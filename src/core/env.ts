@@ -17,6 +17,7 @@ const publicSchema = z.object({
   NEXT_PUBLIC_LOG_LEVEL: z
     .enum(["debug", "info", "warn", "error"])
     .default("info"),
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().min(1),
 });
 
 const mergedSchema = serverSchema.merge(publicSchema);
