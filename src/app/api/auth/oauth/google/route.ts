@@ -18,6 +18,7 @@ export async function POST(request: Request) {
       school: body.school,
       dateOfBirth: body.dateOfBirth,
       profileCompleted: body.profileCompleted,
+      allowCreate: Boolean(body.allowCreate),
     });
     return NextResponse.json(
       {

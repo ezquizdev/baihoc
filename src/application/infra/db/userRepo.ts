@@ -147,3 +147,20 @@ export async function updateUserProfile(
   );
   return res.rows[0] ?? null;
 }
+
+export async function linkUserOAuth(
+  userId: string,
+  provider: OAuthProvider,
+  sub: string,
+) {
+  const res = await query<UserRow>(
+    `UPDATE users
+     SET oauth_provider = $2,
+         oauth_sub = $3,
+         updated_at = now()
+     WHERE id = $1
+     RETURNING *`,
+    [userId, provider, sub],
+  );
+  return res.rows[0] ?? null;
+}
