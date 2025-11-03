@@ -11,7 +11,7 @@ type ButtonProps = PropsWithChildren<
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    "bg-slate-900 text-white hover:bg-slate-800 disabled:bg-slate-400 disabled:text-white",
+    "bg-[#2868e6] text-white hover:bg-[#1f54b8] disabled:bg-slate-400 disabled:text-white",
   secondary:
     "bg-white text-slate-900 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 disabled:border-slate-200 disabled:text-slate-400",
   ghost:

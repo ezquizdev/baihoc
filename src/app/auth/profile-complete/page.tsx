@@ -2,20 +2,26 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { ProfileFields, type ProfileValues } from "@/components/auth/ProfileFields";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { fileToDataUrl } from "@/lib/fileHelpers";
 
 export default function ProfileCompletePage() {
   const params = useSearchParams();
   const router = useRouter();
   const userId = params.get("userId") || "";
-  const [fullName, setFullName] = useState("");
-  const [school, setSchool] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [profile, setProfile] = useState<ProfileValues>({
+    fullName: "",
+    school: "",
+    dateOfBirth: "",
+    avatarFile: null,
+    avatarPreview: "",
+    acceptTerms: false,
+  });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -25,15 +31,19 @@ export default function ProfileCompletePage() {
     setError(null);
     setLoading(true);
     try {
+      let avatarUrl: string | null = null;
+      if (profile.avatarFile) {
+        avatarUrl = await fileToDataUrl(profile.avatarFile);
+      }
       const res = await fetch("/api/auth/profile/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          fullName,
-          school,
-          dateOfBirth: dateOfBirth || null,
-          avatarUrl: avatarUrl || null,
+          fullName: profile.fullName,
+          school: profile.school,
+          dateOfBirth: profile.dateOfBirth || null,
+          avatarUrl: avatarUrl || profile.avatarPreview || null,
         }),
       });
       const data = await res.json();
@@ -63,28 +73,14 @@ export default function ProfileCompletePage() {
     >
       <Card>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <Input
-            label="Họ và tên"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-          />
-          <Input
-            label="Trường/Lớp"
-            value={school}
-            onChange={(e) => setSchool(e.target.value)}
-          />
-          <Input
-            label="Ngày sinh"
-            type="date"
-            value={dateOfBirth}
-            onChange={(e) => setDateOfBirth(e.target.value)}
-          />
-          <Input
-            label="Ảnh đại diện (URL)"
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            placeholder="https://..."
+          <ProfileFields
+            values={profile}
+            onChange={(updates) =>
+              setProfile((prev) => ({ ...prev, ...updates }))
+            }
+            setError={setError}
+            showTerms={false}
+            fileInputRef={fileInputRef}
           />
           {error && <p className="text-sm text-red-500">{error}</p>}
           {done && (

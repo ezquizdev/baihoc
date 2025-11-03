@@ -16,16 +16,34 @@ import {
   updateUserProfile,
 } from "@/application/infra/db/userRepo";
 import { sendTransactionalEmail } from "@/application/services/emailService";
+import { supabaseServer } from "@/application/infra/storage/supabase";
 import { siteConfig } from "@/config/site";
 import { env } from "@/core/env";
 
 const VERIFICATION_TTL_MINUTES = 60 * 24; // 24 hours
 const RESET_TTL_MINUTES = 60; // 1 hour
+const AVATAR_BUCKET = "avatars";
 
 function ensurePasswordStrength(password: string) {
   if (password.length < 8) {
     throw new Error("Password must be at least 8 characters");
   }
+}
+
+function ensureValidEmail(email: string) {
+  const trimmed = email.trim();
+  const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  if (!emailRegex.test(trimmed)) {
+    throw new Error("Invalid email format");
+  }
+  return trimmed.toLowerCase();
+}
+
+function ensureName(name: string) {
+  if (!name || !name.trim()) {
+    throw new Error("Full name is required");
+  }
+  return name.trim();
 }
 
 export async function registerWithEmail(input: {
@@ -36,19 +54,25 @@ export async function registerWithEmail(input: {
   dateOfBirth?: string | null;
   avatarUrl?: string | null;
 }) {
-  const existing = await findUserByEmail(input.email);
+  const email = ensureValidEmail(input.email);
+  const fullName = ensureName(input.fullName);
+  const existing = await findUserByEmail(email);
   if (existing) {
     throw new Error("Email already registered");
   }
   ensurePasswordStrength(input.password);
+  const uploadedAvatar =
+    input.avatarUrl && input.avatarUrl.startsWith("data:")
+      ? await storeAvatar(email, input.avatarUrl)
+      : null;
   const passwordHash = await bcrypt.hash(input.password, 10);
   const user = await createUser({
-    email: input.email,
+    email,
     password_hash: passwordHash,
-    full_name: input.fullName,
+    full_name: fullName,
     school: input.school,
     date_of_birth: input.dateOfBirth,
-    avatar_url: input.avatarUrl,
+    avatar_url: uploadedAvatar,
     status: "pending_verification",
     profile_completed: true,
   });
@@ -80,7 +104,8 @@ export async function loginWithEmail(input: {
   email: string;
   password: string;
 }) {
-  const user = await findUserByEmail(input.email);
+  const email = ensureValidEmail(input.email);
+  const user = await findUserByEmail(email);
   if (!user || !user.password_hash) {
     throw new Error("Invalid credentials");
   }
@@ -96,7 +121,8 @@ export async function loginWithEmail(input: {
 }
 
 export async function requestPasswordReset(email: string) {
-  const user = await findUserByEmail(email);
+  const validEmail = ensureValidEmail(email);
+  const user = await findUserByEmail(validEmail);
   if (!user) {
     return;
   }
@@ -132,10 +158,12 @@ export async function upsertGoogleUser(input: {
   profileCompleted?: boolean;
 }) {
   const provider: OAuthProvider = "google";
+  const email = ensureValidEmail(input.email);
+  const fullName = input.fullName ? ensureName(input.fullName) : undefined;
   const existing = await findUserByOAuth(provider, input.sub);
   if (existing) {
     const updated = await updateUserProfile(existing.id, {
-      full_name: input.fullName,
+      full_name: fullName,
       avatar_url: input.avatarUrl,
       school: input.school,
       date_of_birth: input.dateOfBirth,
@@ -146,7 +174,7 @@ export async function upsertGoogleUser(input: {
     return updated ?? existing;
   }
 
-  const byEmail = await findUserByEmail(input.email);
+  const byEmail = await findUserByEmail(email);
   if (byEmail && byEmail.oauth_provider !== provider) {
     throw new Error(
       "Email already registered with password; link flow not implemented",
@@ -154,9 +182,9 @@ export async function upsertGoogleUser(input: {
   }
 
   const user = await createUser({
-    email: input.email,
+    email,
     password_hash: null,
-    full_name: input.fullName ?? input.email,
+    full_name: fullName ?? email,
     avatar_url: input.avatarUrl ?? null,
     school: input.school ?? null,
     date_of_birth: input.dateOfBirth ?? null,
@@ -179,15 +207,45 @@ export async function completeProfile(
     avatarUrl?: string | null;
   },
 ) {
+  const fullName = ensureName(input.fullName);
+  const uploadedAvatar =
+    input.avatarUrl && input.avatarUrl.startsWith("data:")
+      ? await storeAvatar(userId, input.avatarUrl)
+      : undefined;
   const updated = await updateUserProfile(userId, {
-    full_name: input.fullName,
+    full_name: fullName,
     school: input.school,
     date_of_birth: input.dateOfBirth,
-    avatar_url: input.avatarUrl,
+    avatar_url: uploadedAvatar ?? input.avatarUrl ?? undefined,
     profile_completed: true,
   });
   if (!updated) {
     throw new Error("User not found");
   }
   return updated;
+}
+
+async function storeAvatar(userId: string, dataUrl: string) {
+  const match = /^data:(image\/[-+.\w]+);base64,(.+)$/i.exec(dataUrl);
+  if (!match) {
+    throw new Error("Invalid avatar data");
+  }
+  const mime = match[1];
+  const base64 = match[2];
+  const buffer = Buffer.from(base64, "base64");
+  const ext = mime.split("/")[1] || "png";
+  const path = `${userId}/${Date.now()}.${ext}`;
+  const { error } = await supabaseServer.storage
+    .from(AVATAR_BUCKET)
+    .upload(path, buffer, {
+      contentType: mime,
+      upsert: true,
+    });
+  if (error) {
+    throw new Error("Could not store avatar");
+  }
+  const { data } = supabaseServer.storage
+    .from(AVATAR_BUCKET)
+    .getPublicUrl(path);
+  return data.publicUrl;
 }
