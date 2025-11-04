@@ -5,12 +5,13 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     if (!body.token) {
-      return NextResponse.json({ error: "token required" }, { status: 400 });
+      return NextResponse.json({ error: "Thiếu mã xác minh" }, { status: 400 });
     }
     const userId = await verifyEmailWithToken(body.token);
     return NextResponse.json({ userId, verified: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message =
+      error instanceof Error ? error.message : "Lỗi không xác định";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

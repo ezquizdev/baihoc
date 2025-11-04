@@ -27,7 +27,7 @@ const AVATAR_BUCKET = "avatars";
 
 function ensurePasswordStrength(password: string) {
   if (password.length < 8) {
-    throw new Error("Password must be at least 8 characters");
+    throw new Error("Mật khẩu phải dài tối thiểu 8 ký tự");
   }
 }
 
@@ -35,14 +35,14 @@ function ensureValidEmail(email: string) {
   const trimmed = email.trim();
   const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   if (!emailRegex.test(trimmed)) {
-    throw new Error("Invalid email format");
+    throw new Error("Email không hợp lệ");
   }
   return trimmed.toLowerCase();
 }
 
 function ensureName(name: string) {
   if (!name || !name.trim()) {
-    throw new Error("Full name is required");
+    throw new Error("Vui lòng nhập họ và tên");
   }
   return name.trim();
 }
@@ -59,7 +59,7 @@ export async function registerWithEmail(input: {
   const fullName = ensureName(input.fullName);
   const existing = await findUserByEmail(email);
   if (existing) {
-    throw new Error("Email already registered");
+    throw new Error("Email đã được đăng ký");
   }
   ensurePasswordStrength(input.password);
   const uploadedAvatar =
@@ -85,8 +85,8 @@ export async function registerWithEmail(input: {
   const verifyLink = `${env.NEXT_PUBLIC_APP_URL}/auth/verify?token=${rawToken}`;
   await sendTransactionalEmail({
     to: [{ email: user.email, name: user.full_name }],
-    subject: "Verify your BaiHoc account",
-    text: `Hello ${user.full_name},\n\nPlease verify your email by visiting: ${verifyLink}\n\nThanks,\n${siteConfig.name} Team`,
+    subject: "Xác minh tài khoản BaiHoc",
+    text: `Xin chào ${user.full_name},\n\nVui lòng xác minh email của bạn tại liên kết sau: ${verifyLink}\n\nCảm ơn,\nĐội ngũ ${siteConfig.name}`,
   });
 
   return user;
@@ -95,7 +95,7 @@ export async function registerWithEmail(input: {
 export async function verifyEmailWithToken(rawToken: string) {
   const tokenRow = await consumeEmailVerificationToken(rawToken);
   if (!tokenRow) {
-    throw new Error("Invalid or expired verification token");
+    throw new Error("Mã xác minh không hợp lệ hoặc đã hết hạn");
   }
   await markEmailVerified(tokenRow.user_id);
   return tokenRow.user_id;
@@ -108,14 +108,14 @@ export async function loginWithEmail(input: {
   const email = ensureValidEmail(input.email);
   const user = await findUserByEmail(email);
   if (!user || !user.password_hash) {
-    throw new Error("Invalid credentials");
+    throw new Error("Thông tin đăng nhập không đúng");
   }
   const valid = await bcrypt.compare(input.password, user.password_hash);
   if (!valid) {
-    throw new Error("Invalid credentials");
+    throw new Error("Thông tin đăng nhập không đúng");
   }
   if (user.status === "pending_verification") {
-    throw new Error("Email not verified");
+    throw new Error("Email chưa được xác minh");
   }
   await updateLastLogin(user.id);
   return user;
@@ -131,8 +131,8 @@ export async function requestPasswordReset(email: string) {
   const resetLink = `${env.NEXT_PUBLIC_APP_URL}/auth/reset?token=${rawToken}`;
   await sendTransactionalEmail({
     to: [{ email: user.email, name: user.full_name }],
-    subject: "Reset your BaiHoc password",
-    text: `Hello ${user.full_name},\n\nReset your password using: ${resetLink}\n\nIf you didn't request this, you can ignore this email.`,
+    subject: "Đặt lại mật khẩu BaiHoc",
+    text: `Xin chào ${user.full_name},\n\nĐặt lại mật khẩu tại: ${resetLink}\n\nNếu bạn không yêu cầu, vui lòng bỏ qua email này.`,
   });
 }
 
@@ -143,7 +143,7 @@ export async function resetPasswordWithToken(
   ensurePasswordStrength(newPassword);
   const tokenRow = await consumePasswordResetToken(rawToken);
   if (!tokenRow) {
-    throw new Error("Invalid or expired reset token");
+    throw new Error("Mã đặt lại không hợp lệ hoặc đã hết hạn");
   }
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await updatePassword(tokenRow.user_id, passwordHash);
@@ -238,7 +238,7 @@ export async function completeProfile(
     profile_completed: true,
   });
   if (!updated) {
-    throw new Error("User not found");
+    throw new Error("Không tìm thấy người dùng");
   }
   return updated;
 }
@@ -246,7 +246,7 @@ export async function completeProfile(
 async function storeAvatar(userId: string, dataUrl: string) {
   const match = /^data:(image\/[-+.\w]+);base64,(.+)$/i.exec(dataUrl);
   if (!match) {
-    throw new Error("Invalid avatar data");
+    throw new Error("Dữ liệu ảnh không hợp lệ");
   }
   const mime = match[1];
   const base64 = match[2];
@@ -260,7 +260,7 @@ async function storeAvatar(userId: string, dataUrl: string) {
       upsert: true,
     });
   if (error) {
-    throw new Error("Could not store avatar");
+    throw new Error("Không thể lưu ảnh đại diện");
   }
   const { data } = supabaseServer.storage
     .from(AVATAR_BUCKET)

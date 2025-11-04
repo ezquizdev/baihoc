@@ -44,6 +44,7 @@ export default function RegisterPage() {
 
   const handleProfileChange = (updates: Partial<ProfileValues>) => {
     setForm((prev) => ({ ...prev, profile: { ...prev.profile, ...updates } }));
+    setError(null);
   };
 
   const proceedToProfile = () => {
@@ -139,7 +140,7 @@ export default function RegisterPage() {
           if (!data.profileCompleted) {
             router.push(`/auth/profile-complete?userId=${data.userId}`);
           } else {
-            router.push("/");
+            router.push("/profile");
           }
     } catch (err) {
       const message =

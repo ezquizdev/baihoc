@@ -19,6 +19,10 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!email.trim() || !password) {
+      setError("Vui lòng nhập email và mật khẩu.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
@@ -30,7 +34,11 @@ export default function LoginPage() {
       if (!res.ok) {
         throw new Error(data.error || "Đăng nhập thất bại");
       }
-      router.push("/");
+      if (!data.profileCompleted) {
+        router.push(`/auth/profile-complete?userId=${data.userId}`);
+      } else {
+        router.push("/profile");
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Đăng nhập thất bại";
       setError(message);
@@ -65,7 +73,7 @@ export default function LoginPage() {
       if (!data.profileCompleted) {
         router.push(`/auth/profile-complete?userId=${data.userId}`);
       } else {
-        router.push("/");
+        router.push("/profile");
       }
     } catch (err) {
       const message =
