@@ -10,6 +10,7 @@ import {
   createUser,
   findUserByEmail,
   findUserByOAuth,
+  findUserById,
   linkUserOAuth,
   markEmailVerified,
   type OAuthProvider,
@@ -63,10 +64,9 @@ export async function registerWithEmail(input: {
     throw new Error("Email đã được đăng ký");
   }
   ensurePasswordStrength(input.password);
-  const uploadedAvatar =
-    input.avatarUrl && input.avatarUrl.startsWith("data:")
-      ? await storeAvatar(email, input.avatarUrl)
-      : null;
+  const uploadedAvatar = input.avatarUrl
+    ? await normalizeAvatarUpload(email, input.avatarUrl)
+    : null;
   const passwordHash = await bcrypt.hash(input.password, 10);
   const user = await createUser({
     email,
@@ -172,11 +172,14 @@ export async function upsertGoogleUser(input: {
   const email = ensureValidEmail(input.email);
   const fullName = input.fullName ? ensureName(input.fullName) : undefined;
   const allowCreate = Boolean(input.allowCreate);
+  const avatarUpload = input.avatarUrl
+    ? await normalizeAvatarUpload(input.sub, input.avatarUrl)
+    : null;
   const existing = await findUserByOAuth(provider, input.sub);
   if (existing) {
     const updated = await updateUserProfile(existing.id, {
       full_name: fullName,
-      avatar_url: input.avatarUrl,
+      avatar_url: avatarUpload ?? input.avatarUrl,
       school: input.school,
       date_of_birth: input.dateOfBirth,
       profile_completed: input.profileCompleted ?? existing.profile_completed,
@@ -191,6 +194,9 @@ export async function upsertGoogleUser(input: {
     // Link Google to existing email-only account
     if (!byEmail.oauth_provider || !byEmail.oauth_sub) {
       const linked = await linkUserOAuth(byEmail.id, provider, input.sub);
+      if (avatarUpload) {
+        await updateUserProfile(byEmail.id, { avatar_url: avatarUpload });
+      }
       await markEmailVerified(byEmail.id);
       await updateLastLogin(byEmail.id);
       return linked ?? byEmail;
@@ -212,7 +218,7 @@ export async function upsertGoogleUser(input: {
     email,
     password_hash: null,
     full_name: fullName ?? email,
-    avatar_url: input.avatarUrl ?? null,
+    avatar_url: avatarUpload,
     school: input.school ?? null,
     date_of_birth: input.dateOfBirth ?? null,
     oauth_provider: provider,
@@ -252,6 +258,19 @@ export async function completeProfile(
   return updated;
 }
 
+export async function getProfilePrefill(userId: string) {
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new Error("Không tìm thấy người dùng");
+  }
+  return {
+    fullName: user.full_name ?? "",
+    school: user.school ?? "",
+    dateOfBirth: user.date_of_birth ?? "",
+    avatarUrl: user.avatar_url ?? "",
+  };
+}
+
 async function storeAvatar(userId: string, dataUrl: string) {
   const match = /^data:(image\/[-+.\w]+);base64,(.+)$/i.exec(dataUrl);
   if (!match) {
@@ -275,4 +294,40 @@ async function storeAvatar(userId: string, dataUrl: string) {
     .from(AVATAR_BUCKET)
     .getPublicUrl(path);
   return data.publicUrl;
+}
+
+async function uploadAvatarFromUrl(userKey: string, url: string) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Không thể tải ảnh đại diện từ Google");
+  }
+  const arrayBuffer = await res.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const mime =
+    res.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+  const ext = mime.split("/")[1] || "jpg";
+  const path = `${userKey}/${Date.now()}.${ext}`;
+  const { error } = await supabaseServer.storage
+    .from(AVATAR_BUCKET)
+    .upload(path, buffer, {
+      contentType: mime,
+      upsert: true,
+    });
+  if (error) {
+    throw new Error("Không thể lưu ảnh đại diện");
+  }
+  const { data } = supabaseServer.storage
+    .from(AVATAR_BUCKET)
+    .getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function normalizeAvatarUpload(userKey: string, avatarUrl: string) {
+  if (avatarUrl.startsWith("data:")) {
+    return await storeAvatar(userKey, avatarUrl);
+  }
+  if (avatarUrl.startsWith("http")) {
+    return await uploadAvatarFromUrl(userKey, avatarUrl);
+  }
+  return avatarUrl;
 }

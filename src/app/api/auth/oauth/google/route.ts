@@ -21,20 +21,21 @@ export async function POST(request: Request) {
       profileCompleted: body.profileCompleted,
       allowCreate: Boolean(body.allowCreate),
     });
-    await setSession({
-      sub: user.id,
-      email: user.email,
+    const responseBody = {
+      userId: user.id,
       role: user.role,
       profileCompleted: user.profile_completed,
-    });
-    return NextResponse.json(
-      {
-        userId: user.id,
+    };
+    // Only set session if profile is complete; otherwise let client finish profile
+    if (user.profile_completed) {
+      await setSession({
+        sub: user.id,
+        email: user.email,
         role: user.role,
         profileCompleted: user.profile_completed,
-      },
-      { status: 200 },
-    );
+      });
+    }
+    return NextResponse.json(responseBody, { status: 200 });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Lỗi không xác định";
