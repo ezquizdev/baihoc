@@ -73,3 +73,14 @@ export async function consumePasswordResetToken(rawToken: string) {
   );
   return res.rows[0] ?? null;
 }
+
+export async function isPasswordResetTokenValid(rawToken: string) {
+  const hashed = hashToken(rawToken);
+  const res = await query<ResetTokenRow>(
+    `SELECT * FROM password_reset_tokens
+     WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+     LIMIT 1`,
+    [hashed],
+  );
+  return res.rows[0] ?? null;
+}
