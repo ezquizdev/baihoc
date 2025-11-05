@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
-import { completeProfile } from "@/application/services/authService";
+import { controllerCompleteProfile } from "@/application/controllers/authController";
+import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 import { setSession } from "@/application/infra/auth/session";
 
 export async function POST(request: Request) {
   try {
+    const session = await requireAuthenticatedApi(request, {
+      allowIncompleteProfile: true,
+    });
+    if (session instanceof NextResponse) return session;
+
     const body = await request.json();
     if (!body.userId || !body.fullName) {
       return NextResponse.json(
@@ -11,20 +17,15 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    const user = await completeProfile(body.userId, {
-      fullName: body.fullName,
-      school: body.school,
-      dateOfBirth: body.dateOfBirth,
-      avatarUrl: body.avatarUrl,
-    });
+    const { user, sessionUser } = await controllerCompleteProfile(body);
     await setSession({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      profileCompleted: user.profile_completed,
+      sub: sessionUser.id,
+      email: sessionUser.email,
+      role: sessionUser.role,
+      profileCompleted: sessionUser.profileCompleted,
     });
     return NextResponse.json(
-      { userId: user.id, profileCompleted: user.profile_completed },
+      { userId: user.id, profileCompleted: sessionUser.profileCompleted },
       { status: 200 },
     );
   } catch (error) {

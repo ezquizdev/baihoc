@@ -1,26 +1,23 @@
 import { NextResponse } from "next/server";
-import { loginWithEmail } from "@/application/services/authService";
+import { controllerLoginWithEmail } from "@/application/controllers/authController";
 import { setSession } from "@/application/infra/auth/session";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const user = await loginWithEmail({
-      email: body.email,
-      password: body.password,
-    });
+    const { user, sessionUser } = await controllerLoginWithEmail(body);
     await setSession({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      profileCompleted: user.profile_completed,
+      sub: sessionUser.id,
+      email: sessionUser.email,
+      role: sessionUser.role,
+      profileCompleted: sessionUser.profileCompleted,
     });
     return NextResponse.json(
       {
         userId: user.id,
         role: user.role,
         tier: user.tier,
-        profileCompleted: user.profile_completed,
+        profileCompleted: sessionUser.profileCompleted,
       },
       { status: 200 },
     );

@@ -1,17 +1,10 @@
 import { NextResponse } from "next/server";
-import { registerWithEmail } from "@/application/services/authService";
+import { controllerRegisterWithEmail } from "@/application/controllers/authController";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const user = await registerWithEmail({
-      email: body.email,
-      password: body.password,
-      fullName: body.fullName,
-      school: body.school,
-      dateOfBirth: body.dateOfBirth,
-      avatarUrl: body.avatarUrl,
-    });
+    const { user } = await controllerRegisterWithEmail(body);
     return NextResponse.json(
       { userId: user.id, status: "pending_verification" },
       { status: 201 },

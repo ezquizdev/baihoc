@@ -55,7 +55,7 @@ export default function LoginPage() {
   }) => {
     setError(null);
     try {
-      const res = await fetch("/api/auth/oauth/google", {
+      const res = await fetch("/api/auth/oauth/google/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -63,18 +63,13 @@ export default function LoginPage() {
           email: payload.email,
           fullName: payload.fullName,
           avatarUrl: payload.avatarUrl,
-          allowCreate: false,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Google đăng nhập thất bại");
       }
-      if (!data.profileCompleted) {
-        router.push(`/auth/profile-complete`);
-      } else {
-        router.push("/profile");
-      }
+      router.push("/dashboard");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Google đăng nhập thất bại";
@@ -114,10 +109,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <div className="flex items-center justify-between text-sm text-slate-600">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="h-4 w-4" /> Ghi nhớ đăng nhập
-              </label>
+            <div className="flex items-center justify-end text-sm text-slate-600">
               <Link href="/auth/forgot" className="font-medium text-slate-900">
                 Quên mật khẩu?
               </Link>

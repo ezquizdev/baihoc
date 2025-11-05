@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -30,7 +29,8 @@ export function ProfileCompleteForm({
     school: initialProfile.school ?? "",
     dateOfBirth: initialProfile.dateOfBirth ?? "",
     avatarFile: null,
-    avatarPreview: initialProfile.avatarPreview ?? initialProfile.avatarUrl ?? "",
+    avatarPreview:
+      initialProfile.avatarPreview ?? initialProfile.avatarUrl ?? "",
     acceptTerms: false,
   });
   const [error, setError] = useState<string | null>(errorMessage ?? null);

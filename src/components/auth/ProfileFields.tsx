@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { RefObject } from "react";
+import type { RefObject } from "react";
 import { Input } from "@/components/ui/input";
 
 export type ProfileValues = {

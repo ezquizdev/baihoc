@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleButton } from "@/components/auth/GoogleButton";
-import { ProfileFields, type ProfileValues } from "@/components/auth/ProfileFields";
+import {
+  ProfileFields,
+  type ProfileValues,
+} from "@/components/auth/ProfileFields";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -121,7 +124,7 @@ export default function RegisterPage() {
     setError(null);
     setSuccess(null);
     try {
-      const res = await fetch("/api/auth/oauth/google", {
+      const res = await fetch("/api/auth/oauth/google/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -129,19 +132,13 @@ export default function RegisterPage() {
           email: payload.email,
           fullName: payload.fullName,
           avatarUrl: payload.avatarUrl,
-          profileCompleted: false,
-          allowCreate: true,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Google đăng ký thất bại");
       }
-      if (!data.profileCompleted) {
-        router.push(`/auth/profile-complete`);
-      } else {
-        router.push("/profile");
-      }
+      router.push(`/auth/profile-complete`);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Google đăng ký thất bại";
