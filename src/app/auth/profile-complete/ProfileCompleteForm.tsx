@@ -81,9 +81,16 @@ export function ProfileCompleteForm({
       title="Hoàn tất thông tin"
       subtitle="Chúng tôi cần thêm vài chi tiết để cá nhân hóa trải nghiệm của bạn."
       footer={
-        <Link href="/auth/login" className="font-medium text-slate-900">
+        <button
+          type="button"
+          className="font-medium text-slate-900"
+          onClick={async () => {
+            await fetch("/api/auth/logout", { method: "POST" });
+            router.push("/auth/login");
+          }}
+        >
           Quay lại đăng nhập
-        </Link>
+        </button>
       }
     >
       <Card>

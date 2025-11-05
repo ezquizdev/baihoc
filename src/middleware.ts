@@ -6,46 +6,68 @@ const PROTECTED_PREFIXES = ["/profile", "/dashboard", "/quizzes"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (
-    pathname.startsWith("/auth") ||
+  const isAuthPath = pathname.startsWith("/auth");
+  const hasFileExtension = /\.[^/]+$/.test(pathname);
+  const isAsset =
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico"
-  ) {
-    // prevent showing auth pages when already logged in
-    if (pathname.startsWith("/auth")) {
-      const token = req.cookies.get(SESSION_COOKIE)?.value;
-      if (token) {
-        try {
-          await jwtVerify(token, new TextEncoder().encode(process.env.SESSION_SECRET));
-          return NextResponse.redirect(new URL("/dashboard", req.url));
-        } catch {
-          // fall through to let auth pages render
-        }
-      }
-    }
+    pathname.startsWith("/public") ||
+    pathname === "/favicon.ico" ||
+    hasFileExtension;
+
+  if (isAsset) {
     return NextResponse.next();
   }
-  const protectedPath =
+
+  const token = req.cookies.get(SESSION_COOKIE)?.value;
+  let payload: Record<string, unknown> | null = null;
+  if (token) {
+    try {
+      const verified = await jwtVerify(
+        token,
+        new TextEncoder().encode(process.env.SESSION_SECRET),
+      );
+      payload = verified.payload as Record<string, unknown>;
+    } catch {
+      const res = NextResponse.redirect(new URL(`/auth/login?next=${pathname}`, req.url));
+      res.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+      return res;
+    }
+  }
+
+  const isProtected =
     pathname === "/" ||
     PROTECTED_PREFIXES.some(
       (p) => pathname === p || pathname.startsWith(p + "/"),
     );
-  if (!protectedPath) {
+
+  const profileCompleted = Boolean(payload?.profileCompleted);
+
+  if (isAuthPath) {
+    if (payload && profileCompleted) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+    if (payload && !profileCompleted) {
+      if (!pathname.startsWith("/auth/profile-complete")) {
+        return NextResponse.redirect(new URL(`/auth/profile-complete`, req.url));
+      }
+    }
     return NextResponse.next();
   }
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
-  if (!token) {
+
+  if (!payload) {
     return NextResponse.redirect(new URL(`/auth/login?next=${pathname}`, req.url));
   }
-  try {
-    await jwtVerify(token, new TextEncoder().encode(process.env.SESSION_SECRET));
-    return NextResponse.next();
-  } catch {
-    const res = NextResponse.redirect(new URL(`/auth/login?next=${pathname}`, req.url));
-    res.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
-    return res;
+
+  if (!profileCompleted && !pathname.startsWith("/auth/profile-complete")) {
+    return NextResponse.redirect(new URL(`/auth/profile-complete`, req.url));
   }
+
+  if (!isProtected) {
+    return NextResponse.next();
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

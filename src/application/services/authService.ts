@@ -192,26 +192,11 @@ export async function upsertGoogleUser(input: {
   const byEmail = await findUserByEmail(email);
   if (byEmail) {
     // Link Google to existing email-only account
-    if (!byEmail.oauth_provider || !byEmail.oauth_sub) {
-      const linked = await linkUserOAuth(byEmail.id, provider, input.sub);
-      if (avatarUpload) {
-        await updateUserProfile(byEmail.id, { avatar_url: avatarUpload });
-      }
-      await markEmailVerified(byEmail.id);
-      await updateLastLogin(byEmail.id);
-      return linked ?? byEmail;
+    if (!allowCreate) {
+      throw new Error("Email đã tồn tại. Vui lòng đăng nhập để liên kết tài khoản.");
     }
-    if (byEmail.oauth_provider !== provider || byEmail.oauth_sub !== input.sub) {
-      throw new Error(
-        "Email đã tồn tại. Vui lòng đăng nhập bằng email/mật khẩu hoặc liên kết tài khoản.",
-      );
-    }
-    await updateLastLogin(byEmail.id);
-    return byEmail;
-  }
-
-  if (!allowCreate) {
-    throw new Error("Tài khoản Google chưa được đăng ký");
+    // If allowCreate (signup) and account exists, block to prevent duplicate profiles
+    throw new Error("Email đã tồn tại, không thể đăng ký bằng Google.");
   }
 
   const user = await createUser({
