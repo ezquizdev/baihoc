@@ -15,7 +15,7 @@ export function AuthShell({
 }: AuthShellProps) {
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
-      <div className="relative hidden overflow-hidden bg-[#2868e6] text-white md:block">
+      <div className="relative hidden max-h-screen overflow-hidden bg-[#2868e6] text-white md:block">
         <div className="absolute left-1/2 top-4 -translate-x-1/2">
           <Image
             src="/assets/logo.svg"
@@ -49,7 +49,7 @@ export function AuthShell({
         </div>
       </div>
       <div className="flex max-h-screen flex-col overflow-y-auto bg-white px-6 py-10 text-slate-900 md:px-12 lg:px-20">
-        <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-6 md:my-auto">
           <div className="space-y-2 text-center">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
               {title}
