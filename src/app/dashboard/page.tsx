@@ -1,54 +1,108 @@
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
-import { Card } from "@/components/ui/card";
+import { DailyChallengeCard } from "@/components/dashboard/daily-challenge-card";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
+import { PromoBanner } from "@/components/dashboard/promo-banner";
+import { QuickActionsCard } from "@/components/dashboard/quick-actions-card";
+import { StatsCard } from "@/components/dashboard/stats-card";
+import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
+import layoutStyles from "./dashboard-page.module.css";
+
+type LeaderboardRow = {
+  rank: number;
+  name: string;
+  xp: number;
+};
+
+const quickActions = [
+  "TẤT CẢ",
+  "TỰ LUYỆN QUIZ CÙNG AI",
+  "QUIZ NGẪU NHIÊN",
+  "TẤT CẢ CHALLENGE",
+];
+
+const leaderboard: LeaderboardRow[] = [
+  { rank: 1, name: "Trần Bảo Quyên", xp: 1047 },
+  { rank: 2, name: "Nguyễn Thị Hằng", xp: 1023 },
+  { rank: 3, name: "Lê Văn Minh", xp: 1015 },
+  { rank: 4, name: "Phạm Thị Lan", xp: 932 },
+  { rank: 5, name: "Trần Văn An", xp: 910 },
+];
 
 export default async function DashboardPage() {
   const session = await requireAuthenticatedPage({ next: "/dashboard" });
-
-  const isStaff = session.role === "staff";
+  const displayName = session.fullName ?? session.email.split("@")[0];
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-4 py-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-slate-500">Xin chào, {session.email}</p>
-          <h1 className="text-2xl font-semibold text-slate-900">
-            {isStaff ? "Bảng điều khiển nhân sự" : "Bảng điều khiển học viên"}
-          </h1>
-        </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Trạng thái tài khoản
-          </h2>
-          <p className="text-sm text-slate-600 mt-2">
-            Vai trò: {isStaff ? "Nhân sự (giáo viên/quản trị)" : "Học viên"}
-          </p>
-          {!session.profileCompleted && (
-            <p className="text-sm text-amber-600 mt-2">
-              Hồ sơ chưa hoàn tất. Vui lòng cập nhật thông tin.
-            </p>
-          )}
-        </Card>
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Bước tiếp theo
-          </h2>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600">
-            {isStaff ? (
-              <>
-                <li>Tạo/duyệt đề thi và thử thách mới.</li>
-                <li>Theo dõi tiến độ học viên và thống kê.</li>
-              </>
-            ) : (
-              <>
-                <li>Tiếp tục luyện tập với các quiz được gợi ý.</li>
-                <li>Theo dõi tiến độ và hoàn tất hồ sơ cá nhân.</li>
-              </>
-            )}
-          </ul>
-        </Card>
-      </div>
-    </main>
+    <DashboardShell
+      pageTitle="Tổng quan"
+      activeNav="overview"
+      userEmail={session.email}
+      userName={displayName}
+      avatarUrl={session.avatarUrl}
+    >
+      <WelcomeBanner
+        title={`Chào mừng đã trở lại, ${displayName}!`}
+        subtitle="Tiếp tục làm bài thôi nào, bạn còn 10 bài chưa làm trong tuần vừa rồi"
+        ctaLabel="Bắt đầu ngay"
+      />
+
+      <section
+        className={layoutStyles.pageGridTop}
+        aria-label="Khối trắc nghiệm"
+      >
+        <DailyChallengeCard
+          tag="CHALLENGE"
+          titleLines={["DAILY", "QUIZ"]}
+          question="Dòng nào sau đây nêu tên những tác phẩm cùng phong cách sáng tác của trường phái văn học hiện thực?"
+          answers={[
+            { text: "Tắt đèn • Số đỏ • Chí Phèo" },
+            { text: "Chữ người tử tù • Giông tố • Lão Hạc", isActive: true },
+            { text: "Hai đứa trẻ • Tắt đèn • Số đỏ" },
+            { text: "Lão Hạc • Số đỏ • Chữ người tử tù" },
+          ]}
+        />
+
+        <QuickActionsCard actions={quickActions} />
+      </section>
+
+      <section
+        className={layoutStyles.pageGridBottom}
+        aria-label="Khối thông tin dưới"
+      >
+        <StatsCard
+          title="Thống kê"
+          actionLabel="Xem chi tiết"
+          progressValue={36}
+          progressLabel="Tiến độ hoàn thành bài tập"
+          kpis={[
+            { label: "Số quiz đã làm", value: "12" },
+            { label: "Thời gian học", value: "12h39" },
+            { label: "Điểm TB", value: "82%" },
+          ]}
+          weeklyBars={[
+            { day: "T2", correct: 50, wrong: 20 },
+            { day: "T3", correct: 70, wrong: 10 },
+            { day: "T4", correct: 30, wrong: 25 },
+            { day: "T5", correct: 80, wrong: 15 },
+            { day: "T6", correct: 45, wrong: 22 },
+            { day: "T7", correct: 60, wrong: 18 },
+            { day: "CN", correct: 35, wrong: 20 },
+          ]}
+        />
+
+        <LeaderboardCard
+          title="Bảng xếp hạng"
+          actionLabel="Xem tất cả"
+          rows={leaderboard}
+        />
+
+        <PromoBanner
+          tag="BANNER"
+          titleLines={["QUẢNG", "CÁO"]}
+          subtitle="Khu vực banner / quảng cáo (placeholder)"
+        />
+      </section>
+    </DashboardShell>
   );
 }
