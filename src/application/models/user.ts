@@ -25,4 +25,6 @@ export type SessionUser = {
   email: string;
   role: UserRole;
   profileCompleted: boolean;
+  fullName?: string | null;
+  avatarUrl?: string | null;
 };

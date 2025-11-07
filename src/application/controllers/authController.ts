@@ -19,6 +19,8 @@ const toSessionUser = (user: User): SessionUser => ({
   email: user.email,
   role: user.role,
   profileCompleted: user.profileCompleted,
+  fullName: user.fullName,
+  avatarUrl: user.avatarUrl,
 });
 
 const toDomainUser = (row: UserRow): User => ({
