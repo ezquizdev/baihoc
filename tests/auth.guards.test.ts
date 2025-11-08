@@ -1,6 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
 import { NextResponse } from "next/server";
-import { requireAuthenticatedApi, requireAuthenticatedPage } from "@/application/infra/auth/guards";
+import { describe, expect, it, vi } from "vitest";
+import {
+  requireAuthenticatedApi,
+  requireAuthenticatedPage,
+} from "@/application/infra/auth/guards";
 import * as sessionModule from "@/application/infra/auth/session";
 
 describe("auth guards", () => {
@@ -46,7 +49,7 @@ describe("auth guards", () => {
 
   it("requireAuthenticatedApi returns 401 when no session", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(null);
-    const res = await requireAuthenticatedApi({} as any);
+    const res = await requireAuthenticatedApi({} as unknown as Request);
     expect(res).toBeInstanceOf(NextResponse);
     expect((res as NextResponse).status).toBe(401);
   });
@@ -56,7 +59,7 @@ describe("auth guards", () => {
       ...session,
       profileCompleted: false,
     });
-    const res = await requireAuthenticatedApi({} as any);
+    const res = await requireAuthenticatedApi({} as unknown as Request);
     expect((res as NextResponse).status).toBe(403);
   });
 
@@ -65,13 +68,15 @@ describe("auth guards", () => {
       ...session,
       role: "student",
     });
-    const res = await requireAuthenticatedApi({} as any, { role: "staff" });
+    const res = await requireAuthenticatedApi({} as unknown as Request, {
+      role: "staff",
+    });
     expect((res as NextResponse).status).toBe(403);
   });
 
   it("requireAuthenticatedApi passes through session on success", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(session);
-    const res = await requireAuthenticatedApi({} as any);
+    const res = await requireAuthenticatedApi({} as unknown as Request);
     expect(res).toEqual(session);
   });
 });

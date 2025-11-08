@@ -14,6 +14,9 @@
 - Added controllers and Next.js API endpoints for staff quiz/question CRUD, publishing/archiving, and question ordering.
 - Added catalog endpoints for authenticated users to list and view published quizzes with filters and validation via zod.
 
+### chore(tests): fix lint regressions
+- Cleaned up mock types and helpers in auth and middleware tests to satisfy Biome lint rules.
+
 ### feat(auth): add route-level guards
 - Introduced reusable `requireAuthenticatedPage`/`requireAuthenticatedApi` guards to handle login/profile/role gating per route.
 - Updated core pages to use the new guards and simplified middleware to stop path-based protection.

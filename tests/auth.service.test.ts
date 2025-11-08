@@ -1,8 +1,28 @@
 import bcrypt from "bcryptjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+type MockUser = {
+  id: string;
+  email: string;
+  full_name: string;
+  password_hash: string | null;
+  school: string | null;
+  date_of_birth: string | null;
+  avatar_url: string | null;
+  role: string;
+  tier: string;
+  status: string;
+  email_verified_at: string | null;
+  oauth_provider: string | null;
+  oauth_sub: string | null;
+  profile_completed: boolean;
+  last_login_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 vi.mock("@/application/infra/db/userRepo", () => {
-  const store: Record<string, any> = {};
+  const store: Record<string, MockUser> = {};
   return {
     __store: store,
     createUser: vi.fn(async (input) => {
@@ -29,11 +49,12 @@ vi.mock("@/application/infra/db/userRepo", () => {
       return user;
     }),
     findUserByEmail: vi.fn(async (email: string) => store[email] ?? null),
-    findUserById: vi.fn(async (id: string) =>
-      Object.values(store).find((u: any) => u.id === id) ?? null,
+    findUserById: vi.fn(
+      async (id: string) =>
+        Object.values(store).find((u) => u.id === id) ?? null,
     ),
     linkUserOAuth: vi.fn(async (id: string, provider: string, sub: string) => {
-      const user = Object.values(store).find((u: any) => u.id === id);
+      const user = Object.values(store).find((u) => u.id === id);
       if (user) {
         user.oauth_provider = provider;
         user.oauth_sub = sub;
@@ -41,31 +62,33 @@ vi.mock("@/application/infra/db/userRepo", () => {
       return user ?? null;
     }),
     markEmailVerified: vi.fn(async (userId: string) => {
-      const user = Object.values(store).find((u: any) => u.id === userId);
+      const user = Object.values(store).find((u) => u.id === userId);
       if (user) {
         user.status = "active";
         user.email_verified_at = new Date().toISOString();
       }
     }),
     updatePassword: vi.fn(async (userId: string, hash: string) => {
-      const user = Object.values(store).find((u: any) => u.id === userId);
+      const user = Object.values(store).find((u) => u.id === userId);
       if (user) user.password_hash = hash;
     }),
     updateLastLogin: vi.fn(async () => {}),
-    updateUserProfile: vi.fn(async (userId: string, input: any) => {
-      const user = Object.values(store).find((u: any) => u.id === userId);
-      if (!user) return null;
-      Object.assign(user, {
-        full_name: input.full_name ?? user.full_name,
-        school: input.school ?? user.school,
-        date_of_birth: input.date_of_birth ?? user.date_of_birth,
-        avatar_url: input.avatar_url ?? user.avatar_url,
-        profile_completed:
-          input.profile_completed ?? user.profile_completed ?? false,
-        updated_at: new Date().toISOString(),
-      });
-      return user;
-    }),
+    updateUserProfile: vi.fn(
+      async (userId: string, input: Partial<MockUser>) => {
+        const user = Object.values(store).find((u) => u.id === userId);
+        if (!user) return null;
+        Object.assign(user, {
+          full_name: input.full_name ?? user.full_name,
+          school: input.school ?? user.school,
+          date_of_birth: input.date_of_birth ?? user.date_of_birth,
+          avatar_url: input.avatar_url ?? user.avatar_url,
+          profile_completed:
+            input.profile_completed ?? user.profile_completed ?? false,
+          updated_at: new Date().toISOString(),
+        });
+        return user;
+      },
+    ),
   };
 });
 
@@ -105,25 +128,37 @@ vi.mock("@/application/infra/storage/supabase", () => ({
     storage: {
       from: () => ({
         upload: async () => ({ error: null }),
-        getPublicUrl: () => ({ data: { publicUrl: "http://example.com/avatar" } }),
+        getPublicUrl: () => ({
+          data: { publicUrl: "http://example.com/avatar" },
+        }),
       }),
     },
   },
 }));
 
-const userRepo = await import("@/application/infra/db/userRepo");
+const userRepo = (await import(
+  "@/application/infra/db/userRepo"
+)) as unknown as typeof import("@/application/infra/db/userRepo") & {
+  __store: Record<string, MockUser>;
+};
 const tokenRepo = await import("@/application/infra/db/tokenRepo");
 const emailService = await import("@/application/services/emailService");
 
-const { registerWithEmail, loginWithEmail, verifyEmailWithToken, googleLogin, resetPasswordWithToken, requestPasswordReset } =
-  await import("@/application/services/authService");
+const {
+  registerWithEmail,
+  loginWithEmail,
+  verifyEmailWithToken,
+  googleLogin,
+  resetPasswordWithToken,
+  requestPasswordReset,
+} = await import("@/application/services/authService");
 
 describe("authService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    Object.keys((userRepo as any).__store).forEach(
-      (k) => delete (userRepo as any).__store[k],
-    );
+    for (const k of Object.keys(userRepo.__store)) {
+      delete userRepo.__store[k];
+    }
   });
 
   it("registerWithEmail hashes password, enforces confirm, and sends verify email", async () => {
@@ -134,7 +169,7 @@ describe("authService", () => {
       fullName: "Tester",
     });
 
-    const created = (userRepo as any).__store["test@example.com"];
+    const created = userRepo.__store["test@example.com"];
     expect(created).toBeDefined();
     expect(created.password_hash).toBeTruthy();
     expect(await bcrypt.compare("Password123!", created.password_hash)).toBe(
@@ -176,7 +211,7 @@ describe("authService", () => {
       created_at: "",
       updated_at: "",
     };
-    (userRepo.findUserByEmail as any).mockResolvedValueOnce({
+    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
       ...baseUser,
       id: "u1",
       status: "pending_verification",
@@ -185,7 +220,7 @@ describe("authService", () => {
       loginWithEmail({ email: "u@example.com", password: "pass1234" }),
     ).rejects.toThrow(/chưa được xác minh/);
 
-    (userRepo.findUserByEmail as any).mockResolvedValueOnce({
+    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
       ...baseUser,
       id: "u2",
       status: "suspended",
@@ -194,7 +229,7 @@ describe("authService", () => {
       loginWithEmail({ email: "u@example.com", password: "pass1234" }),
     ).rejects.toThrow(/tạm khóa/);
 
-    (userRepo.findUserByEmail as any).mockResolvedValueOnce({
+    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
       ...baseUser,
       id: "u3",
       status: "deactivated",
@@ -205,7 +240,7 @@ describe("authService", () => {
   });
 
   it("googleLogin enforces status", async () => {
-    (userRepo.findUserByEmail as any).mockResolvedValueOnce({
+    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
       id: "g1",
       email: "g@example.com",
       password_hash: null,
@@ -260,14 +295,14 @@ describe("authService", () => {
   });
 
   it("googleLogin fails for unknown account", async () => {
-    (userRepo.findUserByEmail as any).mockResolvedValueOnce(null);
+    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce(null);
     await expect(
       googleLogin({ sub: "newsub", email: "none@example.com" }),
     ).rejects.toThrow(/chưa được đăng ký/);
   });
 
   it("googleLogin links OAuth to password account", async () => {
-    (userRepo as any).__store["link@example.com"] = {
+    userRepo.__store["link@example.com"] = {
       id: "link1",
       email: "link@example.com",
       password_hash: await bcrypt.hash("Password123!", 10),
@@ -286,16 +321,21 @@ describe("authService", () => {
       created_at: "",
       updated_at: "",
     };
-    (userRepo.findUserByEmail as any).mockResolvedValueOnce({
-      ...(userRepo as any).__store["link@example.com"],
+    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
+      ...userRepo.__store["link@example.com"],
     });
-    (userRepo.linkUserOAuth as any).mockImplementation(async (id, provider, sub) => {
-      const user = (userRepo as any).__store["link@example.com"];
-      user.oauth_provider = provider;
-      user.oauth_sub = sub;
-      return user;
+    vi.mocked(userRepo.linkUserOAuth).mockImplementation(
+      async (_id, provider, sub) => {
+        const user = userRepo.__store["link@example.com"];
+        user.oauth_provider = provider;
+        user.oauth_sub = sub;
+        return user;
+      },
+    );
+    const user = await googleLogin({
+      sub: "link-sub",
+      email: "link@example.com",
     });
-    const user = await googleLogin({ sub: "link-sub", email: "link@example.com" });
     expect(user.oauth_sub).toBe("link-sub");
     expect(user.oauth_provider).toBe("google");
   });
@@ -308,7 +348,7 @@ describe("authService", () => {
       fullName: "Verify",
     });
     await verifyEmailWithToken("verify-token");
-    const stored = (userRepo as any).__store[user.email];
+    const stored = userRepo.__store[user.email];
     expect(stored.status).toBe("active");
     expect(stored.email_verified_at).toBeTruthy();
   });
@@ -320,18 +360,18 @@ describe("authService", () => {
       passwordConfirm: "OldPass123!",
       fullName: "Reset",
     });
-    (tokenRepo.consumePasswordResetToken as any).mockResolvedValueOnce({
+    vi.mocked(tokenRepo.consumePasswordResetToken).mockResolvedValueOnce({
       user_id: "r@example.com",
     });
     await resetPasswordWithToken("good-reset", "NewPass123!");
-    const stored = (userRepo as any).__store["r@example.com"];
+    const stored = userRepo.__store["r@example.com"];
     expect(await bcrypt.compare("NewPass123!", stored.password_hash)).toBe(
       true,
     );
   });
 
   it("allows password reset request for Google-only account", async () => {
-    (userRepo as any).__store["google@example.com"] = {
+    userRepo.__store["google@example.com"] = {
       id: "google@example.com",
       email: "google@example.com",
       full_name: "G User",
@@ -357,7 +397,7 @@ describe("authService", () => {
   it("requestPasswordReset no-ops for unknown email", async () => {
     await requestPasswordReset("missing@example.com");
     expect(
-      emailService.sendTransactionalEmail as any,
+      vi.mocked(emailService.sendTransactionalEmail),
     ).not.toHaveBeenCalled();
   });
 });
