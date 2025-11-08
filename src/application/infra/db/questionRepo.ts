@@ -369,6 +369,38 @@ export async function archiveQuestion(questionId: string) {
   );
 }
 
+export async function isQuestionUsed(questionId: string) {
+  const res = await query<{ cnt: string }>(
+    `SELECT COUNT(*)::int AS cnt FROM quiz_questions WHERE question_id = $1`,
+    [questionId],
+  );
+  return Number(res.rows[0]?.cnt ?? 0) > 0;
+}
+
+export async function deleteQuestion(questionId: string) {
+  await withTransaction(async (client) => {
+    await client.query(`DELETE FROM question_options WHERE question_id = $1`, [
+      questionId,
+    ]);
+    await client.query(`DELETE FROM short_answer_keys WHERE question_id = $1`, [
+      questionId,
+    ]);
+    const passage = await client.query<{ passage_id: string }>(
+      `SELECT passage_id FROM question_passages WHERE question_id = $1`,
+      [questionId],
+    );
+    await client.query(`DELETE FROM question_passages WHERE question_id = $1`, [
+      questionId,
+    ]);
+    if (passage.rows[0]) {
+      await client.query(`DELETE FROM passages WHERE id = $1`, [
+        passage.rows[0].passage_id,
+      ]);
+    }
+    await client.query(`DELETE FROM questions WHERE id = $1`, [questionId]);
+  });
+}
+
 async function insertOptions(
   client: PoolClient,
   questionId: string,

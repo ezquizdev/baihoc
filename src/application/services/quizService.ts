@@ -1,7 +1,9 @@
 import { query } from "@/application/infra/db/pool";
 import {
+  deleteQuiz,
   getQuizDetail as getQuizDetailRepo,
   insertQuiz,
+  isQuizUsed,
   listQuizzesForCatalog,
   listQuizzesForStaff,
   replaceQuizQuestions,
@@ -85,6 +87,15 @@ export async function archiveQuiz(quizId: string) {
   return res;
 }
 
+export async function deleteQuizWithRules(quizId: string) {
+  const used = await isQuizUsed(quizId);
+  if (used) {
+    throw new Error("Quiz has attempts; please archive instead of deleting");
+  }
+  await deleteQuiz(quizId);
+  return { status: "deleted" as const };
+}
+
 export async function listCatalogQuizzes(params: {
   subjectId?: string;
   topicIds?: string[];
@@ -93,6 +104,8 @@ export async function listCatalogQuizzes(params: {
   search?: string;
   limit?: number;
   offset?: number;
+  minQuestions?: number;
+  maxQuestions?: number;
 }): Promise<QuizListItem[]> {
   return listQuizzesForCatalog(params);
 }

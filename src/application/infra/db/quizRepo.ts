@@ -30,6 +30,7 @@ export type QuizRow = {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  question_count?: number | null;
 };
 
 export type ChallengeSettingsRow = {
@@ -73,6 +74,10 @@ function mapQuiz(row: QuizRow): Quiz {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     publishedAt: row.published_at,
+    questionCount:
+      row.question_count !== undefined && row.question_count !== null
+        ? Number(row.question_count)
+        : undefined,
   };
 }
 
@@ -318,9 +323,13 @@ export async function replaceQuizQuestions(
 export async function getQuizDetail(
   quizId: string,
 ): Promise<QuizDetail | null> {
-  const quizRes = await query<QuizRow>(`SELECT * FROM quizzes WHERE id = $1`, [
-    quizId,
-  ]);
+  const quizRes = await query<QuizRow>(
+    `SELECT q.*,
+            (SELECT COUNT(*) FROM quiz_questions qq WHERE qq.quiz_id = q.id) AS question_count
+     FROM quizzes q
+     WHERE q.id = $1`,
+    [quizId],
+  );
   const quizRow = quizRes.rows[0];
   if (!quizRow) return null;
 
@@ -360,6 +369,8 @@ export async function listQuizzesForCatalog(params: {
   search?: string;
   limit?: number;
   offset?: number;
+  minQuestions?: number;
+  maxQuestions?: number;
 }): Promise<QuizListItem[]> {
   const where: string[] = ["q.status = 'published'"];
   const values: unknown[] = [];
@@ -380,6 +391,12 @@ export async function listQuizzesForCatalog(params: {
       params.topicIds,
     );
   }
+  if (params.minQuestions !== undefined) {
+    add("COALESCE(qc.question_count, 0) >= $idx", params.minQuestions);
+  }
+  if (params.maxQuestions !== undefined) {
+    add("COALESCE(qc.question_count, 0) <= $idx", params.maxQuestions);
+  }
   if (params.search) {
     add(
       "(q.title ILIKE $idx OR q.description ILIKE $idx)",
@@ -397,11 +414,18 @@ export async function listQuizzesForCatalog(params: {
       topic_ids: string[];
     }
   >(
-    `SELECT q.*, COALESCE(array_agg(qt.topic_id) FILTER (WHERE qt.topic_id IS NOT NULL), '{}') AS topic_ids
+    `SELECT q.*,
+            COALESCE(array_agg(qt.topic_id) FILTER (WHERE qt.topic_id IS NOT NULL), '{}') AS topic_ids,
+            qc.question_count
      FROM quizzes q
      LEFT JOIN quiz_topics qt ON qt.quiz_id = q.id
+     LEFT JOIN (
+       SELECT quiz_id, COUNT(*) AS question_count
+       FROM quiz_questions
+       GROUP BY quiz_id
+     ) qc ON qc.quiz_id = q.id
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-     GROUP BY q.id
+     GROUP BY q.id, qc.question_count
      ORDER BY q.published_at DESC NULLS LAST, q.created_at DESC
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
     values,
@@ -440,11 +464,18 @@ export async function listQuizzesForStaff(params: {
   values.push(offset);
 
   const res = await query<QuizRow & { topic_ids: string[] }>(
-    `SELECT q.*, COALESCE(array_agg(qt.topic_id) FILTER (WHERE qt.topic_id IS NOT NULL), '{}') AS topic_ids
+    `SELECT q.*,
+            COALESCE(array_agg(qt.topic_id) FILTER (WHERE qt.topic_id IS NOT NULL), '{}') AS topic_ids,
+            qc.question_count
      FROM quizzes q
      LEFT JOIN quiz_topics qt ON qt.quiz_id = q.id
+     LEFT JOIN (
+       SELECT quiz_id, COUNT(*) AS question_count
+       FROM quiz_questions
+       GROUP BY quiz_id
+     ) qc ON qc.quiz_id = q.id
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-     GROUP BY q.id
+     GROUP BY q.id, qc.question_count
      ORDER BY q.created_at DESC
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
     values,
@@ -454,6 +485,27 @@ export async function listQuizzesForStaff(params: {
     ...mapQuiz(row),
     topicIds: row.topic_ids,
   }));
+}
+
+export async function isQuizUsed(quizId: string) {
+  const res = await query<{ cnt: string }>(
+    `SELECT COUNT(*)::int AS cnt FROM attempts WHERE quiz_id = $1`,
+    [quizId],
+  );
+  return Number(res.rows[0]?.cnt ?? 0) > 0;
+}
+
+export async function deleteQuiz(quizId: string) {
+  await withTransaction(async (client) => {
+    await client.query(`DELETE FROM quiz_questions WHERE quiz_id = $1`, [
+      quizId,
+    ]);
+    await client.query(`DELETE FROM quiz_topics WHERE quiz_id = $1`, [quizId]);
+    await client.query(`DELETE FROM challenge_settings WHERE quiz_id = $1`, [
+      quizId,
+    ]);
+    await client.query(`DELETE FROM quizzes WHERE id = $1`, [quizId]);
+  });
 }
 
 async function insertTopics(

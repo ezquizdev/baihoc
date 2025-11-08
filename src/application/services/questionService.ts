@@ -1,7 +1,9 @@
 import {
   archiveQuestion as archiveQuestionRepo,
+  deleteQuestion,
   getQuestionDetail as getQuestionDetailRepo,
   insertQuestion,
+  isQuestionUsed,
   listQuestions as listQuestionsRepo,
   updateQuestion as updateQuestionRepo,
 } from "@/application/infra/db/questionRepo";
@@ -90,6 +92,16 @@ export async function getQuestionDetail(questionId: string) {
 
 export async function archiveQuestion(questionId: string) {
   await archiveQuestionRepo(questionId);
+}
+
+export async function deleteQuestionWithRules(questionId: string) {
+  const used = await isQuestionUsed(questionId);
+  if (used) {
+    await archiveQuestionRepo(questionId);
+    return { status: "archived" as const };
+  }
+  await deleteQuestion(questionId);
+  return { status: "deleted" as const };
 }
 
 function validateQuestionPayload(input: CreateQuestionInput, partial = false) {

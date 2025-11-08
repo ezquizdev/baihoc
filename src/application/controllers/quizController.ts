@@ -8,6 +8,7 @@ import type {
 import {
   archiveQuiz,
   createQuiz,
+  deleteQuizWithRules,
   getPublishedQuizDetail,
   getQuizDetailForStaff,
   listCatalogQuizzes,
@@ -84,6 +85,10 @@ export async function controllerArchiveQuiz(quizId: string) {
   return archiveQuiz(quizId);
 }
 
+export async function controllerDeleteQuiz(quizId: string) {
+  return deleteQuizWithRules(quizId);
+}
+
 export async function controllerListCatalog(
   params: {
     subjectId?: string;
@@ -93,6 +98,8 @@ export async function controllerListCatalog(
     search?: string;
     limit?: number;
     offset?: number;
+    minQuestions?: number;
+    maxQuestions?: number;
   } = {},
 ): Promise<QuizListItem[]> {
   return listCatalogQuizzes(params);

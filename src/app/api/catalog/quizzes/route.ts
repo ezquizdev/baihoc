@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
   const topicIds = topicIdsParam
     ? topicIdsParam.split(",").filter(Boolean)
     : undefined;
+  const minQuestions = searchParams.get("minQuestions");
+  const maxQuestions = searchParams.get("maxQuestions");
 
   try {
     const items = await controllerListCatalog({
@@ -33,6 +35,8 @@ export async function GET(request: NextRequest) {
       search: searchParams.get("search") ?? undefined,
       limit: Number.isFinite(limit) ? limit : 20,
       offset: Number.isFinite(offset) ? offset : 0,
+      minQuestions: minQuestions ? Number(minQuestions) : undefined,
+      maxQuestions: maxQuestions ? Number(maxQuestions) : undefined,
     });
     return NextResponse.json({ items });
   } catch (error) {
