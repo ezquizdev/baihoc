@@ -1,6 +1,8 @@
-export type DifficultyLevel = "easy" | "medium" | "hard" | "mixed";
-export type QuizVisibility = "free" | "premium";
-export type QuizStatus = "draft" | "published" | "archived";
+import type {
+  DifficultyLevel,
+  QuizStatus,
+  QuizVisibility,
+} from "@/application/models/enums";
 
 export type Quiz = {
   id: string;
