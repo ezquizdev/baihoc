@@ -7,6 +7,7 @@ import {
   listQuestions as listQuestionsRepo,
   updateQuestion as updateQuestionRepo,
 } from "@/application/infra/db/questionRepo";
+import type { DifficultyLevel } from "@/application/models/enums";
 import type {
   QuestionOption,
   QuestionStatus,
@@ -16,7 +17,7 @@ import type {
 
 type CreateQuestionInput = {
   subjectId: string;
-  defaultDifficulty: "easy" | "medium" | "hard" | "mixed";
+  defaultDifficulty: DifficultyLevel;
   type: QuestionType;
   stem: string;
   explanation?: string | null;
@@ -98,7 +99,7 @@ export async function deleteQuestionWithRules(questionId: string) {
   const used = await isQuestionUsed(questionId);
   if (used) {
     await archiveQuestionRepo(questionId);
-    return { status: "archived" as const };
+    return { status: "archived" as const, code: "QUESTION_IN_USE" as const };
   }
   await deleteQuestion(questionId);
   return { status: "deleted" as const };
