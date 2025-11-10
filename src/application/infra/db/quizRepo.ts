@@ -5,6 +5,7 @@ import type {
   ChallengeSettings,
   DifficultyLevel,
   Quiz,
+  QuizCatalogItem,
   QuizDetail,
   QuizListItem,
   QuizQuestionLink,
@@ -50,6 +51,15 @@ export type QuizQuestionRow = {
   stem: string;
   type: QuestionType;
   default_score: number;
+};
+
+type QuizCatalogRow = QuizRow & {
+  subject_name: string;
+  subject_slug: string;
+  question_count: number | null;
+  attempt_count: number | null;
+  user_attempted: boolean | null;
+  total_count: number;
 };
 
 const searchVectorSql =
@@ -103,6 +113,15 @@ function mapQuestionRow(row: QuizQuestionRow) {
     position: row.position,
     score: row.score !== null ? Number(row.score) : null,
     required: row.required,
+  };
+}
+
+function mapCatalogRow(row: QuizCatalogRow): QuizCatalogItem {
+  return {
+    ...mapQuiz(row),
+    subjectName: row.subject_name,
+    subjectSlug: row.subject_slug,
+    attemptCount: Number(row.attempt_count ?? 0),
   };
 }
 
@@ -435,6 +454,110 @@ export async function listQuizzesForCatalog(params: {
     ...mapQuiz(row),
     topicIds: row.topic_ids,
   }));
+}
+
+export async function listCatalogPage(params: {
+  userId: string;
+  subjectIds?: string[];
+  difficulty?: DifficultyLevel[];
+  search?: string;
+  minQuestions?: number;
+  maxQuestions?: number;
+  minDurationSeconds?: number;
+  maxDurationSeconds?: number;
+  status?: "todo" | "done" | "all";
+  sort?: "newest" | "oldest";
+  limit?: number;
+  offset?: number;
+}): Promise<{ items: QuizCatalogItem[]; total: number }> {
+  const where: string[] = ["q.status = 'published'"];
+  const values: unknown[] = [params.userId];
+
+  const add = (sql: string, value: unknown) => {
+    values.push(value);
+    where.push(sql.replace("$idx", `$${values.length}`));
+  };
+
+  if (params.subjectIds?.length) {
+    add("q.subject_id = ANY($idx::uuid[])", params.subjectIds);
+  }
+  if (params.difficulty?.length) {
+    add("q.difficulty = ANY($idx::difficulty_level[])", params.difficulty);
+  }
+  if (params.search) {
+    add(
+      "(q.title ILIKE $idx OR q.description ILIKE $idx)",
+      `%${params.search}%`,
+    );
+  }
+  if (params.minQuestions !== undefined) {
+    add("COALESCE(qc.question_count, 0) >= $idx", params.minQuestions);
+  }
+  if (params.maxQuestions !== undefined) {
+    add("COALESCE(qc.question_count, 0) <= $idx", params.maxQuestions);
+  }
+  if (params.minDurationSeconds !== undefined) {
+    add(
+      "COALESCE(q.estimated_time_seconds, 0) >= $idx",
+      params.minDurationSeconds,
+    );
+  }
+  if (params.maxDurationSeconds !== undefined) {
+    add(
+      "COALESCE(q.estimated_time_seconds, 0) <= $idx",
+      params.maxDurationSeconds,
+    );
+  }
+  if (params.status === "done") {
+    where.push("ua.user_attempted IS TRUE");
+  }
+  if (params.status === "todo") {
+    where.push("ua.user_attempted IS NULL");
+  }
+
+  const limit = params.limit ?? 20;
+  const offset = params.offset ?? 0;
+  values.push(limit);
+  values.push(offset);
+
+  const orderBy =
+    params.sort === "oldest" ? "q.updated_at ASC" : "q.updated_at DESC";
+
+  const res = await query<QuizCatalogRow>(
+    `SELECT q.*,
+            s.name AS subject_name,
+            s.slug AS subject_slug,
+            qc.question_count,
+            ac.attempt_count,
+            ua.user_attempted,
+            COUNT(*) OVER() AS total_count
+     FROM quizzes q
+     JOIN subjects s ON s.id = q.subject_id
+     LEFT JOIN (
+       SELECT quiz_id, COUNT(*)::int AS question_count
+       FROM quiz_questions
+       GROUP BY quiz_id
+     ) qc ON qc.quiz_id = q.id
+     LEFT JOIN (
+       SELECT quiz_id, COUNT(*)::int AS attempt_count
+       FROM attempts
+       GROUP BY quiz_id
+     ) ac ON ac.quiz_id = q.id
+     LEFT JOIN (
+       SELECT quiz_id, true AS user_attempted
+       FROM attempts
+       WHERE user_id = $1
+       GROUP BY quiz_id
+     ) ua ON ua.quiz_id = q.id
+     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+     ORDER BY ${orderBy}
+     LIMIT $${values.length - 1} OFFSET $${values.length}`,
+    values,
+  );
+
+  const items = res.rows.map(mapCatalogRow);
+  const total = res.rows.length ? Number(res.rows[0].total_count) : 0;
+  return { items, total };
 }
 
 export async function listQuizzesForStaff(params: {

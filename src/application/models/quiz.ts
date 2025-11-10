@@ -60,3 +60,9 @@ export type QuizQuestionSummary = {
 export type QuizListItem = Quiz & {
   topicIds: string[];
 };
+
+export type QuizCatalogItem = Quiz & {
+  subjectName: string;
+  subjectSlug: string;
+  attemptCount: number;
+};
