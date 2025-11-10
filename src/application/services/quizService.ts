@@ -4,6 +4,7 @@ import {
   getQuizDetail as getQuizDetailRepo,
   insertQuiz,
   isQuizUsed,
+  listCatalogPage as listCatalogPageRepo,
   listQuizzesForCatalog,
   listQuizzesForStaff,
   replaceQuizQuestions,
@@ -13,6 +14,7 @@ import {
 import type {
   ChallengeSettings,
   DifficultyLevel,
+  QuizCatalogItem,
   QuizDetail,
   QuizListItem,
   QuizStatus,
@@ -115,6 +117,39 @@ export async function listCatalogQuizzes(params: {
   return listQuizzesForCatalog(params);
 }
 
+export async function listCatalogPage(
+  userId: string,
+  params: {
+    subjectIds?: string[];
+    difficulty?: DifficultyLevel[];
+    search?: string;
+    minQuestions?: number;
+    maxQuestions?: number;
+    minDurationMinutes?: number;
+    maxDurationMinutes?: number;
+    status?: "todo" | "done" | "all";
+    sort?: "newest" | "oldest";
+    limit?: number;
+    offset?: number;
+  },
+): Promise<{ items: QuizCatalogItem[]; total: number }> {
+  const search = params.search?.trim();
+  return listCatalogPageRepo({
+    userId,
+    subjectIds: params.subjectIds,
+    difficulty: params.difficulty,
+    search: search || undefined,
+    minQuestions: params.minQuestions,
+    maxQuestions: params.maxQuestions,
+    minDurationSeconds: toSeconds(params.minDurationMinutes),
+    maxDurationSeconds: toSeconds(params.maxDurationMinutes),
+    status: params.status,
+    sort: params.sort,
+    limit: params.limit,
+    offset: params.offset,
+  });
+}
+
 export async function listStaffQuizzes(params: {
   status?: QuizStatus;
   search?: string;
@@ -179,4 +214,10 @@ async function ensureQuestionsExist(questionIds: string[]) {
   if (missing.length) {
     throw new Error(`Questions not found: ${missing.join(", ")}`);
   }
+}
+
+function toSeconds(minutes?: number) {
+  if (minutes === undefined) return undefined;
+  if (!Number.isFinite(minutes)) return undefined;
+  return Math.max(0, Math.round(minutes * 60));
 }
