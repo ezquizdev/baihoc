@@ -41,6 +41,33 @@ export function parseCommaIds(searchParams: URLSearchParams, key: string) {
   return ids.length ? ids : undefined;
 }
 
+export function parseEnumArray<T extends string>(
+  searchParams: URLSearchParams,
+  key: string,
+  allowed: readonly T[],
+) {
+  const raw = searchParams.get(key);
+  if (!raw) return undefined;
+  const values = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter((value) => allowed.includes(value as T)) as T[];
+  return values.length ? values : undefined;
+}
+
+export function parseNumberRange(
+  searchParams: URLSearchParams,
+  minKey: string,
+  maxKey: string,
+) {
+  const min = parseFiniteNumber(searchParams.get(minKey));
+  const max = parseFiniteNumber(searchParams.get(maxKey));
+  if (min !== undefined && max !== undefined && min > max) {
+    return { min: max, max: min };
+  }
+  return { min, max };
+}
+
 export function parseDifficulty(searchParams: URLSearchParams) {
   return parseEnum<DifficultyLevel>(
     searchParams.get("difficulty"),
