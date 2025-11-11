@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Bell, MagnifyingGlass } from "phosphor-react";
-import type { MouseEvent, ReactNode } from "react";
+import type { FormEvent, MouseEvent, ReactNode } from "react";
 import styles from "./dashboard-shell.module.css";
 
 type NavItem = {
@@ -19,6 +19,12 @@ type DashboardShellProps = {
   userName?: string;
   navItems?: NavItem[];
   avatarUrl?: string | null;
+  searchValue?: string;
+  searchPlaceholder?: string;
+  searchName?: string;
+  searchDisabled?: boolean;
+  onSearchChange?: (value: string) => void;
+  onSearchSubmit?: (value: string) => void;
 };
 
 const defaultNav: NavItem[] = [
@@ -37,12 +43,27 @@ export function DashboardShell({
   userName,
   navItems = defaultNav,
   avatarUrl,
+  searchValue,
+  searchPlaceholder = "Tìm kiếm",
+  searchName = "q",
+  searchDisabled = false,
+  onSearchChange,
+  onSearchSubmit,
 }: DashboardShellProps) {
   const displayName = userName ?? userEmail.split("@")[0];
   const toggleId = "dashboard-nav-toggle";
   const handlePlaceholderClick = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
   };
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (!onSearchSubmit) return;
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const value = String(formData.get(searchName) ?? "");
+    onSearchSubmit(value);
+  };
+  const inputProps =
+    searchValue !== undefined ? { value: searchValue } : undefined;
 
   return (
     <div className={styles.shell}>
@@ -120,15 +141,26 @@ export function DashboardShell({
               </div>
             </label>
 
-            <form className={styles.search} aria-label="Tìm kiếm">
+            <form
+              className={styles.search}
+              aria-label="Tìm kiếm"
+              onSubmit={onSearchSubmit ? handleSearchSubmit : undefined}
+            >
               <div className={styles.searchIcon} aria-hidden="true">
                 <MagnifyingGlass size={18} weight="bold" />
               </div>
               <input
                 className={styles.searchInput}
-                placeholder="Tìm kiếm"
+                placeholder={searchPlaceholder}
                 type="search"
-                name="q"
+                name={searchName}
+                {...inputProps}
+                onChange={
+                  onSearchChange
+                    ? (event) => onSearchChange(event.target.value)
+                    : undefined
+                }
+                disabled={searchDisabled}
               />
             </form>
 
