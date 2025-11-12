@@ -9,9 +9,16 @@ type QuizGridProps = {
   isLoading: boolean;
   error: string | null;
   onRetry: () => void;
+  onSelect?: (quiz: QuizCatalogItem) => void;
 };
 
-export function QuizGrid({ items, isLoading, error, onRetry }: QuizGridProps) {
+export function QuizGrid({
+  items,
+  isLoading,
+  error,
+  onRetry,
+  onSelect,
+}: QuizGridProps) {
   if (isLoading) {
     return (
       <div className={styles.stateCard} role="status" aria-live="polite">
@@ -48,6 +55,7 @@ export function QuizGrid({ items, isLoading, error, onRetry }: QuizGridProps) {
           key={quiz.id}
           quiz={quiz}
           tone={index % 2 === 1 ? "alt" : undefined}
+          onSelect={onSelect}
         />
       ))}
     </div>
