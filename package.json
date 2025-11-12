@@ -9,6 +9,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "db:init": "node scripts/db/init.js",
+    "db:seed": "node scripts/db/seed.js",
     "test": "vitest",
     "test:email": "vitest run tests/email.test.ts"
   },
