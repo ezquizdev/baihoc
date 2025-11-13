@@ -14,6 +14,9 @@
 - Added the quiz quick-view modal layout and styling to match catalog v10.
 - Wired quiz cards to open the modal with current quiz data.
 
+### fix(ui): align filter dropdown labels
+- Adjusted dropdown label alignment to better match the v10 reference layout.
+
 ### chore(db): add seed script
 - Added a database seed script to populate quizzes, subjects, questions, attempts, and XP for catalog testing.
 - Added `db:seed` npm script for convenience.
