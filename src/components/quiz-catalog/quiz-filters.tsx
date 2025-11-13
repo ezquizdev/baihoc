@@ -108,7 +108,9 @@ export function QuizFilters({
 
       <div className={styles.filterRow} aria-label="Bộ lọc">
         <div
-          className={`${styles.dd} ${styles.ddWide}`}
+          className={`${styles.dd} ${styles.ddWide} ${
+            openDropdown === "sort" ? styles.ddOpen : ""
+          }`}
           data-dropdown-root
         >
           <button
@@ -147,7 +149,9 @@ export function QuizFilters({
         </div>
 
         <div
-          className={`${styles.dd} ${styles.ddWide}`}
+          className={`${styles.dd} ${styles.ddWide} ${
+            openDropdown === "subject" ? styles.ddOpen : ""
+          }`}
           data-dropdown-root
         >
           <button
@@ -172,15 +176,11 @@ export function QuizFilters({
                         onChange={() => onSubjectToggle(subject.id)}
                       />
                       <span
-                        className={`${styles.subjectChip} ${subjectToneClass(
+                        className={`${styles.subjectOption} ${subjectUnderlineClass(
                           subject.slug,
                           styles,
                         )}`}
                       >
-                        <span
-                          className={styles.subjectChipDot}
-                          aria-hidden="true"
-                        />
                         {subject.name}
                       </span>
                     </label>
@@ -191,7 +191,12 @@ export function QuizFilters({
           ) : null}
         </div>
 
-        <div className={styles.dd} data-dropdown-root>
+        <div
+          className={`${styles.dd} ${
+            openDropdown === "difficulty" ? styles.ddOpen : ""
+          }`}
+          data-dropdown-root
+        >
           <button
             type="button"
             className={styles.ddButton}
@@ -216,7 +221,12 @@ export function QuizFilters({
                           onChange={() => onDifficultyToggle(level)}
                         />
                       </label>
-                      <span className={styles.rateChip}>
+                      <span
+                        className={`${styles.rateChip} ${difficultyRateClass(
+                          level,
+                          styles,
+                        )}`}
+                      >
                         {label}
                         <span className={styles.rateStar} aria-hidden="true" />
                       </span>
@@ -229,7 +239,9 @@ export function QuizFilters({
         </div>
 
         <div
-          className={`${styles.dd} ${styles.ddSlider}`}
+          className={`${styles.dd} ${styles.ddSlider} ${
+            openDropdown === "range" ? styles.ddOpen : ""
+          }`}
           data-dropdown-root
         >
           <button
@@ -238,7 +250,10 @@ export function QuizFilters({
             aria-expanded={openDropdown === "range"}
             onClick={() => toggleDropdown("range")}
           >
-            <span className={styles.ddLabel}>Thời gian{"\n"}Số câu</span>
+            <span className={styles.ddLabel}>
+              <span>Thời gian</span>
+              <span>Số câu</span>
+            </span>
             <span className={styles.ddChevron} aria-hidden="true" />
           </button>
           {openDropdown === "range" ? (
@@ -333,11 +348,28 @@ function DoubleRange({
   );
 }
 
-function subjectToneClass(slug: string, moduleStyles: typeof styles) {
+function subjectUnderlineClass(slug: string, moduleStyles: typeof styles) {
   const normalized = slug.toLowerCase();
-  if (normalized.includes("math")) return moduleStyles.chipMath;
-  if (normalized.includes("sci")) return moduleStyles.chipSci;
-  if (normalized.includes("vi")) return moduleStyles.chipVi;
-  if (normalized.includes("en")) return moduleStyles.chipEn;
+  if (normalized.includes("math")) return moduleStyles.subjectUnderlineSky;
+  if (normalized.includes("sci")) return moduleStyles.subjectUnderlineBlue;
+  if (normalized.includes("vi")) return moduleStyles.subjectUnderlineRed;
+  if (normalized.includes("en")) return moduleStyles.subjectUnderlineYellow;
   return "";
+}
+
+function difficultyRateClass(
+  difficulty: DifficultyLevel,
+  moduleStyles: typeof styles,
+) {
+  switch (difficulty) {
+    case "easy":
+      return moduleStyles.rateEasy;
+    case "medium":
+      return moduleStyles.rateMedium;
+    case "hard":
+      return moduleStyles.rateHard;
+    case "mixed":
+    default:
+      return moduleStyles.rateMixed;
+  }
 }
