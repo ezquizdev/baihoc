@@ -60,6 +60,12 @@ type QuizCatalogRow = QuizRow & {
   attempt_count: number | null;
   user_attempted: boolean | null;
   total_count: number;
+  subject_breakdown: Array<{
+    subjectId: string;
+    name: string;
+    slug: string;
+    questionCount: number;
+  }> | null;
 };
 
 const searchVectorSql =
@@ -122,6 +128,7 @@ function mapCatalogRow(row: QuizCatalogRow): QuizCatalogItem {
     subjectName: row.subject_name,
     subjectSlug: row.subject_slug,
     attemptCount: Number(row.attempt_count ?? 0),
+    subjectBreakdown: row.subject_breakdown ?? [],
   };
 }
 
@@ -530,6 +537,7 @@ export async function listCatalogPage(params: {
             qc.question_count,
             ac.attempt_count,
             ua.user_attempted,
+            sb.subject_breakdown,
             COUNT(*) OVER() AS total_count
      FROM quizzes q
      JOIN subjects s ON s.id = q.subject_id
@@ -549,6 +557,25 @@ export async function listCatalogPage(params: {
        WHERE user_id = $1
        GROUP BY quiz_id
      ) ua ON ua.quiz_id = q.id
+     LEFT JOIN LATERAL (
+       SELECT json_agg(
+         json_build_object(
+           'subjectId', subj.id,
+           'name', subj.name,
+           'slug', subj.slug,
+           'questionCount', qb.question_count
+         )
+         ORDER BY subj.name
+       ) AS subject_breakdown
+       FROM (
+         SELECT qn.subject_id, COUNT(*)::int AS question_count
+         FROM quiz_questions qq
+         JOIN questions qn ON qn.id = qq.question_id
+         WHERE qq.quiz_id = q.id
+         GROUP BY qn.subject_id
+       ) qb
+       JOIN subjects subj ON subj.id = qb.subject_id
+     ) sb ON true
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
      ORDER BY ${orderBy}
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
