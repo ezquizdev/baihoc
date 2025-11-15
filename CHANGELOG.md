@@ -29,6 +29,10 @@
 - Added a database seed script to populate quizzes, subjects, questions, attempts, and XP for catalog testing.
 - Added `db:seed` npm script for convenience.
 
+### chore(db): speed up seed script
+- Limited seed subjects to vi/en/sci/math and added multi-subject quiz coverage.
+- Batched inserts and removed per-row hashing to make seeding faster.
+
 ### feat(ui): build quiz catalog page
 - Added the `/quizzes` page with dashboard shell integration, filters, quiz grid, leaderboard, and pagination states.
 - Wired search input to catalog filters and added responsive catalog layout.
