@@ -3,7 +3,6 @@ export type UserTier = "free" | "paid";
 export type UserStatus =
   | "pending_verification"
   | "active"
-  | "suspended"
   | "deactivated";
 
 export type User = {

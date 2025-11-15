@@ -231,9 +231,6 @@ function enforceLoginStatus(status: string) {
   if (status === "pending_verification") {
     throw new Error("Email chưa được xác minh");
   }
-  if (status === "suspended") {
-    throw new Error("Tài khoản đã bị tạm khóa. Vui lòng liên hệ hỗ trợ.");
-  }
   if (status === "deactivated") {
     throw new Error("Tài khoản đã bị vô hiệu hóa.");
   }
