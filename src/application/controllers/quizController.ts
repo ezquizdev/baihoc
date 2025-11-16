@@ -23,7 +23,6 @@ import {
 export async function controllerCreateQuiz(input: {
   title: string;
   description?: string | null;
-  subjectId: string;
   difficulty: DifficultyLevel;
   visibility: QuizVisibility;
   isChallenge?: boolean;
@@ -31,7 +30,6 @@ export async function controllerCreateQuiz(input: {
   thumbnailUrl?: string | null;
   featuredRank?: number | null;
   createdBy: string;
-  topicIds?: string[];
   challenge?: {
     startAt: string;
     endAt: string;
@@ -47,7 +45,6 @@ export async function controllerUpdateQuiz(
   input: {
     title?: string;
     description?: string | null;
-    subjectId?: string;
     difficulty?: DifficultyLevel;
     visibility?: QuizVisibility;
     isChallenge?: boolean;
@@ -55,7 +52,6 @@ export async function controllerUpdateQuiz(
     thumbnailUrl?: string | null;
     featuredRank?: number | null;
     status?: QuizStatus;
-    topicIds?: string[];
     challenge?: {
       startAt: string;
       endAt: string;

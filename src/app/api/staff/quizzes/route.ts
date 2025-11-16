@@ -6,22 +6,17 @@ import {
   controllerListStaffQuizzes,
 } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import {
-  DifficultyValues,
-  QuizVisibilityValues,
-} from "@/application/models/enums";
+import { QuizVisibilityValues } from "@/application/models/enums";
 
 const quizPayloadSchema = z.object({
   title: z.string().min(1),
   description: z.string().nullable().optional(),
-  subjectId: z.string().uuid(),
-  difficulty: z.enum(DifficultyValues),
+  difficulty: z.number().int().min(1).max(5),
   visibility: z.enum(QuizVisibilityValues),
   isChallenge: z.boolean().optional(),
   estimatedTimeSeconds: z.number().int().positive().nullable().optional(),
   thumbnailUrl: z.string().url().nullable().optional(),
   featuredRank: z.number().int().nullable().optional(),
-  topicIds: z.array(z.string().uuid()).optional(),
   challenge: z
     .object({
       startAt: z.string(),

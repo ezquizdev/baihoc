@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
-import type { DifficultyLevel } from "@/application/models/enums";
+import type { DifficultyLabel } from "@/application/models/enums";
 import type { LeaderboardEntry } from "@/application/models/leaderboard";
 import type { QuizCatalogItem } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
@@ -40,7 +40,7 @@ export function QuizCatalogScreen({
   const [sort, setSort] = useState<SortOrder>("newest");
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<
-    DifficultyLevel[]
+    DifficultyLabel[]
   >([]);
   const [minQuestions, setMinQuestions] = useState(RANGE_MIN);
   const [maxQuestions, setMaxQuestions] = useState(RANGE_MAX);
@@ -117,8 +117,9 @@ export function QuizCatalogScreen({
         if (selectedSubjectIds.length) {
           params.set("subjectIds", selectedSubjectIds.join(","));
         }
-        if (selectedDifficulties.length) {
-          params.set("difficulty", selectedDifficulties.join(","));
+        const difficultyLevels = expandDifficultyLevels(selectedDifficulties);
+        if (difficultyLevels.length) {
+          params.set("difficultyLevels", difficultyLevels.join(","));
         }
         if (minQuestions !== RANGE_MIN) {
           params.set("minQuestions", String(minQuestions));
@@ -174,7 +175,7 @@ export function QuizCatalogScreen({
     setPage(1);
   };
 
-  const toggleDifficulty = (difficulty: DifficultyLevel) => {
+  const toggleDifficulty = (difficulty: DifficultyLabel) => {
     setSelectedDifficulties((prev) => {
       const exists = prev.includes(difficulty);
       const next = exists ? prev.filter((id) => id !== difficulty) : [...prev, difficulty];
@@ -268,4 +269,20 @@ function useDebouncedValue<T>(value: T, delay: number) {
     return () => clearTimeout(id);
   }, [value, delay]);
   return debounced;
+}
+
+function expandDifficultyLevels(labels: DifficultyLabel[]) {
+  const levels = new Set<number>();
+  labels.forEach((label) => {
+    if (label === "easy") {
+      levels.add(1);
+      levels.add(2);
+    } else if (label === "medium") {
+      levels.add(3);
+      levels.add(4);
+    } else if (label === "hard") {
+      levels.add(5);
+    }
+  });
+  return Array.from(levels);
 }

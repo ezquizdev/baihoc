@@ -2,7 +2,7 @@
 
 import { FunnelSimple } from "phosphor-react";
 import { useEffect, useState } from "react";
-import type { DifficultyLevel } from "@/application/models/enums";
+import type { DifficultyLabel } from "@/application/models/enums";
 import type { Subject } from "@/application/models/subject";
 import styles from "./quiz-catalog.module.css";
 
@@ -17,8 +17,8 @@ type QuizFiltersProps = {
   subjects: Subject[];
   selectedSubjectIds: string[];
   onSubjectToggle: (subjectId: string) => void;
-  selectedDifficulties: DifficultyLevel[];
-  onDifficultyToggle: (difficulty: DifficultyLevel) => void;
+  selectedDifficulties: DifficultyLabel[];
+  onDifficultyToggle: (difficulty: DifficultyLabel) => void;
   minQuestions: number;
   maxQuestions: number;
   onQuestionRangeChange: (min: number, max: number) => void;
@@ -27,11 +27,10 @@ type QuizFiltersProps = {
   onDurationRangeChange: (min: number, max: number) => void;
 };
 
-const difficultyLabels: Record<DifficultyLevel, string> = {
+const difficultyLabels: Record<DifficultyLabel, string> = {
   easy: "Dễ",
   medium: "Trung bình",
   hard: "Khó",
-  mixed: "Tổng hợp",
 };
 
 export function QuizFilters({
@@ -230,7 +229,7 @@ export function QuizFilters({
             <div className={styles.ddPanel}>
               <div className={styles.ddList} aria-label="Chọn độ khó">
                 {Object.entries(difficultyLabels).map(([value, label]) => {
-                  const level = value as DifficultyLevel;
+                  const level = value as DifficultyLabel;
                   const selected = selectedDifficulties.includes(level);
                   return (
                     <div key={value} className={styles.ddItem}>
@@ -384,7 +383,7 @@ function subjectUnderlineClass(slug: string, moduleStyles: typeof styles) {
 }
 
 function difficultyRateClass(
-  difficulty: DifficultyLevel,
+  difficulty: DifficultyLabel,
   moduleStyles: typeof styles,
 ) {
   switch (difficulty) {
@@ -393,9 +392,7 @@ function difficultyRateClass(
     case "medium":
       return moduleStyles.rateMedium;
     case "hard":
-      return moduleStyles.rateHard;
-    case "mixed":
     default:
-      return moduleStyles.rateMixed;
+      return moduleStyles.rateHard;
   }
 }

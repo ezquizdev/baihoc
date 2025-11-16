@@ -6,25 +6,19 @@ import {
   controllerUpdateQuiz,
 } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import {
-  DifficultyValues,
-  QuizStatusValues,
-  QuizVisibilityValues,
-} from "@/application/models/enums";
+import { QuizStatusValues, QuizVisibilityValues } from "@/application/models/enums";
 import { isServiceError } from "@/application/services/errors";
 
 const updateSchema = z.object({
   title: z.string().optional(),
   description: z.string().nullable().optional(),
-  subjectId: z.string().uuid().optional(),
-  difficulty: z.enum(DifficultyValues).optional(),
+  difficulty: z.number().int().min(1).max(5).optional(),
   visibility: z.enum(QuizVisibilityValues).optional(),
   isChallenge: z.boolean().optional(),
   estimatedTimeSeconds: z.number().int().positive().nullable().optional(),
   thumbnailUrl: z.string().url().nullable().optional(),
   featuredRank: z.number().int().nullable().optional(),
   status: z.enum(QuizStatusValues).optional(),
-  topicIds: z.array(z.string().uuid()).optional(),
   challenge: z
     .union([
       z

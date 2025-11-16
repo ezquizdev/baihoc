@@ -24,7 +24,7 @@ export function QuizCard({
   const ctaLabel = quiz.isChallenge ? "Thử thách ngay" : "Làm ngay";
   const subjectBreakdown = quiz.subjectBreakdown ?? [];
   const isMultiSubject = subjectBreakdown.length > 1;
-  const showDifficulty = quiz.difficulty !== "mixed";
+  const showDifficulty = Number.isFinite(quiz.difficulty);
   const subjectBadge = isMultiSubject
     ? { name: "Tổng hợp", slug: "mixed" }
     : { name: quiz.subjectName, slug: quiz.subjectSlug };

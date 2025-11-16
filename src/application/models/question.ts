@@ -13,11 +13,14 @@ export type Question = {
   explanation: string | null;
   status: QuestionStatus;
   tags: string[];
+  topicIds: string[];
   defaultScore: number;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  passageId?: string | null;
+  passagePosition?: number | null;
 };
 
 export type QuestionOption = {

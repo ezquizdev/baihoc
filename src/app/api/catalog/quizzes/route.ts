@@ -1,13 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import {
   parseCommaIds,
-  parseEnumArray,
+  parseNumberArray,
   parseNumberRange,
   parsePagination,
 } from "@/app/api/_utils/query";
 import { controllerListCatalogPage } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import { DifficultyValues } from "@/application/models/enums";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuthenticatedApi(request, {
@@ -36,7 +35,10 @@ export async function GET(request: NextRequest) {
   try {
     const { items, total } = await controllerListCatalogPage(auth.sub, {
       subjectIds: parseCommaIds(searchParams, "subjectIds"),
-      difficulty: parseEnumArray(searchParams, "difficulty", DifficultyValues),
+      difficulty: parseNumberArray(searchParams, "difficultyLevels", {
+        min: 1,
+        max: 5,
+      }),
       search:
         searchParams.get("search") ?? searchParams.get("q") ?? undefined,
       status,

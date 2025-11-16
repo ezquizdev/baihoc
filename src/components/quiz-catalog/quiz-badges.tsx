@@ -9,13 +9,23 @@ type DifficultyConfig = {
   className: string;
 };
 
-const difficultyMap: Partial<
-  Record<QuizCatalogItem["difficulty"], DifficultyConfig>
-> = {
-  easy: { label: "Dễ", stars: 2, className: styles.difficultyEasy },
-  medium: { label: "Trung bình", stars: 3, className: styles.difficultyMedium },
-  hard: { label: "Khó", stars: 5, className: styles.difficultyHard },
-};
+function difficultyConfig(
+  level: QuizCatalogItem["difficulty"],
+): DifficultyConfig | null {
+  if (!Number.isFinite(level)) return null;
+  const safeLevel = Math.min(Math.max(Math.round(level), 1), 5);
+  if (safeLevel <= 2) {
+    return { label: "Dễ", stars: safeLevel, className: styles.difficultyEasy };
+  }
+  if (safeLevel <= 4) {
+    return {
+      label: "Trung bình",
+      stars: safeLevel,
+      className: styles.difficultyMedium,
+    };
+  }
+  return { label: "Khó", stars: safeLevel, className: styles.difficultyHard };
+}
 
 export function DifficultyBadge({
   difficulty,
@@ -24,7 +34,7 @@ export function DifficultyBadge({
   difficulty: QuizCatalogItem["difficulty"];
   className?: string;
 }) {
-  const config = difficultyMap[difficulty];
+  const config = difficultyConfig(difficulty);
   if (!config) return null;
   return (
     <div

@@ -8,7 +8,6 @@ export type Quiz = {
   id: string;
   title: string;
   description: string | null;
-  subjectId: string;
   difficulty: DifficultyLevel;
   visibility: QuizVisibility;
   status: QuizStatus;
@@ -16,8 +15,6 @@ export type Quiz = {
   estimatedTimeSeconds: number | null;
   thumbnailUrl: string | null;
   featuredRank: number | null;
-  ratingCount: number;
-  ratingAvg: number;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -43,6 +40,7 @@ export type QuizQuestionLink = {
 
 export type QuizDetail = Quiz & {
   topicIds: string[];
+  subjectIds: string[];
   questions: QuizQuestionSummary[];
   challenge?: ChallengeSettings | null;
 };
@@ -59,12 +57,14 @@ export type QuizQuestionSummary = {
 
 export type QuizListItem = Quiz & {
   topicIds: string[];
+  subjectIds: string[];
 };
 
 export type QuizCatalogItem = Quiz & {
   subjectName: string;
   subjectSlug: string;
   attemptCount: number;
+  topicIds?: string[];
   subjectBreakdown?: QuizSubjectBreakdown[];
 };
 
