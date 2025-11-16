@@ -43,6 +43,9 @@
 ### docs: update quiz model notes
 - Updated WIP notes to reflect derived subject/topic rules, numeric difficulty, and passage grouping.
 
+### fix(api): parse numeric difficulty
+- Catalog API now parses numeric `difficultyLevels` params and forwards validated values.
+
 ### feat(ui): build quiz catalog page
 - Added the `/quizzes` page with dashboard shell integration, filters, quiz grid, leaderboard, and pagination states.
 - Wired search input to catalog filters and added responsive catalog layout.
