@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-12-24
+
+### feat(api): add quiz subject breakdown endpoint
+- Added quiz subject breakdown aggregation in repo/service/controller layers.
+- Exposed `/api/catalog/quizzes/[quizId]/subjects` for per-quiz subject counts.
+
 ## 2025-12-20
 
 ### feat(ui): refresh quiz card layout

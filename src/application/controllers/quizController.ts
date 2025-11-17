@@ -12,6 +12,7 @@ import {
   deleteQuizWithRules,
   getPublishedQuizDetail,
   getQuizDetailForStaff,
+  getQuizSubjectBreakdown,
   listCatalogQuizzes,
   listCatalogPage,
   listStaffQuizzes,
@@ -141,4 +142,8 @@ export async function controllerGetStaffQuizDetail(
 
 export async function controllerGetPublishedQuiz(quizId: string) {
   return getPublishedQuizDetail(quizId);
+}
+
+export async function controllerGetQuizSubjectBreakdown(quizId: string) {
+  return getQuizSubjectBreakdown(quizId);
 }

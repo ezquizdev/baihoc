@@ -10,6 +10,7 @@ import type {
   QuizListItem,
   QuizQuestionLink,
   QuizStatus,
+  QuizSubjectBreakdown,
   QuizVisibility,
 } from "@/application/models/quiz";
 
@@ -380,6 +381,35 @@ export async function getQuizDetail(
     questions: questionsRes.rows.map(mapQuestionRow),
     challenge: mapChallenge(challengeRes.rows[0]),
   };
+}
+
+export async function listQuizSubjectBreakdown(
+  quizId: string,
+): Promise<QuizSubjectBreakdown[]> {
+  const res = await query<{
+    subject_id: string;
+    name: string;
+    slug: string;
+    question_count: number;
+  }>(
+    `SELECT subj.id AS subject_id,
+            subj.name,
+            subj.slug,
+            COUNT(*)::int AS question_count
+     FROM quiz_questions qq
+     JOIN questions qn ON qn.id = qq.question_id
+     JOIN subjects subj ON subj.id = qn.subject_id
+     WHERE qq.quiz_id = $1
+     GROUP BY subj.id, subj.name, subj.slug
+     ORDER BY subj.name`,
+    [quizId],
+  );
+  return res.rows.map((row) => ({
+    subjectId: row.subject_id,
+    name: row.name,
+    slug: row.slug,
+    questionCount: Number(row.question_count ?? 0),
+  }));
 }
 
 export async function listQuizzesForCatalog(params: {

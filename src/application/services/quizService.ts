@@ -5,6 +5,7 @@ import {
   insertQuiz,
   isQuizUsed,
   listCatalogPage as listCatalogPageRepo,
+  listQuizSubjectBreakdown as listQuizSubjectBreakdownRepo,
   listQuizzesForCatalog,
   listQuizzesForStaff,
   replaceQuizQuestions,
@@ -173,6 +174,10 @@ export async function getPublishedQuizDetail(
     throw new Error("Quiz not found");
   }
   return quiz;
+}
+
+export async function getQuizSubjectBreakdown(quizId: string) {
+  return listQuizSubjectBreakdownRepo(quizId);
 }
 
 function validateQuizInput(input: CreateQuizInput, partial = false) {
