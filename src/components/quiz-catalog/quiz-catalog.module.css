@@ -87,7 +87,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .tabs {
@@ -98,6 +98,7 @@
   padding: 4px;
   gap: 4px;
   flex: 0 0 auto;
+  width: fit-content;
 }
 
 .tab {
@@ -120,18 +121,24 @@
 
 .filterRow {
   display: flex;
-  gap: 10px;
+  gap: var(--filter-gap);
   flex-wrap: nowrap;
   align-items: flex-start;
   justify-content: flex-end;
   flex: 1 1 auto;
-  min-width: 260px;
+  --filter-gap: 10px;
+  --filter-width: 190px;
+  --filters-min: calc(
+    (4 * var(--filter-width)) + (3 * var(--filter-gap))
+  );
+  min-width: var(--filters-min);
+  margin-left: auto;
 }
 
 .dd {
   position: relative;
   flex: 0 0 auto;
-  width: 170px;
+  width: min(100%, var(--filter-width));
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -140,11 +147,11 @@
 }
 
 .ddWide {
-  width: 220px;
+  width: min(100%, var(--filter-width));
 }
 
 .ddSlider {
-  width: 240px;
+  width: min(100%, var(--filter-width));
 }
 
 .ddOpen {
@@ -171,6 +178,7 @@
   border: 0;
   background: transparent;
   padding: 12px 14px;
+  min-height: 48px;
   font-size: 15px;
   font-weight: 900;
   color: #0e1b2b;
@@ -256,7 +264,7 @@
 }
 
 .subjectOption {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 950;
   line-height: 1.05;
   padding-right: 6px;
@@ -648,7 +656,7 @@
   border: 1px solid rgba(219, 231, 255, 0.9);
   background: rgba(255, 255, 255, 0.75);
   color: #0e1b2b;
-  max-width: 140px;
+  max-width: 100px;
   white-space: normal;
   line-height: 1.15;
 }
@@ -664,7 +672,9 @@
 }
 
 .subjectText {
-  display: inline-block;
+  display: block;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .subjectMixed {
@@ -922,12 +932,16 @@
 }
 
 @media (max-width: 1100px) {
-  .filters {
-    flex-wrap: wrap;
-  }
-
   .filterRow {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, var(--filter-width));
+    justify-content: center;
+    justify-items: center;
+    gap: 12px;
+    min-width: 0;
+    margin-left: 0;
+    flex-basis: 100%;
+    width: 100%;
   }
 }
 
@@ -942,28 +956,11 @@
     grid-template-columns: 1fr;
   }
 
-  .dd,
-  .ddWide,
-  .ddSlider {
-    width: 100%;
-    max-width: 360px;
-  }
-
-  .filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   .tabs {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .filterRow {
-    justify-content: stretch;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: auto;
+    max-width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .leaderboard {
@@ -974,13 +971,13 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 560px) {
   .quizGrid {
     grid-template-columns: 1fr;
   }
 
   .filterRow {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, var(--filter-width));
   }
 
   .hero {

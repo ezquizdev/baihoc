@@ -6,6 +6,18 @@
 - Added quiz subject breakdown aggregation in repo/service/controller layers.
 - Exposed `/api/catalog/quizzes/[quizId]/subjects` for per-quiz subject counts.
 
+### fix(ui): adjust catalog filter wrap and badges
+- Forced filter row to wrap below tabs earlier to prevent overlap at tight widths.
+- Reduced subject dropdown option size and allowed subject badges to wrap to two lines.
+- Extended the wrap breakpoint so filters no longer overlap the tabs on wide screens.
+
+### fix(ui): align quiz catalog filter groups
+- Kept status tabs left-aligned without stretching full width.
+- Right-aligned filter controls and enabled clean wrapping with 1-per-row on small screens.
+- Switched filter wrapping to explicit 1-row/2-row/2x2/1-column layouts to avoid 3+1 rows.
+- Standardized filter dropdown widths/heights and moved wrap breakpoint earlier to prevent overlap.
+- Let flex wrapping + min-width drive row breaks and reduced breakpoint usage for filter layout.
+
 ## 2025-12-20
 
 ### feat(ui): refresh quiz card layout
