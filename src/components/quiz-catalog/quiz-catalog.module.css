@@ -605,9 +605,9 @@
 }
 
 .difficultyBadge {
-  width: 54px;
-  height: 54px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -630,15 +630,17 @@
 
 .difficultyEasy {
   background: #2f66ff;
+  color: #ffd400;
 }
 
 .difficultyMedium {
-  background: #ffb703;
-  color: #1f2a3a;
+  background: #ffd400;
+  color: #2f66ff;
 }
 
 .difficultyHard {
-  background: #d14a3a;
+  background: #e53935;
+  color: #ffd400;
 }
 
 .difficultyMixed {
@@ -650,13 +652,13 @@
   align-items: center;
   gap: 8px;
   padding: 7px 10px;
-  border-radius: 999px;
+  border-radius: 10px;
   font-size: 12px;
   font-weight: 800;
-  border: 1px solid rgba(219, 231, 255, 0.9);
-  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid transparent;
+  background: #ffffff;
   color: #0e1b2b;
-  max-width: 100px;
+  max-width: 110px;
   white-space: normal;
   line-height: 1.15;
 }
@@ -665,7 +667,7 @@
   width: 12px;
   height: 12px;
   border-radius: 4px;
-  background: #d7e3ff;
+  background: currentColor;
   flex: 0 0 auto;
   position: relative;
   overflow: hidden;
@@ -678,18 +680,20 @@
 }
 
 .subjectMixed {
-  background: rgba(30, 108, 255, 0.12);
-  border-color: rgba(30, 108, 255, 0.24);
+  background: #0e1b2b;
+  border-color: #0e1b2b;
+  color: #ffd400;
 }
 
 .subjectMixed .subjectChip {
-  background: #1e6cff;
+  background: #ffd400;
   border-radius: 999px;
 }
 
 .subjectEn {
-  background: rgba(255, 196, 0, 0.7);
-  border-color: rgba(255, 196, 0, 0.4);
+  background: #ffd400;
+  border-color: rgba(255, 212, 0, 0.7);
+  color: #2f66ff;
 }
 
 .subjectEn .subjectChip {
@@ -698,29 +702,49 @@
 }
 
 .subjectMath .subjectChip {
-  background: #d14a3a;
+  background: #e53935;
   border-radius: 3px;
 }
 
 .subjectSci {
-  background: rgba(47, 102, 255, 0.16);
-  border-color: rgba(47, 102, 255, 0.25);
+  background: #2f66ff;
+  border-color: rgba(47, 102, 255, 0.65);
+  color: #ffd400;
 }
 
 .subjectSci .subjectChip {
-  background: #2f66ff;
+  background: #ffd400;
   clip-path: polygon(50% 0, 0 100%, 100% 100%);
   border-radius: 0;
 }
 
 .subjectVi {
-  background: rgba(255, 255, 255, 0.75);
-  border-color: rgba(219, 231, 255, 0.9);
+  background: #e53935;
+  border-color: rgba(229, 57, 53, 0.7);
+  color: #ffd400;
 }
 
 .subjectVi .subjectChip {
-  background: #d14a3a;
-  border-radius: 999px;
+  background: #ffd400;
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  border-radius: 0;
+}
+
+.subjectMath {
+  background: #ffffff;
+  border-color: rgba(229, 57, 53, 0.35);
+  color: #e53935;
 }
 
 .quizCta {

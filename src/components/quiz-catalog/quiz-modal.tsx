@@ -159,6 +159,7 @@ export function QuizModal({ quiz, onClose }: QuizModalProps) {
 
 function topicToneClass(slug: string, moduleStyles: typeof styles) {
   const normalized = slug.toLowerCase();
+  if (normalized.includes("mixed")) return moduleStyles.topicMixed;
   if (normalized.includes("vi")) return moduleStyles.topicVi;
   if (normalized.includes("en")) return moduleStyles.topicEn;
   if (normalized.includes("math")) return moduleStyles.topicMath;
