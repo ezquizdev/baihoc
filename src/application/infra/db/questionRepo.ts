@@ -179,7 +179,7 @@ export async function insertQuestion(input: {
       ...questionRow,
       topic_ids: input.topicIds ?? [],
       passage_id: passageId,
-      passage_position: passageId ? input.passagePosition ?? 1 : null,
+      passage_position: passageId ? (input.passagePosition ?? 1) : null,
     };
 
     if (input.options?.length) {
@@ -371,8 +371,7 @@ export async function listQuestions(params: {
   };
 
   if (params.subjectId) add("subject_id = $idx", params.subjectId);
-  if (params.difficulty)
-    add("default_difficulty = $idx", params.difficulty);
+  if (params.difficulty) add("default_difficulty = $idx", params.difficulty);
   if (params.status) add("status = $idx::question_status", params.status);
   if (params.search) {
     add("(stem ILIKE $idx OR explanation ILIKE $idx)", `%${params.search}%`);

@@ -4,6 +4,8 @@ import type {
   QuestionType,
 } from "@/application/models/enums";
 
+export type { QuestionStatus, QuestionType } from "@/application/models/enums";
+
 export type Question = {
   id: string;
   subjectId: string;

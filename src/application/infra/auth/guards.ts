@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { getSession, type SessionPayload } from "./session";
 
@@ -36,7 +36,7 @@ export async function requireAuthenticatedPage(
 ): Promise<SessionPayload> {
   const session = await getSession();
   if (!session) {
-    redirect(loginRedirectUrl(options.next));
+    redirect(loginRedirectUrl(options.next) as Parameters<typeof redirect>[0]);
   }
   if (!options.allowIncompleteProfile && !session.profileCompleted) {
     redirect("/auth/profile-complete");
@@ -52,7 +52,7 @@ export async function requireAuthenticatedPage(
  * Returns JSON 401/403 on failure (no redirects for APIs).
  */
 export async function requireAuthenticatedApi(
-  _req: NextRequest,
+  _req: Request,
   options: ApiAuthOptions = {},
 ): Promise<ApiGuardResult> {
   const session = await getSession();

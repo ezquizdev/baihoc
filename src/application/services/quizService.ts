@@ -5,7 +5,6 @@ import {
   insertQuiz,
   isQuizUsed,
   listCatalogPage as listCatalogPageRepo,
-  listQuizSubjectBreakdown as listQuizSubjectBreakdownRepo,
   listQuizzesForCatalog,
   listQuizzesForStaff,
   replaceQuizQuestions,
@@ -13,8 +12,11 @@ import {
   updateQuizStatus,
 } from "@/application/infra/db/quizRepo";
 import type {
-  ChallengeSettings,
+  DifficultyLabel,
   DifficultyLevel,
+} from "@/application/models/enums";
+import type {
+  ChallengeSettings,
   QuizCatalogItem,
   QuizDetail,
   QuizListItem,
@@ -22,6 +24,7 @@ import type {
   QuizVisibility,
 } from "@/application/models/quiz";
 import { ServiceError } from "@/application/services/errors";
+import { mapDifficultyLabelsToLevels } from "@/lib/difficulty";
 
 type CreateQuizInput = {
   title: string;
@@ -33,7 +36,7 @@ type CreateQuizInput = {
   thumbnailUrl?: string | null;
   featuredRank?: number | null;
   createdBy: string;
-  challenge?: Partial<ChallengeSettings>;
+  challenge?: Partial<ChallengeSettings> | null;
 };
 
 type QuestionLinkInput = {
@@ -45,7 +48,7 @@ type QuestionLinkInput = {
 
 export async function createQuiz(input: CreateQuizInput) {
   validateQuizInput(input);
-  return insertQuiz(input);
+  return insertQuiz({ ...input, challenge: input.challenge ?? undefined });
 }
 
 export async function updateQuizMeta(
@@ -120,7 +123,7 @@ export async function listCatalogPage(
   userId: string,
   params: {
     subjectIds?: string[];
-    difficulty?: DifficultyLevel[];
+    difficulty?: DifficultyLabel[];
     search?: string;
     minQuestions?: number;
     maxQuestions?: number;
@@ -133,10 +136,11 @@ export async function listCatalogPage(
   },
 ): Promise<{ items: QuizCatalogItem[]; total: number }> {
   const search = params.search?.trim();
+  const difficultyLevels = mapDifficultyLabelsToLevels(params.difficulty);
   return listCatalogPageRepo({
     userId,
     subjectIds: params.subjectIds,
-    difficulty: params.difficulty,
+    difficulty: difficultyLevels,
     search: search || undefined,
     minQuestions: params.minQuestions,
     maxQuestions: params.maxQuestions,
@@ -174,10 +178,6 @@ export async function getPublishedQuizDetail(
     throw new Error("Quiz not found");
   }
   return quiz;
-}
-
-export async function getQuizSubjectBreakdown(quizId: string) {
-  return listQuizSubjectBreakdownRepo(quizId);
 }
 
 function validateQuizInput(input: CreateQuizInput, partial = false) {

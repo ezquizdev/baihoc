@@ -13,7 +13,7 @@ import { fileToDataUrl } from "@/lib/fileHelpers";
 
 type Props = {
   userId: string;
-  initialProfile: Partial<ProfileValues>;
+  initialProfile: Partial<ProfileValues> & { avatarUrl?: string | null };
   errorMessage?: string | null;
 };
 

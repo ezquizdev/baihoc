@@ -6,7 +6,11 @@ import {
   controllerUpdateQuiz,
 } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import { QuizStatusValues, QuizVisibilityValues } from "@/application/models/enums";
+import {
+  type DifficultyLevel,
+  QuizStatusValues,
+  QuizVisibilityValues,
+} from "@/application/models/enums";
 import { isServiceError } from "@/application/services/errors";
 
 const updateSchema = z.object({
@@ -36,11 +40,15 @@ const updateSchema = z.object({
 
 type Params = { quizId: string };
 
-export async function GET(request: NextRequest, context: { params: Params }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<Params> },
+) {
   const auth = await requireAuthenticatedApi(request, { role: "staff" });
   if (auth instanceof NextResponse) return auth;
   try {
-    const quiz = await controllerGetStaffQuizDetail(context.params.quizId);
+    const { quizId } = await context.params;
+    const quiz = await controllerGetStaffQuizDetail(quizId);
     return NextResponse.json({ quiz });
   } catch (error) {
     const message =
@@ -49,13 +57,20 @@ export async function GET(request: NextRequest, context: { params: Params }) {
   }
 }
 
-export async function PATCH(request: NextRequest, context: { params: Params }) {
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<Params> },
+) {
   const auth = await requireAuthenticatedApi(request, { role: "staff" });
   if (auth instanceof NextResponse) return auth;
   try {
     const body = await request.json();
     const parsed = updateSchema.parse(body);
-    const quiz = await controllerUpdateQuiz(context.params.quizId, parsed);
+    const { quizId } = await context.params;
+    const quiz = await controllerUpdateQuiz(quizId, {
+      ...parsed,
+      difficulty: parsed.difficulty as DifficultyLevel | undefined,
+    });
     return NextResponse.json({ quiz });
   } catch (error) {
     const message =
@@ -66,12 +81,13 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: Params },
+  context: { params: Promise<Params> },
 ) {
   const auth = await requireAuthenticatedApi(request, { role: "staff" });
   if (auth instanceof NextResponse) return auth;
   try {
-    const result = await controllerDeleteQuiz(context.params.quizId);
+    const { quizId } = await context.params;
+    const result = await controllerDeleteQuiz(quizId);
     return NextResponse.json({ status: result.status });
   } catch (error) {
     if (isServiceError(error)) {

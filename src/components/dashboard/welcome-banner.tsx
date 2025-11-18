@@ -5,7 +5,7 @@ type WelcomeBannerProps = {
   title: string;
   subtitle: string;
   ctaLabel: string;
-  ctaHref?: string;
+  ctaHref?: Parameters<typeof Link>[0]["href"];
   className?: string;
 };
 
@@ -16,8 +16,6 @@ export function WelcomeBanner({
   ctaHref,
   className,
 }: WelcomeBannerProps) {
-  const CtaElement = ctaHref ? Link : "button";
-
   return (
     <section
       className={`${styles.welcome} ${className ?? ""}`}
@@ -27,12 +25,15 @@ export function WelcomeBanner({
         <h2 className={styles.title}>{title}</h2>
         <p className={styles.subtitle}>{subtitle}</p>
       </div>
-      <CtaElement
-        className={styles.cta}
-        {...(ctaHref ? { href: ctaHref } : { type: "button" })}
-      >
-        {ctaLabel}
-      </CtaElement>
+      {ctaHref ? (
+        <Link className={styles.cta} href={ctaHref}>
+          {ctaLabel}
+        </Link>
+      ) : (
+        <button type="button" className={styles.cta}>
+          {ctaLabel}
+        </button>
+      )}
     </section>
   );
 }

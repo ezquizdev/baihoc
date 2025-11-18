@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { DifficultyLabel } from "@/application/models/enums";
 import type { LeaderboardEntry } from "@/application/models/leaderboard";
 import type { QuizCatalogItem } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import styles from "./quiz-catalog.module.css";
 import { QuizFilters } from "./quiz-filters";
 import { QuizGrid } from "./quiz-grid";
 import { QuizHero } from "./quiz-hero";
 import { QuizLeaderboard } from "./quiz-leaderboard";
 import { QuizModal } from "./quiz-modal";
 import { QuizPagination } from "./quiz-pagination";
-import styles from "./quiz-catalog.module.css";
 
 type StatusFilter = "todo" | "done" | "all";
 type SortOrder = "newest" | "oldest";
@@ -54,40 +54,12 @@ export function QuizCatalogScreen({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [selectedQuiz, setSelectedQuiz] = useState<QuizCatalogItem | null>(null);
+  const [selectedQuiz, setSelectedQuiz] = useState<QuizCatalogItem | null>(
+    null,
+  );
   const initialLoadRef = useRef(true);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
-  const requestKey = useMemo(
-    () =>
-      [
-        status,
-        sort,
-        selectedSubjectIds.join(","),
-        selectedDifficulties.join(","),
-        debouncedSearch,
-        minQuestions,
-        maxQuestions,
-        minDuration,
-        maxDuration,
-        page,
-        refreshKey,
-      ].join("|"),
-    [
-      status,
-      sort,
-      selectedSubjectIds,
-      selectedDifficulties,
-      debouncedSearch,
-      minQuestions,
-      maxQuestions,
-      minDuration,
-      maxDuration,
-      page,
-      refreshKey,
-    ],
-  );
 
   useEffect(() => {
     if (page > totalPages) {
@@ -100,6 +72,7 @@ export function QuizCatalogScreen({
       initialLoadRef.current = false;
       return;
     }
+    void refreshKey;
 
     const controller = new AbortController();
     const run = async () => {
@@ -117,9 +90,8 @@ export function QuizCatalogScreen({
         if (selectedSubjectIds.length) {
           params.set("subjectIds", selectedSubjectIds.join(","));
         }
-        const difficultyLevels = expandDifficultyLevels(selectedDifficulties);
-        if (difficultyLevels.length) {
-          params.set("difficultyLevels", difficultyLevels.join(","));
+        if (selectedDifficulties.length) {
+          params.set("difficultyLabels", selectedDifficulties.join(","));
         }
         if (minQuestions !== RANGE_MIN) {
           params.set("minQuestions", String(minQuestions));
@@ -154,7 +126,19 @@ export function QuizCatalogScreen({
     run();
 
     return () => controller.abort();
-  }, [requestKey]);
+  }, [
+    status,
+    sort,
+    selectedSubjectIds,
+    selectedDifficulties,
+    debouncedSearch,
+    minQuestions,
+    maxQuestions,
+    minDuration,
+    maxDuration,
+    page,
+    refreshKey,
+  ]);
 
   const handleStatusChange = (next: StatusFilter) => {
     setStatus(next);
@@ -169,7 +153,9 @@ export function QuizCatalogScreen({
   const toggleSubject = (subjectId: string) => {
     setSelectedSubjectIds((prev) => {
       const exists = prev.includes(subjectId);
-      const next = exists ? prev.filter((id) => id !== subjectId) : [...prev, subjectId];
+      const next = exists
+        ? prev.filter((id) => id !== subjectId)
+        : [...prev, subjectId];
       return next;
     });
     setPage(1);
@@ -178,7 +164,9 @@ export function QuizCatalogScreen({
   const toggleDifficulty = (difficulty: DifficultyLabel) => {
     setSelectedDifficulties((prev) => {
       const exists = prev.includes(difficulty);
-      const next = exists ? prev.filter((id) => id !== difficulty) : [...prev, difficulty];
+      const next = exists
+        ? prev.filter((id) => id !== difficulty)
+        : [...prev, difficulty];
       return next;
     });
     setPage(1);
@@ -269,20 +257,4 @@ function useDebouncedValue<T>(value: T, delay: number) {
     return () => clearTimeout(id);
   }, [value, delay]);
   return debounced;
-}
-
-function expandDifficultyLevels(labels: DifficultyLabel[]) {
-  const levels = new Set<number>();
-  labels.forEach((label) => {
-    if (label === "easy") {
-      levels.add(1);
-      levels.add(2);
-    } else if (label === "medium") {
-      levels.add(3);
-      levels.add(4);
-    } else if (label === "hard") {
-      levels.add(5);
-    }
-  });
-  return Array.from(levels);
 }

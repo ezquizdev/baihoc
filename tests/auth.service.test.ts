@@ -1,32 +1,23 @@
 import bcrypt from "bcryptjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type {
+  ResetTokenRow,
+  VerificationTokenRow,
+} from "@/application/infra/db/tokenRepo";
+import type {
+  CreateUserInput,
+  OAuthProvider,
+  UserRow,
+} from "@/application/infra/db/userRepo";
 
-type MockUser = {
-  id: string;
-  email: string;
-  full_name: string;
-  password_hash: string | null;
-  school: string | null;
-  date_of_birth: string | null;
-  avatar_url: string | null;
-  role: string;
-  tier: string;
-  status: string;
-  email_verified_at: string | null;
-  oauth_provider: string | null;
-  oauth_sub: string | null;
-  profile_completed: boolean;
-  last_login_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
+type MockUser = UserRow;
 
 vi.mock("@/application/infra/db/userRepo", () => {
   const store: Record<string, MockUser> = {};
   return {
     __store: store,
-    createUser: vi.fn(async (input) => {
-      const user = {
+    createUser: vi.fn(async (input: CreateUserInput) => {
+      const user: MockUser = {
         id: input.email ?? "user-id",
         email: input.email,
         full_name: input.full_name,
@@ -53,14 +44,16 @@ vi.mock("@/application/infra/db/userRepo", () => {
       async (id: string) =>
         Object.values(store).find((u) => u.id === id) ?? null,
     ),
-    linkUserOAuth: vi.fn(async (id: string, provider: string, sub: string) => {
-      const user = Object.values(store).find((u) => u.id === id);
-      if (user) {
-        user.oauth_provider = provider;
-        user.oauth_sub = sub;
-      }
-      return user ?? null;
-    }),
+    linkUserOAuth: vi.fn(
+      async (id: string, provider: OAuthProvider, sub: string) => {
+        const user = Object.values(store).find((u) => u.id === id);
+        if (user) {
+          user.oauth_provider = provider;
+          user.oauth_sub = sub;
+        }
+        return user ?? null;
+      },
+    ),
     markEmailVerified: vi.fn(async (userId: string) => {
       const user = Object.values(store).find((u) => u.id === userId);
       if (user) {
@@ -102,7 +95,16 @@ vi.mock("@/application/infra/db/tokenRepo", () => {
     }),
     consumeEmailVerificationToken: vi.fn(async (token: string) => {
       const userId = token === "good-verify" ? "user-id" : verifyMap.get(token);
-      return userId ? { user_id: userId } : null;
+      return userId
+        ? ({
+            id: "verify-token-id",
+            user_id: userId,
+            token_hash: "hash",
+            expires_at: new Date().toISOString(),
+            used_at: null,
+            created_at: new Date().toISOString(),
+          } as VerificationTokenRow)
+        : null;
     }),
     createPasswordResetToken: vi.fn(async (userId: string) => {
       resetMap.set("reset-token", userId);
@@ -110,11 +112,29 @@ vi.mock("@/application/infra/db/tokenRepo", () => {
     }),
     consumePasswordResetToken: vi.fn(async (token: string) => {
       const userId = token === "good-reset" ? "user-id" : resetMap.get(token);
-      return userId ? { user_id: userId } : null;
+      return userId
+        ? ({
+            id: "reset-token-id",
+            user_id: userId,
+            token_hash: "hash",
+            expires_at: new Date().toISOString(),
+            used_at: null,
+            created_at: new Date().toISOString(),
+          } as ResetTokenRow)
+        : null;
     }),
     isPasswordResetTokenValid: vi.fn(async (token: string) => {
       const userId = token === "good-reset" ? "user-id" : resetMap.get(token);
-      return userId ? { user_id: userId } : null;
+      return userId
+        ? ({
+            id: "reset-token-id",
+            user_id: userId,
+            token_hash: "hash",
+            expires_at: new Date().toISOString(),
+            used_at: null,
+            created_at: new Date().toISOString(),
+          } as ResetTokenRow)
+        : null;
     }),
   };
 });
@@ -172,6 +192,9 @@ describe("authService", () => {
     const created = userRepo.__store["test@example.com"];
     expect(created).toBeDefined();
     expect(created.password_hash).toBeTruthy();
+    if (!created.password_hash) {
+      throw new Error("Missing password hash");
+    }
     expect(await bcrypt.compare("Password123!", created.password_hash)).toBe(
       true,
     );
@@ -193,13 +216,15 @@ describe("authService", () => {
     ).rejects.toThrow(/khớp/);
   });
 
-  it("loginWithEmail rejects unverified/suspended/deactivated", async () => {
-    const baseUser = {
+  it("loginWithEmail rejects unverified/deactivated", async () => {
+    const baseUser: UserRow = {
+      id: "base",
       email: "u@example.com",
       full_name: "U",
       password_hash: await bcrypt.hash("pass1234", 10),
       role: "student",
       tier: "free",
+      status: "active",
       email_verified_at: null,
       oauth_provider: null,
       oauth_sub: null,
@@ -223,15 +248,6 @@ describe("authService", () => {
     vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
       ...baseUser,
       id: "u2",
-      status: "suspended",
-    });
-    await expect(
-      loginWithEmail({ email: "u@example.com", password: "pass1234" }),
-    ).rejects.toThrow(/tạm khóa/);
-
-    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
-      ...baseUser,
-      id: "u3",
       status: "deactivated",
     });
     await expect(
@@ -247,7 +263,7 @@ describe("authService", () => {
       full_name: "G",
       role: "student",
       tier: "free",
-      status: "suspended",
+      status: "deactivated",
       email_verified_at: new Date().toISOString(),
       oauth_provider: "google",
       oauth_sub: "sub",
@@ -255,11 +271,14 @@ describe("authService", () => {
       avatar_url: null,
       school: null,
       date_of_birth: null,
+      last_login_at: null,
+      created_at: "",
+      updated_at: "",
     });
 
     await expect(
       googleLogin({ sub: "sub", email: "g@example.com" }),
-    ).rejects.toThrow(/tạm khóa/);
+    ).rejects.toThrow(/vô hiệu hóa/);
   });
 
   it("rejects email registration when email exists", async () => {
@@ -295,7 +314,9 @@ describe("authService", () => {
   });
 
   it("googleLogin fails for unknown account", async () => {
-    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce(null);
+    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce(
+      null as UserRow | null,
+    );
     await expect(
       googleLogin({ sub: "newsub", email: "none@example.com" }),
     ).rejects.toThrow(/chưa được đăng ký/);
@@ -361,10 +382,19 @@ describe("authService", () => {
       fullName: "Reset",
     });
     vi.mocked(tokenRepo.consumePasswordResetToken).mockResolvedValueOnce({
+      id: "reset-token-id",
       user_id: "r@example.com",
+      token_hash: "hash",
+      expires_at: new Date().toISOString(),
+      used_at: null,
+      created_at: new Date().toISOString(),
     });
     await resetPasswordWithToken("good-reset", "NewPass123!");
     const stored = userRepo.__store["r@example.com"];
+    expect(stored.password_hash).toBeTruthy();
+    if (!stored.password_hash) {
+      throw new Error("Missing password hash");
+    }
     expect(await bcrypt.compare("NewPass123!", stored.password_hash)).toBe(
       true,
     );

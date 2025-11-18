@@ -4,6 +4,8 @@ import type {
   QuizVisibility,
 } from "@/application/models/enums";
 
+export type { QuizStatus, QuizVisibility } from "@/application/models/enums";
+
 export type Quiz = {
   id: string;
   title: string;

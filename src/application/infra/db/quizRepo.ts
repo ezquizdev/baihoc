@@ -1,16 +1,15 @@
 import type { PoolClient } from "pg";
 import { query, withTransaction } from "@/application/infra/db/pool";
+import type { DifficultyLevel } from "@/application/models/enums";
 import type { QuestionType } from "@/application/models/question";
 import type {
   ChallengeSettings,
-  DifficultyLevel,
   Quiz,
   QuizCatalogItem,
   QuizDetail,
   QuizListItem,
   QuizQuestionLink,
   QuizStatus,
-  QuizSubjectBreakdown,
   QuizVisibility,
 } from "@/application/models/quiz";
 
@@ -172,7 +171,7 @@ export async function insertQuiz(input: {
       throw new Error("Failed to insert quiz");
     }
 
-    if (quizRow.is_challenge && input.challenge) {
+    if (quizRow.is_challenge && hasCompleteChallenge(input.challenge)) {
       const { startAt, endAt, timeLimitSeconds, rules } = input.challenge;
       await upsertChallengeInternal(client, {
         quizId: quizRow.id,
@@ -264,7 +263,7 @@ export async function updateQuiz(input: {
           `DELETE FROM challenge_settings WHERE quiz_id = $1`,
           [input.quizId],
         );
-      } else if (input.challenge) {
+      } else if (hasCompleteChallenge(input.challenge)) {
         const { startAt, endAt, timeLimitSeconds, rules } = input.challenge;
         await upsertChallengeInternal(client, {
           quizId: input.quizId,
@@ -383,35 +382,6 @@ export async function getQuizDetail(
   };
 }
 
-export async function listQuizSubjectBreakdown(
-  quizId: string,
-): Promise<QuizSubjectBreakdown[]> {
-  const res = await query<{
-    subject_id: string;
-    name: string;
-    slug: string;
-    question_count: number;
-  }>(
-    `SELECT subj.id AS subject_id,
-            subj.name,
-            subj.slug,
-            COUNT(*)::int AS question_count
-     FROM quiz_questions qq
-     JOIN questions qn ON qn.id = qq.question_id
-     JOIN subjects subj ON subj.id = qn.subject_id
-     WHERE qq.quiz_id = $1
-     GROUP BY subj.id, subj.name, subj.slug
-     ORDER BY subj.name`,
-    [quizId],
-  );
-  return res.rows.map((row) => ({
-    subjectId: row.subject_id,
-    name: row.name,
-    slug: row.slug,
-    questionCount: Number(row.question_count ?? 0),
-  }));
-}
-
 export async function listQuizzesForCatalog(params: {
   subjectId?: string;
   topicIds?: string[];
@@ -442,8 +412,7 @@ export async function listQuizzesForCatalog(params: {
       params.subjectId,
     );
   }
-  if (params.difficulty)
-    add("q.difficulty_level = $idx", params.difficulty);
+  if (params.difficulty) add("q.difficulty_level = $idx", params.difficulty);
   if (params.visibility)
     add("q.visibility = $idx::quiz_visibility", params.visibility);
   if (params.topicIds?.length) {
@@ -683,7 +652,9 @@ export async function listQuizzesForStaff(params: {
   values.push(limit);
   values.push(offset);
 
-  const res = await query<QuizRow & { topic_ids: string[]; subject_ids: string[] }>(
+  const res = await query<
+    QuizRow & { topic_ids: string[]; subject_ids: string[] }
+  >(
     `SELECT q.*,
             COALESCE(qt.topic_ids, '{}') AS topic_ids,
             COALESCE(qs.subject_ids, '{}') AS subject_ids,
@@ -760,5 +731,16 @@ async function upsertChallengeInternal(
       input.timeLimitSeconds,
       input.rules ?? {},
     ],
+  );
+}
+
+function hasCompleteChallenge(
+  input?: Partial<ChallengeSettings> | null,
+): input is ChallengeSettings {
+  return Boolean(
+    input &&
+      input.startAt !== undefined &&
+      input.endAt !== undefined &&
+      input.timeLimitSeconds !== undefined,
   );
 }

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
-  keywords: siteConfig.keywords,
+  keywords: [...siteConfig.keywords],
   openGraph: {
     title: siteConfig.name,
     description: siteConfig.description,

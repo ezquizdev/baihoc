@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { Clock, ListChecks, UsersThree } from "phosphor-react";
+import { useEffect, useRef } from "react";
 import type { QuizCatalogItem } from "@/application/models/quiz";
 import { DifficultyBadge } from "./quiz-badges";
 import styles from "./quiz-modal.module.css";
+import { getSubjectTone, isMixedSubject } from "./subject-tone";
 
 type QuizModalProps = {
   quiz: QuizCatalogItem | null;
@@ -41,25 +42,20 @@ export function QuizModal({ quiz, onClose }: QuizModalProps) {
     : 0;
   const questionCount = quiz.questionCount ?? 0;
   const ctaLabel = quiz.isChallenge ? "Thử thách ngay" : "Làm bài ngay";
-  const subjectBreakdown =
-    quiz.subjectBreakdown && quiz.subjectBreakdown.length
-      ? quiz.subjectBreakdown
-      : [
-          {
-            subjectId: quiz.subjectSlug ?? "mixed",
-            name: quiz.subjectName,
-            slug: quiz.subjectSlug,
-            questionCount,
-          },
-        ];
+  const subjectBreakdown = quiz.subjectBreakdown?.length
+    ? quiz.subjectBreakdown
+    : [
+        {
+          subjectId: quiz.subjectSlug ?? "mixed",
+          name: quiz.subjectName,
+          slug: quiz.subjectSlug,
+          questionCount,
+        },
+      ];
 
   return (
     <div className={styles.modal} role="presentation">
-      <div
-        className={styles.backdrop}
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
       <div
         className={styles.dialog}
         role="dialog"
@@ -80,9 +76,7 @@ export function QuizModal({ quiz, onClose }: QuizModalProps) {
 
           <div className={styles.desc}>
             <span className={styles.descLabel}>Mô tả quiz:</span>
-            <span className={styles.descText}>
-              {quiz.description ?? "—"}
-            </span>
+            <span className={styles.descText}>{quiz.description ?? "—"}</span>
           </div>
 
           <div className={styles.grid}>
@@ -158,11 +152,18 @@ export function QuizModal({ quiz, onClose }: QuizModalProps) {
 }
 
 function topicToneClass(slug: string, moduleStyles: typeof styles) {
-  const normalized = slug.toLowerCase();
-  if (normalized.includes("mixed")) return moduleStyles.topicMixed;
-  if (normalized.includes("vi")) return moduleStyles.topicVi;
-  if (normalized.includes("en")) return moduleStyles.topicEn;
-  if (normalized.includes("math")) return moduleStyles.topicMath;
-  if (normalized.includes("sci")) return moduleStyles.topicSci;
-  return "";
+  if (isMixedSubject(slug)) return moduleStyles.topicMixed;
+  const tone = getSubjectTone(slug);
+  switch (tone) {
+    case "vi":
+      return moduleStyles.topicVi;
+    case "en":
+      return moduleStyles.topicEn;
+    case "math":
+      return moduleStyles.topicMath;
+    case "sci":
+      return moduleStyles.topicSci;
+    default:
+      return "";
+  }
 }
