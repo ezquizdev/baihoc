@@ -30,3 +30,13 @@ export async function removeAllowlistEmail(email: string) {
     email.toLowerCase(),
   ]);
 }
+
+export async function isEmailAllowlisted(email: string) {
+  const res = await query<{ exists: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1 FROM course_student_allowlist WHERE email = $1
+     ) AS exists`,
+    [email.toLowerCase()],
+  );
+  return Boolean(res.rows[0]?.exists);
+}
