@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -5,6 +6,7 @@ import {
   requireAuthenticatedPage,
 } from "@/application/infra/auth/guards";
 import * as sessionModule from "@/application/infra/auth/session";
+import * as userRepo from "@/application/infra/db/userRepo";
 
 describe("auth guards", () => {
   const session: sessionModule.SessionPayload = {
@@ -13,6 +15,7 @@ describe("auth guards", () => {
     role: "student",
     profileCompleted: true,
   };
+  const fakeRequest = {} as unknown as NextRequest;
 
   it("requireAuthenticatedPage redirects to login when missing session", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(null);
@@ -26,6 +29,25 @@ describe("auth guards", () => {
       ...session,
       profileCompleted: false,
     });
+    vi.spyOn(userRepo, "findUserById").mockResolvedValueOnce({
+      id: "u1",
+      email: "user@example.com",
+      full_name: "User",
+      password_hash: null,
+      role: "student",
+      tier: "free",
+      status: "active",
+      email_verified_at: new Date().toISOString(),
+      oauth_provider: null,
+      oauth_sub: null,
+      profile_completed: false,
+      avatar_url: null,
+      school: null,
+      date_of_birth: null,
+      last_login_at: null,
+      created_at: "",
+      updated_at: "",
+    });
     await expect(() => requireAuthenticatedPage()).rejects.toThrow(
       /NEXT_REDIRECT/,
     );
@@ -36,6 +58,25 @@ describe("auth guards", () => {
       ...session,
       role: "student",
     });
+    vi.spyOn(userRepo, "findUserById").mockResolvedValueOnce({
+      id: "u1",
+      email: "user@example.com",
+      full_name: "User",
+      password_hash: null,
+      role: "student",
+      tier: "free",
+      status: "active",
+      email_verified_at: new Date().toISOString(),
+      oauth_provider: null,
+      oauth_sub: null,
+      profile_completed: true,
+      avatar_url: null,
+      school: null,
+      date_of_birth: null,
+      last_login_at: null,
+      created_at: "",
+      updated_at: "",
+    });
     await expect(() =>
       requireAuthenticatedPage({ role: "staff" }),
     ).rejects.toThrow(/NEXT_REDIRECT/);
@@ -43,13 +84,32 @@ describe("auth guards", () => {
 
   it("requireAuthenticatedPage returns session on success", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(session);
+    vi.spyOn(userRepo, "findUserById").mockResolvedValueOnce({
+      id: "u1",
+      email: "user@example.com",
+      full_name: "User",
+      password_hash: null,
+      role: "student",
+      tier: "free",
+      status: "active",
+      email_verified_at: new Date().toISOString(),
+      oauth_provider: null,
+      oauth_sub: null,
+      profile_completed: true,
+      avatar_url: null,
+      school: null,
+      date_of_birth: null,
+      last_login_at: null,
+      created_at: "",
+      updated_at: "",
+    });
     const res = await requireAuthenticatedPage();
     expect(res.email).toBe("user@example.com");
   });
 
   it("requireAuthenticatedApi returns 401 when no session", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(null);
-    const res = await requireAuthenticatedApi({} as unknown as Request);
+    const res = await requireAuthenticatedApi(fakeRequest);
     expect(res).toBeInstanceOf(NextResponse);
     expect((res as NextResponse).status).toBe(401);
   });
@@ -59,7 +119,26 @@ describe("auth guards", () => {
       ...session,
       profileCompleted: false,
     });
-    const res = await requireAuthenticatedApi({} as unknown as Request);
+    vi.spyOn(userRepo, "findUserById").mockResolvedValueOnce({
+      id: "u1",
+      email: "user@example.com",
+      full_name: "User",
+      password_hash: null,
+      role: "student",
+      tier: "free",
+      status: "active",
+      email_verified_at: new Date().toISOString(),
+      oauth_provider: null,
+      oauth_sub: null,
+      profile_completed: false,
+      avatar_url: null,
+      school: null,
+      date_of_birth: null,
+      last_login_at: null,
+      created_at: "",
+      updated_at: "",
+    });
+    const res = await requireAuthenticatedApi(fakeRequest);
     expect((res as NextResponse).status).toBe(403);
   });
 
@@ -68,15 +147,51 @@ describe("auth guards", () => {
       ...session,
       role: "student",
     });
-    const res = await requireAuthenticatedApi({} as unknown as Request, {
-      role: "staff",
+    vi.spyOn(userRepo, "findUserById").mockResolvedValueOnce({
+      id: "u1",
+      email: "user@example.com",
+      full_name: "User",
+      password_hash: null,
+      role: "student",
+      tier: "free",
+      status: "active",
+      email_verified_at: new Date().toISOString(),
+      oauth_provider: null,
+      oauth_sub: null,
+      profile_completed: true,
+      avatar_url: null,
+      school: null,
+      date_of_birth: null,
+      last_login_at: null,
+      created_at: "",
+      updated_at: "",
     });
+    const res = await requireAuthenticatedApi(fakeRequest, { role: "staff" });
     expect((res as NextResponse).status).toBe(403);
   });
 
   it("requireAuthenticatedApi passes through session on success", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(session);
-    const res = await requireAuthenticatedApi({} as unknown as Request);
-    expect(res).toEqual(session);
+    vi.spyOn(userRepo, "findUserById").mockResolvedValueOnce({
+      id: "u1",
+      email: "user@example.com",
+      full_name: "User",
+      password_hash: null,
+      role: "student",
+      tier: "free",
+      status: "active",
+      email_verified_at: new Date().toISOString(),
+      oauth_provider: null,
+      oauth_sub: null,
+      profile_completed: true,
+      avatar_url: null,
+      school: null,
+      date_of_birth: null,
+      last_login_at: null,
+      created_at: "",
+      updated_at: "",
+    });
+    const res = await requireAuthenticatedApi(fakeRequest);
+    expect(res).toMatchObject(session);
   });
 });

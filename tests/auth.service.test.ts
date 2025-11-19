@@ -1,23 +1,29 @@
 import bcrypt from "bcryptjs";
+import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ResetTokenRow,
   VerificationTokenRow,
 } from "@/application/infra/db/tokenRepo";
-import type {
-  CreateUserInput,
-  OAuthProvider,
-  UserRow,
-} from "@/application/infra/db/userRepo";
+import type { CreateUserInput, UserRow } from "@/application/infra/db/userRepo";
 
-type MockUser = UserRow;
+type MockUserRow = UserRow;
+
+type AllowlistEntry = {
+  email: string;
+  role: "student" | "staff";
+  tier: "free" | "paid";
+};
+
+const fetchMock = vi.fn();
+vi.stubGlobal("fetch", fetchMock);
 
 vi.mock("@/application/infra/db/userRepo", () => {
-  const store: Record<string, MockUser> = {};
+  const store: Record<string, MockUserRow> = {};
   return {
     __store: store,
     createUser: vi.fn(async (input: CreateUserInput) => {
-      const user: MockUser = {
+      const user: MockUserRow = {
         id: input.email ?? "user-id",
         email: input.email,
         full_name: input.full_name,
@@ -44,16 +50,14 @@ vi.mock("@/application/infra/db/userRepo", () => {
       async (id: string) =>
         Object.values(store).find((u) => u.id === id) ?? null,
     ),
-    linkUserOAuth: vi.fn(
-      async (id: string, provider: OAuthProvider, sub: string) => {
-        const user = Object.values(store).find((u) => u.id === id);
-        if (user) {
-          user.oauth_provider = provider;
-          user.oauth_sub = sub;
-        }
-        return user ?? null;
-      },
-    ),
+    linkUserOAuth: vi.fn(async (id: string, provider: string, sub: string) => {
+      const user = Object.values(store).find((u) => u.id === id);
+      if (user) {
+        user.oauth_provider = provider as MockUserRow["oauth_provider"];
+        user.oauth_sub = sub;
+      }
+      return user ?? null;
+    }),
     markEmailVerified: vi.fn(async (userId: string) => {
       const user = Object.values(store).find((u) => u.id === userId);
       if (user) {
@@ -67,7 +71,7 @@ vi.mock("@/application/infra/db/userRepo", () => {
     }),
     updateLastLogin: vi.fn(async () => {}),
     updateUserProfile: vi.fn(
-      async (userId: string, input: Partial<MockUser>) => {
+      async (userId: string, input: Partial<MockUserRow>) => {
         const user = Object.values(store).find((u) => u.id === userId);
         if (!user) return null;
         Object.assign(user, {
@@ -139,6 +143,36 @@ vi.mock("@/application/infra/db/tokenRepo", () => {
   };
 });
 
+vi.mock("@/application/infra/db/allowlistRepo", () => {
+  let entry: AllowlistEntry | null = null;
+  return {
+    __setAllowlistEntry(next: AllowlistEntry | null) {
+      entry = next;
+    },
+    findAllowlistEntryByEmail: vi.fn(async (email: string) => {
+      if (!entry) return null;
+      if (entry.email !== email) return null;
+      return {
+        email: entry.email,
+        role: entry.role,
+        tier: entry.tier,
+        added_by: null,
+        created_at: "",
+      };
+    }),
+  };
+});
+
+vi.mock("@/application/infra/db/membershipRepo", () => {
+  const records: Array<{ userId: string }> = [];
+  return {
+    __records: records,
+    insertAllowlistUpgrade: vi.fn(async (userId: string) => {
+      records.push({ userId });
+    }),
+  };
+});
+
 vi.mock("@/application/services/emailService", () => ({
   sendTransactionalEmail: vi.fn(async () => ({ messageId: "mocked" })),
 }));
@@ -159,16 +193,19 @@ vi.mock("@/application/infra/storage/supabase", () => ({
 const userRepo = (await import(
   "@/application/infra/db/userRepo"
 )) as unknown as typeof import("@/application/infra/db/userRepo") & {
-  __store: Record<string, MockUser>;
+  __store: Record<string, MockUserRow>;
 };
 const tokenRepo = await import("@/application/infra/db/tokenRepo");
 const emailService = await import("@/application/services/emailService");
+const allowlistRepo = await import("@/application/infra/db/allowlistRepo");
+const membershipRepo = await import("@/application/infra/db/membershipRepo");
 
 const {
   registerWithEmail,
   loginWithEmail,
   verifyEmailWithToken,
   googleLogin,
+  googleRegister,
   resetPasswordWithToken,
   requestPasswordReset,
 } = await import("@/application/services/authService");
@@ -176,9 +213,43 @@ const {
 describe("authService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    for (const k of Object.keys(userRepo.__store)) {
-      delete userRepo.__store[k];
-    }
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async (input, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : String(input);
+      if (url.startsWith("https://oauth2.googleapis.com/tokeninfo")) {
+        return new Response(
+          JSON.stringify({ aud: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      if (url === "https://www.googleapis.com/oauth2/v3/userinfo") {
+        const headers =
+          (init?.headers as Record<string, string> | undefined) ?? undefined;
+        const authHeader =
+          headers?.Authorization ?? headers?.authorization ?? "";
+        const token = authHeader.replace(/^Bearer\s+/i, "");
+        const [, email, sub] = token.split(":");
+        return new Response(JSON.stringify({ email, sub }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response("not found", { status: 404 });
+    });
+
+    const store = (
+      userRepo as unknown as { __store: Record<string, MockUserRow> }
+    ).__store;
+    Object.keys(store).forEach((k) => {
+      delete store[k];
+    });
+    (
+      allowlistRepo as unknown as {
+        __setAllowlistEntry: (entry: AllowlistEntry | null) => void;
+      }
+    ).__setAllowlistEntry(null);
+    (membershipRepo as unknown as { __records: unknown[] }).__records.length =
+      0;
   });
 
   it("registerWithEmail hashes password, enforces confirm, and sends verify email", async () => {
@@ -189,7 +260,9 @@ describe("authService", () => {
       fullName: "Tester",
     });
 
-    const created = userRepo.__store["test@example.com"];
+    const created = (
+      userRepo as unknown as { __store: Record<string, MockUserRow> }
+    ).__store["test@example.com"];
     expect(created).toBeDefined();
     expect(created.password_hash).toBeTruthy();
     if (!created.password_hash) {
@@ -203,6 +276,61 @@ describe("authService", () => {
       expect.any(Number),
     );
     expect(emailService.sendTransactionalEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("registerWithEmail uses allowlist role/tier and logs membership for paid", async () => {
+    (
+      allowlistRepo as unknown as {
+        __setAllowlistEntry: (entry: AllowlistEntry | null) => void;
+      }
+    ).__setAllowlistEntry({
+      email: "allow@example.com",
+      role: "staff",
+      tier: "paid",
+    });
+
+    const user = await registerWithEmail({
+      email: "allow@example.com",
+      password: "Password123!",
+      passwordConfirm: "Password123!",
+      fullName: "Allow Listed",
+    });
+
+    expect(user.role).toBe("staff");
+    expect(user.tier).toBe("paid");
+    expect(user.status).toBe("active");
+    expect(user.email_verified_at).toBeTruthy();
+    expect(tokenRepo.createEmailVerificationToken).not.toHaveBeenCalled();
+    expect(emailService.sendTransactionalEmail).not.toHaveBeenCalled();
+    const membershipRecords = (
+      membershipRepo as unknown as { __records: Array<{ userId: string }> }
+    ).__records;
+    expect(membershipRecords).toHaveLength(1);
+    expect(membershipRecords[0].userId).toBe(user.id);
+  });
+
+  it("googleRegister applies allowlist role/tier when present", async () => {
+    (
+      allowlistRepo as unknown as {
+        __setAllowlistEntry: (entry: AllowlistEntry | null) => void;
+      }
+    ).__setAllowlistEntry({
+      email: "google-allow@example.com",
+      role: "staff",
+      tier: "paid",
+    });
+
+    const user = await googleRegister({
+      accessToken: "token:google-allow@example.com:g-sub",
+    });
+
+    expect(user.role).toBe("staff");
+    expect(user.tier).toBe("paid");
+    const membershipRecords = (
+      membershipRepo as unknown as { __records: Array<{ userId: string }> }
+    ).__records;
+    expect(membershipRecords).toHaveLength(1);
+    expect(membershipRecords[0].userId).toBe(user.id);
   });
 
   it("registerWithEmail rejects mismatched confirm", async () => {
@@ -236,7 +364,7 @@ describe("authService", () => {
       created_at: "",
       updated_at: "",
     };
-    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
+    (userRepo.findUserByEmail as unknown as Mock).mockResolvedValueOnce({
       ...baseUser,
       id: "u1",
       status: "pending_verification",
@@ -245,7 +373,7 @@ describe("authService", () => {
       loginWithEmail({ email: "u@example.com", password: "pass1234" }),
     ).rejects.toThrow(/chưa được xác minh/);
 
-    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
+    (userRepo.findUserByEmail as unknown as Mock).mockResolvedValueOnce({
       ...baseUser,
       id: "u2",
       status: "deactivated",
@@ -256,7 +384,7 @@ describe("authService", () => {
   });
 
   it("googleLogin enforces status", async () => {
-    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
+    (userRepo.findUserByEmail as unknown as Mock).mockResolvedValueOnce({
       id: "g1",
       email: "g@example.com",
       password_hash: null,
@@ -277,7 +405,7 @@ describe("authService", () => {
     });
 
     await expect(
-      googleLogin({ sub: "sub", email: "g@example.com" }),
+      googleLogin({ accessToken: "token:g@example.com:sub" }),
     ).rejects.toThrow(/vô hiệu hóa/);
   });
 
@@ -307,23 +435,22 @@ describe("authService", () => {
     });
     await expect(
       (await import("@/application/services/authService")).googleRegister({
-        sub: "sub-x",
-        email: "dup-google@example.com",
+        accessToken: "token:dup-google@example.com:sub-x",
       }),
     ).rejects.toThrow(/Email đã tồn tại/);
   });
 
   it("googleLogin fails for unknown account", async () => {
-    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce(
-      null as UserRow | null,
-    );
+    (userRepo.findUserByEmail as unknown as Mock).mockResolvedValueOnce(null);
     await expect(
-      googleLogin({ sub: "newsub", email: "none@example.com" }),
+      googleLogin({ accessToken: "token:none@example.com:newsub" }),
     ).rejects.toThrow(/chưa được đăng ký/);
   });
 
   it("googleLogin links OAuth to password account", async () => {
-    userRepo.__store["link@example.com"] = {
+    (userRepo as unknown as { __store: Record<string, MockUserRow> }).__store[
+      "link@example.com"
+    ] = {
       id: "link1",
       email: "link@example.com",
       password_hash: await bcrypt.hash("Password123!", 10),
@@ -342,20 +469,22 @@ describe("authService", () => {
       created_at: "",
       updated_at: "",
     };
-    vi.mocked(userRepo.findUserByEmail).mockResolvedValueOnce({
-      ...userRepo.__store["link@example.com"],
+    (userRepo.findUserByEmail as unknown as Mock).mockResolvedValueOnce({
+      ...(userRepo as unknown as { __store: Record<string, MockUserRow> })
+        .__store["link@example.com"],
     });
-    vi.mocked(userRepo.linkUserOAuth).mockImplementation(
+    (userRepo.linkUserOAuth as unknown as Mock).mockImplementation(
       async (_id, provider, sub) => {
-        const user = userRepo.__store["link@example.com"];
+        const user = (
+          userRepo as unknown as { __store: Record<string, MockUserRow> }
+        ).__store["link@example.com"];
         user.oauth_provider = provider;
         user.oauth_sub = sub;
         return user;
       },
     );
     const user = await googleLogin({
-      sub: "link-sub",
-      email: "link@example.com",
+      accessToken: "token:link@example.com:link-sub",
     });
     expect(user.oauth_sub).toBe("link-sub");
     expect(user.oauth_provider).toBe("google");
@@ -369,7 +498,9 @@ describe("authService", () => {
       fullName: "Verify",
     });
     await verifyEmailWithToken("verify-token");
-    const stored = userRepo.__store[user.email];
+    const stored = (
+      userRepo as unknown as { __store: Record<string, MockUserRow> }
+    ).__store[user.email];
     expect(stored.status).toBe("active");
     expect(stored.email_verified_at).toBeTruthy();
   });
@@ -381,7 +512,9 @@ describe("authService", () => {
       passwordConfirm: "OldPass123!",
       fullName: "Reset",
     });
-    vi.mocked(tokenRepo.consumePasswordResetToken).mockResolvedValueOnce({
+    (
+      tokenRepo.consumePasswordResetToken as unknown as Mock
+    ).mockResolvedValueOnce({
       id: "reset-token-id",
       user_id: "r@example.com",
       token_hash: "hash",
@@ -390,7 +523,9 @@ describe("authService", () => {
       created_at: new Date().toISOString(),
     });
     await resetPasswordWithToken("good-reset", "NewPass123!");
-    const stored = userRepo.__store["r@example.com"];
+    const stored = (
+      userRepo as unknown as { __store: Record<string, MockUserRow> }
+    ).__store["r@example.com"];
     expect(stored.password_hash).toBeTruthy();
     if (!stored.password_hash) {
       throw new Error("Missing password hash");
@@ -401,7 +536,9 @@ describe("authService", () => {
   });
 
   it("allows password reset request for Google-only account", async () => {
-    userRepo.__store["google@example.com"] = {
+    (userRepo as unknown as { __store: Record<string, MockUserRow> }).__store[
+      "google@example.com"
+    ] = {
       id: "google@example.com",
       email: "google@example.com",
       full_name: "G User",
@@ -427,7 +564,7 @@ describe("authService", () => {
   it("requestPasswordReset no-ops for unknown email", async () => {
     await requestPasswordReset("missing@example.com");
     expect(
-      vi.mocked(emailService.sendTransactionalEmail),
+      emailService.sendTransactionalEmail as unknown as Mock,
     ).not.toHaveBeenCalled();
   });
 });
