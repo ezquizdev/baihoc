@@ -1,3 +1,5 @@
+import type { PoolClient } from "pg";
+
 import {
   insertAllowlistEmail,
   listAllowlist,
@@ -8,6 +10,7 @@ import {
   insertMembershipHistory,
   listMembershipHistory,
 } from "@/application/infra/db/membershipRepo";
+import { withTransaction } from "@/application/infra/db/transaction";
 import {
   adminUpdateUser,
   countUsers,
@@ -16,16 +19,14 @@ import {
   listUsers,
   markEmailVerified,
   type UserListFilters,
+  type UserStatus,
 } from "@/application/infra/db/userRepo";
 import {
   insertUserStatusChange,
   listUserStatusChanges,
 } from "@/application/infra/db/userStatusRepo";
 import { requestPasswordReset } from "@/application/services/authService";
-
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
-}
+import { normalizeEmail } from "@/application/utils/email";
 
 export async function listUsersWithTotal(filters: UserListFilters) {
   const [items, total] = await Promise.all([
@@ -43,53 +44,72 @@ export async function updateUserAdmin(input: {
   reason?: string | null;
   actorUserId: string;
 }) {
-  const current = await findUserById(input.userId);
-  if (!current) {
-    throw new Error("User not found");
-  }
+  return withTransaction(async (client) => {
+    const current = await findUserById(input.userId, client);
+    if (!current) {
+      throw new Error("User not found");
+    }
 
-  const updated = await adminUpdateUser(input.userId, {
-    role: input.role,
-    tier: input.tier,
-    status: input.status,
+    const updated = await adminUpdateUser(
+      input.userId,
+      {
+        role: input.role,
+        tier: input.tier,
+        status: input.status,
+      },
+      client,
+    );
+    if (!updated) throw new Error("Failed to update user");
+
+    const auditPayload = {
+      before: {
+        role: current.role,
+        tier: current.tier,
+        status: current.status,
+      },
+      after: { role: updated.role, tier: updated.tier, status: updated.status },
+    };
+    const reason = input.reason ?? null;
+
+    if (input.tier && input.tier !== current.tier) {
+      await insertMembershipHistory(
+        {
+          userId: input.userId,
+          fromTier: current.tier,
+          toTier: input.tier,
+          reason,
+          changedBy: input.actorUserId,
+        },
+        client,
+      );
+    }
+
+    if (input.status && input.status !== current.status) {
+      await insertUserStatusChange(
+        {
+          userId: input.userId,
+          fromStatus: current.status,
+          toStatus: input.status,
+          reason,
+          changedBy: input.actorUserId,
+        },
+        client,
+      );
+    }
+
+    await insertAuditLog(
+      {
+        actorUserId: input.actorUserId,
+        action: "user_admin_update",
+        targetType: "user",
+        targetId: input.userId,
+        metadata: { ...auditPayload, reason },
+      },
+      client,
+    );
+
+    return updated;
   });
-  if (!updated) throw new Error("Failed to update user");
-
-  const auditPayload = {
-    before: { role: current.role, tier: current.tier, status: current.status },
-    after: { role: updated.role, tier: updated.tier, status: updated.status },
-  };
-  const reason = input.reason ?? null;
-
-  if (input.tier && input.tier !== current.tier) {
-    await insertMembershipHistory({
-      userId: input.userId,
-      fromTier: current.tier,
-      toTier: input.tier,
-      reason,
-      changedBy: input.actorUserId,
-    });
-  }
-
-  if (input.status && input.status !== current.status) {
-    await insertUserStatusChange({
-      userId: input.userId,
-      fromStatus: current.status,
-      toStatus: input.status,
-      reason,
-      changedBy: input.actorUserId,
-    });
-  }
-
-  await insertAuditLog({
-    actorUserId: input.actorUserId,
-    action: "user_admin_update",
-    targetType: "user",
-    targetId: input.userId,
-    metadata: { ...auditPayload, reason },
-  });
-
-  return updated;
 }
 
 export async function searchUserByEmail(email: string) {
@@ -152,8 +172,8 @@ export async function addAllowlistBulk(
   return { added };
 }
 
-export async function getUserById(userId: string) {
-  const user = await findUserById(userId);
+export async function getUserById(userId: string, client?: PoolClient) {
+  const user = await findUserById(userId, client);
   if (!user) throw new Error("User not found");
   return user;
 }
@@ -163,29 +183,40 @@ export async function verifyUserEmail(input: {
   actorUserId: string;
   reason?: string | null;
 }) {
-  const current = await getUserById(input.userId);
-  const updated = await markEmailVerified(input.userId);
-  if (!updated) throw new Error("Failed to verify email");
+  return withTransaction(async (client) => {
+    const current = await getUserById(input.userId, client);
+    const toStatus: UserStatus = "active";
 
-  if (current.status !== updated.status) {
-    await insertUserStatusChange({
-      userId: input.userId,
-      fromStatus: current.status,
-      toStatus: updated.status,
-      reason: input.reason ?? null,
-      changedBy: input.actorUserId,
-    });
-  }
+    await markEmailVerified(input.userId, client);
+    const updated = await findUserById(input.userId, client);
+    if (!updated) throw new Error("Failed to verify email");
 
-  await insertAuditLog({
-    actorUserId: input.actorUserId,
-    action: "user_admin_verify_email",
-    targetType: "user",
-    targetId: input.userId,
-    metadata: { reason: input.reason ?? null },
+    if (current.status !== toStatus) {
+      await insertUserStatusChange(
+        {
+          userId: input.userId,
+          fromStatus: current.status,
+          toStatus,
+          reason: input.reason ?? null,
+          changedBy: input.actorUserId,
+        },
+        client,
+      );
+    }
+
+    await insertAuditLog(
+      {
+        actorUserId: input.actorUserId,
+        action: "user_admin_verify_email",
+        targetType: "user",
+        targetId: input.userId,
+        metadata: { reason: input.reason ?? null },
+      },
+      client,
+    );
+
+    return updated;
   });
-
-  return updated;
 }
 
 export async function adminSendPasswordReset(input: {

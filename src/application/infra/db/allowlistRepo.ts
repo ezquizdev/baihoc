@@ -1,4 +1,5 @@
-import { query } from "@/application/infra/db/pool";
+import type { PoolClient } from "pg";
+import { pool } from "@/application/infra/db/pool";
 
 export type AllowlistRow = {
   email: string;
@@ -6,8 +7,13 @@ export type AllowlistRow = {
   created_at: string;
 };
 
-export async function listAllowlist(limit = 200, offset = 0) {
-  const res = await query<AllowlistRow>(
+export async function listAllowlist(
+  limit = 200,
+  offset = 0,
+  client?: PoolClient,
+) {
+  const executor = client ?? pool;
+  const res = await executor.query<AllowlistRow>(
     `SELECT * FROM course_student_allowlist
      ORDER BY created_at DESC
      LIMIT $1 OFFSET $2`,
@@ -16,8 +22,13 @@ export async function listAllowlist(limit = 200, offset = 0) {
   return res.rows;
 }
 
-export async function insertAllowlistEmail(email: string, addedBy?: string) {
-  await query(
+export async function insertAllowlistEmail(
+  email: string,
+  addedBy?: string,
+  client?: PoolClient,
+) {
+  const executor = client ?? pool;
+  await executor.query(
     `INSERT INTO course_student_allowlist (email, added_by)
      VALUES ($1, $2)
      ON CONFLICT (email) DO NOTHING`,
@@ -25,14 +36,17 @@ export async function insertAllowlistEmail(email: string, addedBy?: string) {
   );
 }
 
-export async function removeAllowlistEmail(email: string) {
-  await query(`DELETE FROM course_student_allowlist WHERE email = $1`, [
-    email.toLowerCase(),
-  ]);
+export async function removeAllowlistEmail(email: string, client?: PoolClient) {
+  const executor = client ?? pool;
+  await executor.query(
+    `DELETE FROM course_student_allowlist WHERE email = $1`,
+    [email.toLowerCase()],
+  );
 }
 
-export async function isEmailAllowlisted(email: string) {
-  const res = await query<{ exists: boolean }>(
+export async function isEmailAllowlisted(email: string, client?: PoolClient) {
+  const executor = client ?? pool;
+  const res = await executor.query<{ exists: boolean }>(
     `SELECT EXISTS (
        SELECT 1 FROM course_student_allowlist WHERE email = $1
      ) AS exists`,

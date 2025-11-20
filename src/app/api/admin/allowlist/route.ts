@@ -6,14 +6,7 @@ import {
   controllerAdminAllowlistRemove,
 } from "@/application/controllers/userAdminController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
-}
-
-function isValidEmail(email: string) {
-  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
-}
+import { isValidEmailFormat, normalizeEmail } from "@/application/utils/email";
 
 export async function GET(request: Request) {
   const session = await requireAuthenticatedApi(request, { role: "staff" });
@@ -47,7 +40,7 @@ export async function POST(request: Request) {
       const emails = body.emails
         .filter((e: unknown) => typeof e === "string")
         .map((e: string) => normalizeEmail(e))
-        .filter(isValidEmail);
+        .filter(isValidEmailFormat);
       if (!emails.length) {
         return NextResponse.json(
           { error: "Danh sách email không hợp lệ" },
@@ -60,7 +53,7 @@ export async function POST(request: Request) {
 
     const email =
       typeof body.email === "string" ? normalizeEmail(body.email) : null;
-    if (!email || !isValidEmail(email)) {
+    if (!email || !isValidEmailFormat(email)) {
       return NextResponse.json(
         { error: "Email không hợp lệ" },
         { status: 400 },
@@ -83,7 +76,7 @@ export async function DELETE(request: Request) {
     const body = await request.json();
     const email =
       typeof body.email === "string" ? normalizeEmail(body.email) : null;
-    if (!email || !isValidEmail(email)) {
+    if (!email || !isValidEmailFormat(email)) {
       return NextResponse.json(
         { error: "Email không hợp lệ" },
         { status: 400 },
