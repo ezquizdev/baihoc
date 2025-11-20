@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   controllerAdminAllowlistAdd,
+  controllerAdminAllowlistBulk,
   controllerAdminAllowlistList,
   controllerAdminAllowlistRemove,
 } from "@/application/controllers/userAdminController";
@@ -42,6 +43,21 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
+    if (Array.isArray(body.emails)) {
+      const emails = body.emails
+        .filter((e: unknown) => typeof e === "string")
+        .map((e: string) => normalizeEmail(e))
+        .filter(isValidEmail);
+      if (!emails.length) {
+        return NextResponse.json(
+          { error: "Danh sách email không hợp lệ" },
+          { status: 400 },
+        );
+      }
+      const result = await controllerAdminAllowlistBulk(emails, session.sub);
+      return NextResponse.json(result, { status: 200 });
+    }
+
     const email =
       typeof body.email === "string" ? normalizeEmail(body.email) : null;
     if (!email || !isValidEmail(email)) {

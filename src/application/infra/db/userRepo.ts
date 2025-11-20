@@ -159,10 +159,16 @@ export async function createUser(input: CreateUserInput) {
 }
 
 export async function markEmailVerified(userId: string) {
-  await query(
-    `UPDATE users SET status = 'active', email_verified_at = now(), updated_at = now() WHERE id = $1`,
+  const res = await query<UserRow>(
+    `UPDATE users
+     SET status = 'active',
+         email_verified_at = now(),
+         updated_at = now()
+     WHERE id = $1
+     RETURNING *`,
     [userId],
   );
+  return res.rows[0] ?? null;
 }
 
 export async function updatePassword(userId: string, password_hash: string) {
