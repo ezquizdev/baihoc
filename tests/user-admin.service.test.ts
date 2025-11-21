@@ -6,7 +6,7 @@ type MockUser = {
   full_name: string;
   role: "student" | "staff";
   tier: "free" | "paid";
-  status: "pending_verification" | "active" | "suspended" | "deactivated";
+  status: "pending_verification" | "active" | "deactivated";
 };
 
 type MockMembership = {
@@ -23,6 +23,13 @@ type MockStatusChange = {
 
 type MockAudit = {
   targetId?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+type AllowlistRecord = {
+  email: string;
+  role: "student" | "staff";
+  tier: "free" | "paid";
 };
 
 vi.mock("@/application/infra/db/userRepo", () => {
@@ -71,18 +78,40 @@ vi.mock("@/application/infra/db/userStatusRepo", () => {
 });
 
 vi.mock("@/application/infra/db/allowlistRepo", () => {
-  const emails: string[] = [];
+  const records: AllowlistRecord[] = [];
   return {
-    __records: emails,
+    __records: records,
     listAllowlist: vi.fn(async () =>
-      emails.map((email) => ({ email, added_by: null, created_at: "" })),
+      records.map((entry) => ({
+        email: entry.email,
+        role: entry.role,
+        tier: entry.tier,
+        added_by: null,
+        created_at: "",
+      })),
     ),
-    insertAllowlistEmail: vi.fn(async (email: string) => {
-      if (!emails.includes(email)) emails.push(email);
-    }),
+    insertAllowlistEmail: vi.fn(
+      async (input: { email: string; role?: string; tier?: string }) => {
+        const existing = records.find((r) => r.email === input.email);
+        const nextRole =
+          (input.role as AllowlistRecord["role"] | undefined) ??
+          existing?.role ??
+          "student";
+        const nextTier =
+          (input.tier as AllowlistRecord["tier"] | undefined) ??
+          existing?.tier ??
+          "paid";
+        if (existing) {
+          existing.role = nextRole;
+          existing.tier = nextTier;
+          return;
+        }
+        records.push({ email: input.email, role: nextRole, tier: nextTier });
+      },
+    ),
     removeAllowlistEmail: vi.fn(async (email: string) => {
-      const idx = emails.indexOf(email);
-      if (idx >= 0) emails.splice(idx, 1);
+      const idx = records.findIndex((r) => r.email === email);
+      if (idx >= 0) records.splice(idx, 1);
     }),
   };
 });
@@ -126,7 +155,9 @@ describe("userAdminService", () => {
     (
       statusRepo as unknown as { __records: MockStatusChange[] }
     ).__records.length = 0;
-    (allowlistRepo as unknown as { __records: string[] }).__records.length = 0;
+    (
+      allowlistRepo as unknown as { __records: AllowlistRecord[] }
+    ).__records.length = 0;
     (auditRepo as unknown as { __logs: MockAudit[] }).__logs.length = 0;
   });
 
@@ -162,12 +193,12 @@ describe("userAdminService", () => {
     const updated = await updateUserAdmin({
       userId: "u1",
       tier: "paid",
-      status: "suspended",
+      status: "deactivated",
       actorUserId: "staff1",
       reason: "test-change",
     });
     expect(updated.tier).toBe("paid");
-    expect(updated.status).toBe("suspended");
+    expect(updated.status).toBe("deactivated");
     const membershipRecords = (
       membershipRepo as unknown as { __records: MockMembership[] }
     ).__records;
@@ -225,7 +256,7 @@ describe("userAdminService", () => {
     ).insertUserStatusChange({
       userId: "u1",
       fromStatus: "active",
-      toStatus: "suspended",
+      toStatus: "deactivated",
     });
     const history = await getUserHistory("u1");
     expect(history.membership).toHaveLength(1);
@@ -233,16 +264,30 @@ describe("userAdminService", () => {
   });
 
   it("adds and removes allowlist entries with audit logs", async () => {
-    await addAllowlistEmail("whitelist@example.com", "staff1");
+    await addAllowlistEmail({
+      email: "whitelist@example.com",
+      role: "student",
+      tier: "paid",
+      actorUserId: "staff1",
+    });
     const allowlistRecords = (
-      allowlistRepo as unknown as { __records: string[] }
+      allowlistRepo as unknown as { __records: AllowlistRecord[] }
     ).__records;
     const auditLogs = (auditRepo as unknown as { __logs: MockAudit[] }).__logs;
-    expect(allowlistRecords).toContain("whitelist@example.com");
+    expect(allowlistRecords).toContainEqual({
+      email: "whitelist@example.com",
+      role: "student",
+      tier: "paid",
+    });
     expect(auditLogs).toHaveLength(1);
-    await removeAllowlist("whitelist@example.com", "staff1");
-    expect(allowlistRecords).not.toContain("whitelist@example.com");
+    expect(auditLogs[0].targetId ?? null).toBeNull();
+    await removeAllowlist({
+      email: "whitelist@example.com",
+      actorUserId: "staff1",
+    });
+    expect(allowlistRecords).toHaveLength(0);
     expect(auditLogs).toHaveLength(2);
+    expect(auditLogs[1].targetId ?? null).toBeNull();
     const list = await getAllowlist();
     expect(list).toHaveLength(0);
   });
