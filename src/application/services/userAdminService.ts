@@ -10,7 +10,7 @@ import {
   insertMembershipHistory,
   listMembershipHistory,
 } from "@/application/infra/db/membershipRepo";
-import { withTransaction } from "@/application/infra/db/transaction";
+import { withTransaction } from "@/application/infra/db/pool";
 import {
   adminUpdateUser,
   countUsers,
@@ -19,13 +19,16 @@ import {
   listUsers,
   markEmailVerified,
   type UserListFilters,
+  type UserRole,
   type UserStatus,
+  type UserTier,
 } from "@/application/infra/db/userRepo";
 import {
   insertUserStatusChange,
   listUserStatusChanges,
 } from "@/application/infra/db/userStatusRepo";
 import { requestPasswordReset } from "@/application/services/authService";
+import { ServiceError } from "@/application/services/errors";
 import { normalizeEmail } from "@/application/utils/email";
 
 export async function listUsersWithTotal(filters: UserListFilters) {
@@ -38,17 +41,14 @@ export async function listUsersWithTotal(filters: UserListFilters) {
 
 export async function updateUserAdmin(input: {
   userId: string;
-  role?: "student" | "staff";
-  tier?: "free" | "paid";
-  status?: "pending_verification" | "active" | "suspended" | "deactivated";
+  role?: UserRole;
+  tier?: UserTier;
+  status?: UserStatus;
   reason?: string | null;
   actorUserId: string;
 }) {
   return withTransaction(async (client) => {
-    const current = await findUserById(input.userId, client);
-    if (!current) {
-      throw new Error("User not found");
-    }
+    const current = await getUserById(input.userId, client);
 
     const updated = await adminUpdateUser(
       input.userId,
@@ -117,6 +117,7 @@ export async function searchUserByEmail(email: string) {
 }
 
 export async function getUserHistory(userId: string) {
+  await getUserById(userId);
   const [membership, status] = await Promise.all([
     listMembershipHistory(userId),
     listUserStatusChanges(userId),
@@ -131,41 +132,81 @@ export async function getAllowlist(options?: {
   return listAllowlist(options?.limit, options?.offset);
 }
 
-export async function addAllowlistEmail(email: string, actorUserId: string) {
-  await insertAllowlistEmail(normalizeEmail(email), actorUserId);
+export async function addAllowlistEmail(input: {
+  email: string;
+  role?: UserRole;
+  tier?: UserTier;
+  actorUserId: string;
+}) {
+  const email = normalizeEmail(input.email);
+  await insertAllowlistEmail({
+    email,
+    role: input.role,
+    tier: input.tier,
+    addedBy: input.actorUserId,
+  });
   await insertAuditLog({
-    actorUserId,
+    actorUserId: input.actorUserId,
     action: "allowlist_add",
     targetType: "allowlist_email",
-    targetId: normalizeEmail(email),
+    targetId: null,
+    metadata: {
+      email,
+      role: input.role ?? "student",
+      tier: input.tier ?? "paid",
+    },
   });
 }
 
-export async function removeAllowlist(email: string, actorUserId: string) {
-  await removeAllowlistEmail(normalizeEmail(email));
+export async function removeAllowlist(input: {
+  email: string;
+  actorUserId: string;
+}) {
+  const email = normalizeEmail(input.email);
+  await removeAllowlistEmail(email);
   await insertAuditLog({
-    actorUserId,
+    actorUserId: input.actorUserId,
     action: "allowlist_remove",
     targetType: "allowlist_email",
-    targetId: normalizeEmail(email),
+    targetId: null,
+    metadata: { email },
   });
 }
 
 export async function addAllowlistBulk(
-  emails: string[],
+  entries: Array<{ email: string; role?: UserRole; tier?: UserTier }>,
   actorUserId: string,
 ): Promise<{ added: number }> {
-  const unique = Array.from(
-    new Set(emails.map((e) => normalizeEmail(e)).filter(Boolean)),
-  );
+  const unique = new Map<
+    string,
+    { email: string; role?: UserRole; tier?: UserTier }
+  >();
+  entries.forEach((entry) => {
+    const email = normalizeEmail(entry.email);
+    if (!email) return;
+    if (!unique.has(email)) {
+      unique.set(email, { email, role: entry.role, tier: entry.tier });
+    }
+  });
+
   let added = 0;
-  for (const email of unique) {
-    await insertAllowlistEmail(email, actorUserId);
+  for (const entry of unique.values()) {
+    await insertAllowlistEmail({
+      email: entry.email,
+      role: entry.role,
+      tier: entry.tier,
+      addedBy: actorUserId,
+    });
     await insertAuditLog({
       actorUserId,
       action: "allowlist_add",
       targetType: "allowlist_email",
-      targetId: email,
+      targetId: null,
+      metadata: {
+        email: entry.email,
+        role: entry.role ?? "student",
+        tier: entry.tier ?? "paid",
+      },
     });
     added += 1;
   }
@@ -174,7 +215,9 @@ export async function addAllowlistBulk(
 
 export async function getUserById(userId: string, client?: PoolClient) {
   const user = await findUserById(userId, client);
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    throw new ServiceError("user_not_found", "User not found", 404);
+  }
   return user;
 }
 

@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { parsePagination } from "@/app/api/_utils/query";
 import {
   controllerAdminAllowlistAdd,
   controllerAdminAllowlistBulk,
@@ -6,19 +8,31 @@ import {
   controllerAdminAllowlistRemove,
 } from "@/application/controllers/userAdminController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import { isValidEmailFormat, normalizeEmail } from "@/application/utils/email";
 
-export async function GET(request: Request) {
+const roleValues = ["student", "staff"] as const;
+const tierValues = ["free", "paid"] as const;
+
+const allowlistEntrySchema = z.object({
+  email: z.string().email(),
+  role: z.enum(roleValues).optional(),
+  tier: z.enum(tierValues).optional(),
+});
+
+const allowlistBodySchema = z.union([
+  allowlistEntrySchema,
+  z.object({ entries: z.array(allowlistEntrySchema).min(1) }),
+]);
+
+export async function GET(request: NextRequest) {
   const session = await requireAuthenticatedApi(request, { role: "staff" });
   if (session instanceof NextResponse) return session;
 
   const url = new URL(request.url);
-  const limitParam = url.searchParams.get("limit");
-  const offsetParam = url.searchParams.get("offset");
-  const limit = limitParam
-    ? Math.min(Math.max(parseInt(limitParam, 10), 1), 500)
-    : 200;
-  const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : 0;
+  const { limit, offset } = parsePagination(
+    url.searchParams,
+    { limit: 200, offset: 0 },
+    500,
+  );
 
   try {
     const list = await controllerAdminAllowlistList({ limit, offset });
@@ -30,36 +44,34 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const session = await requireAuthenticatedApi(request, { role: "staff" });
   if (session instanceof NextResponse) return session;
 
   try {
     const body = await request.json();
-    if (Array.isArray(body.emails)) {
-      const emails = body.emails
-        .filter((e: unknown) => typeof e === "string")
-        .map((e: string) => normalizeEmail(e))
-        .filter(isValidEmailFormat);
-      if (!emails.length) {
-        return NextResponse.json(
-          { error: "Danh sách email không hợp lệ" },
-          { status: 400 },
-        );
-      }
-      const result = await controllerAdminAllowlistBulk(emails, session.sub);
-      return NextResponse.json(result, { status: 200 });
-    }
-
-    const email =
-      typeof body.email === "string" ? normalizeEmail(body.email) : null;
-    if (!email || !isValidEmailFormat(email)) {
+    const parsed = allowlistBodySchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Email không hợp lệ" },
+        { error: "Danh sách email không hợp lệ" },
         { status: 400 },
       );
     }
-    await controllerAdminAllowlistAdd(email, session.sub);
+
+    if ("entries" in parsed.data) {
+      const result = await controllerAdminAllowlistBulk(
+        parsed.data.entries,
+        session.sub,
+      );
+      return NextResponse.json(result, { status: 200 });
+    }
+
+    await controllerAdminAllowlistAdd({
+      email: parsed.data.email,
+      role: parsed.data.role,
+      tier: parsed.data.tier,
+      actorUserId: session.sub,
+    });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
     const message =
@@ -68,21 +80,23 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   const session = await requireAuthenticatedApi(request, { role: "staff" });
   if (session instanceof NextResponse) return session;
 
   try {
     const body = await request.json();
-    const email =
-      typeof body.email === "string" ? normalizeEmail(body.email) : null;
-    if (!email || !isValidEmailFormat(email)) {
+    const parsed = z.object({ email: z.string().email() }).safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
         { error: "Email không hợp lệ" },
         { status: 400 },
       );
     }
-    await controllerAdminAllowlistRemove(email, session.sub);
+    await controllerAdminAllowlistRemove({
+      email: parsed.data.email,
+      actorUserId: session.sub,
+    });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
     const message =

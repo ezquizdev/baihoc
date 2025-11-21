@@ -1,15 +1,11 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { parsePagination } from "@/app/api/_utils/query";
 import { controllerAdminListUsers } from "@/application/controllers/userAdminController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 
 const roleValues = ["student", "staff"] as const;
 const tierValues = ["free", "paid"] as const;
-const statusValues = [
-  "pending_verification",
-  "active",
-  "suspended",
-  "deactivated",
-] as const;
+const statusValues = ["pending_verification", "active", "deactivated"] as const;
 
 function parseEnumParam<T extends readonly string[]>(
   value: string | null,
@@ -19,7 +15,7 @@ function parseEnumParam<T extends readonly string[]>(
   return allowed.includes(value) ? (value as T[number]) : undefined;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const session = await requireAuthenticatedApi(request, { role: "staff" });
   if (session instanceof NextResponse) return session;
 
@@ -28,16 +24,15 @@ export async function GET(request: Request) {
   const role = parseEnumParam(url.searchParams.get("role"), roleValues);
   const tier = parseEnumParam(url.searchParams.get("tier"), tierValues);
   const status = parseEnumParam(url.searchParams.get("status"), statusValues);
-  const limitParam = url.searchParams.get("limit");
-  const offsetParam = url.searchParams.get("offset");
-  const limit = limitParam
-    ? Math.min(Math.max(parseInt(limitParam, 10), 1), 100)
-    : 20;
-  const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : 0;
+  const { limit, offset } = parsePagination(
+    url.searchParams,
+    { limit: 20, offset: 0 },
+    100,
+  );
 
   try {
     const result = await controllerAdminListUsers({
-      search: search ?? undefined,
+      search,
       role,
       tier,
       status,
