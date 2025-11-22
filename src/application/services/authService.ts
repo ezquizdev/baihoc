@@ -188,6 +188,7 @@ export async function googleRegister(input: {
   if (existing) {
     throw new Error("Email đã tồn tại, không thể đăng ký bằng Google.");
   }
+  const allowlistEntry = await findAllowlistEntryByEmail(email);
   const avatarUpload = input.avatarUrl
     ? await normalizeAvatarUpload(input.sub, input.avatarUrl)
     : null;
@@ -201,10 +202,15 @@ export async function googleRegister(input: {
     date_of_birth: input.dateOfBirth ?? null,
     oauth_provider: provider,
     oauth_sub: input.sub,
+    role: allowlistEntry?.role ?? "student",
+    tier: allowlistEntry?.tier ?? "free",
     status: "active",
     email_verified_at: new Date().toISOString(),
     profile_completed: false,
   });
+  if (allowlistEntry?.tier === "paid") {
+    await insertAllowlistUpgrade(user.id);
+  }
   await updateLastLogin(user.id);
   return user;
 }
