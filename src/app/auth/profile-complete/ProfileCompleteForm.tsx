@@ -12,16 +12,11 @@ import { Card } from "@/components/ui/card";
 import { fileToDataUrl } from "@/lib/fileHelpers";
 
 type Props = {
-  userId: string;
   initialProfile: Partial<ProfileValues> & { avatarUrl?: string | null };
   errorMessage?: string | null;
 };
 
-export function ProfileCompleteForm({
-  userId,
-  initialProfile,
-  errorMessage,
-}: Props) {
+export function ProfileCompleteForm({ initialProfile, errorMessage }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [profile, setProfile] = useState<ProfileValues>({
@@ -39,10 +34,6 @@ export function ProfileCompleteForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) {
-      setError("Thiếu mã người dùng. Vui lòng mở đường dẫn từ email.");
-      return;
-    }
     setError(null);
     setLoading(true);
     try {
@@ -54,7 +45,6 @@ export function ProfileCompleteForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
           fullName: profile.fullName,
           school: profile.school,
           dateOfBirth: profile.dateOfBirth || null,
@@ -108,7 +98,7 @@ export function ProfileCompleteForm({
           {done && (
             <p className="text-sm text-green-600">Đã lưu, chuyển hướng...</p>
           )}
-          <Button type="submit" block disabled={loading || !userId}>
+          <Button type="submit" block disabled={loading}>
             {loading ? "Đang lưu..." : "Hoàn tất hồ sơ"}
           </Button>
         </form>
