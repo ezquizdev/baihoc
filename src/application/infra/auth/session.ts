@@ -6,6 +6,7 @@ const SESSION_COOKIE = "baihoc_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
 const secretKey = new TextEncoder().encode(env.SESSION_SECRET);
+const isProd = process.env.NODE_ENV === "production";
 
 export type SessionPayload = {
   sub: string;
@@ -43,6 +44,7 @@ export async function setSession(payload: SessionPayload) {
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
+    secure: isProd,
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
   });
@@ -50,7 +52,7 @@ export async function setSession(payload: SessionPayload) {
 
 export async function clearSession() {
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  cookieStore.set(SESSION_COOKIE, "", { path: "/", maxAge: 0, secure: isProd });
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
