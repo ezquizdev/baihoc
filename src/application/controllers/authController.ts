@@ -60,10 +60,7 @@ export async function controllerRegisterWithEmail(input: {
 }
 
 export async function controllerGoogleRegister(input: {
-  sub: string;
-  email: string;
-  fullName?: string;
-  avatarUrl?: string;
+  accessToken: string;
   school?: string | null;
   dateOfBirth?: string | null;
 }): Promise<AuthResult> {
@@ -73,10 +70,7 @@ export async function controllerGoogleRegister(input: {
 }
 
 export async function controllerGoogleLogin(input: {
-  sub: string;
-  email: string;
-  fullName?: string;
-  avatarUrl?: string;
+  accessToken: string;
   school?: string | null;
   dateOfBirth?: string | null;
 }): Promise<AuthResult> {

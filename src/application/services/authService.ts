@@ -175,23 +175,21 @@ export async function verifyResetToken(rawToken: string) {
 }
 
 export async function googleRegister(input: {
-  sub: string;
-  email: string;
-  fullName?: string;
-  avatarUrl?: string;
+  accessToken: string;
   school?: string | null;
   dateOfBirth?: string | null;
 }) {
   const provider: OAuthProvider = "google";
-  const email = ensureValidEmail(input.email);
-  const fullName = input.fullName ? ensureName(input.fullName) : email;
+  const userinfo = await getGoogleUserInfoFromAccessToken(input.accessToken);
+  const email = ensureValidEmail(userinfo.email);
+  const fullName = userinfo.name ? ensureName(userinfo.name) : email;
   const existing = await findUserByEmail(email);
   if (existing) {
     throw new Error("Email đã tồn tại, không thể đăng ký bằng Google.");
   }
   const allowlistEntry = await findAllowlistEntryByEmail(email);
-  const avatarUpload = input.avatarUrl
-    ? await normalizeAvatarUpload(input.sub, input.avatarUrl)
+  const avatarUpload = userinfo.picture
+    ? await normalizeAvatarUpload(userinfo.sub, userinfo.picture)
     : null;
 
   const user = await createUser({
@@ -202,7 +200,7 @@ export async function googleRegister(input: {
     school: input.school ?? null,
     date_of_birth: input.dateOfBirth ?? null,
     oauth_provider: provider,
-    oauth_sub: input.sub,
+    oauth_sub: userinfo.sub,
     role: allowlistEntry?.role ?? "student",
     tier: allowlistEntry?.tier ?? "free",
     status: "active",
@@ -217,21 +215,19 @@ export async function googleRegister(input: {
 }
 
 export async function googleLogin(input: {
-  sub: string;
-  email: string;
-  fullName?: string;
-  avatarUrl?: string;
+  accessToken: string;
   school?: string | null;
   dateOfBirth?: string | null;
 }) {
   const provider: OAuthProvider = "google";
-  const email = ensureValidEmail(input.email);
+  const userinfo = await getGoogleUserInfoFromAccessToken(input.accessToken);
+  const email = ensureValidEmail(userinfo.email);
 
   const byEmail = await findUserByEmail(email);
   if (!byEmail) {
     throw new Error("Email chưa được đăng ký. Vui lòng tạo tài khoản trước.");
   }
-  if (byEmail.oauth_provider && byEmail.oauth_sub !== input.sub) {
+  if (byEmail.oauth_provider && byEmail.oauth_sub !== userinfo.sub) {
     throw new Error(
       "Email đã liên kết tài khoản khác. Vui lòng đăng nhập bằng email/mật khẩu.",
     );
@@ -239,7 +235,7 @@ export async function googleLogin(input: {
 
   const linked = byEmail.oauth_provider
     ? byEmail
-    : await linkUserOAuth(byEmail.id, provider, input.sub);
+    : await linkUserOAuth(byEmail.id, provider, userinfo.sub);
   enforceLoginStatus(linked?.status ?? byEmail.status);
   await updateLastLogin(byEmail.id);
   return linked ?? byEmail;
@@ -366,6 +362,50 @@ async function normalizeAvatarUpload(userKey: string, avatarUrl: string) {
     return await uploadAvatarFromUrl(userKey, avatarUrl);
   }
   return avatarUrl;
+}
+
+async function getGoogleUserInfoFromAccessToken(accessToken: string) {
+  const aud = env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  if (!aud) {
+    throw new Error("Google client ID is not configured");
+  }
+  const tokenInfo = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(
+      accessToken,
+    )}`,
+  );
+  if (!tokenInfo.ok) {
+    throw new Error("Google sign-in không hợp lệ");
+  }
+  const tokenPayload = (await tokenInfo.json()) as { aud?: string };
+  if (!tokenPayload?.aud || tokenPayload.aud !== aud) {
+    throw new Error("Google sign-in không hợp lệ");
+  }
+
+  const userInfo = await fetch(
+    "https://www.googleapis.com/oauth2/v3/userinfo",
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!userInfo.ok) {
+    throw new Error("Google sign-in không hợp lệ");
+  }
+  const userPayload = (await userInfo.json()) as {
+    sub?: string;
+    email?: string;
+    name?: string;
+    picture?: string;
+  };
+  if (!userPayload?.sub || !userPayload.email) {
+    throw new Error("Google sign-in không hợp lệ");
+  }
+  return {
+    sub: userPayload.sub,
+    email: userPayload.email,
+    name: userPayload.name,
+    picture: userPayload.picture,
+  };
 }
 
 function estimateBase64Bytes(base64: string) {
