@@ -9,12 +9,12 @@ import styles from "./quiz-catalog.module.css";
 
 export function QuizCard({
   quiz,
-  tone,
   onSelect,
+  onStart,
 }: {
   quiz: QuizCatalogItem;
-  tone?: "alt";
   onSelect?: (quiz: QuizCatalogItem) => void;
+  onStart?: (quiz: QuizCatalogItem) => void;
 }) {
   const [bookmarked, setBookmarked] = useState(false);
   const minutes = quiz.estimatedTimeSeconds
@@ -34,14 +34,24 @@ export function QuizCard({
     onSelect?.(quiz);
   };
 
+  const handleStart = () => {
+    if (onStart) {
+      onStart(quiz);
+      return;
+    }
+    window.alert("Tính năng làm bài đang được phát triển.");
+  };
+
   return (
     <article
-      className={`${styles.quizCard} ${tone === "alt" ? styles.quizCardAlt : ""}`}
+      className={`${styles.quizCard} ${
+        quiz.isChallenge ? styles.quizCardChallenge : ""
+      }`}
     >
       <button
         type="button"
         className={styles.quizCardButton}
-        aria-label={`Quiz ${quiz.title}`}
+        aria-label={`Xem trước quiz ${quiz.title}`}
         onClick={handleSelect}
       />
       <div className={styles.quizHead}>
@@ -112,19 +122,10 @@ export function QuizCard({
           }`}
           onClick={(event) => {
             event.stopPropagation();
-            handleSelect();
+            handleStart();
           }}
         >
           {ctaLabel}
-          {quiz.isChallenge ? (
-            <>
-              <span className={styles.quizCtaArrow} aria-hidden="true" />
-              <span
-                className={`${styles.quizCtaArrow} ${styles.quizCtaArrowRight}`}
-                aria-hidden="true"
-              />
-            </>
-          ) : null}
         </button>
       </div>
     </article>

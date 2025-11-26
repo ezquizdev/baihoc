@@ -10,6 +10,7 @@ type QuizGridProps = {
   error: string | null;
   onRetry: () => void;
   onSelect?: (quiz: QuizCatalogItem) => void;
+  onStart?: (quiz: QuizCatalogItem) => void;
 };
 
 export function QuizGrid({
@@ -18,6 +19,7 @@ export function QuizGrid({
   error,
   onRetry,
   onSelect,
+  onStart,
 }: QuizGridProps) {
   if (isLoading) {
     return (
@@ -52,13 +54,9 @@ export function QuizGrid({
 
   return (
     <ul className={styles.quizGrid} aria-label="Danh sách quiz">
-      {items.map((quiz, index) => (
+      {items.map((quiz) => (
         <li key={quiz.id} className={styles.quizGridItem}>
-          <QuizCard
-            quiz={quiz}
-            tone={index % 2 === 1 ? "alt" : undefined}
-            onSelect={onSelect}
-          />
+          <QuizCard quiz={quiz} onSelect={onSelect} onStart={onStart} />
         </li>
       ))}
     </ul>

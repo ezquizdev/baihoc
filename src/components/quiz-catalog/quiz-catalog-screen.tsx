@@ -189,6 +189,10 @@ export function QuizCatalogScreen({
     setRefreshKey((prev) => prev + 1);
   };
 
+  const handleStartQuiz = (quiz: QuizCatalogItem) => {
+    window.alert(`Bắt đầu làm quiz: ${quiz.title}`);
+  };
+
   return (
     <DashboardShell
       activeNav="quizzes"
@@ -234,6 +238,7 @@ export function QuizCatalogScreen({
               error={error}
               onRetry={handleRetry}
               onSelect={setSelectedQuiz}
+              onStart={handleStartQuiz}
             />
             <QuizPagination
               page={page}
