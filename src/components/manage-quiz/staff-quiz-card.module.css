@@ -1,0 +1,179 @@
+.quizCard {
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 26px rgba(26, 46, 93, 0.06);
+  overflow: hidden;
+  background: #eef4ff;
+  position: relative;
+  min-height: 214px;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.quizCard:focus-within {
+  outline: 3px solid rgba(40, 104, 230, 0.32);
+  outline-offset: 3px;
+}
+
+.quizHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 6px;
+}
+
+.quizDate {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 750;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(219, 231, 255, 0.9);
+  padding: 5px 8px;
+  border-radius: 999px;
+}
+
+.vip {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  background: #0e1b2b;
+  color: var(--accent);
+  padding: 5px 9px;
+  border-radius: 999px;
+}
+
+.spacer {
+  margin-left: auto;
+}
+
+.bookmark {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(219, 231, 255, 0.95);
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: #2b3b55;
+}
+
+.bookmarkActive {
+  background: rgba(255, 214, 65, 0.22);
+  border-color: rgba(255, 214, 65, 0.9);
+}
+
+.quizTitle {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 850;
+  color: #0e1b2b;
+  min-height: 36px;
+}
+
+.quizInfo {
+  margin-top: 2px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.quizMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.quizMetaItem {
+  font-size: 12px;
+  font-weight: 850;
+  color: #2b3b55;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.metaIcon {
+  width: 22px;
+  height: 22px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(219, 231, 255, 0.9);
+  flex: 0 0 auto;
+}
+
+.badgeStack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  flex: 0 0 auto;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: 0;
+  cursor: pointer;
+  font-weight: 900;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.btnBlue {
+  background: var(--brand-primary);
+  color: var(--brand-accent);
+  box-shadow: 0 10px 18px rgba(30, 108, 255, 0.22);
+}
+
+.btnYellow {
+  background: var(--brand-accent);
+  color: #1f3b86;
+  box-shadow: 0 10px 18px rgba(255, 212, 0, 0.18);
+}
+
+.btnRed {
+  background: #d84a3f;
+  color: #fff;
+  box-shadow: 0 10px 18px rgba(216, 74, 63, 0.18);
+}
+
+.btnDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.cardError {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 750;
+  color: #2b3b55;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(219, 231, 255, 0.9);
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.cardErrorActions {
+  margin-top: 8px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
