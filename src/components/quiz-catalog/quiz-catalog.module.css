@@ -428,6 +428,32 @@
   align-items: start;
 }
 
+.quizGridArea {
+  position: relative;
+  min-height: 220px;
+}
+
+.quizGridAreaCenter {
+  display: grid;
+  place-items: center;
+  padding: 10px 0;
+}
+
+.quizGridLoading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border-radius: 16px;
+  border: 1px dashed var(--line);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 24px;
+  color: #2b3b55;
+  font-weight: 700;
+  pointer-events: none;
+}
+
 .quizGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -976,6 +1002,9 @@
   text-align: center;
   color: #2b3b55;
   font-weight: 700;
+  display: block;
+  width: min(520px, 100%);
+  margin: 0 auto;
 }
 
 .stateAction {

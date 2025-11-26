@@ -324,6 +324,15 @@
     max-width: 100%;
   }
 
+  .topic {
+    justify-content: flex-start;
+  }
+
+  .topicCount {
+    flex: 1;
+    text-align: center;
+  }
+
   .grid {
     grid-template-columns: 1fr;
   }
@@ -342,6 +351,15 @@
   }
 
   .right {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 0;
+  }
+
+  .meta {
     align-items: flex-start;
   }
 }
