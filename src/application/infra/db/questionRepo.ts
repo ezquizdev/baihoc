@@ -53,6 +53,8 @@ export type PassageRow = {
 
 const searchVectorSql =
   "to_tsvector('simple', coalesce(stem, '') || ' ' || coalesce(explanation, ''))";
+const insertSearchVectorSql =
+  "to_tsvector('simple', coalesce($4, '') || ' ' || coalesce($5, ''))";
 
 function mapQuestion(row: QuestionRow): Question {
   return {
@@ -132,7 +134,7 @@ export async function insertQuestion(input: {
         COALESCE($7::text[], '{}'),
         COALESCE($8, 1),
         $9,
-        ${searchVectorSql}
+        ${insertSearchVectorSql}
       )
       RETURNING *`,
       [
@@ -224,7 +226,7 @@ export async function updateQuestion(input: {
   const values: unknown[] = [];
   let idx = 1;
   const push = (sql: string, value: unknown) => {
-    fields.push(sql.replace("$idx", `$${idx}`));
+    fields.push(sql.replaceAll("$idx", `$${idx}`));
     values.push(value);
     idx += 1;
   };
@@ -367,7 +369,7 @@ export async function listQuestions(params: {
   const values: unknown[] = [];
   const add = (sql: string, value: unknown) => {
     values.push(value);
-    where.push(sql.replace("$idx", `$${values.length}`));
+    where.push(sql.replaceAll("$idx", `$${values.length}`));
   };
 
   if (params.subjectId) add("subject_id = $idx", params.subjectId);
