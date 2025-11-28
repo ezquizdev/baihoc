@@ -33,6 +33,14 @@ type CreateQuestionInput = {
   passagePosition?: number;
 };
 
+type UpdateQuestionInput = Partial<
+  Omit<CreateQuestionInput, "createdBy" | "options" | "shortAnswers">
+> & {
+  status?: QuestionStatus;
+  options?: CreateQuestionInput["options"] | null;
+  shortAnswers?: CreateQuestionInput["shortAnswers"] | null;
+};
+
 export async function createQuestion(input: CreateQuestionInput) {
   validateQuestionPayload(input);
   return insertQuestion({
@@ -55,12 +63,9 @@ export async function createQuestion(input: CreateQuestionInput) {
 
 export async function updateQuestion(
   questionId: string,
-  input: Partial<CreateQuestionInput> & { status?: QuestionStatus },
+  input: UpdateQuestionInput,
 ) {
-  validateQuestionPayload(
-    { ...input, questionId } as CreateQuestionInput,
-    true,
-  );
+  validateQuestionPayload(input, true);
   const res = await updateQuestionRepo({
     questionId,
     subjectId: input.subjectId,
@@ -74,8 +79,8 @@ export async function updateQuestion(
     status: input.status,
     options: input.options,
     shortAnswers: input.shortAnswers,
-    passage: input.passage ?? undefined,
-    passageId: input.passageId ?? undefined,
+    passage: input.passage,
+    passageId: input.passageId,
     passagePosition: input.passagePosition,
   });
   if (!res) {
@@ -125,7 +130,13 @@ export async function deleteQuestionWithRules(questionId: string) {
   return { status: "deleted" as const };
 }
 
-function validateQuestionPayload(input: CreateQuestionInput, partial = false) {
+function validateQuestionPayload(
+  input: Partial<CreateQuestionInput> & {
+    options?: CreateQuestionInput["options"] | null;
+    shortAnswers?: CreateQuestionInput["shortAnswers"] | null;
+  },
+  partial = false,
+) {
   if (!partial && !input.stem?.trim()) {
     throw new Error("Question stem is required");
   }
@@ -141,6 +152,8 @@ function validateQuestionPayload(input: CreateQuestionInput, partial = false) {
   if (input.type === "mcq_single" || input.type === "mcq_multi") {
     if (input.options === undefined) {
       if (!partial) throw new Error("Options are required for MCQ");
+    } else if (input.options === null) {
+      throw new Error("Options are required for MCQ");
     } else {
       if (input.options.length < 2) {
         throw new Error("MCQ must have at least two options");
@@ -161,6 +174,8 @@ function validateQuestionPayload(input: CreateQuestionInput, partial = false) {
   if (input.type === "short_answer") {
     if (input.shortAnswers === undefined) {
       if (!partial) throw new Error("Short-answer keys are required");
+    } else if (input.shortAnswers === null) {
+      throw new Error("Short-answer keys are required");
     } else if (!input.shortAnswers.length) {
       throw new Error("Provide at least one acceptable answer");
     }
