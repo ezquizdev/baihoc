@@ -569,15 +569,22 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                     type="button"
                     className={`${styles.smallBtn} ${styles.smallBtnBlue}`}
                     onClick={() =>
-                      setOptions((prev) => [
-                        ...prev,
-                        {
-                          label: null,
-                          text: "",
-                          isCorrect: false,
-                          position: prev.length + 1,
-                        },
-                      ])
+                      setOptions((prev) => {
+                        const nextPosition =
+                          prev.reduce(
+                            (max, opt) => Math.max(max, opt.position),
+                            0,
+                          ) + 1;
+                        return [
+                          ...prev,
+                          {
+                            label: null,
+                            text: "",
+                            isCorrect: false,
+                            position: nextPosition,
+                          },
+                        ];
+                      })
                     }
                     disabled={disabled}
                   >
