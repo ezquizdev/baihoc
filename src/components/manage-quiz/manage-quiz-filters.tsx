@@ -8,8 +8,11 @@ import { getSubjectTone } from "@/components/quiz-catalog/subject-tone";
 import styles from "./manage-quiz-filters.module.css";
 
 type SortOrder = "newest" | "oldest";
+type StatusFilter = "active" | "draft" | "published" | "archived" | "all";
 
 type ManageQuizFiltersProps = {
+  statusFilter: StatusFilter;
+  onStatusFilterChange: (status: StatusFilter) => void;
   sort: SortOrder;
   onSortChange: (sort: SortOrder) => void;
   subjects: Subject[];
@@ -28,6 +31,8 @@ type ManageQuizFiltersProps = {
 const difficultyLevels: DifficultyLevel[] = [5, 4, 3, 2, 1];
 
 export function ManageQuizFilters({
+  statusFilter,
+  onStatusFilterChange,
   sort,
   onSortChange,
   subjects,
@@ -43,6 +48,7 @@ export function ManageQuizFilters({
   onDurationRangeChange,
 }: ManageQuizFiltersProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const isStatusActive = statusFilter !== "active";
   const isSubjectActive = selectedSubjectIds.length > 0;
   const isDifficultyActive = selectedDifficulties.length > 0;
   const isRangeActive =
@@ -70,6 +76,84 @@ export function ManageQuizFilters({
   return (
     <section className={`cardBase ${styles.filters}`} aria-label="Filters">
       <fieldset className={styles.filterRow} aria-label="Bộ lọc">
+        <div
+          className={`${styles.dd} ${styles.ddWide} ${
+            isStatusActive ? styles.ddActive : ""
+          } ${openDropdown === "status" ? styles.ddOpen : ""}`}
+          data-dropdown-root
+        >
+          <button
+            type="button"
+            className={`${styles.ddButton} ${
+              isStatusActive ? styles.ddButtonActive : ""
+            }`}
+            aria-expanded={openDropdown === "status"}
+            onClick={() => toggleDropdown("status")}
+          >
+            <span className={styles.ddLabel}>Trạng thái</span>
+            {isStatusActive ? (
+              <FunnelSimple
+                size={16}
+                weight="bold"
+                className={styles.filterIcon}
+              />
+            ) : (
+              <span className={styles.ddChevron} aria-hidden="true" />
+            )}
+          </button>
+          {openDropdown === "status" ? (
+            <div className={styles.ddPanel}>
+              <fieldset className={styles.ddList} aria-label="Trạng thái quiz">
+                <label className={styles.ck}>
+                  <input
+                    type="radio"
+                    name="quizStatus"
+                    checked={statusFilter === "active"}
+                    onChange={() => onStatusFilterChange("active")}
+                  />
+                  Đang hoạt động
+                </label>
+                <label className={styles.ck}>
+                  <input
+                    type="radio"
+                    name="quizStatus"
+                    checked={statusFilter === "draft"}
+                    onChange={() => onStatusFilterChange("draft")}
+                  />
+                  Bản nháp
+                </label>
+                <label className={styles.ck}>
+                  <input
+                    type="radio"
+                    name="quizStatus"
+                    checked={statusFilter === "published"}
+                    onChange={() => onStatusFilterChange("published")}
+                  />
+                  Đã xuất bản
+                </label>
+                <label className={styles.ck}>
+                  <input
+                    type="radio"
+                    name="quizStatus"
+                    checked={statusFilter === "archived"}
+                    onChange={() => onStatusFilterChange("archived")}
+                  />
+                  Đã lưu trữ
+                </label>
+                <label className={styles.ck}>
+                  <input
+                    type="radio"
+                    name="quizStatus"
+                    checked={statusFilter === "all"}
+                    onChange={() => onStatusFilterChange("all")}
+                  />
+                  Tất cả
+                </label>
+              </fieldset>
+            </div>
+          ) : null}
+        </div>
+
         <div
           className={`${styles.dd} ${styles.ddWide} ${
             openDropdown === "sort" ? styles.ddOpen : ""

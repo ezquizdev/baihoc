@@ -10,14 +10,12 @@
 .filterRow {
   display: flex;
   gap: var(--filter-gap);
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: flex-end;
   flex: 1 1 auto;
   --filter-gap: 10px;
   --filter-width: 190px;
-  --filters-min: calc((4 * var(--filter-width)) + (3 * var(--filter-gap)));
-  min-width: var(--filters-min);
   border: 0;
   padding: 0;
   margin: 0 0 0 auto;

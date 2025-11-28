@@ -404,6 +404,35 @@ export async function listQuestions(params: {
   return res.rows.map(mapQuestion);
 }
 
+export async function countQuestions(params: {
+  subjectId?: string;
+  difficulty?: Question["defaultDifficulty"];
+  status?: QuestionStatus;
+  search?: string;
+}): Promise<number> {
+  const where: string[] = [];
+  const values: unknown[] = [];
+  const add = (sql: string, value: unknown) => {
+    values.push(value);
+    where.push(sql.replaceAll("$idx", `$${values.length}`));
+  };
+
+  if (params.subjectId) add("subject_id = $idx", params.subjectId);
+  if (params.difficulty) add("default_difficulty = $idx", params.difficulty);
+  if (params.status) add("status = $idx::question_status", params.status);
+  if (params.search) {
+    add("(stem ILIKE $idx OR explanation ILIKE $idx)", `%${params.search}%`);
+  }
+
+  const res = await query<{ cnt: number }>(
+    `SELECT COUNT(*)::int AS cnt
+     FROM questions
+     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}`,
+    values,
+  );
+  return Number(res.rows[0]?.cnt ?? 0);
+}
+
 export async function getQuestionDetail(
   questionId: string,
 ): Promise<QuestionDetail | null> {

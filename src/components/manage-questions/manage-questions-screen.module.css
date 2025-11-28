@@ -1,0 +1,82 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hero {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  overflow: hidden;
+  position: relative;
+  min-height: 110px;
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 950;
+  color: #1f3b86;
+  line-height: 1.05;
+  letter-spacing: 0.2px;
+}
+
+.heroText {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  max-width: 560px;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.cta {
+  border: none;
+  background: #2868e6;
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(40, 104, 230, 0.28);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.cta:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.35);
+  outline-offset: 3px;
+}
+
+.listCard {
+  padding: 16px;
+}
+
+.listHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.listTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 850;
+  color: var(--foreground);
+}
+
+.subtle {
+  color: var(--muted);
+  font-size: 12px;
+}
