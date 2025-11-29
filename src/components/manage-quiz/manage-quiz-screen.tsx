@@ -30,7 +30,7 @@ type ManageQuizScreenProps = {
 
 const PAGE_SIZE = 9;
 const RANGE_MIN = 0;
-const RANGE_MAX = 50;
+const RANGE_MAX_INITIAL = 50;
 
 const staffNavItems = [
   { key: "overview", label: "Tổng quan" },
@@ -57,9 +57,9 @@ export function ManageQuizScreen({
     DifficultyLevel[]
   >([]);
   const [minQuestions, setMinQuestions] = useState(RANGE_MIN);
-  const [maxQuestions, setMaxQuestions] = useState(RANGE_MAX);
+  const [maxQuestions, setMaxQuestions] = useState(RANGE_MAX_INITIAL);
   const [minDuration, setMinDuration] = useState(RANGE_MIN);
-  const [maxDuration, setMaxDuration] = useState(RANGE_MAX);
+  const [maxDuration, setMaxDuration] = useState(RANGE_MAX_INITIAL);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
@@ -158,6 +158,38 @@ export function ManageQuizScreen({
     document.body.classList.toggle("modal-open", open);
     return () => document.body.classList.remove("modal-open");
   }, [builderQuizId, createOpen, infoQuizId, questionTarget]);
+
+  const questionMaxLimit = useMemo(() => {
+    let max = RANGE_MAX_INITIAL;
+    for (const quiz of allQuizzes) {
+      const count = quiz.questionCount ?? 0;
+      if (count > max) max = count;
+    }
+    return Math.max(max, maxQuestions);
+  }, [allQuizzes, maxQuestions]);
+
+  const durationMaxLimit = useMemo(() => {
+    let max = RANGE_MAX_INITIAL;
+    for (const quiz of allQuizzes) {
+      const minutes = quiz.estimatedTimeSeconds
+        ? Math.round(quiz.estimatedTimeSeconds / 60)
+        : 0;
+      if (minutes > max) max = minutes;
+    }
+    return Math.max(max, maxDuration);
+  }, [allQuizzes, maxDuration]);
+
+  useEffect(() => {
+    setMaxQuestions((prev) =>
+      prev === RANGE_MAX_INITIAL ? questionMaxLimit : prev,
+    );
+  }, [questionMaxLimit]);
+
+  useEffect(() => {
+    setMaxDuration((prev) =>
+      prev === RANGE_MAX_INITIAL ? durationMaxLimit : prev,
+    );
+  }, [durationMaxLimit]);
 
   const filtered = useMemo(() => {
     const query = debouncedSearch.trim().toLowerCase();
@@ -344,9 +376,11 @@ export function ManageQuizScreen({
           onDifficultyToggle={toggleDifficulty}
           minQuestions={minQuestions}
           maxQuestions={maxQuestions}
+          questionMaxLimit={questionMaxLimit}
           onQuestionRangeChange={handleQuestionRange}
           minDuration={minDuration}
           maxDuration={maxDuration}
+          durationMaxLimit={durationMaxLimit}
           onDurationRangeChange={handleDurationRange}
         />
 

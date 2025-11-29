@@ -22,9 +22,11 @@ type ManageQuizFiltersProps = {
   onDifficultyToggle: (difficulty: DifficultyLevel) => void;
   minQuestions: number;
   maxQuestions: number;
+  questionMaxLimit: number;
   onQuestionRangeChange: (min: number, max: number) => void;
   minDuration: number;
   maxDuration: number;
+  durationMaxLimit: number;
   onDurationRangeChange: (min: number, max: number) => void;
 };
 
@@ -42,9 +44,11 @@ export function ManageQuizFilters({
   onDifficultyToggle,
   minQuestions,
   maxQuestions,
+  questionMaxLimit,
   onQuestionRangeChange,
   minDuration,
   maxDuration,
+  durationMaxLimit,
   onDurationRangeChange,
 }: ManageQuizFiltersProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -53,9 +57,9 @@ export function ManageQuizFilters({
   const isDifficultyActive = selectedDifficulties.length > 0;
   const isRangeActive =
     minQuestions !== 0 ||
-    maxQuestions !== 50 ||
+    maxQuestions !== questionMaxLimit ||
     minDuration !== 0 ||
-    maxDuration !== 50;
+    maxDuration !== durationMaxLimit;
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -343,7 +347,7 @@ export function ManageQuizFilters({
                 </div>
                 <DoubleRange
                   min={0}
-                  max={50}
+                  max={Math.max(1, questionMaxLimit)}
                   valueMin={minQuestions}
                   valueMax={maxQuestions}
                   onChange={onQuestionRangeChange}
@@ -356,7 +360,7 @@ export function ManageQuizFilters({
                 </div>
                 <DoubleRange
                   min={0}
-                  max={50}
+                  max={Math.max(1, durationMaxLimit)}
                   valueMin={minDuration}
                   valueMax={maxDuration}
                   onChange={onDurationRangeChange}
