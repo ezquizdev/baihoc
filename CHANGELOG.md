@@ -78,6 +78,9 @@
 ### fix(ui): make nested modal escape close top-most
 - Prevented the quiz builder from closing when pressing Escape inside the question-bank picker modal.
 
+### fix(security): add noopener to staff blank links
+- Added `rel=\"noopener noreferrer\"` to staff links that open in a new tab.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
