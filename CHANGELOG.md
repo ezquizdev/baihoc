@@ -2,6 +2,10 @@
 
 ## 2025-12-25
 
+### fix(build): resolve TypeScript build errors
+- Fixed question payload validator types to allow `null` for `options`/`shortAnswers` in PATCH updates.
+- Fixed a React effect cleanup to return `void` (not the boolean result of `delete`).
+
 ### chore(deps): add dnd-kit for sortable drag
 - Added `@dnd-kit/*` dependencies to support drag-to-reorder in staff quiz builder.
 

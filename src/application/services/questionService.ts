@@ -131,7 +131,7 @@ export async function deleteQuestionWithRules(questionId: string) {
 }
 
 function validateQuestionPayload(
-  input: Partial<CreateQuestionInput> & {
+  input: Partial<Omit<CreateQuestionInput, "options" | "shortAnswers">> & {
     options?: CreateQuestionInput["options"] | null;
     shortAnswers?: CreateQuestionInput["shortAnswers"] | null;
   },
