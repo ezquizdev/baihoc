@@ -131,6 +131,7 @@ export function ManageQuizScreen({
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      if (document.body.dataset.dndDragging === "true") return;
       if (createOpen) {
         setCreateOpen(false);
         return;

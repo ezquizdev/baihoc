@@ -5,6 +5,10 @@
 ### chore(deps): add dnd-kit for sortable drag
 - Added `@dnd-kit/*` dependencies to support drag-to-reorder in staff quiz builder.
 
+### feat(staff): drag to reorder quiz questions
+- Added handle-based drag-and-drop reordering (with keyboard support) in the quiz builder question list.
+- Prevented Escape during an active drag from closing the quiz builder modal.
+
 ### feat(attempt): add attempt domain models
 - Added attempt status + attempt question/answer domain types.
 

@@ -1,6 +1,28 @@
 "use client";
 
-import { X } from "phosphor-react";
+import {
+  closestCenter,
+  DndContext,
+  type DragCancelEvent,
+  type DragEndEvent,
+  type DragStartEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  restrictToFirstScrollableAncestor,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { DotsSixVertical, X } from "phosphor-react";
 import { useEffect, useMemo, useState } from "react";
 import type {
   QuizDetail,
@@ -35,6 +57,14 @@ export function QuizBuilderModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bankOpen, setBankOpen] = useState(false);
+  const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   useEffect(() => {
     if (!quizId) return;
@@ -71,6 +101,16 @@ export function QuizBuilderModal({
     run();
     return () => controller.abort();
   }, [quizId, refreshKey]);
+
+  useEffect(() => {
+    if (!quizId) return;
+    if (activeQuestionId) {
+      document.body.dataset.dndDragging = "true";
+    } else {
+      delete document.body.dataset.dndDragging;
+    }
+    return () => delete document.body.dataset.dndDragging;
+  }, [activeQuestionId, quizId]);
 
   const visibilityText = quiz?.visibility === "premium" ? "VIP" : "Miễn phí";
   const difficultyText = quiz ? `${quiz.difficulty}★` : "—";
@@ -152,6 +192,29 @@ export function QuizBuilderModal({
   const toolDisabled = useMemo(() => loading || saving, [loading, saving]);
 
   if (!quizId) return null;
+
+  const questionIds = questions.map((q) => q.id);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveQuestionId(String(event.active.id));
+  };
+
+  const handleDragCancel = (_event: DragCancelEvent) => {
+    setActiveQuestionId(null);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveQuestionId(null);
+    if (!over) return;
+    if (active.id === over.id) return;
+    setQuestions((prev) => {
+      const oldIndex = prev.findIndex((q) => q.id === active.id);
+      const newIndex = prev.findIndex((q) => q.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
 
   return (
     <div className={styles.modal} role="presentation">
@@ -247,111 +310,35 @@ export function QuizBuilderModal({
               </div>
 
               <div className={styles.builderSection}>Câu hỏi</div>
+              <div className={styles.builderHint}>
+                Kéo thả để sắp xếp (hoặc dùng ↑↓).
+              </div>
 
-              <div className={styles.qList}>
-                {questions.map((q, idx) => (
-                  <div key={q.id} className={styles.qCard} data-qid={q.id}>
-                    <div className={styles.qTitle}>{`Câu ${idx + 1}:`}</div>
-                    <p className={styles.qText}>{q.stem}</p>
-                    <div className={styles.qMetaRow}>
-                      <label className={styles.qMetaItem}>
-                        <span>Điểm</span>
-                        <input
-                          className={styles.qScoreInput}
-                          type="number"
-                          min={1}
-                          placeholder={String(q.defaultScore)}
-                          value={q.score ?? ""}
-                          onChange={(event) => {
-                            const raw = event.target.value;
-                            setQuestions((prev) =>
-                              prev.map((item) =>
-                                item.id === q.id
-                                  ? {
-                                      ...item,
-                                      score: raw ? Number(raw) : null,
-                                    }
-                                  : item,
-                              ),
-                            );
-                          }}
-                          disabled={toolDisabled}
-                        />
-                        <span className={styles.qMetaHint}>
-                          mặc định: {q.defaultScore}
-                        </span>
-                      </label>
-
-                      <label className={styles.qMetaToggle}>
-                        <input
-                          type="checkbox"
-                          checked={q.required}
-                          onChange={() => {
-                            setQuestions((prev) =>
-                              prev.map((item) =>
-                                item.id === q.id
-                                  ? { ...item, required: !item.required }
-                                  : item,
-                              ),
-                            );
-                          }}
-                          disabled={toolDisabled}
-                        />
-                        Bắt buộc
-                      </label>
-
-                      <div className={styles.qMove}>
-                        <button
-                          type="button"
-                          className={`${styles.smallBtn} ${styles.smallGray}`}
-                          onClick={() => {
-                            if (idx === 0) return;
-                            setQuestions((prev) => {
-                              const next = [...prev];
-                              const tmp = next[idx - 1];
-                              next[idx - 1] = next[idx];
-                              next[idx] = tmp;
-                              return next;
-                            });
-                          }}
-                          disabled={toolDisabled || idx === 0}
-                          aria-label="Đưa lên"
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          className={`${styles.smallBtn} ${styles.smallGray}`}
-                          onClick={() => {
-                            if (idx >= questions.length - 1) return;
-                            setQuestions((prev) => {
-                              const next = [...prev];
-                              const tmp = next[idx + 1];
-                              next[idx + 1] = next[idx];
-                              next[idx] = tmp;
-                              return next;
-                            });
-                          }}
-                          disabled={toolDisabled || idx >= questions.length - 1}
-                          aria-label="Đưa xuống"
-                        >
-                          ↓
-                        </button>
-                      </div>
-                    </div>
-                    <div className={styles.qActions}>
-                      <button
-                        className={`${styles.smallBtn} ${styles.smallBlue}`}
-                        type="button"
-                        onClick={() => onEditQuestion(q.id, idx + 1)}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragCancel={handleDragCancel}
+                onDragEnd={handleDragEnd}
+                modifiers={[
+                  restrictToVerticalAxis,
+                  restrictToFirstScrollableAncestor,
+                ]}
+              >
+                <SortableContext
+                  items={questionIds}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className={styles.qList} aria-label="Danh sách câu hỏi">
+                    {questions.map((q, idx) => (
+                      <SortableQuestionCard
+                        key={q.id}
+                        question={q}
+                        index={idx}
+                        total={questions.length}
                         disabled={toolDisabled}
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        className={`${styles.smallBtn} ${styles.smallRed}`}
-                        type="button"
-                        onClick={() => {
+                        onEdit={() => onEditQuestion(q.id, idx + 1)}
+                        onRemove={() => {
                           const ok = window.confirm(
                             "Xóa câu hỏi này khỏi quiz?",
                           );
@@ -360,14 +347,37 @@ export function QuizBuilderModal({
                             prev.filter((item) => item.id !== q.id),
                           );
                         }}
-                        disabled={toolDisabled}
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                        onMoveUp={() => {
+                          if (idx === 0) return;
+                          setQuestions((prev) => arrayMove(prev, idx, idx - 1));
+                        }}
+                        onMoveDown={() => {
+                          if (idx >= questions.length - 1) return;
+                          setQuestions((prev) => arrayMove(prev, idx, idx + 1));
+                        }}
+                        onScoreChange={(nextScore) => {
+                          setQuestions((prev) =>
+                            prev.map((item) =>
+                              item.id === q.id
+                                ? { ...item, score: nextScore }
+                                : item,
+                            ),
+                          );
+                        }}
+                        onToggleRequired={() => {
+                          setQuestions((prev) =>
+                            prev.map((item) =>
+                              item.id === q.id
+                                ? { ...item, required: !item.required }
+                                : item,
+                            ),
+                          );
+                        }}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
 
               {error ? (
                 <div className={styles.inlineError} role="alert">
@@ -443,5 +453,146 @@ export function QuizBuilderModal({
         }}
       />
     </div>
+  );
+}
+
+function SortableQuestionCard({
+  question,
+  index,
+  total,
+  disabled,
+  onEdit,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  onScoreChange,
+  onToggleRequired,
+}: {
+  question: QuizQuestionSummary;
+  index: number;
+  total: number;
+  disabled: boolean;
+  onEdit: () => void;
+  onRemove: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onScoreChange: (score: number | null) => void;
+  onToggleRequired: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: question.id,
+    disabled,
+  });
+
+  const style = {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    transition,
+  } as const;
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={`${styles.qCard} ${isDragging ? styles.qCardDragging : ""}`}
+      data-qid={question.id}
+    >
+      <div className={styles.qTitleRow}>
+        <button
+          ref={setActivatorNodeRef}
+          type="button"
+          className={styles.qDragHandle}
+          aria-label="Kéo để sắp xếp"
+          disabled={disabled}
+          {...attributes}
+          {...listeners}
+        >
+          <DotsSixVertical size={18} weight="bold" aria-hidden="true" />
+        </button>
+        <div className={styles.qTitle}>{`Câu ${index + 1}:`}</div>
+      </div>
+
+      <p className={styles.qText}>{question.stem}</p>
+
+      <div className={styles.qMetaRow}>
+        <label className={styles.qMetaItem}>
+          <span>Điểm</span>
+          <input
+            className={styles.qScoreInput}
+            type="number"
+            min={1}
+            placeholder={String(question.defaultScore)}
+            value={question.score ?? ""}
+            onChange={(event) => {
+              const raw = event.target.value;
+              onScoreChange(raw ? Number(raw) : null);
+            }}
+            disabled={disabled}
+          />
+          <span className={styles.qMetaHint}>
+            mặc định: {question.defaultScore}
+          </span>
+        </label>
+
+        <label className={styles.qMetaToggle}>
+          <input
+            type="checkbox"
+            checked={question.required}
+            onChange={onToggleRequired}
+            disabled={disabled}
+          />
+          Bắt buộc
+        </label>
+
+        <div className={styles.qMove}>
+          <button
+            type="button"
+            className={`${styles.smallBtn} ${styles.smallGray}`}
+            onClick={onMoveUp}
+            disabled={disabled || index === 0}
+            aria-label="Đưa lên"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className={`${styles.smallBtn} ${styles.smallGray}`}
+            onClick={onMoveDown}
+            disabled={disabled || index >= total - 1}
+            aria-label="Đưa xuống"
+          >
+            ↓
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.qActions}>
+        <button
+          className={`${styles.smallBtn} ${styles.smallBlue}`}
+          type="button"
+          onClick={onEdit}
+          disabled={disabled}
+        >
+          Sửa
+        </button>
+        <button
+          className={`${styles.smallBtn} ${styles.smallRed}`}
+          type="button"
+          onClick={onRemove}
+          disabled={disabled}
+        >
+          Xóa
+        </button>
+      </div>
+    </li>
   );
 }
