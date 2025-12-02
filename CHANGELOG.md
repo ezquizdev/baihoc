@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### refactor(challenge): remove challenge rules
+- Removed the `challenge_settings.rules` column and the staff UI/API field.
+
 ### refactor(quiz): remove thumbnail support
 - Removed `thumbnail_url` from the quizzes table and seed data.
 - Removed thumbnail fields from staff quiz APIs and UI.

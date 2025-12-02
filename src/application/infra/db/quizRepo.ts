@@ -35,7 +35,6 @@ export type ChallengeSettingsRow = {
   start_at: string;
   end_at: string;
   time_limit_seconds: number;
-  rules: unknown;
 };
 
 export type QuizQuestionRow = {
@@ -99,7 +98,6 @@ function mapChallenge(
     startAt: row.start_at,
     endAt: row.end_at,
     timeLimitSeconds: row.time_limit_seconds,
-    rules: row.rules,
   };
 }
 
@@ -170,13 +168,12 @@ export async function insertQuiz(input: {
     }
 
     if (quizRow.is_challenge && hasCompleteChallenge(input.challenge)) {
-      const { startAt, endAt, timeLimitSeconds, rules } = input.challenge;
+      const { startAt, endAt, timeLimitSeconds } = input.challenge;
       await upsertChallengeInternal(client, {
         quizId: quizRow.id,
         startAt,
         endAt,
         timeLimitSeconds,
-        rules: rules ?? {},
       });
     }
 
@@ -259,13 +256,12 @@ export async function updateQuiz(input: {
           [input.quizId],
         );
       } else if (hasCompleteChallenge(input.challenge)) {
-        const { startAt, endAt, timeLimitSeconds, rules } = input.challenge;
+        const { startAt, endAt, timeLimitSeconds } = input.challenge;
         await upsertChallengeInternal(client, {
           quizId: input.quizId,
           startAt,
           endAt,
           timeLimitSeconds,
-          rules: rules ?? {},
         });
       }
     } else {
@@ -354,7 +350,9 @@ export async function getQuizDetail(
   ]);
 
   const challengeRes = await query<ChallengeSettingsRow>(
-    `SELECT * FROM challenge_settings WHERE quiz_id = $1`,
+    `SELECT quiz_id, start_at, end_at, time_limit_seconds
+     FROM challenge_settings
+     WHERE quiz_id = $1`,
     [quizId],
   );
 
@@ -712,20 +710,13 @@ async function upsertChallengeInternal(
   input: ChallengeSettings,
 ) {
   await client.query(
-    `INSERT INTO challenge_settings (quiz_id, start_at, end_at, time_limit_seconds, rules)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO challenge_settings (quiz_id, start_at, end_at, time_limit_seconds)
+     VALUES ($1, $2, $3, $4)
      ON CONFLICT (quiz_id)
      DO UPDATE SET start_at = EXCLUDED.start_at,
                    end_at = EXCLUDED.end_at,
-                   time_limit_seconds = EXCLUDED.time_limit_seconds,
-                   rules = EXCLUDED.rules`,
-    [
-      input.quizId,
-      input.startAt,
-      input.endAt,
-      input.timeLimitSeconds,
-      input.rules ?? {},
-    ],
+                   time_limit_seconds = EXCLUDED.time_limit_seconds`,
+    [input.quizId, input.startAt, input.endAt, input.timeLimitSeconds],
   );
 }
 
