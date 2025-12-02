@@ -148,7 +148,12 @@ export function StaffQuizCard({
   };
 
   return (
-    <article className={cardStyles.quizCard} aria-label={`Quiz ${quiz.id}`}>
+    <article
+      className={`${cardStyles.quizCard} ${
+        quiz.isChallenge ? cardStyles.quizCardChallenge : ""
+      }`}
+      aria-label={`Quiz ${quiz.id}`}
+    >
       <div className={cardStyles.quizHead}>
         <span className={cardStyles.quizDate}>{dateLabel}</span>
         {quiz.visibility === "premium" ? (
@@ -180,17 +185,16 @@ export function StaffQuizCard({
             <span className={cardStyles.metaIcon} aria-hidden="true">
               <ListChecks size={12} weight="bold" />
             </span>
-            <span>
-              {questionCount} câu
-              <br />
-              {minutes !== null ? `${minutes} phút` : "— phút"}
-            </span>
+            <span>{questionCount} câu</span>
           </div>
           <div className={cardStyles.quizMetaItem}>
-            <span className={cardStyles.metaIcon} aria-hidden="true">
+            <span
+              className={`${cardStyles.metaIcon} ${cardStyles.metaIconClock}`}
+              aria-hidden="true"
+            >
               <Clock size={12} weight="bold" />
             </span>
-            <span>{quiz.isChallenge ? "Challenge" : "Quiz"}</span>
+            <span>{minutes !== null ? `${minutes} phút` : "— phút"}</span>
           </div>
         </div>
 
