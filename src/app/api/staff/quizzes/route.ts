@@ -18,7 +18,6 @@ const quizPayloadSchema = z.object({
   visibility: z.enum(QuizVisibilityValues),
   isChallenge: z.boolean().optional(),
   estimatedTimeSeconds: z.number().int().positive().nullable().optional(),
-  thumbnailUrl: z.string().url().nullable().optional(),
   featuredRank: z.number().int().nullable().optional(),
   challenge: z
     .object({

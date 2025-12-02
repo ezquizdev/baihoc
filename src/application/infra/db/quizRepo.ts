@@ -22,7 +22,6 @@ export type QuizRow = {
   status: QuizStatus;
   is_challenge: boolean;
   estimated_time_seconds: number | null;
-  thumbnail_url: string | null;
   featured_rank: number | null;
   created_by: string;
   created_at: string;
@@ -79,7 +78,6 @@ function mapQuiz(row: QuizRow): Quiz {
     status: row.status,
     isChallenge: row.is_challenge,
     estimatedTimeSeconds: row.estimated_time_seconds,
-    thumbnailUrl: row.thumbnail_url,
     featuredRank: row.featured_rank,
     createdBy: row.created_by,
     createdAt: row.created_at,
@@ -138,7 +136,6 @@ export async function insertQuiz(input: {
   status?: QuizStatus;
   isChallenge?: boolean;
   estimatedTimeSeconds?: number | null;
-  thumbnailUrl?: string | null;
   featuredRank?: number | null;
   createdBy: string;
   challenge?: Partial<ChallengeSettings>;
@@ -147,12 +144,12 @@ export async function insertQuiz(input: {
     const res = await client.query<QuizRow>(
       `INSERT INTO quizzes (
         title, description, difficulty_level, visibility, status,
-        is_challenge, estimated_time_seconds, thumbnail_url, featured_rank,
+        is_challenge, estimated_time_seconds, featured_rank,
         created_by, search_vector
       ) VALUES (
         $1, $2, $3, $4::quiz_visibility,
         COALESCE($5::quiz_status, 'draft'),
-        COALESCE($6, false), $7, $8, $9, $10, ${insertSearchVectorSql}
+        COALESCE($6, false), $7, $8, $9, ${insertSearchVectorSql}
       ) RETURNING *`,
       [
         input.title,
@@ -162,7 +159,6 @@ export async function insertQuiz(input: {
         input.status ?? "draft",
         input.isChallenge ?? false,
         input.estimatedTimeSeconds ?? null,
-        input.thumbnailUrl ?? null,
         input.featuredRank ?? null,
         input.createdBy,
       ],
@@ -198,7 +194,6 @@ export async function updateQuiz(input: {
   visibility?: QuizVisibility;
   isChallenge?: boolean;
   estimatedTimeSeconds?: number | null;
-  thumbnailUrl?: string | null;
   featuredRank?: number | null;
   status?: QuizStatus;
   challenge?: Partial<ChallengeSettings> | null;
@@ -224,8 +219,6 @@ export async function updateQuiz(input: {
     push("is_challenge = $idx", input.isChallenge);
   if (input.estimatedTimeSeconds !== undefined)
     push("estimated_time_seconds = $idx", input.estimatedTimeSeconds);
-  if (input.thumbnailUrl !== undefined)
-    push("thumbnail_url = $idx", input.thumbnailUrl);
   if (input.featuredRank !== undefined)
     push("featured_rank = $idx", input.featuredRank);
   if (input.status !== undefined)

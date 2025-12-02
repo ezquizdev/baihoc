@@ -2,6 +2,10 @@
 
 ## 2025-12-25
 
+### refactor(quiz): remove thumbnail support
+- Removed `thumbnail_url` from the quizzes table and seed data.
+- Removed thumbnail fields from staff quiz APIs and UI.
+
 ### fix(ui): polish staff quiz cards
 - Centered and stabilized the action button row (prevents awkward wrapping).
 - Matched quiz/challenge visual styling with the quiz catalog card tone and decorations.

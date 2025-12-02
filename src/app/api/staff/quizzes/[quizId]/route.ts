@@ -20,7 +20,6 @@ const updateSchema = z.object({
   visibility: z.enum(QuizVisibilityValues).optional(),
   isChallenge: z.boolean().optional(),
   estimatedTimeSeconds: z.number().int().positive().nullable().optional(),
-  thumbnailUrl: z.string().url().nullable().optional(),
   featuredRank: z.number().int().nullable().optional(),
   status: z.enum(QuizStatusValues).optional(),
   challenge: z

@@ -34,7 +34,6 @@ export function QuizInfoModal({
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [featuredRank, setFeaturedRank] = useState("");
   const [visibility, setVisibility] = useState<QuizVisibility>("free");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>(5);
@@ -68,7 +67,6 @@ export function QuizInfoModal({
         setQuiz(nextQuiz);
         setTitle(nextQuiz.title ?? "");
         setDescription(nextQuiz.description ?? "");
-        setThumbnailUrl(nextQuiz.thumbnailUrl ?? "");
         setFeaturedRank(
           nextQuiz.featuredRank !== null && nextQuiz.featuredRank !== undefined
             ? String(nextQuiz.featuredRank)
@@ -150,7 +148,6 @@ export function QuizInfoModal({
       const titleTrimmed = title.trim();
       if (titleTrimmed) payload.title = titleTrimmed;
       payload.description = description.trim() ? description.trim() : null;
-      payload.thumbnailUrl = thumbnailUrl.trim() ? thumbnailUrl.trim() : null;
       const featuredRankTrimmed = featuredRank.trim();
       if (!featuredRankTrimmed) {
         payload.featuredRank = null;
@@ -280,18 +277,6 @@ export function QuizInfoModal({
                     placeholder=".............................................................."
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
-                    disabled={disabled}
-                  />
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.label}>Thumbnail URL:</div>
-                  <input
-                    className={styles.dashInput}
-                    type="url"
-                    placeholder="https://..."
-                    value={thumbnailUrl}
-                    onChange={(event) => setThumbnailUrl(event.target.value)}
                     disabled={disabled}
                   />
                 </div>

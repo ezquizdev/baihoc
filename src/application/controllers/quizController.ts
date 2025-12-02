@@ -30,7 +30,6 @@ export async function controllerCreateQuiz(input: {
   visibility: QuizVisibility;
   isChallenge?: boolean;
   estimatedTimeSeconds?: number | null;
-  thumbnailUrl?: string | null;
   featuredRank?: number | null;
   createdBy: string;
   challenge?: {
@@ -52,7 +51,6 @@ export async function controllerUpdateQuiz(
     visibility?: QuizVisibility;
     isChallenge?: boolean;
     estimatedTimeSeconds?: number | null;
-    thumbnailUrl?: string | null;
     featuredRank?: number | null;
     status?: QuizStatus;
     challenge?: {
