@@ -2,6 +2,22 @@
 
 ## 2025-12-25
 
+### fix(staff): preserve quiz builder state on question save
+- Prevented the quiz builder from wiping unsaved question selections when a question is edited and saved.
+- Reset builder state cleanly when switching between quizzes.
+
+### fix(a11y): localize quiz builder drag announcements
+- Localized drag-and-drop screen reader announcements and removed internal IDs from the live region output.
+
+### fix(staff): stabilize quiz builder hook order
+- Fixed a client-side crash when opening the quiz builder by ensuring all hooks run unconditionally.
+
+### chore(lint): fix quiz builder biome warnings
+- Tweaked quiz builder hooks/utilities to satisfy Biome lint rules.
+
+### fix(build): type quiz builder drag announcements
+- Added explicit typing for dnd-kit accessibility callbacks to satisfy TypeScript strict mode.
+
 ### refactor(staff): hide quiz archive UI
 - Removed archive/restore buttons and archived visual indicators from staff quiz cards and filters.
 - Replaced the staff-only bookmark control with a draft status chip.

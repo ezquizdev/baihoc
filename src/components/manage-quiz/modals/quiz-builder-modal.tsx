@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type Announcements,
   closestCenter,
   DndContext,
   type DragCancelEvent,
@@ -8,6 +9,7 @@ import {
   type DragStartEvent,
   KeyboardSensor,
   PointerSensor,
+  type ScreenReaderInstructions,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -59,6 +61,16 @@ export function QuizBuilderModal({
   const [bankOpen, setBankOpen] = useState(false);
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
 
+  useEffect(() => {
+    void quizId;
+    setQuiz(null);
+    setDescription("");
+    setQuestions([]);
+    setError(null);
+    setBankOpen(false);
+    setActiveQuestionId(null);
+  }, [quizId]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
@@ -86,11 +98,24 @@ export function QuizBuilderModal({
         if (!nextQuiz) throw new Error("Không thể tải quiz");
         setQuiz(nextQuiz);
         setDescription(nextQuiz.description ?? "");
-        setQuestions(
-          [...(nextQuiz.questions ?? [])].sort(
-            (a, b) => a.position - b.position,
-          ),
+        const nextQuestions = [...(nextQuiz.questions ?? [])].sort(
+          (a, b) => a.position - b.position,
         );
+        setQuestions((prev) => {
+          if (prev.length === 0) return nextQuestions;
+          if (nextQuestions.length === 0) return prev;
+          const freshById = new Map(nextQuestions.map((q) => [q.id, q]));
+          return prev.map((q) => {
+            const fresh = freshById.get(q.id);
+            if (!fresh) return q;
+            return {
+              ...q,
+              stem: fresh.stem,
+              type: fresh.type,
+              defaultScore: fresh.defaultScore,
+            };
+          });
+        });
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Không thể tải quiz");
@@ -193,9 +218,56 @@ export function QuizBuilderModal({
 
   const toolDisabled = useMemo(() => loading || saving, [loading, saving]);
 
-  if (!quizId) return null;
-
   const questionIds = questions.map((q) => q.id);
+  const questionPositionById = useMemo(() => {
+    const map = new Map<string, number>();
+    questions.forEach((q, idx) => {
+      map.set(q.id, idx + 1);
+    });
+    return map;
+  }, [questions]);
+
+  const dndAccessibility = useMemo(() => {
+    const labelFor = (id: unknown) => {
+      const position = questionPositionById.get(String(id));
+      return position ? `Câu ${position}` : "Câu hỏi";
+    };
+
+    const announcements: Announcements = {
+      onDragStart({ active }) {
+        return `Bắt đầu kéo ${labelFor(active.id)}.`;
+      },
+      onDragOver({ active, over }) {
+        if (!over) return `${labelFor(active.id)} không còn ở vị trí hợp lệ.`;
+        const from = labelFor(active.id);
+        const to = labelFor(over.id);
+        if (from === to) return;
+        return `${from} đang ở vị trí của ${to}.`;
+      },
+      onDragEnd({ active, over }) {
+        if (!over) return `Đã thả ${labelFor(active.id)}.`;
+        const from = labelFor(active.id);
+        const to = labelFor(over.id);
+        if (from === to) return `Đã thả ${from}.`;
+        return `${from} đã được di chuyển tới vị trí của ${to}.`;
+      },
+      onDragCancel({ active }) {
+        return `Đã hủy kéo ${labelFor(active.id)}.`;
+      },
+    };
+
+    const screenReaderInstructions: ScreenReaderInstructions = {
+      draggable:
+        "Để sắp xếp câu hỏi: nhấn Space để nhấc, dùng ↑/↓ để di chuyển, nhấn Space lần nữa để thả, hoặc nhấn Escape để hủy.",
+    };
+
+    return {
+      announcements,
+      screenReaderInstructions,
+    };
+  }, [questionPositionById]);
+
+  if (!quizId) return null;
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveQuestionId(String(event.active.id));
@@ -318,6 +390,7 @@ export function QuizBuilderModal({
 
               <DndContext
                 sensors={sensors}
+                accessibility={dndAccessibility}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragCancel={handleDragCancel}
