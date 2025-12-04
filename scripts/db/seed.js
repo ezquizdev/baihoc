@@ -123,9 +123,16 @@ async function main() {
 
     const questionRows = [];
     const questionTopicRows = [];
+    const questionOptionRows = [];
+    const shortAnswerKeyRows = [];
     const passageRows = [];
     const questionPassageRows = [];
     const questionGroups = new Map();
+    const questionIdsByType = {
+      mcq_single: [],
+      mcq_multi: [],
+      short_answer: [],
+    };
 
     subjects.forEach((subject) => {
       const groups = [];
@@ -140,21 +147,38 @@ async function main() {
         const passageId = crypto.randomUUID();
         const groupSize = randomInt(2, 4);
         const groupQuestionIds = [];
+        const groupTypes =
+          groupSize >= 3
+            ? ["mcq_single", "mcq_multi", "short_answer"]
+            : ["mcq_single", "mcq_multi"];
         passageRows.push([
           passageId,
-          `Đoạn văn ${g + 1} cho ${subject.name}`,
+          buildPassageContent({
+            subjectName: subject.name,
+            subjectSlug: subject.slug,
+            groupIndex: g,
+            groupSize,
+            startPosition: generated + 1,
+          }),
           [],
         ]);
         for (let j = 0; j < groupSize; j += 1) {
           const id = crypto.randomUUID();
           const difficulty = pick(difficultyLevels);
-          const stem = `Câu hỏi ${generated + j + 1} (đoạn văn) về ${subject.name}`;
+          const type = groupTypes[j] ?? pick(Object.keys(questionIdsByType));
+          const stem = buildQuestionStem({
+            subjectName: subject.name,
+            subjectSlug: subject.slug,
+            index: generated + j + 1,
+            type,
+            passage: true,
+          });
           const explanation = `Giải thích cho câu hỏi ${generated + j + 1} (${subject.name}).`;
           questionRows.push([
             id,
             subject.id,
             difficulty,
-            "mcq_single",
+            type,
             stem,
             explanation,
             "active",
@@ -162,6 +186,16 @@ async function main() {
             1,
             staff.id,
           ]);
+          questionIdsByType[type].push(id);
+          seedQuestionMeta({
+            questionOptionRows,
+            shortAnswerKeyRows,
+            questionId: id,
+            type,
+            subject,
+            index: generated + j + 1,
+            passage: true,
+          });
           assignQuestionTopics(questionTopicRows, id, subjectTopicIds);
           questionPassageRows.push([id, passageId, j + 1]);
           groupQuestionIds.push(id);
@@ -170,16 +204,31 @@ async function main() {
         generated += groupSize;
       }
 
+      const standaloneTypeSequence = [
+        "mcq_single",
+        "mcq_single",
+        "mcq_multi",
+        "mcq_single",
+        "short_answer",
+      ];
       for (let i = generated; i < config.questionsPerSubject; i += 1) {
         const id = crypto.randomUUID();
         const difficulty = pick(difficultyLevels);
-        const stem = `Câu hỏi ${i + 1} về ${subject.name}`;
+        const type =
+          standaloneTypeSequence[(i - generated) % standaloneTypeSequence.length];
+        const stem = buildQuestionStem({
+          subjectName: subject.name,
+          subjectSlug: subject.slug,
+          index: i + 1,
+          type,
+          passage: false,
+        });
         const explanation = `Giải thích cho câu hỏi ${i + 1} (${subject.name}).`;
         questionRows.push([
           id,
           subject.id,
           difficulty,
-          "mcq_single",
+          type,
           stem,
           explanation,
           "active",
@@ -187,6 +236,16 @@ async function main() {
           1,
           staff.id,
         ]);
+        questionIdsByType[type].push(id);
+        seedQuestionMeta({
+          questionOptionRows,
+          shortAnswerKeyRows,
+          questionId: id,
+          type,
+          subject,
+          index: i + 1,
+          passage: false,
+        });
         assignQuestionTopics(questionTopicRows, id, subjectTopicIds);
         groups.push([id]);
       }
@@ -211,6 +270,22 @@ async function main() {
       ],
       questionRows,
     );
+    if (questionOptionRows.length) {
+      await insertRows(
+        client,
+        "question_options",
+        ["question_id", "label", "text", "is_correct", "position"],
+        questionOptionRows,
+      );
+    }
+    if (shortAnswerKeyRows.length) {
+      await insertRows(
+        client,
+        "short_answer_keys",
+        ["question_id", "acceptable_answer", "case_sensitive"],
+        shortAnswerKeyRows,
+      );
+    }
     if (passageRows.length) {
       await insertRows(
         client,
@@ -245,14 +320,21 @@ async function main() {
 
     for (let i = 0; i < config.quizzes; i += 1) {
       const quizId = crypto.randomUUID();
-      const chosenSubjects = pickSubjects(subjects, config.multiSubjectRate);
+      const isDemoQuiz = i === 0;
+      const chosenSubjects = isDemoQuiz
+        ? subjects
+        : pickSubjects(subjects, config.multiSubjectRate);
       const primarySubject = pick(chosenSubjects);
-      const difficulty = pick(difficultyLevels);
-      const visibility = pick(quizVisibility);
-      const isChallenge = Math.random() < 0.2;
-      const title = `${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`;
-      const description = `Bộ câu hỏi ${title.toLowerCase()} dành cho luyện tập.`;
-      const minutes = randomInt(10, 50);
+      const difficulty = isDemoQuiz ? 2 : pick(difficultyLevels);
+      const visibility = isDemoQuiz ? "free" : pick(quizVisibility);
+      const isChallenge = isDemoQuiz ? false : Math.random() < 0.2;
+      const title = isDemoQuiz
+        ? "Demo: Tất cả dạng câu hỏi"
+        : `${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`;
+      const description = isDemoQuiz
+        ? "Quiz mẫu để kiểm tra đủ dạng câu hỏi (MCQ 1 đáp án, nhiều đáp án, và tự luận ngắn) + đoạn văn."
+        : `Bộ câu hỏi ${title.toLowerCase()} dành cho luyện tập.`;
+      const minutes = isDemoQuiz ? 20 : randomInt(10, 50);
       const timestamps = randomTimestamps(120);
 
       quizRows.push([
@@ -280,19 +362,34 @@ async function main() {
         ]);
       }
 
-      const questionTotal = randomInt(8, 30);
-      const distribution = distribute(questionTotal, chosenSubjects.length);
       let position = 1;
-      chosenSubjects.forEach((subject, index) => {
-        const groups = questionGroups.get(subject.id) ?? [];
-        const selectedGroups = pickQuestionGroups(groups, distribution[index]);
-        selectedGroups.forEach((group) => {
-          group.forEach((questionId) => {
-            quizQuestionRows.push([quizId, questionId, position, null, true]);
-            position += 1;
+      if (isDemoQuiz) {
+        const demoQuestionIds = buildDemoQuestionList({
+          chosenSubjects,
+          questionGroups,
+          questionIdsByType,
+        });
+        demoQuestionIds.forEach((questionId) => {
+          quizQuestionRows.push([quizId, questionId, position, null, true]);
+          position += 1;
+        });
+      } else {
+        const questionTotal = randomInt(8, 30);
+        const distribution = distribute(questionTotal, chosenSubjects.length);
+        chosenSubjects.forEach((subject, index) => {
+          const groups = questionGroups.get(subject.id) ?? [];
+          const selectedGroups = pickQuestionGroups(
+            groups,
+            distribution[index],
+          );
+          selectedGroups.forEach((group) => {
+            group.forEach((questionId) => {
+              quizQuestionRows.push([quizId, questionId, position, null, true]);
+              position += 1;
+            });
           });
         });
-      });
+      }
 
       const questionCount = Math.max(position - 1, 0);
       const attemptCount = randomInt(0, config.maxAttemptsPerQuiz);
@@ -634,6 +731,109 @@ function distribute(total, buckets) {
     remaining -= 1;
   }
   return base;
+}
+
+function buildPassageContent({
+  subjectName,
+  subjectSlug,
+  groupIndex,
+  groupSize,
+  startPosition,
+}) {
+  const endPosition = startPosition + groupSize - 1;
+  const title = `Dựa vào đoạn văn dưới đây để trả lời câu hỏi ${startPosition}–${endPosition}:`;
+  const body = [
+    `Chủ đề: ${subjectName} (${subjectSlug.toUpperCase()})`,
+    `Đây là đoạn văn mẫu #${groupIndex + 1} được seed để kiểm tra UI hiển thị "đoạn văn" (multi-line + pre-wrap).`,
+    "Bạn có thể cuộn, chuyển câu, và kiểm tra việc giữ nguyên đoạn văn khi đổi câu trong cùng nhóm.",
+  ].join("\n\n");
+  return `${title}\n\n${body}`;
+}
+
+function buildQuestionStem({ subjectName, subjectSlug, index, type, passage }) {
+  const prefix = passage ? `Câu hỏi ${index} (đoạn văn)` : `Câu hỏi ${index}`;
+  const typeHint =
+    type === "mcq_multi"
+      ? "Chọn nhiều đáp án đúng."
+      : type === "short_answer"
+        ? "Nhập đáp án ngắn."
+        : "Chọn 1 đáp án đúng.";
+  return `${prefix} về ${subjectName}.\n\n${typeHint}\n\n[Mã chủ đề: ${subjectSlug.toUpperCase()}-${index}]`;
+}
+
+function seedQuestionMeta({
+  questionOptionRows,
+  shortAnswerKeyRows,
+  questionId,
+  type,
+  subject,
+  index,
+  passage,
+}) {
+  if (type === "short_answer") {
+    const base = `${subject.slug}-${index}`;
+    const caseSensitive = passage && Math.random() < 0.5;
+    const answer = caseSensitive ? base.toUpperCase() : base;
+    shortAnswerKeyRows.push([questionId, answer, caseSensitive]);
+    return;
+  }
+
+  const labels = ["A", "B", "C", "D"];
+  const optionTexts = labels.map(
+    (label) =>
+      `${subject.name} • ${passage ? "Đoạn văn" : "Cơ bản"} • ${label} (${subject.slug.toUpperCase()}-${index})`,
+  );
+  const positions = [1, 2, 3, 4];
+  const correctPositions =
+    type === "mcq_multi"
+      ? sample(positions, randomInt(2, 3))
+      : [pick(positions)];
+
+  labels.forEach((label, idx) => {
+    const position = idx + 1;
+    questionOptionRows.push([
+      questionId,
+      label,
+      optionTexts[idx],
+      correctPositions.includes(position),
+      position,
+    ]);
+  });
+}
+
+function buildDemoQuestionList({
+  chosenSubjects,
+  questionGroups,
+  questionIdsByType,
+}) {
+  const seen = new Set();
+  const ordered = [];
+
+  for (const subject of chosenSubjects) {
+    const groups = questionGroups.get(subject.id) ?? [];
+    const passageGroup = groups.find((group) => group.length >= 2);
+    if (!passageGroup) continue;
+    for (const id of passageGroup) {
+      if (seen.has(id)) continue;
+      ordered.push(id);
+      seen.add(id);
+    }
+    break;
+  }
+
+  const ensureType = (type) => {
+    const candidates = questionIdsByType[type] ?? [];
+    const pickId = candidates.find((id) => !seen.has(id));
+    if (!pickId) return;
+    ordered.push(pickId);
+    seen.add(pickId);
+  };
+
+  ensureType("mcq_single");
+  ensureType("mcq_multi");
+  ensureType("short_answer");
+
+  return ordered;
 }
 
 main();
