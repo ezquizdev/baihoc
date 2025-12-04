@@ -9,6 +9,7 @@ import type {
   AttemptAnswer,
   AttemptQuestion,
   AttemptQuestionOption,
+  AttemptStateResponse,
   AttemptStatus,
 } from "@/application/models/attempt";
 import type { QuestionType } from "@/application/models/enums";
@@ -68,6 +69,8 @@ type QuizAttemptMetaRow = {
   is_challenge: boolean;
   estimated_time_seconds: number | null;
   challenge_time_limit_seconds: number | null;
+  challenge_start_at: string | null;
+  challenge_end_at: string | null;
   total_questions: number;
 };
 
@@ -76,6 +79,8 @@ export type QuizAttemptMeta = {
   isChallenge: boolean;
   estimatedTimeSeconds: number | null;
   challengeTimeLimitSeconds: number | null;
+  challengeStartAt: string | null;
+  challengeEndAt: string | null;
   totalQuestions: number;
 };
 
@@ -109,13 +114,7 @@ export type GradedAnswerInput = {
   awardedScore: number;
 };
 
-export type AttemptStateResult = {
-  attempt: Attempt;
-  ownerId: string;
-  quizId: string;
-  questions: AttemptQuestion[];
-  answers: AttemptAnswer[];
-};
+export type AttemptStateResult = AttemptStateResponse;
 
 type SubmitAttemptInput = {
   attemptId: string;
@@ -194,6 +193,8 @@ export async function getQuizAttemptMeta(
             q.is_challenge,
             q.estimated_time_seconds,
             cs.time_limit_seconds AS challenge_time_limit_seconds,
+            cs.start_at AS challenge_start_at,
+            cs.end_at AS challenge_end_at,
             (SELECT COUNT(*)::int FROM quiz_questions qq WHERE qq.quiz_id = q.id) AS total_questions
      FROM quizzes q
      LEFT JOIN challenge_settings cs ON cs.quiz_id = q.id
@@ -208,6 +209,8 @@ export async function getQuizAttemptMeta(
     isChallenge: row.is_challenge,
     estimatedTimeSeconds: row.estimated_time_seconds,
     challengeTimeLimitSeconds: row.challenge_time_limit_seconds,
+    challengeStartAt: row.challenge_start_at,
+    challengeEndAt: row.challenge_end_at,
     totalQuestions: Number(row.total_questions),
   };
 }
@@ -257,54 +260,52 @@ export async function createAttempt(input: {
     input.totalQuestions,
   ];
 
+  const insertSql = `INSERT INTO attempts (
+       user_id,
+       quiz_id,
+       challenge_id,
+       time_limit_seconds,
+       remaining_seconds,
+       total_questions
+     ) VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING *`;
+
   if (!input.challengeId) {
-    const res = await query<AttemptRow>(
-      `INSERT INTO attempts (
-         user_id,
-         quiz_id,
-         challenge_id,
-         time_limit_seconds,
-         remaining_seconds,
-         total_questions
-       ) VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      params,
-    );
+    const res = await query<AttemptRow>(insertSql, params);
     const row = res.rows[0];
     if (!row) throw new Error("Failed to create attempt");
     return row;
   }
 
   try {
-    const res = await query<AttemptRow>(
-      `INSERT INTO attempts (
-         user_id,
-         quiz_id,
-         challenge_id,
-         time_limit_seconds,
-         remaining_seconds,
-         total_questions
-       ) VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      params,
-    );
+    const res = await query<AttemptRow>(insertSql, params);
     const row = res.rows[0];
-    if (!row) throw new Error("Failed to create attempt");
-    return row;
+    if (row) return row;
   } catch (error) {
-    if ((error as { code?: string } | null)?.code === "23505") {
-      const existing = await query<AttemptRow>(
+    if (isUniqueViolation(error)) {
+      const res = await query<AttemptRow>(
         `SELECT * FROM attempts
          WHERE user_id = $1 AND challenge_id = $2
          ORDER BY started_at DESC
          LIMIT 1`,
         [input.userId, input.challengeId],
       );
-      const row = existing.rows[0];
+      const row = res.rows[0];
       if (row) return row;
     }
     throw error;
   }
+
+  throw new Error("Failed to create attempt");
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "23505"
+  );
 }
 
 export async function getAttemptById(
@@ -319,9 +320,15 @@ export async function getAttemptById(
 export async function getAttemptState(
   attemptId: string,
 ): Promise<AttemptStateResult | null> {
-  const res = await query<AttemptRow>(`SELECT * FROM attempts WHERE id = $1`, [
-    attemptId,
-  ]);
+  const res = await query<
+    AttemptRow & { quiz_title: string | null | undefined }
+  >(
+    `SELECT a.*, q.title AS quiz_title
+     FROM attempts a
+     LEFT JOIN quizzes q ON q.id = a.quiz_id
+     WHERE a.id = $1`,
+    [attemptId],
+  );
   const attemptRow = res.rows[0];
   if (!attemptRow) return null;
   const [questions, answers] = await Promise.all([
@@ -332,6 +339,7 @@ export async function getAttemptState(
     attempt: mapAttempt(attemptRow),
     ownerId: attemptRow.user_id,
     quizId: attemptRow.quiz_id,
+    quizTitle: attemptRow.quiz_title ?? null,
     questions,
     answers,
   };
@@ -414,6 +422,25 @@ export async function listQuizQuestionMeta(
      JOIN questions q ON q.id = qq.question_id
      WHERE qq.quiz_id = $1`,
     [quizId],
+  );
+  return res.rows.map((row) => ({
+    questionId: row.question_id,
+    type: row.type,
+  }));
+}
+
+export async function listQuizQuestionMetaByIds(
+  quizId: string,
+  questionIds: string[],
+): Promise<QuizQuestionMeta[]> {
+  if (!questionIds.length) return [];
+  const res = await query<{ question_id: string; type: QuestionType }>(
+    `SELECT qq.question_id, q.type
+     FROM quiz_questions qq
+     JOIN questions q ON q.id = qq.question_id
+     WHERE qq.quiz_id = $1
+       AND qq.question_id = ANY($2)`,
+    [quizId, questionIds],
   );
   return res.rows.map((row) => ({
     questionId: row.question_id,
@@ -522,14 +549,29 @@ export async function saveAttemptAnswers(input: {
   attemptId: string;
   answers: AttemptAnswerInput[];
   remainingSeconds?: number | null;
-}) {
-  if (!input.answers.length && input.remainingSeconds === undefined) return;
-  await withTransaction(async (client) => {
+}): Promise<AttemptRow | null> {
+  return withTransaction(async (client) => {
+    const attemptRes = await client.query<AttemptRow>(
+      `SELECT * FROM attempts WHERE id = $1 FOR UPDATE`,
+      [input.attemptId],
+    );
+    const attemptRow = attemptRes.rows[0];
+    if (!attemptRow) return null;
+
+    if (attemptRow.status !== "in_progress") {
+      return attemptRow;
+    }
+
+    let updatedAttemptRow = attemptRow;
     if (input.remainingSeconds !== undefined) {
-      await client.query(
-        `UPDATE attempts SET remaining_seconds = $2 WHERE id = $1`,
+      const updatedRes = await client.query<AttemptRow>(
+        `UPDATE attempts SET remaining_seconds = $2 WHERE id = $1 RETURNING *`,
         [input.attemptId, input.remainingSeconds],
       );
+      const updated = updatedRes.rows[0];
+      if (updated) {
+        updatedAttemptRow = updated;
+      }
     }
     if (input.answers.length) {
       await upsertAutosaveAnswers(client, input.attemptId, input.answers);
@@ -543,6 +585,7 @@ export async function saveAttemptAnswers(input: {
         },
       );
     }
+    return updatedAttemptRow;
   });
 }
 

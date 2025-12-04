@@ -56,3 +56,11 @@ export type AttemptQuestion = {
   passage: AttemptPassage | null;
   options: AttemptQuestionOption[];
 };
+
+export type AttemptStateResponse = {
+  attempt: Attempt;
+  ownerId: string;
+  quizId: string;
+  questions: AttemptQuestion[];
+  answers: AttemptAnswer[];
+};

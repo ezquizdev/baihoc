@@ -2,51 +2,29 @@
 
 ## 2025-12-25
 
-### fix(staff): preserve quiz builder state on question save
-- Prevented the quiz builder from wiping unsaved question selections when a question is edited and saved.
-- Reset builder state cleanly when switching between quizzes.
+### feat(ui): add attempt loading states
+- Added route-level loading UIs for attempt + results pages so navigation shows a clear spinner while server data loads.
 
-### fix(a11y): localize quiz builder drag announcements
-- Localized drag-and-drop screen reader announcements and removed internal IDs from the live region output.
+### feat(ui): redirect quiz catalog start to attempt-prep screen
+- Changed “Làm bài/Thử thách” CTA to navigate immediately to `/quizzes/[quizId]/attempt`, then create/resume the attempt there with a clear loading state.
 
-### fix(staff): stabilize quiz builder hook order
-- Fixed a client-side crash when opening the quiz builder by ensuring all hooks run unconditionally.
+### fix(ui): improve attempt hover colors
+- Fixed hover states so selected MCQ options and the active question navigator button keep their highlight colors.
+- Added consistent hover feedback for attempt action + modal buttons.
 
-### chore(lint): fix quiz builder biome warnings
-- Tweaked quiz builder hooks/utilities to satisfy Biome lint rules.
+### fix(ui): prevent accidental success modal dismissal
+- Disabled Escape/backdrop dismissal for the submit success modal so users aren’t navigated away unintentionally.
 
-### fix(build): type quiz builder drag announcements
-- Added explicit typing for dnd-kit accessibility callbacks to satisfy TypeScript strict mode.
+### fix(ui): show friendly attempt load errors
+- Rendered in-page error cards for attempt and results pages (with retry + back-to-quizzes links) instead of falling into a generic Next.js error boundary.
 
-### refactor(staff): remove preview action from question modal
-- Removed the “Xem trước” button from the staff question edit modal inside the quiz builder flow.
+### fix(ui): add attempt tablet breakpoint
+- Added a dedicated `max-width: 760px` layout for the attempt header so the timer, title, and status pills wrap cleanly.
 
-### refactor(staff): hide quiz archive UI
-- Removed archive/restore buttons and archived visual indicators from staff quiz cards and filters.
-- Replaced the staff-only bookmark control with a draft status chip.
-
-### refactor(challenge): remove challenge rules
-- Removed the `challenge_settings.rules` column and the staff UI/API field.
-
-### refactor(quiz): remove thumbnail support
-- Removed `thumbnail_url` from the quizzes table and seed data.
-- Removed thumbnail fields from staff quiz APIs and UI.
-
-### fix(ui): polish staff quiz cards
-- Centered and stabilized the action button row (prevents awkward wrapping).
-- Matched quiz/challenge visual styling with the quiz catalog card tone and decorations.
-- Moved time to the meta section and relied on card styling to indicate quiz vs challenge.
-
-### fix(build): resolve TypeScript build errors
-- Fixed question payload validator types to allow `null` for `options`/`shortAnswers` in PATCH updates.
-- Fixed a React effect cleanup to return `void` (not the boolean result of `delete`).
-
-### chore(deps): add dnd-kit for sortable drag
-- Added `@dnd-kit/*` dependencies to support drag-to-reorder in staff quiz builder.
-
-### feat(staff): drag to reorder quiz questions
-- Added handle-based drag-and-drop reordering (with keyboard support) in the quiz builder question list.
-- Prevented Escape during an active drag from closing the quiz builder modal.
+### feat(ui): add quiz attempt screen
+- Wired quiz catalog CTA to start/resume an attempt and navigate to `/attempts/[attemptId]`.
+- Added attempt-taking UI (timer, question navigator, autosave, submit confirm/success modals) and a minimal results page at `/attempts/[attemptId]/results`.
+- Added a 5-second submit grace window to tolerate network latency at the deadline.
 
 ### feat(attempt): add attempt domain models
 - Added attempt status + attempt question/answer domain types.
@@ -70,68 +48,6 @@
 
 ### docs(changelog): log attempt engine backend
 - Recorded the attempt engine backend changes.
-
-### feat(staff): add manage quiz filters and grid
-- Added manage quiz filter controls and staff quiz grid/card building blocks.
-
-### feat(staff): add manage quiz modals
-- Added quiz info, quiz builder, and question edit modals for staff quiz management.
-
-### feat(staff): add manage quiz screen hydration
-- Added the staff manage quiz screen with full-dataset hydration, client-side filtering, and pagination.
-
-### feat(staff): add staff quizzes page
-- Added the staff-only `/staff/quizzes` page with initial server preload and auth guard.
-
-### chore(changelog): log staff manage quiz commits
-- Logged the above staff manage quiz UI commits.
-
-### fix(staff): add staff nav items to manage quiz
-- Added staff dashboard navigation items to the manage quiz screen.
-
-### fix(staff): make manage quiz modals scrollable
-- Kept manage quiz modal actions visible by making dialog bodies scroll within the viewport.
-
-### fix(staff): localize manage quiz visibility labels
-- Localized quiz visibility labels to Vietnamese (Miễn phí/VIP) in manage quiz modals.
-
-### chore(changelog): log manage quiz polish commits
-- Logged the manage quiz polish commits.
-
-### fix(attempt): create challenge attempts safely
-- Avoided `ON CONFLICT` against a deferrable unique constraint by retrying on unique-violation and returning the existing attempt.
-
-### fix(db): compute search_vector on insert
-- Fixed quiz/question inserts to build `search_vector` from the inserted title/stem + description/explanation values.
-
-### fix(db): fix dynamic SQL placeholder replacement
-- Replaced single-use `.replace()` with `.replaceAll()` so SQL fragments with multiple `$idx` placeholders work correctly.
-
-### feat(staff): add question bank + quiz builder picker
-- Added staff `/staff/questions` question bank page with table UX and full CRUD flows.
-- Added question-bank picker modal for quickly adding questions inside the quiz builder.
-
-### fix(question): preserve null-clearing semantics on update
-- Allowed PATCH payloads to pass `null` through for `options`, `shortAnswers`, and `passage` so staff editors can clear/replace related rows safely.
-- Added unit coverage for update null-handling.
-
-### fix(staff): prevent duplicate MCQ option positions
-- Ensured the question editor assigns a unique `position` when adding new MCQ options after deletions.
-
-### fix(staff): remove hard caps from quiz range filters
-- Made quiz duration/question range filters adapt to the actual dataset so large quizzes are not hidden by default.
-
-### fix(ui): make nested modal escape close top-most
-- Prevented the quiz builder from closing when pressing Escape inside the question-bank picker modal.
-
-### fix(security): add noopener to staff blank links
-- Added `rel=\"noopener noreferrer\"` to staff links that open in a new tab.
-
-### feat(staff): expose all quiz/challenge fields in UI
-- Extended the staff quiz info modal to edit `thumbnailUrl`, `featuredRank`, and `challenge.rules` (JSON).
-
-### chore(format): biome
-- Applied Biome formatting fixes.
 
 ## 2025-12-24
 
