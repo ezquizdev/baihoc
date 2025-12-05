@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### chore(format): biome
+- Applied Biome formatting fixes to keep `npm run lint` passing.
+
 ### chore(seed): diversify question variants
 - Seeded `mcq_single`, `mcq_multi`, and `short_answer` questions (including passage groups) with proper `question_options` / `short_answer_keys`.
 - Added a demo quiz that includes all question types for quick UI verification.
