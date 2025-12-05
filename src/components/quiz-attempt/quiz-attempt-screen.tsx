@@ -34,7 +34,7 @@ export function QuizAttemptScreen({
   const [activeIndex, setActiveIndex] = useState(0);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savingCount, setSavingCount] = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -70,6 +70,10 @@ export function QuizAttemptScreen({
 
   const draftsRef = useRef(drafts);
   draftsRef.current = drafts;
+
+  const saveQueueRef = useRef(
+    new Map<string, { inFlight: boolean; queued: AnswerDraft | null }>(),
+  );
 
   const shortDebounceRef = useRef<number | null>(null);
   useEffect(() => {
@@ -157,43 +161,86 @@ export function QuizAttemptScreen({
   const autosaveAnswer = useCallback(
     async (question: AttemptQuestion, draft: AnswerDraft) => {
       if (attempt.status !== "in_progress") return;
-      setSaving(true);
       setSaveError(null);
+      const queue = saveQueueRef.current;
+      const state = queue.get(question.id) ?? { inFlight: false, queued: null };
+      if (state.inFlight) {
+        state.queued = draft;
+        queue.set(question.id, state);
+        return;
+      }
+      state.inFlight = true;
+      state.queued = null;
+      queue.set(question.id, state);
+      setSavingCount((prev) => prev + 1);
 
+      let didFail = false;
       try {
-        const payloadAnswer = buildAnswerPayload(question, draft);
-        const response = await fetch(`/api/attempts/${attemptId}`, {
-          method: "PATCH",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            answers: [payloadAnswer],
-            ...(isTimed ? { remainingSeconds: remainingRef.current } : {}),
-          }),
-        });
+        let nextDraft: AnswerDraft | null = draft;
+        while (nextDraft) {
+          const payloadAnswer = buildAnswerPayload(question, nextDraft);
+          const response = await fetch(`/api/attempts/${attemptId}`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              answers: [payloadAnswer],
+              ...(isTimed ? { remainingSeconds: remainingRef.current } : {}),
+            }),
+          });
 
-        if (!response.ok) {
-          const payload = await response.json().catch(() => ({}));
-          const code = String(payload?.code ?? "");
-          const message = String(payload?.error ?? "Không thể lưu câu trả lời");
-          if (response.status === 409 && code === "ATTEMPT_EXPIRED") {
-            autoSubmitTriggeredRef.current = true;
-            await submitAttempt({ auto: true });
-            return;
+          if (!response.ok) {
+            const payload = await response.json().catch(() => ({}));
+            const code = String(payload?.code ?? "");
+            const message = String(
+              payload?.error ?? "Không thể lưu câu trả lời",
+            );
+            if (response.status === 409 && code === "ATTEMPT_EXPIRED") {
+              autoSubmitTriggeredRef.current = true;
+              await submitAttempt({ auto: true });
+              return;
+            }
+            if (
+              response.status === 409 &&
+              code === "ATTEMPT_ALREADY_SUBMITTED"
+            ) {
+              setShowConfirmModal(false);
+              setShowSuccessModal(true);
+              return;
+            }
+            throw new Error(message);
           }
-          throw new Error(message);
-        }
 
-        const payload = (await response.json()) as { attempt?: typeof attempt };
-        if (payload?.attempt) {
-          setAttempt(payload.attempt);
-          if (isTimed && payload.attempt.remainingSeconds !== null) {
-            setRemainingSeconds(payload.attempt.remainingSeconds);
+          const payload = (await response.json()) as {
+            attempt?: typeof attempt;
+          };
+          if (payload?.attempt) {
+            setAttempt(payload.attempt);
+            if (isTimed && payload.attempt.remainingSeconds !== null) {
+              setRemainingSeconds(payload.attempt.remainingSeconds);
+            }
+          }
+
+          const latest = queue.get(question.id);
+          nextDraft = latest?.queued ?? null;
+          if (latest) {
+            latest.queued = null;
+            queue.set(question.id, latest);
           }
         }
       } catch (error) {
+        didFail = true;
         setSaveError(error instanceof Error ? error.message : "Không thể lưu");
       } finally {
-        setSaving(false);
+        setSavingCount((prev) => Math.max(0, prev - 1));
+        const latest = queue.get(question.id) ?? state;
+        const queuedDraft = latest.queued;
+        latest.inFlight = false;
+        latest.queued = null;
+        queue.set(question.id, latest);
+
+        if (!didFail && queuedDraft) {
+          void autosaveAnswer(question, queuedDraft);
+        }
       }
     },
     [attempt.status, attemptId, isTimed, submitAttempt],
@@ -475,7 +522,7 @@ export function QuizAttemptScreen({
         <div className={styles.title}>{quizTitle}</div>
 
         <div className={styles.rightMeta}>
-          {saving ? (
+          {savingCount > 0 ? (
             <span className={styles.savingPill}>Đang lưu...</span>
           ) : null}
           {saveError ? (
