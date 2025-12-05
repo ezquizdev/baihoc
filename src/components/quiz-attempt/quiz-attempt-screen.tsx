@@ -91,7 +91,7 @@ export function QuizAttemptScreen({
       if (submitting) return;
       setSubmitting(true);
       setSubmitError(null);
-      if (!params.auto) setShowConfirmModal(false);
+      setShowConfirmModal(false);
 
       try {
         const answers = buildSubmitPayload(questions, draftsRef.current);
@@ -131,6 +131,12 @@ export function QuizAttemptScreen({
     },
     [attempt.status, attemptId, isTimed, questions, submitting],
   );
+
+  useEffect(() => {
+    if (attempt.status === "in_progress") return;
+    setShowConfirmModal(false);
+    setShowSuccessModal(true);
+  }, [attempt.status]);
 
   const syncTimer = useCallback(async () => {
     if (!isTimed) return;
@@ -316,6 +322,11 @@ export function QuizAttemptScreen({
   };
 
   const handleNext = () => {
+    if (attempt.status !== "in_progress") {
+      setShowConfirmModal(false);
+      setShowSuccessModal(true);
+      return;
+    }
     if (activeIndex >= questions.length - 1) {
       setShowConfirmModal(true);
       return;
@@ -324,6 +335,7 @@ export function QuizAttemptScreen({
   };
 
   const toggleFlag = () => {
+    if (attempt.status !== "in_progress") return;
     setFlagged((prev) => {
       const next = new Set(prev);
       if (next.has(activeQuestion.id)) next.delete(activeQuestion.id);
@@ -530,7 +542,7 @@ export function QuizAttemptScreen({
                 .filter(Boolean)
                 .join(" ")}
               onClick={toggleFlag}
-              disabled={submitting}
+              disabled={attempt.status !== "in_progress" || submitting}
             >
               Đánh dấu
             </button>
@@ -539,7 +551,7 @@ export function QuizAttemptScreen({
               type="button"
               className={`${styles.actionButton} ${styles.actionNext}`}
               onClick={handleNext}
-              disabled={submitting}
+              disabled={attempt.status !== "in_progress" || submitting}
             >
               Câu tiếp
             </button>
@@ -570,6 +582,7 @@ export function QuizAttemptScreen({
                   type="button"
                   className={className}
                   onClick={() => handleJump(index)}
+                  disabled={attempt.status !== "in_progress" || submitting}
                   aria-label={`Câu ${question.position}`}
                 >
                   {question.position}
