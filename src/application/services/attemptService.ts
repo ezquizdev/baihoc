@@ -77,6 +77,34 @@ export async function startOrResumeAttempt(
       400,
     );
   }
+  if (quizMeta.isChallenge) {
+    const startAt = quizMeta.challengeStartAt;
+    const endAt = quizMeta.challengeEndAt;
+    if (!startAt || !endAt) {
+      throw new ServiceError(
+        "CHALLENGE_SCHEDULE_MISSING",
+        "Challenge schedule missing",
+        400,
+      );
+    }
+    const now = Date.now();
+    const startMs = new Date(startAt).getTime();
+    const endMs = new Date(endAt).getTime();
+    if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
+      throw new ServiceError(
+        "CHALLENGE_SCHEDULE_INVALID",
+        "Challenge schedule invalid",
+        400,
+      );
+    }
+    if (now < startMs || now > endMs) {
+      throw new ServiceError(
+        "CHALLENGE_NOT_ACTIVE",
+        "Thử thách chưa bắt đầu hoặc đã kết thúc.",
+        409,
+      );
+    }
+  }
 
   const created = await createAttempt({
     userId,
@@ -135,17 +163,25 @@ export async function autosaveAttempt(
     rejectExpired: true,
   });
 
-  await saveAttemptAnswers({
+  const savedAttempt = await saveAttemptAnswers({
     attemptId,
     answers: normalized,
     remainingSeconds,
   });
+  if (!savedAttempt) {
+    throw new ServiceError("ATTEMPT_NOT_FOUND", "Attempt not found", 404);
+  }
+  if (savedAttempt.status !== "in_progress") {
+    throw new ServiceError(
+      "ATTEMPT_ALREADY_SUBMITTED",
+      "Attempt already submitted",
+      409,
+    );
+  }
 
   return {
     attempt: {
-      ...mapAttemptRow(attempt),
-      remainingSeconds:
-        remainingSeconds ?? mapAttemptRow(attempt).remainingSeconds,
+      ...mapAttemptRow(savedAttempt),
     },
   };
 }
