@@ -2,7 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { Clock } from "phosphor-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   AttemptQuestion,
   AttemptStateResponse,
@@ -630,7 +637,13 @@ export function QuizAttemptScreen({
                   className={className}
                   onClick={() => handleJump(index)}
                   disabled={attempt.status !== "in_progress" || submitting}
-                  aria-label={`Câu ${question.position}`}
+                  aria-label={buildNavigatorLabel({
+                    position: question.position,
+                    answered: isAnswered,
+                    flagged: flagged.has(question.id),
+                    active: isActive,
+                  })}
+                  aria-current={isActive ? "true" : undefined}
                 >
                   {question.position}
                 </button>
@@ -719,6 +732,9 @@ function AttemptModal({
   dismissible?: boolean;
 }) {
   const primaryRef = useRef<HTMLButtonElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const titleId = useId();
+  const subtitleId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -740,6 +756,41 @@ function AttemptModal({
     return () => document.removeEventListener("keydown", handleKey);
   }, [dismissible, open, onSecondary]);
 
+  useEffect(() => {
+    if (!open) return;
+    const handleTab = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(
+        (node) =>
+          !node.hasAttribute("disabled") &&
+          node.getAttribute("tabindex") !== "-1",
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      const isInside = active ? dialog.contains(active) : false;
+
+      if (event.shiftKey) {
+        if (!isInside || active === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (!isInside || active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleTab);
+    return () => document.removeEventListener("keydown", handleTab);
+  }, [open]);
+
   if (!open) return null;
 
   const primaryClass = [
@@ -756,9 +807,20 @@ function AttemptModal({
         onClick={dismissible ? onSecondary : undefined}
         aria-hidden="true"
       />
-      <div className={styles.dialog} role="dialog" aria-modal="true">
-        <h2 className={styles.modalTitle}>{title}</h2>
-        <div className={styles.modalSubtitle}>{subtitle}</div>
+      <div
+        ref={dialogRef}
+        className={styles.dialog}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={subtitleId}
+      >
+        <h2 id={titleId} className={styles.modalTitle}>
+          {title}
+        </h2>
+        <div id={subtitleId} className={styles.modalSubtitle}>
+          {subtitle}
+        </div>
         <div className={styles.modalActions}>
           <button
             ref={primaryRef}
@@ -810,4 +872,17 @@ function buildSuccessSubtitle(
   const submittedMs = new Date(attempt.submittedAt).getTime();
   const elapsed = Math.max(0, Math.floor((submittedMs - startedMs) / 1000));
   return `Bạn đã hoàn thành bài quiz trong ${formatClock(elapsed)} phút`;
+}
+
+function buildNavigatorLabel(params: {
+  position: number;
+  answered: boolean;
+  flagged: boolean;
+  active: boolean;
+}) {
+  const segments = [`Câu ${params.position}`];
+  segments.push(params.answered ? "đã trả lời" : "chưa trả lời");
+  if (params.flagged) segments.push("đã đánh dấu");
+  if (params.active) segments.push("hiện tại");
+  return segments.join(", ");
 }
