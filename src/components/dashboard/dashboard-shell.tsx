@@ -23,6 +23,7 @@ type DashboardShellProps = {
   searchPlaceholder?: string;
   searchName?: string;
   searchDisabled?: boolean;
+  hideSearch?: boolean;
   onSearchChange?: (value: string) => void;
   onSearchSubmit?: (value: string) => void;
 };
@@ -47,6 +48,7 @@ export function DashboardShell({
   searchPlaceholder = "Tìm kiếm",
   searchName = "q",
   searchDisabled = false,
+  hideSearch = false,
   onSearchChange,
   onSearchSubmit,
 }: DashboardShellProps) {
@@ -141,28 +143,30 @@ export function DashboardShell({
               </div>
             </label>
 
-            <form
-              className={styles.search}
-              aria-label="Tìm kiếm"
-              onSubmit={onSearchSubmit ? handleSearchSubmit : undefined}
-            >
-              <div className={styles.searchIcon} aria-hidden="true">
-                <MagnifyingGlass size={18} weight="bold" />
-              </div>
-              <input
-                className={styles.searchInput}
-                placeholder={searchPlaceholder}
-                type="search"
-                name={searchName}
-                {...inputProps}
-                onChange={
-                  onSearchChange
-                    ? (event) => onSearchChange(event.target.value)
-                    : undefined
-                }
-                disabled={searchDisabled}
-              />
-            </form>
+            {!hideSearch ? (
+              <form
+                className={styles.search}
+                aria-label="Tìm kiếm"
+                onSubmit={onSearchSubmit ? handleSearchSubmit : undefined}
+              >
+                <div className={styles.searchIcon} aria-hidden="true">
+                  <MagnifyingGlass size={18} weight="bold" />
+                </div>
+                <input
+                  className={styles.searchInput}
+                  placeholder={searchPlaceholder}
+                  type="search"
+                  name={searchName}
+                  {...inputProps}
+                  onChange={
+                    onSearchChange
+                      ? (event) => onSearchChange(event.target.value)
+                      : undefined
+                  }
+                  disabled={searchDisabled}
+                />
+              </form>
+            ) : null}
 
             <div className={styles.topActions}>
               <button

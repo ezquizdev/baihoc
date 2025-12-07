@@ -22,6 +22,7 @@ export default async function QuizAttemptStartPage({
       userName={displayName}
       avatarUrl={session.avatarUrl}
       searchDisabled
+      hideSearch
       searchPlaceholder="Tìm kiếm"
     >
       <AttemptStartScreen quizId={quizId} />

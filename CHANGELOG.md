@@ -2,6 +2,12 @@
 
 ## 2025-12-25
 
+### fix(catalog): fix quiz search SQL placeholders
+- Fixed placeholder substitution so search filters like `(title ILIKE ... OR description ILIKE ...)` no longer produce invalid SQL.
+
+### fix(ui): hide search on attempt screens
+- Hid the dashboard search bar on attempt start/attempt/results pages since it doesn’t apply there.
+
 ### fix(ui): improve attempt accessibility
 - Added focus trapping + ARIA labelling for attempt modals.
 - Improved screen-reader labels for the question navigator (answered/flagged/current state).
