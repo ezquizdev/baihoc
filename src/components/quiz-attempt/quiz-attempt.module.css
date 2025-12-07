@@ -128,7 +128,6 @@
 .passageContent {
   font-size: 13px;
   line-height: 1.6;
-  white-space: pre-wrap;
 }
 
 .questionHeading {
@@ -143,7 +142,6 @@
   font-size: 14px;
   line-height: 1.7;
   color: #2b3b55;
-  white-space: pre-wrap;
 }
 
 .optionsGrid {

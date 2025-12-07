@@ -1,0 +1,93 @@
+.richText {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.block {
+  display: block;
+}
+
+.inline {
+  display: inline;
+}
+
+.richText :global(p) {
+  margin: 0;
+}
+
+.block :global(p + p) {
+  margin-top: 0.75em;
+}
+
+.inline :global(p) {
+  display: inline;
+}
+
+.richText :global(em) {
+  font-style: italic;
+}
+
+.richText :global(strong) {
+  font-weight: 800;
+}
+
+.richText :global(code) {
+  font-family: var(--font-mono-stack);
+  font-size: 0.95em;
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  padding: 0.08em 0.35em;
+}
+
+.richText :global(pre) {
+  margin: 0.75em 0 0;
+  font-family: var(--font-mono-stack);
+  background: rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  padding: 12px;
+  overflow: auto;
+}
+
+.richText :global(pre code) {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.richText :global(ul),
+.richText :global(ol) {
+  margin: 0.6em 0 0;
+  padding-left: 1.2em;
+}
+
+.inline :global(ul),
+.inline :global(ol) {
+  display: inline;
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.richText :global(li) {
+  margin: 0.15em 0;
+}
+
+.richText :global(a) {
+  color: var(--brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.richText :global(.katex-display) {
+  margin: 0.7em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+}
+
+.inline :global(.katex-display) {
+  display: inline;
+  margin: 0;
+  overflow: visible;
+  padding: 0;
+}

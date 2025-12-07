@@ -21,11 +21,16 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
     "jose": "^5.10.0",
+    "katex": "^0.16.27",
     "next": "16.0.10",
     "pg": "^8.11.3",
     "phosphor-react": "^1.4.1",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
     "zod": "3.23.8"
   },
   "devDependencies": {

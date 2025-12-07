@@ -744,12 +744,20 @@ function buildPassageContent({
 }) {
   const endPosition = startPosition + groupSize - 1;
   const title = `Dựa vào đoạn văn dưới đây để trả lời câu hỏi ${startPosition}–${endPosition}:`;
-  const body = [
-    `Chủ đề: ${subjectName} (${subjectSlug.toUpperCase()})`,
-    `Đây là đoạn văn mẫu #${groupIndex + 1} được seed để kiểm tra UI hiển thị "đoạn văn" (multi-line + pre-wrap).`,
+  const bodyParts = [
+    `Chủ đề: **${subjectName}** (${subjectSlug.toUpperCase()})`,
+    `Đây là đoạn văn mẫu #${groupIndex + 1} được seed để kiểm tra UI hiển thị "đoạn văn" (Markdown + LaTeX-like).`,
     "Bạn có thể cuộn, chuyển câu, và kiểm tra việc giữ nguyên đoạn văn khi đổi câu trong cùng nhóm.",
-  ].join("\n\n");
-  return `${title}\n\n${body}`;
+  ];
+
+  if (groupIndex === 0) {
+    bodyParts.push(
+      `**Ghi chú định dạng:** _in nghiêng_, **in đậm**, danh sách gạch đầu dòng, và công thức $a^2 + b^2 = c^2$.`,
+    );
+    bodyParts.push(["- Dòng 1: *markdown*", "- Dòng 2: $x^2 + 1$"].join("\n"));
+  }
+
+  return `${title}\n\n${bodyParts.join("\n\n")}`;
 }
 
 function buildQuestionStem({ subjectName, subjectSlug, index, type, passage }) {
@@ -760,7 +768,21 @@ function buildQuestionStem({ subjectName, subjectSlug, index, type, passage }) {
       : type === "short_answer"
         ? "Nhập đáp án ngắn."
         : "Chọn 1 đáp án đúng.";
-  return `${prefix} về ${subjectName}.\n\n${typeHint}\n\n[Mã chủ đề: ${subjectSlug.toUpperCase()}-${index}]`;
+
+  const extras = ["**Gợi ý:** _đọc kỹ đề_ và trả lời ngắn gọn."];
+  if (index % 2 === 0) {
+    extras.push(`Ví dụ inline: $x^2 + ${index}x + 1$`);
+  }
+  if (index % 3 === 0) {
+    extras.push(
+      "Ví dụ block:\n\n$$\\frac{1}{2} + \\frac{1}{3} = \\frac{5}{6}$$",
+    );
+  }
+  extras.push(`\`code\`: ${subjectSlug.toUpperCase()}-${index}`);
+
+  return `${prefix} về ${subjectName}.\n\n${typeHint}\n\n${extras.join(
+    "\n\n",
+  )}\n\n[Mã chủ đề: ${subjectSlug.toUpperCase()}-${index}]`;
 }
 
 function seedQuestionMeta({
@@ -781,10 +803,24 @@ function seedQuestionMeta({
   }
 
   const labels = ["A", "B", "C", "D"];
-  const optionTexts = labels.map(
-    (label) =>
-      `${subject.name} • ${passage ? "Đoạn văn" : "Cơ bản"} • ${label} (${subject.slug.toUpperCase()}-${index})`,
-  );
+  const optionTexts = labels.map((label) => {
+    const base = `${subject.name} • ${
+      passage ? "Đoạn văn" : "Cơ bản"
+    } • ${label} (${subject.slug.toUpperCase()}-${index})`;
+    if (index % 2 === 0 && label === "A") {
+      return `**${base}**\n\nInline: $\\sqrt{${index}}$`;
+    }
+    if (index % 2 === 0 && label === "B") {
+      return `${base}\n\n_ghi chú_: dùng **markdown**`;
+    }
+    if (index % 3 === 0 && label === "C") {
+      return `${base}\n\n$$x^2 + 2x + 1 = (x+1)^2$$`;
+    }
+    if (index % 5 === 0 && label === "D") {
+      return `${base}\n\n\`code\`: ${subject.slug}-${index}`;
+    }
+    return base;
+  });
   const positions = [1, 2, 3, 4];
   const correctPositions =
     type === "mcq_multi"
