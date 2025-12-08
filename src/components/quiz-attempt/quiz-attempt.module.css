@@ -117,11 +117,11 @@
 }
 
 .passageTitle {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   color: #1f3b86;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   margin-bottom: 8px;
 }
 
@@ -168,12 +168,17 @@
 }
 
 .optionButton:hover {
-  background: #f1f5ff;
-  border-color: #c4d7ff;
+  background: #f8fafc;
+  border-color: #94a3b8;
 }
 
 .optionButton:active {
   transform: translateY(1px);
+}
+
+.optionButton:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
 }
 
 .optionSelected {
@@ -287,11 +292,28 @@
 }
 
 .navItem:hover {
-  background: #f1f5ff;
+  background: #f8fafc;
+  border-color: #a6c4ff;
 }
 
 .navItem:active {
   transform: translateY(1px);
+}
+
+.navItem:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+}
+
+.actionButton:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+}
+
+.modalPrimary:focus-visible,
+.modalSecondary:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
 }
 
 .navItemAnswered {

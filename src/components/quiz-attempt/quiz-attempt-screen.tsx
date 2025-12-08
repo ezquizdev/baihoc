@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Clock } from "phosphor-react";
 import {
+  type MutableRefObject,
   useCallback,
   useEffect,
   useId,
@@ -46,6 +47,79 @@ export function QuizAttemptScreen({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const ignorePopRef = useRef(false);
+
+  const leaveWarningEnabled =
+    attempt.status === "in_progress" && !showSuccessModal;
+
+  useEffect(() => {
+    if (!leaveWarningEnabled) return;
+    const message =
+      "Bạn đang làm bài. Nếu rời khỏi trang, tiến độ có thể chưa được lưu. Bạn có chắc chắn muốn rời khỏi trang?";
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = message;
+      return message;
+    };
+
+    const shouldConfirmForUrl = (url: string | URL | null | undefined) => {
+      if (!url) return false;
+      let targetUrl: URL | null = null;
+      try {
+        targetUrl = typeof url === "string" ? new URL(url, location.href) : url;
+      } catch {
+        targetUrl = null;
+      }
+      if (!targetUrl) return false;
+      if (
+        targetUrl.pathname === window.location.pathname &&
+        targetUrl.search === window.location.search
+      ) {
+        return false;
+      }
+      return true;
+    };
+
+    const originalPushState = window.history.pushState.bind(window.history);
+    const originalReplaceState = window.history.replaceState.bind(
+      window.history,
+    );
+
+    window.history.pushState = (state, title, url) => {
+      if (shouldConfirmForUrl(url) && !window.confirm(message)) {
+        return;
+      }
+      return originalPushState(state, title, url);
+    };
+
+    window.history.replaceState = (state, title, url) => {
+      if (shouldConfirmForUrl(url) && !window.confirm(message)) {
+        return;
+      }
+      return originalReplaceState(state, title, url);
+    };
+
+    const handlePopState = () => {
+      if (ignorePopRef.current) {
+        ignorePopRef.current = false;
+        return;
+      }
+      const ok = window.confirm(message);
+      if (ok) return;
+      ignorePopRef.current = true;
+      window.history.forward();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
+  }, [leaveWarningEnabled]);
 
   const initialDrafts = useMemo(() => {
     const drafts: Record<string, AnswerDraft> = {};
@@ -64,15 +138,14 @@ export function QuizAttemptScreen({
   const [drafts, setDrafts] =
     useState<Record<string, AnswerDraft>>(initialDrafts);
 
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(() => {
-    if (!isTimed) return 0;
-    if (attempt.remainingSeconds !== null) return attempt.remainingSeconds;
-    return attempt.timeLimitSeconds ?? 0;
-  });
-  const remainingRef = useRef(remainingSeconds);
+  const remainingRef = useRef(
+    isTimed ? (attempt.remainingSeconds ?? attempt.timeLimitSeconds ?? 0) : 0,
+  );
   useEffect(() => {
-    remainingRef.current = remainingSeconds;
-  }, [remainingSeconds]);
+    if (!isTimed) return;
+    if (attempt.remainingSeconds === null) return;
+    remainingRef.current = attempt.remainingSeconds;
+  }, [attempt.remainingSeconds, isTimed]);
 
   const autoSubmitTriggeredRef = useRef(false);
 
@@ -143,6 +216,14 @@ export function QuizAttemptScreen({
     },
     [attempt.status, attemptId, isTimed, questions, submitting],
   );
+
+  const handleTimerExpired = useCallback(() => {
+    if (!isTimed) return;
+    if (attempt.status !== "in_progress") return;
+    if (autoSubmitTriggeredRef.current) return;
+    autoSubmitTriggeredRef.current = true;
+    void submitAttempt({ auto: true });
+  }, [attempt.status, isTimed, submitAttempt]);
 
   useEffect(() => {
     if (attempt.status === "in_progress") return;
@@ -224,7 +305,7 @@ export function QuizAttemptScreen({
           if (payload?.attempt) {
             setAttempt(payload.attempt);
             if (isTimed && payload.attempt.remainingSeconds !== null) {
-              setRemainingSeconds(payload.attempt.remainingSeconds);
+              remainingRef.current = payload.attempt.remainingSeconds;
             }
           }
 
@@ -294,43 +375,27 @@ export function QuizAttemptScreen({
     if (!isTimed) return;
     if (attempt.status !== "in_progress") return;
     const id = window.setInterval(() => {
-      setRemainingSeconds((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [attempt.status, isTimed]);
-
-  useEffect(() => {
-    if (!isTimed) return;
-    if (attempt.status !== "in_progress") return;
-    const id = window.setInterval(() => {
       void syncTimer();
     }, 30_000);
     return () => window.clearInterval(id);
   }, [attempt.status, isTimed, syncTimer]);
 
-  useEffect(() => {
-    if (!isTimed) return;
-    if (attempt.status !== "in_progress") return;
-    if (remainingSeconds > 0) return;
-    if (autoSubmitTriggeredRef.current) return;
-    autoSubmitTriggeredRef.current = true;
-    void submitAttempt({ auto: true });
-  }, [attempt.status, isTimed, remainingSeconds, submitAttempt]);
-
-  const startedAtMs = useMemo(
-    () => new Date(attempt.startedAt).getTime(),
-    [attempt.startedAt],
-  );
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    if (isTimed) return;
-    const id = window.setInterval(() => setTick((prev) => prev + 1), 1000);
-    return () => window.clearInterval(id);
-  }, [isTimed]);
-  void tick;
-
   const activeQuestion = questions[activeIndex];
   const activeDraft = activeQuestion ? drafts[activeQuestion.id] : undefined;
+
+  const passageHeading = useMemo(() => {
+    if (!activeQuestion?.passage) return null;
+    const passageId = activeQuestion.passage.id;
+    let start = activeQuestion.position;
+    let end = activeQuestion.position;
+    questions.forEach((question) => {
+      if (question.passage?.id !== passageId) return;
+      start = Math.min(start, question.position);
+      end = Math.max(end, question.position);
+    });
+    if (start === end) return `Dùng thông tin sau để trả lời câu ${start}.`;
+    return `Dùng thông tin sau để trả lời các câu ${start}–${end}.`;
+  }, [activeQuestion?.passage, activeQuestion?.position, questions]);
 
   const answeredCount = useMemo(() => {
     return questions.reduce((count, question) => {
@@ -347,17 +412,24 @@ export function QuizAttemptScreen({
     ? Math.round(((activeIndex + 1) / questions.length) * 100)
     : 0;
 
-  const timerText = isTimed
-    ? formatClock(remainingSeconds)
-    : formatClock(Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)));
-
   if (!activeQuestion) {
     return (
       <div className={styles.wrapper}>
         <div className={styles.headerBar}>
           <div className={styles.timer}>
             <Clock size={16} weight="bold" />
-            <span className={styles.timerValue}>{timerText}</span>
+            <span className={styles.timerLabel}>
+              {isTimed ? "Còn lại" : "Đã làm"}
+            </span>
+            <AttemptTimerValue
+              isTimed={isTimed}
+              status={attempt.status}
+              startedAt={attempt.startedAt}
+              remainingSeconds={attempt.remainingSeconds}
+              timeLimitSeconds={attempt.timeLimitSeconds}
+              remainingRef={remainingRef}
+              onExpire={handleTimerExpired}
+            />
           </div>
           <div className={styles.title}>{quizTitle}</div>
           <div className={styles.rightMeta} />
@@ -528,7 +600,15 @@ export function QuizAttemptScreen({
           <span className={styles.timerLabel}>
             {isTimed ? "Còn lại" : "Đã làm"}
           </span>
-          <span className={styles.timerValue}>{timerText}</span>
+          <AttemptTimerValue
+            isTimed={isTimed}
+            status={attempt.status}
+            startedAt={attempt.startedAt}
+            remainingSeconds={attempt.remainingSeconds}
+            timeLimitSeconds={attempt.timeLimitSeconds}
+            remainingRef={remainingRef}
+            onExpire={handleTimerExpired}
+          />
         </div>
 
         <div className={styles.title}>{quizTitle}</div>
@@ -557,7 +637,10 @@ export function QuizAttemptScreen({
 
           {activeQuestion.passage ? (
             <div className={styles.passage}>
-              <div className={styles.passageTitle}>Đoạn văn</div>
+              <div className={styles.passageTitle}>
+                {passageHeading ??
+                  "Dùng thông tin sau để trả lời các câu liên quan."}
+              </div>
               <RichText
                 content={activeQuestion.passage.content}
                 className={styles.passageContent}
@@ -866,6 +949,83 @@ function formatClock(totalSeconds: number) {
 
 function pad2(value: number) {
   return String(value).padStart(2, "0");
+}
+
+function AttemptTimerValue({
+  isTimed,
+  status,
+  startedAt,
+  remainingSeconds,
+  timeLimitSeconds,
+  remainingRef,
+  onExpire,
+}: {
+  isTimed: boolean;
+  status: AttemptStateResponse["attempt"]["status"];
+  startedAt: string;
+  remainingSeconds: number | null;
+  timeLimitSeconds: number | null;
+  remainingRef: MutableRefObject<number>;
+  onExpire: () => void;
+}) {
+  const expiredRef = useRef(false);
+  const startedAtMsRef = useRef<number | null>(null);
+  const deadlineMsRef = useRef<number | null>(null);
+
+  const [displaySeconds, setDisplaySeconds] = useState(() => {
+    if (isTimed) {
+      return Math.max(0, remainingSeconds ?? timeLimitSeconds ?? 0);
+    }
+    const startedMs = new Date(startedAt).getTime();
+    return Math.max(0, Math.floor((Date.now() - startedMs) / 1000));
+  });
+
+  useEffect(() => {
+    if (isTimed) {
+      const next = Math.max(0, remainingSeconds ?? timeLimitSeconds ?? 0);
+      setDisplaySeconds(next);
+      remainingRef.current = next;
+      deadlineMsRef.current = Date.now() + next * 1000;
+      expiredRef.current = false;
+      return;
+    }
+
+    startedAtMsRef.current = new Date(startedAt).getTime();
+    setDisplaySeconds(
+      Math.max(0, Math.floor((Date.now() - startedAtMsRef.current) / 1000)),
+    );
+  }, [isTimed, remainingSeconds, startedAt, timeLimitSeconds, remainingRef]);
+
+  useEffect(() => {
+    if (status !== "in_progress") return;
+    const id = window.setInterval(() => {
+      if (isTimed) {
+        const deadline = deadlineMsRef.current;
+        if (!deadline) return;
+        const next = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        remainingRef.current = next;
+        setDisplaySeconds(next);
+        if (next <= 0 && !expiredRef.current) {
+          expiredRef.current = true;
+          onExpire();
+        }
+        return;
+      }
+
+      const startedMs = startedAtMsRef.current;
+      if (!startedMs) return;
+      setDisplaySeconds(
+        Math.max(0, Math.floor((Date.now() - startedMs) / 1000)),
+      );
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [isTimed, onExpire, remainingRef, status]);
+
+  return (
+    <span className={styles.timerValue} aria-live="off">
+      {formatClock(displaySeconds)}
+    </span>
+  );
 }
 
 function buildSuccessSubtitle(
