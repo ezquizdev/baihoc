@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { controllerGetAttemptState } from "@/application/controllers/attemptController";
-import { controllerGetPublishedQuiz } from "@/application/controllers/quizController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import type {
   AttemptAnswer,
@@ -101,13 +100,7 @@ export default async function AttemptResultsPage({
     );
   }
 
-  let quizTitle = "Quiz";
-  try {
-    const quiz = await controllerGetPublishedQuiz(state.quizId);
-    quizTitle = quiz.title ?? quizTitle;
-  } catch {
-    // Fallback title if quiz lookup fails.
-  }
+  const quizTitle = state.quizTitle ?? "Quiz";
 
   const answerMap = new Map<string, AttemptAnswer>();
   for (const answer of state.answers) {
@@ -122,6 +115,8 @@ export default async function AttemptResultsPage({
     }
     return answer.selectedOptionIds?.length ? count + 1 : count;
   }, 0);
+
+  const passageLabels = buildPassageLabels(state.questions);
 
   return (
     <DashboardShell
@@ -152,6 +147,11 @@ export default async function AttemptResultsPage({
               key={question.id}
               question={question}
               answer={answerMap.get(question.id)}
+              passageLabel={
+                question.passage
+                  ? passageLabels.get(question.passage.id)
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -190,9 +190,11 @@ function Stat({ label, value }: { label: string; value: string }) {
 function QuestionResultRow({
   question,
   answer,
+  passageLabel,
 }: {
   question: AttemptQuestion;
   answer?: AttemptAnswer;
+  passageLabel?: string;
 }) {
   const isCorrect = answer?.isCorrect;
   const badge =
@@ -221,8 +223,8 @@ function QuestionResultRow({
 
       {question.passage ? (
         <div className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Đoạn văn
+          <div className="mb-2 text-sm font-extrabold text-slate-700">
+            {passageLabel ?? "Dùng thông tin sau để trả lời các câu liên quan."}
           </div>
           <RichText content={question.passage.content} allowLinks />
         </div>
@@ -276,4 +278,35 @@ function renderUserAnswer(question: AttemptQuestion, answer?: AttemptAnswer) {
       ))}
     </ul>
   );
+}
+
+function buildPassageLabels(questions: AttemptQuestion[]) {
+  const ranges = new Map<string, { start: number; end: number }>();
+  for (const question of questions) {
+    const passage = question.passage;
+    if (!passage) continue;
+    const existing = ranges.get(passage.id);
+    if (!existing) {
+      ranges.set(passage.id, {
+        start: question.position,
+        end: question.position,
+      });
+      continue;
+    }
+    existing.start = Math.min(existing.start, question.position);
+    existing.end = Math.max(existing.end, question.position);
+  }
+
+  const labels = new Map<string, string>();
+  for (const [passageId, range] of ranges) {
+    labels.set(passageId, buildPassageLabel(range));
+  }
+  return labels;
+}
+
+function buildPassageLabel(range: { start: number; end: number }) {
+  if (range.start === range.end) {
+    return `Dùng thông tin sau để trả lời câu ${range.start}.`;
+  }
+  return `Dùng thông tin sau để trả lời các câu ${range.start}–${range.end}.`;
 }
