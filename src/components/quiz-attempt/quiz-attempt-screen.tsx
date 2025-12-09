@@ -554,6 +554,19 @@ export function QuizAttemptScreen({
       );
     }
 
+    if (!activeQuestion.options.length) {
+      return (
+        <div className={styles.answerFallback} role="alert">
+          <div className={styles.answerFallbackTitle}>
+            Câu hỏi này chưa có lựa chọn.
+          </div>
+          <div className={styles.answerFallbackBody}>
+            Vui lòng báo cho giáo viên/ban quản trị để cập nhật nội dung.
+          </div>
+        </div>
+      );
+    }
+
     const selected = new Set(activeDraft?.selectedOptionIds ?? []);
     return (
       <div className={styles.optionsGrid}>

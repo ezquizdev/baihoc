@@ -197,6 +197,26 @@
   margin-top: 16px;
 }
 
+.answerFallback {
+  margin-top: 16px;
+  border-radius: 16px;
+  border: 1px dashed #fca5a5;
+  background: #fff1f2;
+  padding: 14px;
+  color: #9f1239;
+}
+
+.answerFallbackTitle {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.answerFallbackBody {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #9f1239;
+}
+
 .actions {
   margin-top: 18px;
   display: flex;
