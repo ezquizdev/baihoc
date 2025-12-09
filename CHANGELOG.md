@@ -2,6 +2,21 @@
 
 ## 2025-12-25
 
+### perf(ui): start attempts via server redirect
+- Starting a quiz from the catalog now creates/resumes the attempt server-side and redirects straight to `/attempts/[attemptId]` (less client-side waiting).
+- Added a minimal route `loading.tsx` spinner for `/quizzes/[quizId]/attempt`.
+
+### perf(attempt): include quiz title in attempt state
+- `controllerGetAttemptState` now returns `quizTitle` from the attempt state query so attempt/results pages avoid an extra quiz fetch.
+
+### perf(ui): polish quiz attempt screen
+- Isolated the ticking timer into a small subcomponent so the full attempt UI doesn't re-render every second.
+- Tweaked MCQ option/navigator hover colors and added focus-visible outlines for keyboard users.
+- Added a leave-attempt warning for in-progress attempts (covers in-app navigations and refresh/close).
+
+### chore(seed): refine passage question copy
+- Adjusted seeded passage text to avoid duplicating the UI heading and use "thông tin chung" wording.
+
 ### feat(ui): render markdown + math in quiz content
 - Added a `RichText` renderer (Markdown + LaTeX-like via KaTeX) and used it for question passages/stems/options and short answers on attempt + results pages.
 - Added a basic unit test to ensure markdown + KaTeX rendering works.
