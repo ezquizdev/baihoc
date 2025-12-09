@@ -668,41 +668,45 @@ export function QuizAttemptScreen({
           {renderAnswerArea()}
 
           <div className={styles.actions}>
-            <button
-              type="button"
-              className={`${styles.actionButton} ${styles.actionSubmit}`}
-              onClick={() => {
-                setSubmitError(null);
-                setShowConfirmModal(true);
-              }}
-              disabled={!canSubmit}
-            >
-              Nộp bài
-            </button>
+            <div className={styles.actionsLeft}>
+              <button
+                type="button"
+                className={`${styles.actionButton} ${styles.actionSubmit}`}
+                onClick={() => {
+                  setSubmitError(null);
+                  setShowConfirmModal(true);
+                }}
+                disabled={!canSubmit}
+              >
+                Nộp bài
+              </button>
+            </div>
 
-            <button
-              type="button"
-              className={[
-                styles.actionButton,
-                styles.actionFlag,
-                isFlagged ? styles.actionFlagActive : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              onClick={toggleFlag}
-              disabled={attempt.status !== "in_progress" || submitting}
-            >
-              Đánh dấu
-            </button>
+            <div className={styles.actionsRight}>
+              <button
+                type="button"
+                className={[
+                  styles.actionButton,
+                  styles.actionFlag,
+                  isFlagged ? styles.actionFlagActive : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={toggleFlag}
+                disabled={attempt.status !== "in_progress" || submitting}
+              >
+                Đánh dấu
+              </button>
 
-            <button
-              type="button"
-              className={`${styles.actionButton} ${styles.actionNext}`}
-              onClick={handleNext}
-              disabled={attempt.status !== "in_progress" || submitting}
-            >
-              Câu tiếp
-            </button>
+              <button
+                type="button"
+                className={`${styles.actionButton} ${styles.actionNext}`}
+                onClick={handleNext}
+                disabled={attempt.status !== "in_progress" || submitting}
+              >
+                Câu tiếp
+              </button>
+            </div>
           </div>
         </section>
 
