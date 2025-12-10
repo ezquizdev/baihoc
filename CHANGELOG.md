@@ -2,6 +2,18 @@
 
 ## 2025-12-25
 
+### fix(ui): group attempt action buttons
+- Adjusted attempt action layout so “Nộp bài” stays on the left, while “Đánh dấu” + “Câu tiếp” stay grouped on the right (and stack cleanly on small screens).
+
+### fix(ui): show message when MCQ has no options
+- When an MCQ question has no options (data issue), the attempt screen now shows a clear in-page warning instead of rendering an empty area.
+
+### fix(question): validate updates for type/options
+- Hardened question update validation to prevent creating invalid states when changing question type (e.g. switching to MCQ without providing options).
+
+### chore(seed): ensure demo challenge is active
+- Seed now always creates a “Demo Challenge” quiz whose schedule is active (start = now-1 day, end = now+7 days) so challenge attempt flow can be tested reliably.
+
 ### perf(ui): start attempts via server redirect
 - Starting a quiz from the catalog now creates/resumes the attempt server-side and redirects straight to `/attempts/[attemptId]` (less client-side waiting).
 - Added a minimal route `loading.tsx` spinner for `/quizzes/[quizId]/attempt`.
