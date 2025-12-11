@@ -483,7 +483,8 @@ export function QuizAttemptScreen({
 
   const handleToggleMulti = async (optionId: string) => {
     if (attempt.status !== "in_progress") return;
-    const current = drafts[activeQuestion.id]?.selectedOptionIds ?? [];
+    const current =
+      draftsRef.current[activeQuestion.id]?.selectedOptionIds ?? [];
     const exists = current.includes(optionId);
     const nextIds = exists
       ? current.filter((id) => id !== optionId)
@@ -492,7 +493,9 @@ export function QuizAttemptScreen({
       selectedOptionIds: nextIds.length ? nextIds : null,
       textAnswer: null,
     } satisfies AnswerDraft;
-    setDrafts((prev) => ({ ...prev, [activeQuestion.id]: next }));
+    const nextDrafts = { ...draftsRef.current, [activeQuestion.id]: next };
+    draftsRef.current = nextDrafts;
+    setDrafts(nextDrafts);
     await autosaveAnswer(activeQuestion, next);
   };
 
