@@ -51,14 +51,7 @@ export async function startOrResumeAttempt(
   if (quizMeta.isChallenge) {
     const existing = await findChallengeAttempt(userId, quizId);
     if (existing) {
-      if (existing.status === "in_progress") {
-        return { attemptId: existing.id, resumed: true };
-      }
-      throw new ServiceError(
-        "CHALLENGE_ALREADY_ATTEMPTED",
-        "Challenge already attempted",
-        409,
-      );
+      return { attemptId: existing.id, resumed: true };
     }
   } else {
     const existing = await findInProgressAttempt(userId, quizId);

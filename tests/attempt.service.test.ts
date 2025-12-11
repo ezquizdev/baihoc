@@ -109,7 +109,7 @@ describe("attemptService", () => {
     expect(result.attemptId).toBe("attempt-1");
   });
 
-  it("blocks challenge re-attempts when already submitted", async () => {
+  it("returns existing challenge attempt when already submitted", async () => {
     vi.mocked(attemptRepo.getQuizAttemptMeta).mockResolvedValue({
       quizId: "quiz-1",
       isChallenge: true,
@@ -124,11 +124,9 @@ describe("attemptService", () => {
       status: "submitted",
     });
 
-    await expect(
-      startOrResumeAttempt("user-1", "quiz-1"),
-    ).rejects.toMatchObject({
-      code: "CHALLENGE_ALREADY_ATTEMPTED",
-    });
+    const result = await startOrResumeAttempt("user-1", "quiz-1");
+
+    expect(result).toMatchObject({ attemptId: "attempt-1", resumed: true });
   });
 
   it("rejects autosave after time expiry", async () => {
