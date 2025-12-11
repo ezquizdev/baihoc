@@ -9,7 +9,7 @@ import {
   getQuizAttemptMeta,
   listAttemptAnswers,
   listQuizGradingData,
-  listQuizQuestionMeta,
+  listQuizQuestionMetaByIds,
   type QuizQuestionGrading,
   saveAttemptAnswers,
   submitAttempt as submitAttemptRepo,
@@ -152,11 +152,20 @@ export async function autosaveAttempt(
     );
   }
 
-  const questionMeta = await listQuizQuestionMeta(attempt.quiz_id);
-  const questionTypeMap = new Map(
-    questionMeta.map((item) => [item.questionId, item.type]),
-  );
-  const normalized = normalizeAutosaveAnswers(input.answers, questionTypeMap);
+  const normalized = await (async () => {
+    if (!input.answers.length) return [];
+    const questionIds = Array.from(
+      new Set(input.answers.map((answer) => answer.questionId)),
+    );
+    const questionMeta = await listQuizQuestionMetaByIds(
+      attempt.quiz_id,
+      questionIds,
+    );
+    const questionTypeMap = new Map(
+      questionMeta.map((item) => [item.questionId, item.type]),
+    );
+    return normalizeAutosaveAnswers(input.answers, questionTypeMap);
+  })();
   const remainingSeconds = resolveRemainingSeconds({
     attempt,
     clientRemaining: input.remainingSeconds,
