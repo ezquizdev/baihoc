@@ -2,6 +2,24 @@
 
 ## 2025-12-25
 
+### fix(ui): prevent stale multi-select toggles
+- Fixed MCQ multi-select so rapid clicks no longer lose selections due to stale state.
+
+### fix(question): allow clearing options/short answers
+- Staff question updates can explicitly clear `options` / `shortAnswers` (via `null`) while still preventing invalid question states.
+
+### perf(attempt): reduce autosave question meta lookup
+- Autosave now fetches question type metadata only for the questions being saved, instead of loading metadata for the whole quiz each time.
+
+### fix(challenge): redirect to existing attempt when already done
+- Starting a challenge that you already submitted now returns the existing attempt id (no conflict error), so the UI can route users to their previous attempt/results.
+
+### fix(attempt): block results before submission
+- Results page no longer renders for in-progress attempts; users are guided back to the attempt screen.
+
+### chore(db): add attempt event index and challenge schedule check
+- Added an index for `attempt_answer_events` by `(attempt_id, created_at)` and a DB constraint ensuring `challenge_settings.end_at > start_at`.
+
 ### fix(ui): group attempt action buttons
 - Adjusted attempt action layout so “Nộp bài” stays on the left, while “Đánh dấu” + “Câu tiếp” stay grouped on the right (and stack cleanly on small screens).
 

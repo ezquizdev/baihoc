@@ -168,6 +168,31 @@ CREATE TABLE IF NOT EXISTS course_student_allowlist (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'course_student_allowlist'
+      AND column_name = 'role'
+  ) THEN
+    ALTER TABLE course_student_allowlist
+    ADD COLUMN role user_role NOT NULL DEFAULT 'student';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'course_student_allowlist'
+      AND column_name = 'tier'
+  ) THEN
+    ALTER TABLE course_student_allowlist
+    ADD COLUMN tier user_tier NOT NULL DEFAULT 'paid';
+  END IF;
+END $$;
+
 -- Taxonomy
 CREATE TABLE IF NOT EXISTS subjects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -238,6 +263,14 @@ BEGIN
       AND column_name = 'rules'
   ) THEN
     ALTER TABLE challenge_settings DROP COLUMN rules;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'challenge_settings_end_after_start'
+  ) THEN
+    ALTER TABLE challenge_settings
+    ADD CONSTRAINT challenge_settings_end_after_start
+    CHECK (end_at > start_at);
   END IF;
 END $$;
 
@@ -360,6 +393,9 @@ CREATE TABLE IF NOT EXISTS attempts (
 CREATE INDEX IF NOT EXISTS idx_attempts_user_started ON attempts(user_id, started_at DESC);
 CREATE INDEX IF NOT EXISTS idx_attempts_quiz_status ON attempts(quiz_id, status);
 CREATE INDEX IF NOT EXISTS idx_attempts_status_in_progress ON attempts(status) WHERE status = 'in_progress';
+CREATE INDEX IF NOT EXISTS idx_attempts_submitted_recent
+ON attempts(submitted_at DESC)
+WHERE submitted_at IS NOT NULL AND status IN ('submitted', 'auto_submitted');
 
 CREATE TABLE IF NOT EXISTS attempt_answers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -386,6 +422,9 @@ CREATE TABLE IF NOT EXISTS attempt_answer_events (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE INDEX IF NOT EXISTS idx_attempt_answer_events_attempt_created_at
+ON attempt_answer_events(attempt_id, created_at DESC);
+
 -- XP and leaderboard
 CREATE TABLE IF NOT EXISTS xp_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -395,6 +434,14 @@ CREATE TABLE IF NOT EXISTS xp_events (
   metadata jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS idx_xp_events_user_created
+ON xp_events(user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_xp_events_quiz_id
+ON xp_events(((metadata->>'quizId')::uuid))
+WHERE metadata ? 'quizId'
+  AND (metadata->>'quizId') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 
 CREATE TABLE IF NOT EXISTS leaderboard_snapshots (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
