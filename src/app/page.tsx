@@ -2,6 +2,6 @@ import { redirect } from "next/navigation";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 
 export default async function RootRedirect() {
-  await requireAuthenticatedPage({ next: "/" });
-  redirect("/dashboard");
+  const session = await requireAuthenticatedPage({ next: "/" });
+  redirect(session.role === "staff" ? "/staff/dashboard" : "/dashboard");
 }

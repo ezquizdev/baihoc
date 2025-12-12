@@ -1,0 +1,9 @@
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  color: var(--muted);
+  font-weight: 700;
+}

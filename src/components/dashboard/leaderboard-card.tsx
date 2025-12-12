@@ -14,6 +14,7 @@ type LeaderboardCardProps = {
   onActionClick?: () => void;
   rows: LeaderboardRow[];
   className?: string;
+  scoreHeader?: string;
 };
 
 export function LeaderboardCard({
@@ -22,6 +23,7 @@ export function LeaderboardCard({
   onActionClick,
   rows,
   className,
+  scoreHeader = "XP",
 }: LeaderboardCardProps) {
   return (
     <div className={`${styles.card} ${className ?? ""}`}>
@@ -43,7 +45,9 @@ export function LeaderboardCard({
           <tr>
             <th style={{ width: "56px" }}>#</th>
             <th>Họ và tên</th>
-            <th style={{ width: "90px", textAlign: "right" }}>XP</th>
+            <th style={{ width: "120px", textAlign: "right" }}>
+              {scoreHeader}
+            </th>
           </tr>
         </thead>
         <tbody>

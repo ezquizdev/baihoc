@@ -2,138 +2,19 @@
 
 ## 2025-12-25
 
-### fix(ui): prevent stale multi-select toggles
-- Fixed MCQ multi-select so rapid clicks no longer lose selections due to stale state.
+### feat(staff-dashboard): add staff overview and role redirects
+- Added staff-only “Tổng quan” dashboard at `/staff/dashboard` matching the teacher mock (charts are placeholders), plus stub staff pages for sidebar navigation.
+- Implemented role-based redirects for `/` and `/auth/**` (staff → `/staff/dashboard`, student → `/dashboard`) and redirect staff away from the student dashboard.
+- Added staff dashboard repo/service/controller to compute overview metrics, recent activity, leaderboard, and competency distributions with per-subject XP bucket configs.
 
-### fix(question): allow clearing options/short answers
-- Staff question updates can explicitly clear `options` / `shortAnswers` (via `null`) while still preventing invalid question states.
+### fix(ui): match staff competency card layout
+- Styled the “Điểm Năng lực Trung bình” card to match the teacher dashboard mock (top split layout + 4 subject tiles row).
 
-### perf(attempt): reduce autosave question meta lookup
-- Autosave now fetches question type metadata only for the questions being saved, instead of loading metadata for the whole quiz each time.
+### fix(ui): balance staff competency widget
+- Widened the right column and reduced typography sizing in the competency block for better visual balance.
 
-### fix(challenge): redirect to existing attempt when already done
-- Starting a challenge that you already submitted now returns the existing attempt id (no conflict error), so the UI can route users to their previous attempt/results.
-
-### fix(attempt): block results before submission
-- Results page no longer renders for in-progress attempts; users are guided back to the attempt screen.
-
-### chore(db): add attempt event index and challenge schedule check
-- Added an index for `attempt_answer_events` by `(attempt_id, created_at)` and a DB constraint ensuring `challenge_settings.end_at > start_at`.
-
-### fix(ui): group attempt action buttons
-- Adjusted attempt action layout so “Nộp bài” stays on the left, while “Đánh dấu” + “Câu tiếp” stay grouped on the right (and stack cleanly on small screens).
-
-### fix(ui): show message when MCQ has no options
-- When an MCQ question has no options (data issue), the attempt screen now shows a clear in-page warning instead of rendering an empty area.
-
-### fix(question): validate updates for type/options
-- Hardened question update validation to prevent creating invalid states when changing question type (e.g. switching to MCQ without providing options).
-
-### chore(seed): ensure demo challenge is active
-- Seed now always creates a “Demo Challenge” quiz whose schedule is active (start = now-1 day, end = now+7 days) so challenge attempt flow can be tested reliably.
-
-### perf(ui): start attempts via server redirect
-- Starting a quiz from the catalog now creates/resumes the attempt server-side and redirects straight to `/attempts/[attemptId]` (less client-side waiting).
-- Added a minimal route `loading.tsx` spinner for `/quizzes/[quizId]/attempt`.
-
-### perf(attempt): include quiz title in attempt state
-- `controllerGetAttemptState` now returns `quizTitle` from the attempt state query so attempt/results pages avoid an extra quiz fetch.
-
-### perf(ui): polish quiz attempt screen
-- Isolated the ticking timer into a small subcomponent so the full attempt UI doesn't re-render every second.
-- Tweaked MCQ option/navigator hover colors and added focus-visible outlines for keyboard users.
-- Added a leave-attempt warning for in-progress attempts (covers in-app navigations and refresh/close).
-
-### chore(seed): refine passage question copy
-- Adjusted seeded passage text to avoid duplicating the UI heading and use "thông tin chung" wording.
-
-### feat(ui): render markdown + math in quiz content
-- Added a `RichText` renderer (Markdown + LaTeX-like via KaTeX) and used it for question passages/stems/options and short answers on attempt + results pages.
-- Added a basic unit test to ensure markdown + KaTeX rendering works.
-
-### chore(seed): add markdown + math examples
-- Updated seed question/passage text to include Markdown formatting and LaTeX-like formulas for easy visual verification.
-
-### chore(dev): ignore Playwright dev artifacts
-- Ignored `.playwright-dev.*` files so local UI testing doesn’t dirty `git status`.
-
-### fix(catalog): fix quiz search SQL placeholders
-- Fixed placeholder substitution so search filters like `(title ILIKE ... OR description ILIKE ...)` no longer produce invalid SQL.
-
-### fix(ui): hide search on attempt screens
-- Hid the dashboard search bar on attempt start/attempt/results pages since it doesn’t apply there.
-
-### fix(ui): improve attempt accessibility
-- Added focus trapping + ARIA labelling for attempt modals.
-- Improved screen-reader labels for the question navigator (answered/flagged/current state).
-
-### fix(attempt): enforce challenge schedule window
-- Prevented starting new challenge attempts outside `challenge_settings.start_at/end_at` (resuming an in-progress attempt is still allowed).
-
-### fix(attempt): prevent autosave after submission
-- Guarded autosave writes with an attempt row lock to avoid autosaves overwriting graded answers after submit (multi-tab safety).
-
-### fix(ui): make attempt autosave more reliable
-- Serialized per-question autosave requests to avoid out-of-order overwrites during rapid answering/typing.
-- Stabilized the “Đang lưu...” indicator for concurrent saves and handled 409 already-submitted autosaves by showing the success modal.
-
-### fix(ui): prevent attempt modal overlap after submit/expiry
-- Ensured auto-submit closes the confirmation modal (no double-modal overlap at the deadline).
-- Disabled attempt navigation/actions once an attempt is no longer in progress.
-
-### chore(format): biome
-- Applied Biome formatting fixes to keep `npm run lint` passing.
-
-### chore(seed): diversify question variants
-- Seeded `mcq_single`, `mcq_multi`, and `short_answer` questions (including passage groups) with proper `question_options` / `short_answer_keys`.
-- Added a demo quiz that includes all question types for quick UI verification.
-
-### feat(ui): add attempt loading states
-- Added route-level loading UIs for attempt + results pages so navigation shows a clear spinner while server data loads.
-
-### feat(ui): redirect quiz catalog start to attempt-prep screen
-- Changed “Làm bài/Thử thách” CTA to navigate immediately to `/quizzes/[quizId]/attempt`, then create/resume the attempt there with a clear loading state.
-
-### fix(ui): improve attempt hover colors
-- Fixed hover states so selected MCQ options and the active question navigator button keep their highlight colors.
-- Added consistent hover feedback for attempt action + modal buttons.
-
-### fix(ui): prevent accidental success modal dismissal
-- Disabled Escape/backdrop dismissal for the submit success modal so users aren’t navigated away unintentionally.
-
-### fix(ui): show friendly attempt load errors
-- Rendered in-page error cards for attempt and results pages (with retry + back-to-quizzes links) instead of falling into a generic Next.js error boundary.
-
-### fix(ui): add attempt tablet breakpoint
-- Added a dedicated `max-width: 760px` layout for the attempt header so the timer, title, and status pills wrap cleanly.
-
-### feat(ui): add quiz attempt screen
-- Wired quiz catalog CTA to start/resume an attempt and navigate to `/attempts/[attemptId]`.
-- Added attempt-taking UI (timer, question navigator, autosave, submit confirm/success modals) and a minimal results page at `/attempts/[attemptId]/results`.
-- Added a 5-second submit grace window to tolerate network latency at the deadline.
-
-### feat(attempt): add attempt domain models
-- Added attempt status + attempt question/answer domain types.
-
-### feat(attempt): add attempt repositories
-- Implemented attempt DB repository for start/resume, state queries, autosave, submit writes, and grading data fetch.
-- Added XP insert helper used during attempt submission.
-
-### feat(attempt): implement attempt service and controller
-- Added attempt service with timer enforcement, server-side grading, and XP awarding on submit.
-- Added controller wrappers for attempt lifecycle endpoints.
-
-### feat(api): add attempt start/autosave/submit routes
-- Added authenticated attempt APIs under `/api/attempts` for start, state fetch, autosave, and submit.
-
-### test(attempt): add attempt service coverage
-- Added unit coverage for start/resume, autosave expiry rules, submit grading, and double-submit protection.
-
-### chore(seed): set challenge_id on seeded attempts
-- Populated `attempts.challenge_id` for challenge quizzes to exercise once-per-user constraints in dev seed data.
-
-### docs(changelog): log attempt engine backend
-- Recorded the attempt engine backend changes.
+### fix(ui): stabilize staff dashboard responsive widths
+- Increased the staff dashboard right-column minimum width and stacked earlier to keep the competency widget readable across screen sizes.
 
 ## 2025-12-24
 
