@@ -49,6 +49,7 @@ export default async function DashboardPage() {
         title={`Chào mừng đã trở lại, ${displayName}!`}
         subtitle="Tiếp tục làm bài thôi nào, bạn còn 10 bài chưa làm trong tuần vừa rồi"
         ctaLabel="Bắt đầu ngay"
+        ctaHref="/quizzes"
       />
 
       <section
@@ -77,6 +78,7 @@ export default async function DashboardPage() {
         <StatsCard
           title="Thống kê"
           actionLabel="Xem chi tiết"
+          actionHref="/dashboard/history"
           progressValue={36}
           progressLabel="Tiến độ hoàn thành bài tập"
           kpis={[
@@ -98,6 +100,7 @@ export default async function DashboardPage() {
         <LeaderboardCard
           title="Bảng xếp hạng"
           actionLabel="Xem tất cả"
+          actionHref="/dashboard/leaderboard"
           rows={leaderboard}
         />
 

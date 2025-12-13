@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { StaffDashboardOverviewDto } from "@/application/models/staffDashboard";
 import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
 import { formatNumberVi } from "@/lib/formatters";
@@ -28,8 +28,6 @@ export function StaffDashboardScreen({
   displayName,
   overview,
 }: StaffDashboardScreenProps) {
-  const router = useRouter();
-
   const stats = overview.stats.status === "ok" ? overview.stats.data : null;
   const statsError =
     overview.stats.status === "error" ? overview.stats.message : null;
@@ -60,24 +58,24 @@ export function StaffDashboardScreen({
           Chào mừng đã trở lại, {displayName}!
         </h2>
         <nav className={styles.welcomeActions} aria-label="Hành động nhanh">
-          <a
+          <Link
             className={`${styles.actionPill} ${styles.actionPillPrimary}`}
             href="/staff/quizzes"
           >
             Tạo Quiz
-          </a>
-          <a
+          </Link>
+          <Link
             className={`${styles.actionPill} ${styles.actionPillAccent}`}
             href="/staff/quizzes"
           >
             Tạo Challenge
-          </a>
-          <a
+          </Link>
+          <Link
             className={`${styles.actionPill} ${styles.actionPillDark}`}
             href="/staff/questions"
           >
             Kho câu hỏi
-          </a>
+          </Link>
         </nav>
       </section>
 
@@ -86,9 +84,9 @@ export function StaffDashboardScreen({
           <section aria-label="Thống kê">
             <header className={styles.sectionHeader}>
               <h3 className={styles.sectionTitle}>Thống kê</h3>
-              <a className={styles.sectionAction} href="/staff/analytics">
+              <Link className={styles.sectionAction} href="/staff/analytics">
                 Xem chi tiết
-              </a>
+              </Link>
             </header>
 
             <div className={styles.statsGrid}>
@@ -268,7 +266,7 @@ export function StaffDashboardScreen({
               <LeaderboardCard
                 title="Bảng xếp hạng"
                 actionLabel="Xem tất cả"
-                onActionClick={() => router.push("/staff/leaderboard")}
+                actionHref="/staff/leaderboard"
                 rows={leaderboard.map((entry) => ({
                   rank: entry.rank,
                   name: entry.fullName,
