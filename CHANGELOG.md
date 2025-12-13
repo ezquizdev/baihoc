@@ -16,6 +16,11 @@
 ### fix(ui): stabilize staff dashboard responsive widths
 - Increased the staff dashboard right-column minimum width and stacked earlier to keep the competency widget readable across screen sizes.
 
+### fix(shell): improve dashboard navigation and profile actions
+- Prevented topbar search from submitting when no handler is provided.
+- Switched the dashboard page title to an `h1` for better document structure.
+- Updated sidebar navigation + profile menu to use real links where possible, and added a working logout action.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
