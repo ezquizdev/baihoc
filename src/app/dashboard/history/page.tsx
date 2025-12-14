@@ -4,7 +4,9 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import styles from "../dashboard-stub-page.module.css";
 
 export default async function DashboardHistoryPage() {
-  const session = await requireAuthenticatedPage({ next: "/dashboard/history" });
+  const session = await requireAuthenticatedPage({
+    next: "/dashboard/history",
+  });
   if (session.role === "staff") {
     redirect("/staff/dashboard");
   }
@@ -22,4 +24,3 @@ export default async function DashboardHistoryPage() {
     </DashboardShell>
   );
 }
-

@@ -1,3 +1,5 @@
+import type { LinkProps } from "next/link";
+
 export type StaffNavKey =
   | "overview"
   | "quizzes"
@@ -7,10 +9,12 @@ export type StaffNavKey =
   | "analytics"
   | "settings";
 
+type NavHref = LinkProps<string>["href"];
+
 export const staffNavItems: Array<{
   key: StaffNavKey;
   label: string;
-  href: string;
+  href: NavHref;
 }> = [
   { key: "overview", label: "Tổng quan", href: "/staff/dashboard" },
   { key: "quizzes", label: "Tất cả quiz", href: "/staff/quizzes" },
