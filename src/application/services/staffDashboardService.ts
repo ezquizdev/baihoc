@@ -108,9 +108,9 @@ export async function getStaffDashboardOverview({
   activityLimit,
   subjects,
 }: StaffDashboardOverviewInput): Promise<StaffDashboardOverviewDto> {
-  const orderedSubjects = orderSubjectsForDashboard(subjects);
+  const dashboardSubjects = selectDashboardSubjects(subjects);
   const xpTotalsPromise = listStudentXpTotals();
-  const subjectIds = orderedSubjects.map((subject) => subject.id);
+  const subjectIds = dashboardSubjects.map((subject) => subject.id);
   const subjectTotalsPromise = subjectIds.length
     ? listStudentSubjectXpTotals(subjectIds)
     : Promise.resolve([]);
@@ -120,7 +120,7 @@ export async function getStaffDashboardOverview({
     buildActivitySection(activityLimit),
     buildLeaderboardSection(leaderboardLimit, xpTotalsPromise),
     buildCompetencySection(
-      orderedSubjects,
+      dashboardSubjects,
       xpTotalsPromise,
       subjectTotalsPromise,
     ),
@@ -134,15 +134,12 @@ export async function getStaffDashboardOverview({
   };
 }
 
-function orderSubjectsForDashboard(subjects: Subject[]) {
-  const preferredSlugs = ["vi", "en", "math", "sci"];
-  const order = new Map(preferredSlugs.map((slug, index) => [slug, index]));
-  return [...subjects].sort((a, b) => {
-    const aOrder = order.get(a.slug) ?? Number.MAX_SAFE_INTEGER;
-    const bOrder = order.get(b.slug) ?? Number.MAX_SAFE_INTEGER;
-    if (aOrder !== bOrder) return aOrder - bOrder;
-    return a.name.localeCompare(b.name, "vi-VN");
-  });
+function selectDashboardSubjects(subjects: Subject[]) {
+  const desiredSlugs = ["vi", "en", "math", "sci"];
+  const bySlug = new Map(subjects.map((subject) => [subject.slug, subject]));
+  return desiredSlugs
+    .map((slug) => bySlug.get(slug))
+    .filter((subject): subject is Subject => Boolean(subject));
 }
 
 async function buildStatsSection(): Promise<

@@ -29,6 +29,9 @@
 - Updated dashboard cards to support link-based actions (avoids dead “Xem …” buttons).
 - Wired student dashboard CTA to `/quizzes` and switched staff dashboard links to `next/link` for smoother navigation.
 
+### perf(staff-dashboard): compute competency for 4 core subjects
+- Restricted staff dashboard subject competency calculations to the 4 core subjects (vi/en/math/sci) to avoid unnecessary aggregation work.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
