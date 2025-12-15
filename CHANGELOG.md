@@ -41,6 +41,24 @@
 ### fix(shell): satisfy typed-route Link hrefs
 - Updated dashboard/staff nav item href typing to align with Next.js typed routes and avoid build-time type errors.
 
+### fix(ui): improve dashboard shell interactions
+- Added consistent hover/active/focus-visible states to navigation, topbar controls, and support CTA.
+- Improved topbar search focus ring and prevented scroll chaining in the sidebar.
+
+### fix(ui): polish dashboard card CTAs
+- Improved CTA affordance (hover/active/focus-visible) for the student welcome banner and card header actions.
+- Added subtle leaderboard row hover highlighting for easier scanning.
+
+### fix(ui): prevent leaderboard table overflow
+- Wrapped leaderboard tables in a scroll container so narrow screens don’t clip columns.
+
+### fix(ui): polish staff dashboard interactions
+- Added focus/hover/active states for staff dashboard CTAs and section links.
+- Improved numeric alignment and prevented long topic names from overflowing.
+
+### fix(ui): add icons to profile menu
+- Added icons to profile menu items and styled “Đăng xuất” as a destructive (red) action.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

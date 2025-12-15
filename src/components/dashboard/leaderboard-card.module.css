@@ -30,18 +30,47 @@
   font-weight: 650;
   background: none;
   border: 0;
-  padding: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
   cursor: pointer;
   text-decoration: none;
+  transition:
+    background 0.12s ease,
+    transform 0.12s ease;
+}
+
+.action:hover {
+  background: #f1f5ff;
+  transform: translateY(-0.5px);
+}
+
+.action:active {
+  transform: translateY(0);
+}
+
+.action:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+}
+
+.action:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tableWrap {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: #fff;
+  background: transparent;
+  min-width: 340px;
 }
 
 .table thead th {
@@ -63,6 +92,27 @@
 
 .table tbody tr:last-child td {
   border-bottom: 0;
+}
+
+.table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.table tbody tr:hover td {
+  background: rgba(241, 245, 255, 0.7);
+}
+
+.table tbody tr:focus-within td {
+  background: rgba(234, 240, 255, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action {
+    transition: none;
+  }
+  .table tbody tr {
+    transition: none;
+  }
 }
 
 .rank {

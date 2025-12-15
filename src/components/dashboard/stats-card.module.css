@@ -31,9 +31,38 @@
   font-weight: 650;
   background: none;
   border: 0;
-  padding: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
   cursor: pointer;
   text-decoration: none;
+  transition:
+    background 0.12s ease,
+    transform 0.12s ease;
+}
+
+.action:hover {
+  background: #f1f5ff;
+  transform: translateY(-0.5px);
+}
+
+.action:active {
+  transform: translateY(0);
+}
+
+.action:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+}
+
+.action:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action {
+    transition: none;
+  }
 }
 
 .top {
