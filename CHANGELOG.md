@@ -68,6 +68,9 @@
 ### feat(shell): add dashboard feature search omnibox
 - Added a suggest-as-you-type feature search dropdown on dashboards with keyboard (↑/↓/Enter/Escape) and click navigation.
 
+### fix(dashboard): make student quick actions clickable
+- Made the student dashboard quick actions render as interactive tiles; “TẤT CẢ” navigates to `/quizzes` while the rest are disabled placeholders.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
