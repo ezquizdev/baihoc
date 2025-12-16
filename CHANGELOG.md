@@ -71,6 +71,18 @@
 ### fix(dashboard): make student quick actions clickable
 - Made the student dashboard quick actions render as interactive tiles; “TẤT CẢ” navigates to `/quizzes` while the rest are disabled placeholders.
 
+### fix(build): satisfy typed routes in dashboard navigation
+- Fixed TypeScript typed-route navigation for the dashboard omnibox and quick-action links so production builds pass.
+
+### fix(shell): improve dashboard feature search UX
+- Show feature suggestions on focus/typing, added `aria-activedescendant`, and prevented click blur issues in the omnibox dropdown.
+
+### fix(shell): close profile menu on outside click
+- Made the profile dropdown dismiss on outside click or Escape for more predictable topbar behavior.
+
+### fix(shell): make profile menu links role-aware
+- Pointed “Cài đặt” in the profile menu to the current dashboard’s settings route and close the menu after selection/logout.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

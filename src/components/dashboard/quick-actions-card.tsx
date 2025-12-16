@@ -25,7 +25,8 @@ export function QuickActionsCard({
     >
       {actions.map((action) => {
         const parts = action.label.split("\n");
-        const isDisabled = action.disabled || !action.href;
+        const href = action.href;
+        const isDisabled = action.disabled || !href;
         return (
           <div key={action.label} className={styles.itemFrame}>
             {isDisabled ? (
@@ -43,7 +44,7 @@ export function QuickActionsCard({
               </button>
             ) : (
               <Link
-                href={action.href}
+                href={href}
                 className={`${styles.item} ${styles.itemInteractive}`}
               >
                 {parts.map((line, index) => (
