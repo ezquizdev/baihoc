@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
-    "db:init": "node scripts/db/init.js"
+    "db:init": "node scripts/db/init.js",
+    "test": "vitest",
+    "test:email": "vitest run tests/email.test.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
@@ -26,6 +28,7 @@
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.16"
   }
 }

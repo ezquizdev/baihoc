@@ -1,6 +1,6 @@
 ## BaiHoc Platform
 
-BaiHoc is an online learning and exam-prep platform that mixes quizzes, time-bound challenges, and an AI study companion. Students practice, track progress, and compare results, while teachers manage content and analytics.
+BaiHoc is an online learning and exam-prep platform that mixes quizzes, time-bound challenges, and an AI study companion. Students practice, track progress, and compare results, while staff manage content and analytics.
 
 ### Tech Stack
 
@@ -27,6 +27,8 @@ Useful scripts:
 - `npm run lint` – Biome lint + type-aware checks.
 - `npm run format` – Format with Biome.
 - `npm run build` – Next.js production build.
+- `npm run db:init` – Create/update tables in your Supabase/Postgres database from `db/schema.sql`.
+- `npm run test:email` – Sends a real transactional email via Brevo (requires valid Brevo env vars).
 
 ### Documentation
 
