@@ -45,6 +45,11 @@ export async function findUserByOAuth(provider: OAuthProvider, sub: string) {
   return res.rows[0] ?? null;
 }
 
+export async function findUserById(id: string) {
+  const res = await query<UserRow>(`SELECT * FROM users WHERE id = $1`, [id]);
+  return res.rows[0] ?? null;
+}
+
 export type CreateUserInput = {
   email: string;
   password_hash: string | null;
