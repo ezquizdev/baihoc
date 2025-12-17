@@ -18,7 +18,7 @@ export function AuthShell({
       <div className="relative hidden overflow-hidden bg-[#2868e6] text-white md:block">
         <div className="absolute left-1/2 top-4 -translate-x-1/2">
           <Image
-            src="/logo.svg"
+            src="/assets/logo.svg"
             alt="BaiHoc logo"
             width={80}
             height={36}
@@ -28,7 +28,7 @@ export function AuthShell({
         <div className="relative z-10 flex h-full flex-col items-center justify-center px-12 py-14">
           <div className="relative flex h-[240px] w-[260px] items-center justify-center">
             <Image
-              src="/arrow-hero.svg"
+              src="/assets/arrow-hero.svg"
               alt="BaiHoc hero"
               fill
               className="object-contain"

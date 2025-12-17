@@ -137,11 +137,11 @@ export default function RegisterPage() {
       if (!res.ok) {
         throw new Error(data.error || "Google đăng ký thất bại");
       }
-          if (!data.profileCompleted) {
-            router.push(`/auth/profile-complete?userId=${data.userId}`);
-          } else {
-            router.push("/profile");
-          }
+      if (!data.profileCompleted) {
+        router.push(`/auth/profile-complete`);
+      } else {
+        router.push("/profile");
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Google đăng ký thất bại";

@@ -35,7 +35,7 @@ export default function LoginPage() {
         throw new Error(data.error || "Đăng nhập thất bại");
       }
       if (!data.profileCompleted) {
-        router.push(`/auth/profile-complete?userId=${data.userId}`);
+        router.push(`/auth/profile-complete`);
       } else {
         router.push("/profile");
       }
@@ -71,7 +71,7 @@ export default function LoginPage() {
         throw new Error(data.error || "Google đăng nhập thất bại");
       }
       if (!data.profileCompleted) {
-        router.push(`/auth/profile-complete?userId=${data.userId}`);
+        router.push(`/auth/profile-complete`);
       } else {
         router.push("/profile");
       }
