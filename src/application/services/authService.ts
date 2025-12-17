@@ -4,6 +4,7 @@ import {
   consumePasswordResetToken,
   createEmailVerificationToken,
   createPasswordResetToken,
+  isPasswordResetTokenValid,
 } from "@/application/infra/db/tokenRepo";
 import {
   createUser,
@@ -147,6 +148,14 @@ export async function resetPasswordWithToken(
   }
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await updatePassword(tokenRow.user_id, passwordHash);
+}
+
+export async function verifyResetToken(rawToken: string) {
+  const tokenRow = await isPasswordResetTokenValid(rawToken);
+  if (!tokenRow) {
+    throw new Error("Mã đặt lại không hợp lệ hoặc đã hết hạn");
+  }
+  return tokenRow.user_id;
 }
 
 export async function upsertGoogleUser(input: {
