@@ -1,0 +1,132 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { GoogleButton } from "@/components/auth/GoogleButton";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Đăng nhập thất bại");
+      }
+      router.push("/");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Đăng nhập thất bại";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async (payload: {
+    sub: string;
+    email: string;
+    fullName?: string;
+    avatarUrl?: string;
+  }) => {
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/oauth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sub: payload.sub,
+          email: payload.email,
+          fullName: payload.fullName,
+          avatarUrl: payload.avatarUrl,
+          profileCompleted: !!payload.fullName,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Google đăng nhập thất bại");
+      }
+      if (!data.profileCompleted) {
+        router.push(`/auth/profile-complete?userId=${data.userId}`);
+      } else {
+        router.push("/");
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Google đăng nhập thất bại";
+      setError(message);
+    }
+  };
+
+  return (
+    <AuthShell
+      title="Đăng nhập"
+      subtitle="Quay lại luyện tập và xem tiến độ của bạn."
+      footer={
+        <p>
+          Chưa có tài khoản?{" "}
+          <Link href="/auth/register" className="font-medium text-slate-900">
+            Đăng ký
+          </Link>
+        </p>
+      }
+    >
+      <Card>
+        <div className="space-y-4">
+          <form className="space-y-4" onSubmit={handleLogin}>
+            <Input
+              label="Email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Input
+              label="Mật khẩu"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <div className="flex items-center justify-between text-sm text-slate-600">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" className="h-4 w-4" /> Ghi nhớ đăng nhập
+              </label>
+              <Link href="/auth/forgot" className="font-medium text-slate-900">
+                Quên mật khẩu?
+              </Link>
+            </div>
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <Button type="submit" block disabled={loading}>
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            </Button>
+          </form>
+          <div className="flex items-center gap-2">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs uppercase text-slate-500">Hoặc</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+          <GoogleButton onSuccess={handleGoogle} />
+        </div>
+      </Card>
+    </AuthShell>
+  );
+}
