@@ -129,6 +129,7 @@ export default function RegisterPage() {
           fullName: payload.fullName,
           avatarUrl: payload.avatarUrl,
           profileCompleted: false,
+          allowCreate: true,
         }),
       });
       const data = await res.json();

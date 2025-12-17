@@ -9,6 +9,7 @@ import {
   createUser,
   findUserByEmail,
   findUserByOAuth,
+  linkUserOAuth,
   markEmailVerified,
   type OAuthProvider,
   updateLastLogin,
@@ -156,10 +157,12 @@ export async function upsertGoogleUser(input: {
   school?: string | null;
   dateOfBirth?: string | null;
   profileCompleted?: boolean;
+  allowCreate?: boolean;
 }) {
   const provider: OAuthProvider = "google";
   const email = ensureValidEmail(input.email);
   const fullName = input.fullName ? ensureName(input.fullName) : undefined;
+  const allowCreate = Boolean(input.allowCreate);
   const existing = await findUserByOAuth(provider, input.sub);
   if (existing) {
     const updated = await updateUserProfile(existing.id, {
@@ -175,10 +178,25 @@ export async function upsertGoogleUser(input: {
   }
 
   const byEmail = await findUserByEmail(email);
-  if (byEmail && byEmail.oauth_provider !== provider) {
-    throw new Error(
-      "Email already registered with password; link flow not implemented",
-    );
+  if (byEmail) {
+    // Link Google to existing email-only account
+    if (!byEmail.oauth_provider || !byEmail.oauth_sub) {
+      const linked = await linkUserOAuth(byEmail.id, provider, input.sub);
+      await markEmailVerified(byEmail.id);
+      await updateLastLogin(byEmail.id);
+      return linked ?? byEmail;
+    }
+    if (byEmail.oauth_provider !== provider || byEmail.oauth_sub !== input.sub) {
+      throw new Error(
+        "Email đã tồn tại. Vui lòng đăng nhập bằng email/mật khẩu hoặc liên kết tài khoản.",
+      );
+    }
+    await updateLastLogin(byEmail.id);
+    return byEmail;
+  }
+
+  if (!allowCreate) {
+    throw new Error("Tài khoản Google chưa được đăng ký");
   }
 
   const user = await createUser({

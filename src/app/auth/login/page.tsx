@@ -55,7 +55,7 @@ export default function LoginPage() {
           email: payload.email,
           fullName: payload.fullName,
           avatarUrl: payload.avatarUrl,
-          profileCompleted: !!payload.fullName,
+          allowCreate: false,
         }),
       });
       const data = await res.json();

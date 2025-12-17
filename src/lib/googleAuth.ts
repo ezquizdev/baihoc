@@ -1,20 +1,3 @@
-type GoogleJwtPayload = {
-  sub: string;
-  email: string;
-  name?: string;
-  picture?: string;
-};
-
-function decodeJwt(token: string): GoogleJwtPayload | null {
-  try {
-    const [, payload] = token.split(".");
-    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(decoded) as GoogleJwtPayload;
-  } catch {
-    return null;
-  }
-}
-
 declare global {
   interface Window {
     google?: {
@@ -26,12 +9,32 @@ declare global {
           }) => void;
           prompt: () => void;
         };
+        oauth2: {
+          initTokenClient: (config: {
+            client_id: string;
+            scope: string;
+            ux_mode?: "popup" | "redirect";
+            prompt?: string;
+            callback: (response: {
+              access_token?: string;
+              error?: string;
+              error_description?: string;
+            }) => void;
+          }) => {
+            requestAccessToken: () => void;
+          };
+        };
       };
     };
   }
 }
 
-export type GoogleAuthResult = GoogleJwtPayload;
+export type GoogleAuthResult = {
+  sub: string;
+  email: string;
+  name?: string;
+  picture?: string;
+};
 
 export async function loadGoogleScript() {
   if (typeof window === "undefined") return;
@@ -52,21 +55,54 @@ export async function getGoogleCredential(
 ): Promise<GoogleAuthResult> {
   await loadGoogleScript();
   return new Promise<GoogleAuthResult>((resolve, reject) => {
-    if (!window.google?.accounts?.id) {
+    const oauth = window.google?.accounts?.oauth2;
+    if (!oauth) {
       reject(new Error("Google Identity Services not available"));
       return;
     }
-    window.google.accounts.id.initialize({
+    const tokenClient = oauth.initTokenClient({
       client_id: clientId,
-      callback: (response) => {
-        const payload = decodeJwt(response.credential);
-        if (!payload) {
-          reject(new Error("Unable to decode Google credential"));
+      scope: "openid email profile",
+      ux_mode: "popup",
+      prompt: "select_account",
+      callback: async (response) => {
+        if (response.error || !response.access_token) {
+          reject(
+            new Error(
+              response.error_description ||
+                response.error ||
+                "Google sign-in failed",
+            ),
+          );
           return;
         }
-        resolve(payload);
+        try {
+          const userinfo = await fetch(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            {
+              headers: {
+                Authorization: `Bearer ${response.access_token}`,
+              },
+            },
+          ).then((r) => r.json());
+          if (!userinfo?.sub || !userinfo?.email) {
+            throw new Error("Không lấy được thông tin tài khoản Google");
+          }
+          resolve({
+            sub: userinfo.sub,
+            email: userinfo.email,
+            name: userinfo.name,
+            picture: userinfo.picture,
+          });
+        } catch (err) {
+          reject(
+            err instanceof Error
+              ? err
+              : new Error("Không lấy được thông tin tài khoản Google"),
+          );
+        }
       },
     });
-    window.google.accounts.id.prompt();
+    tokenClient.requestAccessToken();
   });
 }
