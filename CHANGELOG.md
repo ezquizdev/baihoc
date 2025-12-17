@@ -89,6 +89,9 @@
 ### feat(ui): add icons to staff stat cards
 - Added decorative icons to the staff dashboard stat tiles for quicker visual scanning.
 
+### fix(staff-dashboard): reuse quiz subject badge for “Chủ đề sai nhiều”
+- Exposed subject slug in the staff dashboard “most wrong topic” metric and rendered it using the same SubjectBadge styling as quiz cards.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
