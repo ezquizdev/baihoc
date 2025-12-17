@@ -21,6 +21,7 @@ Environment variables live in `.env.example` and are validated via `src/core/env
 Database setup (dev):
 - After setting `DATABASE_URL`, run `npm run db:init` once to create tables from `db/schema.sql`.
 - If you hit “type already exists” or similar, run with `DB_RESET=true npm run db:init` to drop and recreate the `public` schema (dev-only; this deletes data).
+- Supabase storage: create a bucket named `avatars` and supply `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Service role is required for server-side avatar uploads; data will be stored in storage and referenced by URL in the database.
 
 Useful scripts:
 

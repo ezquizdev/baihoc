@@ -68,8 +68,13 @@ export async function createUser(input: CreateUserInput) {
       role, tier, status, email_verified_at, oauth_provider, oauth_sub, profile_completed
     ) VALUES (
       $1, $2, $3, $4, $5, $6,
-      COALESCE($7, 'student'), COALESCE($8, 'free'), COALESCE($9, 'pending_verification'),
-      $10, $11, $12, COALESCE($13, false)
+      COALESCE($7::user_role, 'student'::user_role),
+      COALESCE($8::user_tier, 'free'::user_tier),
+      COALESCE($9::user_status, 'pending_verification'::user_status),
+      $10,
+      $11::oauth_provider,
+      $12,
+      COALESCE($13, false)
     )
     RETURNING *`,
     [

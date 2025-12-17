@@ -12,8 +12,9 @@ export default function ResetPasswordPage() {
   const params = useSearchParams();
   const router = useRouter();
   const tokenFromUrl = params.get("token") || "";
-  const [token, setToken] = useState(tokenFromUrl);
+  const [token] = useState(tokenFromUrl);
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,6 +23,10 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError(null);
     setStatus("idle");
+    if (password !== passwordConfirm) {
+      setError("Mật khẩu nhập lại không khớp.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/password/confirm", {
@@ -48,7 +53,7 @@ export default function ResetPasswordPage() {
   return (
     <AuthShell
       title="Đặt lại mật khẩu"
-      subtitle="Nhập mã đặt lại và mật khẩu mới."
+      subtitle="Đặt lại mật khẩu mới của bạn."
       footer={
         <Link href="/auth/login" className="font-medium text-slate-900">
           Quay lại đăng nhập
@@ -58,18 +63,27 @@ export default function ResetPasswordPage() {
       <Card>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <Input
-            label="Mã đặt lại (token)"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            required
-          />
-          <Input
-            label="Mật khẩu mới"
+            label={
+              <>
+                Mật khẩu mới <span className="text-red-500">*</span>
+              </>
+            }
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             helperText="Tối thiểu 8 ký tự."
+          />
+          <Input
+            label={
+              <>
+                Nhập lại mật khẩu <span className="text-red-500">*</span>
+              </>
+            }
+            type="password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            required
           />
           {status === "success" && (
             <p className="text-sm text-green-600">
@@ -77,6 +91,9 @@ export default function ResetPasswordPage() {
             </p>
           )}
           {status === "error" && error && (
+            <p className="text-sm text-red-500">{error}</p>
+          )}
+          {status === "idle" && error && (
             <p className="text-sm text-red-500">{error}</p>
           )}
           <Button type="submit" block disabled={loading}>

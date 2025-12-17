@@ -66,13 +66,6 @@ export default function VerifyPage() {
               <p className="text-green-600">{message}</p>
             )}
             {status === "error" && <p className="text-red-500">{message}</p>}
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => router.push("/auth/login")}
-            >
-              Đến trang đăng nhập
-            </Button>
           </div>
         )}
       </Card>
