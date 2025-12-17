@@ -16,7 +16,11 @@ npm install
 npm run dev
 ```
 
-Environment variables live in `.env.example` and are validated via `src/core/env.ts`.
+Environment variables live in `.env.example` and are validated via `src/core/env.ts`. Include a `DATABASE_URL` (Postgres/Supabase connection string).
+
+Database setup (dev):
+- After setting `DATABASE_URL`, run `npm run db:init` once to create tables from `db/schema.sql`.
+- If you hit “type already exists” or similar, run with `DB_RESET=true npm run db:init` to drop and recreate the `public` schema (dev-only; this deletes data).
 
 Useful scripts:
 
