@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 export default function VerifyPage() {

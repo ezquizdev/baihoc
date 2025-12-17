@@ -1,12 +1,8 @@
-import { redirect } from "next/navigation";
+import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import { Card } from "@/components/ui/card";
-import { getSession } from "@/application/infra/auth/session";
 
 export default async function DashboardPage() {
-  const session = await getSession();
-  if (!session) {
-    redirect("/auth/login");
-  }
+  const session = await requireAuthenticatedPage({ next: "/dashboard" });
 
   const isStaff = session.role === "staff";
 

@@ -57,7 +57,7 @@ export async function getGoogleCredential(
   return new Promise<GoogleAuthResult>((resolve, reject) => {
     const oauth = window.google?.accounts?.oauth2;
     if (!oauth) {
-      reject(new Error("Google Identity Services not available"));
+      reject(new Error("Google Identity Services không khả dụng"));
       return;
     }
     const tokenClient = oauth.initTokenClient({
@@ -71,7 +71,7 @@ export async function getGoogleCredential(
             new Error(
               response.error_description ||
                 response.error ||
-                "Google sign-in failed",
+                "Google sign-in bị hủy hoặc lỗi.",
             ),
           );
           return;

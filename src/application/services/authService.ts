@@ -9,7 +9,6 @@ import {
 import {
   createUser,
   findUserByEmail,
-  findUserByOAuth,
   findUserById,
   linkUserOAuth,
   markEmailVerified,
@@ -18,8 +17,8 @@ import {
   updatePassword,
   updateUserProfile,
 } from "@/application/infra/db/userRepo";
-import { sendTransactionalEmail } from "@/application/services/emailService";
 import { supabaseServer } from "@/application/infra/storage/supabase";
+import { sendTransactionalEmail } from "@/application/services/emailService";
 import { siteConfig } from "@/config/site";
 import { env } from "@/core/env";
 
@@ -52,6 +51,7 @@ function ensureName(name: string) {
 export async function registerWithEmail(input: {
   email: string;
   password: string;
+  passwordConfirm?: string;
   fullName: string;
   school?: string | null;
   dateOfBirth?: string | null;
@@ -62,6 +62,12 @@ export async function registerWithEmail(input: {
   const existing = await findUserByEmail(email);
   if (existing) {
     throw new Error("Email đã được đăng ký");
+  }
+  if (
+    input.passwordConfirm !== undefined &&
+    input.password !== input.passwordConfirm
+  ) {
+    throw new Error("Mật khẩu nhập lại không khớp");
   }
   ensurePasswordStrength(input.password);
   const uploadedAvatar = input.avatarUrl
@@ -115,9 +121,7 @@ export async function loginWithEmail(input: {
   if (!valid) {
     throw new Error("Thông tin đăng nhập không đúng");
   }
-  if (user.status === "pending_verification") {
-    throw new Error("Email chưa được xác minh");
-  }
+  enforceLoginStatus(user.status);
   await updateLastLogin(user.id);
   return user;
 }
@@ -158,51 +162,29 @@ export async function verifyResetToken(rawToken: string) {
   return tokenRow.user_id;
 }
 
-export async function upsertGoogleUser(input: {
+export async function googleRegister(input: {
   sub: string;
   email: string;
   fullName?: string;
   avatarUrl?: string;
   school?: string | null;
   dateOfBirth?: string | null;
-  profileCompleted?: boolean;
-  allowCreate?: boolean;
 }) {
   const provider: OAuthProvider = "google";
   const email = ensureValidEmail(input.email);
-  const fullName = input.fullName ? ensureName(input.fullName) : undefined;
-  const allowCreate = Boolean(input.allowCreate);
+  const fullName = input.fullName ? ensureName(input.fullName) : email;
+  const existing = await findUserByEmail(email);
+  if (existing) {
+    throw new Error("Email đã tồn tại, không thể đăng ký bằng Google.");
+  }
   const avatarUpload = input.avatarUrl
     ? await normalizeAvatarUpload(input.sub, input.avatarUrl)
     : null;
-  const existing = await findUserByOAuth(provider, input.sub);
-  if (existing) {
-    const updated = await updateUserProfile(existing.id, {
-      full_name: fullName,
-      avatar_url: avatarUpload ?? input.avatarUrl,
-      school: input.school,
-      date_of_birth: input.dateOfBirth,
-      profile_completed: input.profileCompleted ?? existing.profile_completed,
-    });
-    await markEmailVerified(existing.id);
-    await updateLastLogin(existing.id);
-    return updated ?? existing;
-  }
-
-  const byEmail = await findUserByEmail(email);
-  if (byEmail) {
-    // Link Google to existing email-only account
-    if (!allowCreate) {
-      throw new Error("Email đã tồn tại. Vui lòng đăng nhập để liên kết tài khoản.");
-    }
-    // If allowCreate (signup) and account exists, block to prevent duplicate profiles
-    throw new Error("Email đã tồn tại, không thể đăng ký bằng Google.");
-  }
 
   const user = await createUser({
     email,
     password_hash: null,
-    full_name: fullName ?? email,
+    full_name: fullName,
     avatar_url: avatarUpload,
     school: input.school ?? null,
     date_of_birth: input.dateOfBirth ?? null,
@@ -210,10 +192,51 @@ export async function upsertGoogleUser(input: {
     oauth_sub: input.sub,
     status: "active",
     email_verified_at: new Date().toISOString(),
-    profile_completed: input.profileCompleted ?? false,
+    profile_completed: false,
   });
   await updateLastLogin(user.id);
   return user;
+}
+
+export async function googleLogin(input: {
+  sub: string;
+  email: string;
+  fullName?: string;
+  avatarUrl?: string;
+  school?: string | null;
+  dateOfBirth?: string | null;
+}) {
+  const provider: OAuthProvider = "google";
+  const email = ensureValidEmail(input.email);
+
+  const byEmail = await findUserByEmail(email);
+  if (!byEmail) {
+    throw new Error("Email chưa được đăng ký. Vui lòng tạo tài khoản trước.");
+  }
+  if (byEmail.oauth_provider && byEmail.oauth_sub !== input.sub) {
+    throw new Error(
+      "Email đã liên kết tài khoản khác. Vui lòng đăng nhập bằng email/mật khẩu.",
+    );
+  }
+
+  const linked = byEmail.oauth_provider
+    ? byEmail
+    : await linkUserOAuth(byEmail.id, provider, input.sub);
+  enforceLoginStatus(linked?.status ?? byEmail.status);
+  await updateLastLogin(byEmail.id);
+  return linked ?? byEmail;
+}
+
+function enforceLoginStatus(status: string) {
+  if (status === "pending_verification") {
+    throw new Error("Email chưa được xác minh");
+  }
+  if (status === "suspended") {
+    throw new Error("Tài khoản đã bị tạm khóa. Vui lòng liên hệ hỗ trợ.");
+  }
+  if (status === "deactivated") {
+    throw new Error("Tài khoản đã bị vô hiệu hóa.");
+  }
 }
 
 export async function completeProfile(
@@ -226,10 +249,9 @@ export async function completeProfile(
   },
 ) {
   const fullName = ensureName(input.fullName);
-  const uploadedAvatar =
-    input.avatarUrl && input.avatarUrl.startsWith("data:")
-      ? await storeAvatar(userId, input.avatarUrl)
-      : undefined;
+  const uploadedAvatar = input.avatarUrl?.startsWith("data:")
+    ? await storeAvatar(userId, input.avatarUrl)
+    : undefined;
   const updated = await updateUserProfile(userId, {
     full_name: fullName,
     school: input.school,
@@ -288,8 +310,7 @@ async function uploadAvatarFromUrl(userKey: string, url: string) {
   }
   const arrayBuffer = await res.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  const mime =
-    res.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+  const mime = res.headers.get("content-type")?.split(";")[0] || "image/jpeg";
   const ext = mime.split("/")[1] || "jpg";
   const path = `${userKey}/${Date.now()}.${ext}`;
   const { error } = await supabaseServer.storage
