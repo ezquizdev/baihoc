@@ -1,33 +1,29 @@
 ## BaiHoc Platform
 
-BaiHoc is an online learning and exam-prep platform focused on quizzes, challenges, and an AI study companion. This repository implements the product with a layered architecture.
+BaiHoc is an online learning and exam-prep platform that mixes quizzes, time-bound challenges, and an AI study companion. Students practice, track progress, and compare results, while teachers manage content and analytics.
 
-### Architecture
+### Tech Stack
 
-The codebase follows the structure defined in `arch.md`:
+- **Framework**: Next.js (App Router) with TypeScript.
+- **UI**: React components in `src/app`.
+- **Business Logic**: Controllers/services/models under `src/application`.
+- **Data/Integrations**: Supabase (database/storage), Brevo (email), plus an external LLM for AI explanations.
 
-- `src/app`: Next.js App Router pages/layouts (Presentation layer).
-- `src/application`: Controllers, services, models, and infra helpers.
-
-Use `/ucspec.md` for the detailed use cases and `/arch.md` for architectural decisions.
-
-### Getting Started
+### Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Environment variables are defined in `.env.example` and validated via `src/core/env.ts`.
+Environment variables live in `.env.example` and are validated via `src/core/env.ts`.
 
-### Tooling
+Useful scripts:
 
-- [`Biome`](https://biomejs.dev/) for linting/formatting (`npm run lint`, `npm run format`).
-- Testing stack TBD (Vitest/Playwright) in upcoming commits.
+- `npm run lint` – Biome lint + type-aware checks.
+- `npm run format` – Format with Biome.
+- `npm run build` – Next.js production build.
 
-### Contribution Guidelines
+### Documentation
 
-- Use conventional commits (`feat:`, `fix:`, `chore:` ...).
-- Keep feature work scoped to dedicated modules.
-- Update `arch.md` if architecture changes.
-- Never commit real secrets; sync `.env.example` when new variables are required.
+Product specs, architecture notes, and design references are available from the maintainers on request. Reach out if you need the latest copies before making major changes.
