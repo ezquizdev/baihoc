@@ -83,6 +83,9 @@
 ### fix(shell): make profile menu links role-aware
 - Pointed “Cài đặt” in the profile menu to the current dashboard’s settings route and close the menu after selection/logout.
 
+### fix(ui): format dashboard leaderboard scores
+- Formatted leaderboard score values using Vietnamese number formatting for easier scanning.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
