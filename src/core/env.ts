@@ -1,11 +1,14 @@
 import { z } from "zod";
 
 const serverSchema = z.object({
+  DATABASE_URL: z.string().url(),
   SUPABASE_URL: z.string().url(),
   SUPABASE_ANON_KEY: z.string().min(1),
   BREVO_API_KEY: z.string().min(1),
   BREVO_SENDER_EMAIL: z.string().email(),
   BREVO_SENDER_NAME: z.string().min(1),
+  GOOGLE_CLIENT_ID: z.string().min(1),
+  GOOGLE_CLIENT_SECRET: z.string().min(1),
   LLM_API_KEY: z.string().min(1),
 });
 
