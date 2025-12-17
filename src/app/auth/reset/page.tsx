@@ -23,6 +23,10 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError(null);
     setStatus("idle");
+    if (!token) {
+      setError("Thiếu mã đặt lại. Vui lòng mở liên kết từ email.");
+      return;
+    }
     if (password !== passwordConfirm) {
       setError("Mật khẩu nhập lại không khớp.");
       return;

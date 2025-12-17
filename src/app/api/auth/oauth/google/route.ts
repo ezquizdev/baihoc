@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { upsertGoogleUser } from "@/application/services/authService";
+import { setSession } from "@/application/infra/auth/session";
 
 export async function POST(request: Request) {
   try {
@@ -20,6 +21,12 @@ export async function POST(request: Request) {
       profileCompleted: body.profileCompleted,
       allowCreate: Boolean(body.allowCreate),
     });
+    await setSession({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      profileCompleted: user.profile_completed,
+    });
     return NextResponse.json(
       {
         userId: user.id,
@@ -29,7 +36,8 @@ export async function POST(request: Request) {
       { status: 200 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message =
+      error instanceof Error ? error.message : "Lỗi không xác định";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
