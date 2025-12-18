@@ -12,6 +12,9 @@ const serverSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
   LLM_API_KEY: z.string().min(1),
+  ADMIN_SEED_EMAIL: z.string().email().optional(),
+  ADMIN_SEED_PASSWORD: z.string().min(8).optional(),
+  ADMIN_SEED_NAME: z.string().optional(),
 });
 
 const publicSchema = z.object({
