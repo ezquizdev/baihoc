@@ -460,6 +460,10 @@
   flex: 0 0 auto;
 }
 
+.searchSuggestionMetaHidden {
+  visibility: hidden;
+}
+
 .searchSuggestionEmpty {
   padding: 10px 12px;
   color: var(--muted);
