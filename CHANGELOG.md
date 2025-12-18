@@ -14,6 +14,11 @@
 - Added controllers and Next.js API endpoints for staff quiz/question CRUD, publishing/archiving, and question ordering.
 - Added catalog endpoints for authenticated users to list and view published quizzes with filters and validation via zod.
 
+### fix(quiz): align flow guardrails
+- Catalog listing now supports min/max question filters and returns question counts.
+- Staff can hard-delete quizzes only when no attempts exist; otherwise archive.
+- Staff question delete now hard-deletes only when unused, otherwise archives.
+
 ### chore(tests): fix lint regressions
 - Cleaned up mock types and helpers in auth and middleware tests to satisfy Biome lint rules.
 

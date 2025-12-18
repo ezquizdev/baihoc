@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  controllerDeleteQuiz,
   controllerGetStaffQuizDetail,
   controllerUpdateQuiz,
 } from "@/application/controllers/quizController";
@@ -59,6 +60,22 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Không thể cập nhật quiz";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Params },
+) {
+  const auth = await requireAuthenticatedApi(request, { role: "staff" });
+  if (auth instanceof NextResponse) return auth;
+  try {
+    const result = await controllerDeleteQuiz(context.params.quizId);
+    return NextResponse.json({ status: result.status });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Không thể xóa quiz";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
-  controllerArchiveQuestion,
+  controllerDeleteQuestion,
   controllerGetQuestionDetail,
   controllerUpdateQuestion,
 } from "@/application/controllers/questionController";
@@ -89,11 +89,11 @@ export async function DELETE(
   const auth = await requireAuthenticatedApi(request, { role: "staff" });
   if (auth instanceof NextResponse) return auth;
   try {
-    await controllerArchiveQuestion(context.params.questionId);
-    return NextResponse.json({ success: true });
+    const result = await controllerDeleteQuestion(context.params.questionId);
+    return NextResponse.json({ status: result.status });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Không thể lưu trữ câu hỏi";
+      error instanceof Error ? error.message : "Không thể xóa/lưu trữ câu hỏi";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

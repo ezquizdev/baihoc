@@ -108,3 +108,7 @@ export async function controllerGetQuestionDetail(questionId: string) {
 export async function controllerArchiveQuestion(questionId: string) {
   await archiveQuestion(questionId);
 }
+
+export async function controllerDeleteQuestion(questionId: string) {
+  return deleteQuestionWithRules(questionId);
+}

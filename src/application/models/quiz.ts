@@ -20,6 +20,7 @@ export type Quiz = {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
+  questionCount?: number;
 };
 
 export type ChallengeSettings = {
