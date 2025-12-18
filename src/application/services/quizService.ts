@@ -18,6 +18,7 @@ import type {
   QuizStatus,
   QuizVisibility,
 } from "@/application/models/quiz";
+import { ServiceError } from "@/application/services/errors";
 
 type CreateQuizInput = {
   title: string;
@@ -90,7 +91,11 @@ export async function archiveQuiz(quizId: string) {
 export async function deleteQuizWithRules(quizId: string) {
   const used = await isQuizUsed(quizId);
   if (used) {
-    throw new Error("Quiz has attempts; please archive instead of deleting");
+    throw new ServiceError(
+      "QUIZ_HAS_ATTEMPTS",
+      "Quiz has attempts; please archive instead of deleting",
+      409,
+    );
   }
   await deleteQuiz(quizId);
   return { status: "deleted" as const };

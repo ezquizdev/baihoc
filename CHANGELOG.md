@@ -19,6 +19,11 @@
 - Staff can hard-delete quizzes only when no attempts exist; otherwise archive.
 - Staff question delete now hard-deletes only when unused, otherwise archives.
 
+### refactor(api): shared enums & query parsing
+- Centralized quiz/question enums and value lists for zod schemas and services.
+- Added reusable query parsing helpers for pagination and filters across API routes.
+- Delete guards now surface structured codes for quiz/question deletes to support better UI messaging.
+
 ### chore(tests): fix lint regressions
 - Cleaned up mock types and helpers in auth and middleware tests to satisfy Biome lint rules.
 
