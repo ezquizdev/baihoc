@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { middleware } from "@/middleware";
 
@@ -48,13 +48,18 @@ describe("middleware", () => {
 
 function createRequest(
   path: string,
-  opts?: { cookies?: Record<string, string>; sessionPayload?: any },
-) {
+  opts?: {
+    cookies?: Record<string, string>;
+    sessionPayload?: Record<string, unknown>;
+  },
+): NextRequest {
   const url = new URL(`http://localhost${path}`);
   const headers = new Headers();
   const cookies: string[] = [];
   if (opts?.cookies) {
-    Object.entries(opts.cookies).forEach(([k, v]) => cookies.push(`${k}=${v}`));
+    Object.entries(opts.cookies).forEach(([k, v]) => {
+      cookies.push(`${k}=${v}`);
+    });
   }
   if (cookies.length) headers.set("cookie", cookies.join("; "));
   const req = {
@@ -67,11 +72,11 @@ function createRequest(
     },
     url: url.toString(),
     headers,
-  } as any;
+  };
 
   // jose.jwtVerify is dynamically imported in middleware; mock per request
   vi.doMock("jose", async () => {
-    const actual = await vi.importActual<any>("jose");
+    const actual = await vi.importActual<typeof import("jose")>("jose");
     return {
       ...actual,
       jwtVerify: vi.fn(async () => ({ payload: opts?.sessionPayload ?? {} })),
@@ -81,5 +86,5 @@ function createRequest(
   vi.spyOn(NextResponse, "redirect");
   vi.spyOn(NextResponse, "next");
 
-  return req;
+  return req as unknown as NextRequest;
 }

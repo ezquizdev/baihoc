@@ -1,6 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { requireAuthenticatedApi, requireAuthenticatedPage } from "@/application/infra/auth/guards";
+import { describe, expect, it, vi } from "vitest";
+import {
+  requireAuthenticatedApi,
+  requireAuthenticatedPage,
+} from "@/application/infra/auth/guards";
 import * as sessionModule from "@/application/infra/auth/session";
 
 describe("auth guards", () => {
@@ -10,6 +14,7 @@ describe("auth guards", () => {
     role: "student",
     profileCompleted: true,
   };
+  const fakeRequest = {} as unknown as NextRequest;
 
   it("requireAuthenticatedPage redirects to login when missing session", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(null);
@@ -46,7 +51,7 @@ describe("auth guards", () => {
 
   it("requireAuthenticatedApi returns 401 when no session", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(null);
-    const res = await requireAuthenticatedApi({} as any);
+    const res = await requireAuthenticatedApi(fakeRequest);
     expect(res).toBeInstanceOf(NextResponse);
     expect((res as NextResponse).status).toBe(401);
   });
@@ -56,7 +61,7 @@ describe("auth guards", () => {
       ...session,
       profileCompleted: false,
     });
-    const res = await requireAuthenticatedApi({} as any);
+    const res = await requireAuthenticatedApi(fakeRequest);
     expect((res as NextResponse).status).toBe(403);
   });
 
@@ -65,13 +70,13 @@ describe("auth guards", () => {
       ...session,
       role: "student",
     });
-    const res = await requireAuthenticatedApi({} as any, { role: "staff" });
+    const res = await requireAuthenticatedApi(fakeRequest, { role: "staff" });
     expect((res as NextResponse).status).toBe(403);
   });
 
   it("requireAuthenticatedApi passes through session on success", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(session);
-    const res = await requireAuthenticatedApi({} as any);
+    const res = await requireAuthenticatedApi(fakeRequest);
     expect(res).toEqual(session);
   });
 });
