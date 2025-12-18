@@ -2,6 +2,13 @@
 
 ## 2025-12-18
 
+### feat(auth): auto-upgrade allowlisted signups
+- Registration now checks `course_student_allowlist`; matching emails are created as paid + active, immediately verified, and a membership history record is written.
+
+### feat(admin): extend user management controls
+- Staff APIs added for user detail fetch, email verification override, and triggering password reset emails; user status changes are logged with audit entries.
+- Allowlist management supports bulk add via POST array payload and reuses audit logging.
+
 ### feat(admin): staff user management backend
 - Added user admin services/controllers for listing/filtering users, updating role/tier/status with audit + history, allowlist management, and email search helpers.
 - Exposed staff-only API routes under `/api/admin/users/**` and `/api/admin/allowlist` with validation and auth guards.
