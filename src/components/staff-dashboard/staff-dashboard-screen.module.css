@@ -227,12 +227,6 @@
   color: var(--primary);
 }
 
-.statIconTopics {
-  background: rgba(229, 57, 53, 0.12);
-  border-color: rgba(229, 57, 53, 0.22);
-  color: #e53935;
-}
-
 .statLabel {
   margin: 0;
   font-size: 13px;
@@ -247,6 +241,10 @@
   letter-spacing: 0.2px;
   margin-top: 8px;
   font-variant-numeric: tabular-nums;
+}
+
+.statValueLarge {
+  font-size: 30px;
 }
 
 .statSplit {
@@ -504,7 +502,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -670,6 +668,10 @@
 
   .competencyBig {
     font-size: 56px;
+  }
+
+  .statValueLarge {
+    font-size: 28px;
   }
 
   .chartPanel {
