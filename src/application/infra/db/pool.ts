@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, type PoolClient } from "pg";
 import { env } from "@/core/env";
 
 export const pool = new Pool({
@@ -8,4 +8,21 @@ export const pool = new Pool({
 export async function query<T = unknown>(text: string, params?: unknown[]) {
   const res = await pool.query<T>(text, params);
   return res;
+}
+
+export async function withTransaction<T>(
+  fn: (client: PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await fn(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
