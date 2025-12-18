@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { controllerCompleteProfile } from "@/application/controllers/authController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import { setSession } from "@/application/infra/auth/session";
+import { setSession, toSessionPayload } from "@/application/infra/auth/session";
 
 export async function POST(request: Request) {
   try {
@@ -18,12 +18,7 @@ export async function POST(request: Request) {
       );
     }
     const { user, sessionUser } = await controllerCompleteProfile(body);
-    await setSession({
-      sub: sessionUser.id,
-      email: sessionUser.email,
-      role: sessionUser.role,
-      profileCompleted: sessionUser.profileCompleted,
-    });
+    await setSession(toSessionPayload(sessionUser));
     return NextResponse.json(
       { userId: user.id, profileCompleted: sessionUser.profileCompleted },
       { status: 200 },

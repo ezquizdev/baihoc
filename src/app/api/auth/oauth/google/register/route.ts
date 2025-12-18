@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { controllerGoogleRegister } from "@/application/controllers/authController";
-import { setSession } from "@/application/infra/auth/session";
+import { setSession, toSessionPayload } from "@/application/infra/auth/session";
 
 export async function POST(request: Request) {
   try {
@@ -12,12 +12,7 @@ export async function POST(request: Request) {
       );
     }
     const { user, sessionUser } = await controllerGoogleRegister(body);
-    await setSession({
-      sub: sessionUser.id,
-      email: sessionUser.email,
-      role: sessionUser.role,
-      profileCompleted: sessionUser.profileCompleted,
-    });
+    await setSession(toSessionPayload(sessionUser));
     return NextResponse.json(
       {
         userId: user.id,

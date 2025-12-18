@@ -12,7 +12,27 @@ export type SessionPayload = {
   email: string;
   role: string;
   profileCompleted: boolean;
+  fullName?: string;
+  avatarUrl?: string;
 };
+
+export function toSessionPayload(user: {
+  id: string;
+  email: string;
+  role: string;
+  profileCompleted: boolean;
+  fullName?: string | null;
+  avatarUrl?: string | null;
+}): SessionPayload {
+  return {
+    sub: user.id,
+    email: user.email,
+    role: user.role,
+    profileCompleted: user.profileCompleted,
+    fullName: user.fullName ?? undefined,
+    avatarUrl: user.avatarUrl ?? undefined,
+  };
+}
 
 export async function setSession(payload: SessionPayload) {
   const exp = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
@@ -44,6 +64,8 @@ export async function getSession(): Promise<SessionPayload | null> {
       email: String(payload.email),
       role: String(payload.role),
       profileCompleted: Boolean(payload.profileCompleted),
+      fullName: payload.fullName ? String(payload.fullName) : undefined,
+      avatarUrl: payload.avatarUrl ? String(payload.avatarUrl) : undefined,
     };
   } catch {
     await clearSession();
