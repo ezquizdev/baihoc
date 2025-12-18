@@ -14,12 +14,14 @@ import {
   findUserByEmail,
   findUserById,
   listUsers,
+  markEmailVerified,
   type UserListFilters,
 } from "@/application/infra/db/userRepo";
 import {
   insertUserStatusChange,
   listUserStatusChanges,
 } from "@/application/infra/db/userStatusRepo";
+import { requestPasswordReset } from "@/application/services/authService";
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -126,5 +128,76 @@ export async function removeAllowlist(email: string, actorUserId: string) {
     action: "allowlist_remove",
     targetType: "allowlist_email",
     targetId: normalizeEmail(email),
+  });
+}
+
+export async function addAllowlistBulk(
+  emails: string[],
+  actorUserId: string,
+): Promise<{ added: number }> {
+  const unique = Array.from(
+    new Set(emails.map((e) => normalizeEmail(e)).filter(Boolean)),
+  );
+  let added = 0;
+  for (const email of unique) {
+    await insertAllowlistEmail(email, actorUserId);
+    await insertAuditLog({
+      actorUserId,
+      action: "allowlist_add",
+      targetType: "allowlist_email",
+      targetId: email,
+    });
+    added += 1;
+  }
+  return { added };
+}
+
+export async function getUserById(userId: string) {
+  const user = await findUserById(userId);
+  if (!user) throw new Error("User not found");
+  return user;
+}
+
+export async function verifyUserEmail(input: {
+  userId: string;
+  actorUserId: string;
+  reason?: string | null;
+}) {
+  const current = await getUserById(input.userId);
+  const updated = await markEmailVerified(input.userId);
+  if (!updated) throw new Error("Failed to verify email");
+
+  if (current.status !== updated.status) {
+    await insertUserStatusChange({
+      userId: input.userId,
+      fromStatus: current.status,
+      toStatus: updated.status,
+      reason: input.reason ?? null,
+      changedBy: input.actorUserId,
+    });
+  }
+
+  await insertAuditLog({
+    actorUserId: input.actorUserId,
+    action: "user_admin_verify_email",
+    targetType: "user",
+    targetId: input.userId,
+    metadata: { reason: input.reason ?? null },
+  });
+
+  return updated;
+}
+
+export async function adminSendPasswordReset(input: {
+  userId: string;
+  actorUserId: string;
+}) {
+  const user = await getUserById(input.userId);
+  await requestPasswordReset(user.email);
+  await insertAuditLog({
+    actorUserId: input.actorUserId,
+    action: "user_admin_trigger_reset",
+    targetType: "user",
+    targetId: input.userId,
   });
 }

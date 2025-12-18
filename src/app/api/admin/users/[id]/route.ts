@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { controllerAdminUpdateUser } from "@/application/controllers/userAdminController";
+import {
+  controllerAdminGetUser,
+  controllerAdminUpdateUser,
+} from "@/application/controllers/userAdminController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 
 const roleValues = ["student", "staff"] as const;
@@ -55,6 +58,25 @@ export async function PATCH(
       reason,
       actorUserId: session.sub,
     });
+    return NextResponse.json({ user }, { status: 200 });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Lỗi không xác định";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
+  const session = await requireAuthenticatedApi(request, { role: "staff" });
+  if (session instanceof NextResponse) return session;
+  if (!params?.id) {
+    return NextResponse.json({ error: "Thiếu mã người dùng" }, { status: 400 });
+  }
+  try {
+    const user = await controllerAdminGetUser(params.id);
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
     const message =

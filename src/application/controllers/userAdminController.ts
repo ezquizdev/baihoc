@@ -1,13 +1,17 @@
 import type { UserRow } from "@/application/infra/db/userRepo";
 import type { User } from "@/application/models/user";
 import {
+  addAllowlistBulk,
   addAllowlistEmail,
+  adminSendPasswordReset,
   getAllowlist,
+  getUserById,
   getUserHistory,
   listUsersWithTotal,
   removeAllowlist,
   searchUserByEmail,
   updateUserAdmin,
+  verifyUserEmail,
 } from "@/application/services/userAdminService";
 
 const toDomainUser = (row: UserRow): User => ({
@@ -53,6 +57,11 @@ export async function controllerAdminSearchByEmail(email: string) {
   return found ? toDomainUser(found) : null;
 }
 
+export async function controllerAdminGetUser(userId: string) {
+  const user = await getUserById(userId);
+  return toDomainUser(user);
+}
+
 export async function controllerAdminUserHistory(userId: string) {
   return getUserHistory(userId);
 }
@@ -71,9 +80,32 @@ export async function controllerAdminAllowlistAdd(
   await addAllowlistEmail(email, actorUserId);
 }
 
+export async function controllerAdminAllowlistBulk(
+  emails: string[],
+  actorUserId: string,
+) {
+  return addAllowlistBulk(emails, actorUserId);
+}
+
 export async function controllerAdminAllowlistRemove(
   email: string,
   actorUserId: string,
 ) {
   await removeAllowlist(email, actorUserId);
+}
+
+export async function controllerAdminVerifyEmail(input: {
+  userId: string;
+  actorUserId: string;
+  reason?: string | null;
+}) {
+  const updated = await verifyUserEmail(input);
+  return toDomainUser(updated);
+}
+
+export async function controllerAdminTriggerPasswordReset(input: {
+  userId: string;
+  actorUserId: string;
+}) {
+  await adminSendPasswordReset(input);
 }
