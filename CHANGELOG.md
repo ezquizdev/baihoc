@@ -2,6 +2,11 @@
 
 ## 2025-12-18
 
+### feat(admin): staff user management backend
+- Added user admin services/controllers for listing/filtering users, updating role/tier/status with audit + history, allowlist management, and email search helpers.
+- Exposed staff-only API routes under `/api/admin/users/**` and `/api/admin/allowlist` with validation and auth guards.
+- Recorded membership/status change trails plus audit logs to match UC019 requirements; added unit coverage for user admin workflows.
+
 ### feat(auth): add route-level guards
 - Introduced reusable `requireAuthenticatedPage`/`requireAuthenticatedApi` guards to handle login/profile/role gating per route.
 - Updated core pages to use the new guards and simplified middleware to stop path-based protection.
