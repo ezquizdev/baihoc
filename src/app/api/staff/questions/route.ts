@@ -1,15 +1,24 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  parseDifficulty,
+  parsePagination,
+  parseQuestionStatus,
+} from "@/app/api/_utils/query";
+import {
   controllerCreateQuestion,
   controllerListQuestions,
 } from "@/application/controllers/questionController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
+import {
+  DifficultyValues,
+  QuestionTypeValues,
+} from "@/application/models/enums";
 
 const createSchema = z.object({
   subjectId: z.string().uuid(),
-  defaultDifficulty: z.enum(["easy", "medium", "hard", "mixed"]),
-  type: z.enum(["mcq_single", "mcq_multi", "short_answer", "passage"]),
+  defaultDifficulty: z.enum(DifficultyValues),
+  type: z.enum(QuestionTypeValues),
   stem: z.string().min(1),
   explanation: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
@@ -45,24 +54,18 @@ export async function GET(request: NextRequest) {
   const auth = await requireAuthenticatedApi(request, { role: "staff" });
   if (auth instanceof NextResponse) return auth;
   const { searchParams } = new URL(request.url);
-  const limit = Number(searchParams.get("limit") ?? "20");
-  const offset = Number(searchParams.get("offset") ?? "0");
+  const { limit, offset } = parsePagination(searchParams, {
+    limit: 20,
+    offset: 0,
+  });
   try {
     const items = await controllerListQuestions({
       subjectId: searchParams.get("subjectId") ?? undefined,
-      difficulty: (searchParams.get("difficulty") ?? undefined) as
-        | "easy"
-        | "medium"
-        | "hard"
-        | "mixed"
-        | undefined,
-      status: (searchParams.get("status") ?? undefined) as
-        | "active"
-        | "archived"
-        | undefined,
+      difficulty: parseDifficulty(searchParams),
+      status: parseQuestionStatus(searchParams),
       search: searchParams.get("search") ?? undefined,
-      limit: Number.isFinite(limit) ? limit : 20,
-      offset: Number.isFinite(offset) ? offset : 0,
+      limit,
+      offset,
     });
     return NextResponse.json({ items });
   } catch (error) {

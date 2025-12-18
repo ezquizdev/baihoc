@@ -6,18 +6,21 @@ import {
   controllerUpdateQuestion,
 } from "@/application/controllers/questionController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
+import {
+  DifficultyValues,
+  QuestionStatusValues,
+  QuestionTypeValues,
+} from "@/application/models/enums";
 
 const updateSchema = z.object({
   subjectId: z.string().uuid().optional(),
-  defaultDifficulty: z.enum(["easy", "medium", "hard", "mixed"]).optional(),
-  type: z
-    .enum(["mcq_single", "mcq_multi", "short_answer", "passage"])
-    .optional(),
+  defaultDifficulty: z.enum(DifficultyValues).optional(),
+  type: z.enum(QuestionTypeValues).optional(),
   stem: z.string().min(1).optional(),
   explanation: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
   defaultScore: z.number().positive().optional(),
-  status: z.enum(["active", "archived"]).optional(),
+  status: z.enum(QuestionStatusValues).optional(),
   options: z
     .array(
       z.object({
@@ -90,7 +93,7 @@ export async function DELETE(
   if (auth instanceof NextResponse) return auth;
   try {
     const result = await controllerDeleteQuestion(context.params.questionId);
-    return NextResponse.json({ status: result.status });
+    return NextResponse.json(result);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Không thể xóa/lưu trữ câu hỏi";

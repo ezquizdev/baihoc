@@ -1,4 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  parseCommaIds,
+  parseDifficulty,
+  parseNumber,
+  parsePagination,
+  parseQuizVisibility,
+} from "@/app/api/_utils/query";
 import { controllerListCatalog } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 
@@ -9,34 +16,22 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const { searchParams } = new URL(request.url);
-  const limit = Number(searchParams.get("limit") ?? "20");
-  const offset = Number(searchParams.get("offset") ?? "0");
-  const topicIdsParam = searchParams.get("topicIds");
-  const topicIds = topicIdsParam
-    ? topicIdsParam.split(",").filter(Boolean)
-    : undefined;
-  const minQuestions = searchParams.get("minQuestions");
-  const maxQuestions = searchParams.get("maxQuestions");
+  const { limit, offset } = parsePagination(searchParams, {
+    limit: 20,
+    offset: 0,
+  });
 
   try {
     const items = await controllerListCatalog({
       subjectId: searchParams.get("subjectId") ?? undefined,
-      topicIds,
-      difficulty: (searchParams.get("difficulty") ?? undefined) as
-        | "easy"
-        | "medium"
-        | "hard"
-        | "mixed"
-        | undefined,
-      visibility: (searchParams.get("visibility") ?? undefined) as
-        | "free"
-        | "premium"
-        | undefined,
+      topicIds: parseCommaIds(searchParams, "topicIds"),
+      difficulty: parseDifficulty(searchParams),
+      visibility: parseQuizVisibility(searchParams),
       search: searchParams.get("search") ?? undefined,
-      limit: Number.isFinite(limit) ? limit : 20,
-      offset: Number.isFinite(offset) ? offset : 0,
-      minQuestions: minQuestions ? Number(minQuestions) : undefined,
-      maxQuestions: maxQuestions ? Number(maxQuestions) : undefined,
+      limit,
+      offset,
+      minQuestions: parseNumber(searchParams, "minQuestions"),
+      maxQuestions: parseNumber(searchParams, "maxQuestions"),
     });
     return NextResponse.json({ items });
   } catch (error) {

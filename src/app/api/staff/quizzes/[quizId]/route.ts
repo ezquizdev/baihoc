@@ -6,18 +6,24 @@ import {
   controllerUpdateQuiz,
 } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
+import {
+  DifficultyValues,
+  QuizStatusValues,
+  QuizVisibilityValues,
+} from "@/application/models/enums";
+import { isServiceError } from "@/application/services/errors";
 
 const updateSchema = z.object({
   title: z.string().optional(),
   description: z.string().nullable().optional(),
   subjectId: z.string().uuid().optional(),
-  difficulty: z.enum(["easy", "medium", "hard", "mixed"]).optional(),
-  visibility: z.enum(["free", "premium"]).optional(),
+  difficulty: z.enum(DifficultyValues).optional(),
+  visibility: z.enum(QuizVisibilityValues).optional(),
   isChallenge: z.boolean().optional(),
   estimatedTimeSeconds: z.number().int().positive().nullable().optional(),
   thumbnailUrl: z.string().url().nullable().optional(),
   featuredRank: z.number().int().nullable().optional(),
-  status: z.enum(["draft", "published", "archived"]).optional(),
+  status: z.enum(QuizStatusValues).optional(),
   topicIds: z.array(z.string().uuid()).optional(),
   challenge: z
     .union([
@@ -74,6 +80,12 @@ export async function DELETE(
     const result = await controllerDeleteQuiz(context.params.quizId);
     return NextResponse.json({ status: result.status });
   } catch (error) {
+    if (isServiceError(error)) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     const message =
       error instanceof Error ? error.message : "Không thể xóa quiz";
     return NextResponse.json({ error: message }, { status: 400 });

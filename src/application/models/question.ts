@@ -1,14 +1,13 @@
-export type QuestionType =
-  | "mcq_single"
-  | "mcq_multi"
-  | "short_answer"
-  | "passage";
-export type QuestionStatus = "active" | "archived";
+import type {
+  DifficultyLevel,
+  QuestionStatus,
+  QuestionType,
+} from "@/application/models/enums";
 
 export type Question = {
   id: string;
   subjectId: string;
-  defaultDifficulty: "easy" | "medium" | "hard" | "mixed";
+  defaultDifficulty: DifficultyLevel;
   type: QuestionType;
   stem: string;
   explanation: string | null;
