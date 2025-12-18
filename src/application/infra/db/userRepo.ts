@@ -1,4 +1,5 @@
-import { query } from "@/application/infra/db/pool";
+import type { PoolClient } from "pg";
+import { pool, query } from "@/application/infra/db/pool";
 
 export type UserRole = "student" | "staff";
 export type UserTier = "free" | "paid";
@@ -45,8 +46,12 @@ export async function findUserByOAuth(provider: OAuthProvider, sub: string) {
   return res.rows[0] ?? null;
 }
 
-export async function findUserById(id: string) {
-  const res = await query<UserRow>(`SELECT * FROM users WHERE id = $1`, [id]);
+export async function findUserById(id: string, client?: PoolClient) {
+  const executor = client ?? pool;
+  const res = await executor.query<UserRow>(
+    `SELECT * FROM users WHERE id = $1`,
+    [id],
+  );
   return res.rows[0] ?? null;
 }
 
@@ -159,19 +164,6 @@ export async function createUser(input: CreateUserInput) {
   return res.rows[0];
 }
 
-export async function markEmailVerified(userId: string) {
-  const res = await query<UserRow>(
-    `UPDATE users
-     SET status = 'active',
-         email_verified_at = now(),
-         updated_at = now()
-     WHERE id = $1
-     RETURNING *`,
-    [userId],
-  );
-  return res.rows[0] ?? null;
-}
-
 export async function updatePassword(userId: string, password_hash: string) {
   await query(
     `UPDATE users SET password_hash = $2, updated_at = now() WHERE id = $1`,
@@ -226,8 +218,10 @@ export type UserAdminUpdateInput = {
 export async function adminUpdateUser(
   userId: string,
   input: UserAdminUpdateInput,
+  client?: PoolClient,
 ) {
-  const res = await query<UserRow>(
+  const executor = client ?? pool;
+  const res = await executor.query<UserRow>(
     `UPDATE users
      SET role = COALESCE($2, role),
          tier = COALESCE($3, tier),
@@ -238,6 +232,18 @@ export async function adminUpdateUser(
     [userId, input.role ?? null, input.tier ?? null, input.status ?? null],
   );
   return res.rows[0] ?? null;
+}
+
+export async function markEmailVerified(userId: string, client?: PoolClient) {
+  const executor = client ?? pool;
+  await executor.query(
+    `UPDATE users
+     SET status = 'active',
+         email_verified_at = now(),
+         updated_at = now()
+     WHERE id = $1`,
+    [userId],
+  );
 }
 
 export async function linkUserOAuth(
