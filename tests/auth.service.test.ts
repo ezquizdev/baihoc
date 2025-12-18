@@ -120,6 +120,28 @@ vi.mock("@/application/infra/db/tokenRepo", () => {
   };
 });
 
+vi.mock("@/application/infra/db/allowlistRepo", () => {
+  let allowlistedEmail: string | null = null;
+  return {
+    __setAllowlisted(email: string | null) {
+      allowlistedEmail = email;
+    },
+    isEmailAllowlisted: vi.fn(
+      async (email: string) => email === allowlistedEmail,
+    ),
+  };
+});
+
+vi.mock("@/application/infra/db/membershipRepo", () => {
+  const records: Array<{ userId: string }> = [];
+  return {
+    __records: records,
+    insertAllowlistUpgrade: vi.fn(async (userId: string) => {
+      records.push({ userId });
+    }),
+  };
+});
+
 vi.mock("@/application/services/emailService", () => ({
   sendTransactionalEmail: vi.fn(async () => ({ messageId: "mocked" })),
 }));
@@ -140,6 +162,8 @@ vi.mock("@/application/infra/storage/supabase", () => ({
 const userRepo = await import("@/application/infra/db/userRepo");
 const tokenRepo = await import("@/application/infra/db/tokenRepo");
 const emailService = await import("@/application/services/emailService");
+const allowlistRepo = await import("@/application/infra/db/allowlistRepo");
+const membershipRepo = await import("@/application/infra/db/membershipRepo");
 
 const {
   registerWithEmail,
@@ -159,6 +183,13 @@ describe("authService", () => {
     Object.keys(store).forEach((k) => {
       delete store[k];
     });
+    (
+      allowlistRepo as unknown as {
+        __setAllowlisted: (email: string | null) => void;
+      }
+    ).__setAllowlisted(null);
+    (membershipRepo as unknown as { __records: unknown[] }).__records.length =
+      0;
   });
 
   it("registerWithEmail hashes password, enforces confirm, and sends verify email", async () => {
@@ -182,6 +213,30 @@ describe("authService", () => {
       expect.any(Number),
     );
     expect(emailService.sendTransactionalEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("registerWithEmail upgrades allowlisted email to paid tier and logs history", async () => {
+    (
+      allowlistRepo as unknown as {
+        __setAllowlisted: (email: string | null) => void;
+      }
+    ).__setAllowlisted("allow@example.com");
+
+    const user = await registerWithEmail({
+      email: "allow@example.com",
+      password: "Password123!",
+      passwordConfirm: "Password123!",
+      fullName: "Allow Listed",
+    });
+
+    expect(user.tier).toBe("paid");
+    expect(user.status).toBe("active");
+    expect(user.email_verified_at).toBeTruthy();
+    const membershipRecords = (
+      membershipRepo as unknown as { __records: Array<{ userId: string }> }
+    ).__records;
+    expect(membershipRecords).toHaveLength(1);
+    expect(membershipRecords[0].userId).toBe(user.id);
   });
 
   it("registerWithEmail rejects mismatched confirm", async () => {

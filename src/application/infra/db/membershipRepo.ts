@@ -40,3 +40,13 @@ export async function listMembershipHistory(userId: string, limit = 50) {
   );
   return res.rows;
 }
+
+export async function insertAllowlistUpgrade(userId: string) {
+  await insertMembershipHistory({
+    userId,
+    fromTier: "free",
+    toTier: "paid",
+    reason: "allowlist auto-upgrade",
+    changedBy: null,
+  });
+}
