@@ -6,6 +6,10 @@
 - Added transaction helper to `pg` pool for safe multi-step writes.
 - Implemented quiz/question repositories with topic/challenge handling, search vectors, and catalog/staff listing helpers.
 
+### feat(quiz): add domain services
+- Added quiz services for create/update/publish/archive flows with challenge validation and question ordering support.
+- Added question services with MCQ/short-answer validation, passage handling, and repository orchestration.
+
 ### feat(auth): add route-level guards
 - Introduced reusable `requireAuthenticatedPage`/`requireAuthenticatedApi` guards to handle login/profile/role gating per route.
 - Updated core pages to use the new guards and simplified middleware to stop path-based protection.
