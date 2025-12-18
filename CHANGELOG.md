@@ -10,6 +10,10 @@
 - Added quiz services for create/update/publish/archive flows with challenge validation and question ordering support.
 - Added question services with MCQ/short-answer validation, passage handling, and repository orchestration.
 
+### feat(api): expose quiz & question routes
+- Added controllers and Next.js API endpoints for staff quiz/question CRUD, publishing/archiving, and question ordering.
+- Added catalog endpoints for authenticated users to list and view published quizzes with filters and validation via zod.
+
 ### feat(auth): add route-level guards
 - Introduced reusable `requireAuthenticatedPage`/`requireAuthenticatedApi` guards to handle login/profile/role gating per route.
 - Updated core pages to use the new guards and simplified middleware to stop path-based protection.

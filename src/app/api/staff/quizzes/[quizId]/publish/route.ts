@@ -1,0 +1,18 @@
+import { type NextRequest, NextResponse } from "next/server";
+import { controllerPublishQuiz } from "@/application/controllers/quizController";
+import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
+
+type Params = { quizId: string };
+
+export async function POST(request: NextRequest, context: { params: Params }) {
+  const auth = await requireAuthenticatedApi(request, { role: "staff" });
+  if (auth instanceof NextResponse) return auth;
+  try {
+    const quiz = await controllerPublishQuiz(context.params.quizId);
+    return NextResponse.json({ quiz });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Không thể xuất bản quiz";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
