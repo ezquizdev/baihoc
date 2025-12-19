@@ -102,6 +102,10 @@
 ### fix(shell): show “Enter” hint only for active suggestion
 - Hid the “Enter” hint pill for non-active items in the dashboard feature search dropdown.
 
+### fix(shell): refresh sidebar brand and nav contrast
+- Switched sidebar brand to a larger blue logo mark (icon-only) and removed the subtitle for a cleaner header.
+- Increased sidebar nav label contrast and active-state emphasis.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
