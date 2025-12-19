@@ -134,6 +134,33 @@ export async function getStaffDashboardOverview({
   };
 }
 
+export async function getStaffDashboardStatsSection() {
+  return buildStatsSection();
+}
+
+export async function getStaffDashboardActivitySection(limit: number) {
+  return buildActivitySection(limit);
+}
+
+export async function getStaffDashboardLeaderboardSection(limit: number) {
+  const xpTotalsPromise = listStudentXpTotals();
+  return buildLeaderboardSection(limit, xpTotalsPromise);
+}
+
+export async function getStaffDashboardCompetencySection(subjects: Subject[]) {
+  const dashboardSubjects = selectDashboardSubjects(subjects);
+  const xpTotalsPromise = listStudentXpTotals();
+  const subjectIds = dashboardSubjects.map((subject) => subject.id);
+  const subjectTotalsPromise = subjectIds.length
+    ? listStudentSubjectXpTotals(subjectIds)
+    : Promise.resolve([]);
+  return buildCompetencySection(
+    dashboardSubjects,
+    xpTotalsPromise,
+    subjectTotalsPromise,
+  );
+}
+
 function selectDashboardSubjects(subjects: Subject[]) {
   const desiredSlugs = ["vi", "en", "math", "sci"];
   const bySlug = new Map(subjects.map((subject) => [subject.slug, subject]));

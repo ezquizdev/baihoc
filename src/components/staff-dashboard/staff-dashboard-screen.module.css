@@ -283,6 +283,51 @@
   border: 1px solid rgba(212, 59, 59, 0.2);
 }
 
+.topicSubjectBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 850;
+  border: 1px solid transparent;
+  max-width: 110px;
+  text-align: center;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+.topicSubjectMixed {
+  background: #0e1b2b;
+  border-color: #0e1b2b;
+  color: var(--brand-accent);
+}
+
+.topicSubjectEn {
+  background: var(--brand-accent);
+  border-color: rgba(255, 212, 0, 0.7);
+  color: var(--brand-primary);
+}
+
+.topicSubjectSci {
+  background: var(--brand-primary);
+  border-color: rgba(47, 102, 255, 0.65);
+  color: var(--brand-accent);
+}
+
+.topicSubjectVi {
+  background: #e53935;
+  border-color: rgba(229, 57, 53, 0.7);
+  color: var(--brand-accent);
+}
+
+.topicSubjectMath {
+  background: #ffffff;
+  border-color: rgba(229, 57, 53, 0.35);
+  color: #e53935;
+}
+
 .topicName {
   margin-top: 10px;
   font-weight: 850;
@@ -411,6 +456,68 @@
   color: var(--muted);
   font-weight: 650;
   font-size: 13px;
+}
+
+.skeletonCard {
+  background: linear-gradient(
+    90deg,
+    rgba(231, 239, 255, 0.85),
+    rgba(255, 255, 255, 0.85),
+    rgba(231, 239, 255, 0.85)
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  box-shadow: none;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+.skeletonStatCard {
+  min-height: 118px;
+}
+
+.skeletonLeaderboard {
+  min-height: 260px;
+}
+
+.skeletonCompetency {
+  min-height: 360px;
+}
+
+.activitySkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.skeletonLine {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(231, 239, 255, 0.85),
+    rgba(255, 255, 255, 0.85),
+    rgba(231, 239, 255, 0.85)
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  border: 1px solid rgba(230, 238, 255, 0.9);
+}
+
+.skeletonLineShort {
+  width: 38%;
+}
+
+.skeletonLineMedium {
+  width: 64%;
 }
 
 .activityList {
