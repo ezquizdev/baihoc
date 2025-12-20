@@ -6,6 +6,10 @@
 - Rebuilt quiz cards to match the legacy layout with tone backgrounds, date pill, stacked info, and internal CTA.
 - Added reusable difficulty and subject badge components and swapped to phosphor-react icons.
 
+### feat(ui): align filters and pagination styles
+- Updated filter dropdown sizing, checkbox styling, and slider layering to match catalog v10.
+- Aligned pagination layout and responsive breakpoints with the updated mock.
+
 ### chore(db): add seed script
 - Added a database seed script to populate quizzes, subjects, questions, attempts, and XP for catalog testing.
 - Added `db:seed` npm script for convenience.
