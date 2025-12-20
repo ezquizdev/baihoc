@@ -11,6 +11,7 @@ import { QuizFilters } from "./quiz-filters";
 import { QuizGrid } from "./quiz-grid";
 import { QuizHero } from "./quiz-hero";
 import { QuizLeaderboard } from "./quiz-leaderboard";
+import { QuizModal } from "./quiz-modal";
 import { QuizPagination } from "./quiz-pagination";
 import styles from "./quiz-catalog.module.css";
 
@@ -53,6 +54,7 @@ export function QuizCatalogScreen({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedQuiz, setSelectedQuiz] = useState<QuizCatalogItem | null>(null);
   const initialLoadRef = useRef(true);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -242,6 +244,7 @@ export function QuizCatalogScreen({
               isLoading={loading}
               error={error}
               onRetry={handleRetry}
+              onSelect={setSelectedQuiz}
             />
             <QuizPagination
               page={page}
@@ -253,6 +256,7 @@ export function QuizCatalogScreen({
           <QuizLeaderboard items={leaderboard} />
         </section>
       </div>
+      <QuizModal quiz={selectedQuiz} onClose={() => setSelectedQuiz(null)} />
     </DashboardShell>
   );
 }

@@ -10,6 +10,10 @@
 - Updated filter dropdown sizing, checkbox styling, and slider layering to match catalog v10.
 - Aligned pagination layout and responsive breakpoints with the updated mock.
 
+### feat(ui): add quiz quick-view modal
+- Added the quiz quick-view modal layout and styling to match catalog v10.
+- Wired quiz cards to open the modal with current quiz data.
+
 ### chore(db): add seed script
 - Added a database seed script to populate quizzes, subjects, questions, attempts, and XP for catalog testing.
 - Added `db:seed` npm script for convenience.
