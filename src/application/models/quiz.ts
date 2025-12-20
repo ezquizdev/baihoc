@@ -65,4 +65,12 @@ export type QuizCatalogItem = Quiz & {
   subjectName: string;
   subjectSlug: string;
   attemptCount: number;
+  subjectBreakdown?: QuizSubjectBreakdown[];
+};
+
+export type QuizSubjectBreakdown = {
+  subjectId: string;
+  name: string;
+  slug: string;
+  questionCount: number;
 };
