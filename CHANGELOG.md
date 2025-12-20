@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-12-20
+
+### fix(dashboard): placeholder nav items
+- Replaced sidebar and profile menu links with placeholder anchors to avoid typed-routes errors before routes exist.
+- Added no-op click handler for placeholder links while keeping existing styles.
+
 ## 2025-12-18
 
 ### feat(db): add quiz & question repositories

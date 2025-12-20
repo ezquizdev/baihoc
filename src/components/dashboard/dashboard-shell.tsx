@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { Bell, MagnifyingGlass } from "phosphor-react";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import styles from "./dashboard-shell.module.css";
 
 type NavItem = {
@@ -23,19 +22,11 @@ type DashboardShellProps = {
 };
 
 const defaultNav: NavItem[] = [
-  { key: "overview", label: "Tổng quan", href: "/dashboard" },
-  {
-    key: "quizzes",
-    label: "Tất cả bài trắc nghiệm",
-    href: "/dashboard/quizzes",
-  },
-  { key: "history", label: "Lịch sử", href: "/dashboard/history" },
-  {
-    key: "leaderboard",
-    label: "Bảng xếp hạng",
-    href: "/dashboard/leaderboard",
-  },
-  { key: "settings", label: "Cài đặt", href: "/dashboard/settings" },
+  { key: "overview", label: "Tổng quan" },
+  { key: "quizzes", label: "Tất cả bài trắc nghiệm" },
+  { key: "history", label: "Lịch sử" },
+  { key: "leaderboard", label: "Bảng xếp hạng" },
+  { key: "settings", label: "Cài đặt" },
 ];
 
 export function DashboardShell({
@@ -49,6 +40,9 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const displayName = userName ?? userEmail.split("@")[0];
   const toggleId = "dashboard-nav-toggle";
+  const handlePlaceholderClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+  };
 
   return (
     <div className={styles.shell}>
@@ -86,15 +80,17 @@ export function DashboardShell({
                 .filter(Boolean)
                 .join(" ");
 
+              const href = item.href ?? "#";
               return (
-                <Link
+                <a
                   key={item.key}
-                  href={item.href ?? "#"}
+                  href={href}
                   className={linkClass}
+                  onClick={item.href ? undefined : handlePlaceholderClick}
                 >
                   <span className={styles.dot} aria-hidden="true" />
                   {item.label}
-                </Link>
+                </a>
               );
             })}
           </nav>
@@ -178,18 +174,33 @@ export function DashboardShell({
                   role="menu"
                   aria-label="Tùy chọn hồ sơ"
                 >
-                  <Link href="#" role="menuitem" className={styles.profileLink}>
+                  <a
+                    href="#"
+                    role="menuitem"
+                    className={styles.profileLink}
+                    onClick={handlePlaceholderClick}
+                  >
                     <span className={styles.menuDot} aria-hidden="true" /> Hồ sơ
-                  </Link>
-                  <Link href="#" role="menuitem" className={styles.profileLink}>
+                  </a>
+                  <a
+                    href="#"
+                    role="menuitem"
+                    className={styles.profileLink}
+                    onClick={handlePlaceholderClick}
+                  >
                     <span className={styles.menuDot} aria-hidden="true" /> Cài
                     đặt
-                  </Link>
+                  </a>
                   <div className={styles.profileSeparator} aria-hidden="true" />
-                  <Link href="#" role="menuitem" className={styles.profileLink}>
+                  <a
+                    href="#"
+                    role="menuitem"
+                    className={styles.profileLink}
+                    onClick={handlePlaceholderClick}
+                  >
                     <span className={styles.menuDot} aria-hidden="true" /> Đăng
                     xuất
-                  </Link>
+                  </a>
                 </div>
               </details>
             </div>
