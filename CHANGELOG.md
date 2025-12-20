@@ -33,6 +33,16 @@
 - Limited seed subjects to vi/en/sci/math and added multi-subject quiz coverage.
 - Batched inserts and removed per-row hashing to make seeding faster.
 
+### feat(quiz): derive subject/topic and numeric difficulty
+- Removed quiz ratings and switched quiz/question difficulty to numeric 1–5 with UI label mapping.
+- Derived quiz subjects/topics from question data and updated catalog API/UI to match.
+
+### chore(db): update seed for passage groups
+- Seed now generates question topics, passage groups with ordered positions, and numeric difficulty levels.
+
+### docs: update quiz model notes
+- Updated WIP notes to reflect derived subject/topic rules, numeric difficulty, and passage grouping.
+
 ### feat(ui): build quiz catalog page
 - Added the `/quizzes` page with dashboard shell integration, filters, quiz grid, leaderboard, and pagination states.
 - Wired search input to catalog filters and added responsive catalog layout.
