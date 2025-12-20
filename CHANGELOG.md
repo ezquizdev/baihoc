@@ -17,6 +17,10 @@
 ### fix(ui): align filter dropdown labels
 - Adjusted dropdown label alignment to better match the v10 reference layout.
 
+### fix(ui): catalog dropdowns and badges
+- Allowed dropdown panels to render outside the filter container.
+- Updated difficulty badges to render as N★ and improved mobile filter stacking.
+
 ### chore(db): add seed script
 - Added a database seed script to populate quizzes, subjects, questions, attempts, and XP for catalog testing.
 - Added `db:seed` npm script for convenience.

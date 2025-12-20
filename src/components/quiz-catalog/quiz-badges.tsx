@@ -32,9 +32,7 @@ export function DifficultyBadge({
       aria-label={`Độ khó ${config.label}`}
     >
       <span className={styles.difficultyLabel}>{config.label}</span>
-      <span className={styles.difficultyStars}>
-        {"★".repeat(config.stars)}
-      </span>
+      <span className={styles.difficultyStars}>{config.stars}★</span>
     </div>
   );
 }

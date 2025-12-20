@@ -136,7 +136,7 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: 0 10px 20px rgba(26, 46, 93, 0.06);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ddWide {
@@ -924,8 +924,21 @@
     max-width: 360px;
   }
 
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .filterRow {
-    justify-content: flex-start;
+    justify-content: stretch;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .leaderboard {
@@ -933,8 +946,12 @@
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 600px) {
   .quizGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .filterRow {
     grid-template-columns: 1fr;
   }
 
