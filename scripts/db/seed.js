@@ -87,7 +87,7 @@ const peopleLast = [
   "Ngô",
 ];
 
-const difficultyLevels = ["easy", "medium", "hard"];
+const difficultyLevels = [1, 2, 3, 4, 5];
 const quizVisibility = ["free", "premium"];
 
 async function main() {
@@ -119,11 +119,58 @@ async function main() {
     );
 
     const subjects = await upsertSubjects(client, subjectSeeds);
+    const { topicsBySubject } = await seedTopics(client, subjects);
+
     const questionRows = [];
-    const questionBank = new Map();
+    const questionTopicRows = [];
+    const passageRows = [];
+    const questionPassageRows = [];
+    const questionGroups = new Map();
+
     subjects.forEach((subject) => {
-      const questionIds = [];
-      for (let i = 0; i < config.questionsPerSubject; i += 1) {
+      const groups = [];
+      const subjectTopicIds = topicsBySubject.get(subject.id) ?? [];
+      const passageGroupCount = Math.max(
+        1,
+        Math.round(config.questionsPerSubject / 12),
+      );
+      let generated = 0;
+
+      for (let g = 0; g < passageGroupCount; g += 1) {
+        const passageId = crypto.randomUUID();
+        const groupSize = randomInt(2, 4);
+        const groupQuestionIds = [];
+        passageRows.push([
+          passageId,
+          `Đoạn văn ${g + 1} cho ${subject.name}`,
+          [],
+        ]);
+        for (let j = 0; j < groupSize; j += 1) {
+          const id = crypto.randomUUID();
+          const difficulty = pick(difficultyLevels);
+          const stem = `Câu hỏi ${generated + j + 1} (đoạn văn) về ${subject.name}`;
+          const explanation = `Giải thích cho câu hỏi ${generated + j + 1} (${subject.name}).`;
+          questionRows.push([
+            id,
+            subject.id,
+            difficulty,
+            "mcq_single",
+            stem,
+            explanation,
+            "active",
+            [subject.slug],
+            1,
+            staff.id,
+          ]);
+          assignQuestionTopics(questionTopicRows, id, subjectTopicIds);
+          questionPassageRows.push([id, passageId, j + 1]);
+          groupQuestionIds.push(id);
+        }
+        groups.push(groupQuestionIds);
+        generated += groupSize;
+      }
+
+      for (let i = generated; i < config.questionsPerSubject; i += 1) {
         const id = crypto.randomUUID();
         const difficulty = pick(difficultyLevels);
         const stem = `Câu hỏi ${i + 1} về ${subject.name}`;
@@ -140,9 +187,11 @@ async function main() {
           1,
           staff.id,
         ]);
-        questionIds.push(id);
+        assignQuestionTopics(questionTopicRows, id, subjectTopicIds);
+        groups.push([id]);
       }
-      questionBank.set(subject.id, questionIds);
+
+      questionGroups.set(subject.id, groups);
     });
 
     await insertRows(
@@ -162,6 +211,31 @@ async function main() {
       ],
       questionRows,
     );
+    if (passageRows.length) {
+      await insertRows(
+        client,
+        "passages",
+        ["id", "content", "media_urls"],
+        passageRows,
+      );
+    }
+    if (questionPassageRows.length) {
+      await insertRows(
+        client,
+        "question_passages",
+        ["question_id", "passage_id", "position"],
+        questionPassageRows,
+      );
+    }
+    if (questionTopicRows.length) {
+      await insertRows(
+        client,
+        "question_topics",
+        ["question_id", "topic_id"],
+        questionTopicRows,
+        "ON CONFLICT DO NOTHING",
+      );
+    }
 
     const quizRows = [];
     const quizQuestionRows = [];
@@ -188,14 +262,13 @@ async function main() {
         quizId,
         title,
         description,
-        primarySubject.id,
         difficulty,
         visibility,
         "published",
         isChallenge,
         minutes * 60,
-        0,
-        0,
+        null,
+        null,
         staff.id,
         timestamps.createdAt,
         timestamps.updatedAt,
@@ -216,12 +289,13 @@ async function main() {
       const distribution = distribute(questionTotal, chosenSubjects.length);
       let position = 1;
       chosenSubjects.forEach((subject, index) => {
-        const questionIds = questionBank.get(subject.id) ?? [];
-        const count = Math.min(distribution[index], questionIds.length);
-        const selectedQuestions = sample(questionIds, count);
-        selectedQuestions.forEach((questionId) => {
-          quizQuestionRows.push([quizId, questionId, position, null, true]);
-          position += 1;
+        const groups = questionGroups.get(subject.id) ?? [];
+        const selectedGroups = pickQuestionGroups(groups, distribution[index]);
+        selectedGroups.forEach((group) => {
+          group.forEach((questionId) => {
+            quizQuestionRows.push([quizId, questionId, position, null, true]);
+            position += 1;
+          });
         });
       });
 
@@ -260,14 +334,13 @@ async function main() {
         "id",
         "title",
         "description",
-        "subject_id",
-        "difficulty",
+        "difficulty_level",
         "visibility",
         "status",
         "is_challenge",
         "estimated_time_seconds",
-        "rating_count",
-        "rating_avg",
+        "thumbnail_url",
+        "featured_rank",
         "created_by",
         "created_at",
         "updated_at",
@@ -434,6 +507,40 @@ async function upsertSubjects(client, seeds) {
   return res.rows;
 }
 
+async function seedTopics(client, subjects) {
+  const topicRows = [];
+  subjects.forEach((subject) => {
+    for (let i = 0; i < 3; i += 1) {
+      topicRows.push([
+        subject.id,
+        `${subject.name} Chủ đề ${i + 1}`,
+        `${subject.slug}-topic-${i + 1}`,
+      ]);
+    }
+  });
+
+  await insertRows(
+    client,
+    "topics",
+    ["subject_id", "name", "slug"],
+    topicRows,
+    "ON CONFLICT (subject_id, slug) DO UPDATE SET name = EXCLUDED.name",
+  );
+
+  const res = await client.query(
+    `SELECT id, subject_id FROM topics WHERE subject_id = ANY($1::uuid[])`,
+    [subjects.map((subject) => subject.id)],
+  );
+  const topicsBySubject = new Map();
+  res.rows.forEach((row) => {
+    if (!topicsBySubject.has(row.subject_id)) {
+      topicsBySubject.set(row.subject_id, []);
+    }
+    topicsBySubject.get(row.subject_id).push(row.id);
+  });
+  return { topicsBySubject };
+}
+
 async function insertRows(client, table, columns, rows, conflictClause = "") {
   if (!rows.length) return;
   const batchSize = 500;
@@ -472,6 +579,28 @@ function shuffle(list) {
     const j = Math.floor(Math.random() * (i + 1));
     [list[i], list[j]] = [list[j], list[i]];
   }
+}
+
+function assignQuestionTopics(rows, questionId, topicIds) {
+  if (!topicIds.length) return;
+  const count = Math.random() < 0.3 ? 2 : 1;
+  const selected = sample(topicIds, count);
+  selected.forEach((topicId) => {
+    rows.push([questionId, topicId]);
+  });
+}
+
+function pickQuestionGroups(groups, targetCount) {
+  const shuffled = [...groups];
+  shuffle(shuffled);
+  const selected = [];
+  let count = 0;
+  for (const group of shuffled) {
+    if (count >= targetCount) break;
+    selected.push(group);
+    count += group.length;
+  }
+  return selected;
 }
 
 function randomTimestamps(daysBack) {
