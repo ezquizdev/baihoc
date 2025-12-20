@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Suspense } from "react";
+import { type CSSProperties, Suspense } from "react";
 import {
   controllerGetStaffDashboardActivity,
   controllerGetStaffDashboardCompetency,
@@ -8,6 +8,7 @@ import {
 } from "@/application/controllers/staffDashboardController";
 import { controllerListSubjects } from "@/application/controllers/subjectController";
 import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
+import leaderboardStyles from "@/components/dashboard/leaderboard-card.module.css";
 import { formatNumberVi } from "@/lib/formatters";
 import styles from "./staff-dashboard-screen.module.css";
 
@@ -81,18 +82,260 @@ function topicBadgeVariant(slug: string) {
   return styles.topicSubjectMixed;
 }
 
-function StatsGridSkeleton() {
-  const skeletonKeys = ["students", "questions", "attempts", "topics"];
+function SkeletonBlock({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: CSSProperties;
+}) {
+  return (
+    <span
+      className={`${styles.skeletonBlock} ${className ?? ""}`}
+      style={style}
+      aria-hidden="true"
+    />
+  );
+}
+
+function StatsGridFallback() {
   return (
     <>
-      {skeletonKeys.map((key) => (
-        <div
-          key={key}
-          className={`${styles.statCard} ${styles.skeletonCard} ${styles.skeletonStatCard}`}
-          aria-hidden="true"
-        />
-      ))}
+      <div className={styles.statCard} aria-busy="true">
+        <div className={styles.statTop}>
+          <div className={styles.statTopLeft}>
+            <div
+              className={`${styles.statIcon} ${styles.statIconStudents}`}
+              aria-hidden="true"
+            >
+              <TrophyIcon />
+            </div>
+            <p className={styles.statLabel}>Học sinh</p>
+          </div>
+        </div>
+        <div className={`${styles.statValue} ${styles.statValueLarge}`}>
+          <SkeletonBlock
+            style={{ width: "72%", height: 34, borderRadius: 14 }}
+          />
+        </div>
+      </div>
+
+      <div className={styles.statCard} aria-busy="true">
+        <div className={styles.statTop}>
+          <div className={styles.statTopLeft}>
+            <div
+              className={`${styles.statIcon} ${styles.statIconQuestions}`}
+              aria-hidden="true"
+            >
+              <BookIcon />
+            </div>
+            <p className={styles.statLabel}>Câu hỏi</p>
+          </div>
+        </div>
+        <div className={styles.statValue}>
+          <SkeletonBlock
+            style={{ width: "58%", height: 30, borderRadius: 14 }}
+          />
+        </div>
+        <div className={styles.statSplit}>
+          <div className={styles.statSplitItem}>
+            <div className={styles.statSplitValue}>
+              <SkeletonBlock
+                style={{ width: 46, height: 18, borderRadius: 10 }}
+              />
+            </div>
+            <div className={styles.statSplitLabel}>Quiz</div>
+          </div>
+          <div className={styles.statSplitItem}>
+            <div className={styles.statSplitValue}>
+              <SkeletonBlock
+                style={{ width: 34, height: 18, borderRadius: 10 }}
+              />
+            </div>
+            <div className={styles.statSplitLabel}>Challenge</div>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.statCard} aria-busy="true">
+        <div className={styles.statTop}>
+          <div className={styles.statTopLeft}>
+            <div
+              className={`${styles.statIcon} ${styles.statIconAttempts}`}
+              aria-hidden="true"
+            >
+              <FastForwardIcon />
+            </div>
+            <p className={styles.statLabel}>Lượt làm hôm nay</p>
+          </div>
+        </div>
+        <div className={`${styles.statValue} ${styles.statValueLarge}`}>
+          <SkeletonBlock
+            style={{ width: "64%", height: 34, borderRadius: 14 }}
+          />
+        </div>
+      </div>
+
+      <div className={styles.statCard} aria-busy="true">
+        <div className={styles.statTop}>
+          <p className={styles.statLabel}>Chủ đề sai nhiều</p>
+          <span className={styles.topicSubjectBadge} aria-hidden="true">
+            <SkeletonBlock style={{ width: 66, height: 18, borderRadius: 8 }} />
+          </span>
+        </div>
+        <div className={styles.topicName}>
+          <SkeletonBlock
+            style={{ width: "78%", height: 14, borderRadius: 999 }}
+          />
+        </div>
+        <div className={styles.mutedHint}>
+          <SkeletonBlock
+            style={{ width: "52%", height: 12, borderRadius: 999 }}
+          />
+        </div>
+      </div>
     </>
+  );
+}
+
+function LeaderboardSectionFallback({ limit }: { limit: number }) {
+  const skeletonRows = Array.from({ length: limit }, (_, index) => ({
+    id: `leaderboard-skeleton-${index + 1}`,
+  }));
+
+  return (
+    <div
+      className={`${leaderboardStyles.card} ${styles.skeletonLeaderboardCard}`}
+      aria-busy="true"
+    >
+      <div className={leaderboardStyles.header}>
+        <h3 className={leaderboardStyles.title}>Bảng xếp hạng</h3>
+        <Link className={leaderboardStyles.action} href="/staff/leaderboard">
+          Xem tất cả
+        </Link>
+      </div>
+
+      <div className={leaderboardStyles.tableWrap}>
+        <table className={leaderboardStyles.table} aria-label="Bảng xếp hạng">
+          <thead>
+            <tr>
+              <th style={{ width: "56px" }}>#</th>
+              <th>Họ và tên</th>
+              <th style={{ width: "120px", textAlign: "right" }}>
+                Điểm Năng lực
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {skeletonRows.map((row) => (
+              <tr key={row.id}>
+                <td className={leaderboardStyles.rank}>
+                  <SkeletonBlock
+                    className={styles.skeletonInline}
+                    style={{ width: 18, height: 12, borderRadius: 999 }}
+                  />
+                </td>
+                <td>
+                  <div className={leaderboardStyles.nameCell}>
+                    <div
+                      className={`${leaderboardStyles.avatar} ${styles.leaderboardSkeletonAvatar}`}
+                      aria-hidden="true"
+                    />
+                    <SkeletonBlock
+                      className={styles.skeletonInline}
+                      style={{ width: "62%", height: 12, borderRadius: 999 }}
+                    />
+                  </div>
+                </td>
+                <td className={leaderboardStyles.xp}>
+                  <SkeletonBlock
+                    className={styles.skeletonInline}
+                    style={{
+                      width: "54%",
+                      height: 12,
+                      borderRadius: 999,
+                      marginLeft: "auto",
+                    }}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CompetencySectionFallback() {
+  return (
+    <div className={`${styles.card} ${styles.competencyCard}`} aria-busy="true">
+      <div className={styles.competencyTop}>
+        <div className={styles.competencyLeft}>
+          <h4 className={styles.competencyHeading}>
+            <span>Điểm Năng lực</span>
+            <span>Trung bình</span>
+          </h4>
+          <div className={styles.competencyBig}>
+            <SkeletonBlock
+              style={{ width: 150, height: 56, borderRadius: 18 }}
+            />
+          </div>
+        </div>
+
+        <ul className={styles.bucketList} aria-label="Phân bố điểm">
+          {["1000+", "900+", "800+", "<800"].map((label) => (
+            <li key={label} className={styles.bucketRow}>
+              <span className={styles.bucketLabel}>{label}</span>
+              <SkeletonBlock
+                className={styles.skeletonInline}
+                style={{ width: 36, height: 12, borderRadius: 999 }}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <section className={styles.subjectGrid} aria-label="Năng lực theo môn">
+        {[
+          { slug: "vi", name: "Tiếng Việt" },
+          { slug: "en", name: "Tiếng Anh" },
+          { slug: "math", name: "Toán học" },
+          { slug: "sci", name: "Tư duy Khoa học" },
+        ].map((subject) => (
+          <div
+            key={subject.slug}
+            className={`${styles.subjectCard} ${subjectVariant(subject.slug)}`}
+          >
+            <div className={styles.subjectUpper}>
+              <div className={styles.subjectLabel}>Năng lực</div>
+              <div className={styles.subjectName}>{subject.name}</div>
+              <div className={styles.subjectValue}>
+                <SkeletonBlock
+                  className={styles.skeletonBlockOnColor}
+                  style={{ width: 70, height: 30, borderRadius: 14 }}
+                />
+              </div>
+            </div>
+
+            <ul
+              className={styles.subjectBuckets}
+              aria-label={`Phân bố ${subject.name}`}
+            >
+              {["250+", "225+", "200+", "<200"].map((label) => (
+                <li key={label} className={styles.subjectBucketRow}>
+                  <span>{label}</span>
+                  <SkeletonBlock
+                    className={styles.skeletonBlockOnColor}
+                    style={{ width: 26, height: 10, borderRadius: 999 }}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+    </div>
   );
 }
 
@@ -258,15 +501,6 @@ async function StaffActivityList({ limit }: { limit: number }) {
     );
   }
   return <div className={styles.emptyState}>—</div>;
-}
-
-function CardSkeleton({ className }: { className: string }) {
-  return (
-    <div
-      className={`${styles.card} ${styles.skeletonCard} ${className}`}
-      aria-hidden="true"
-    />
-  );
 }
 
 async function StaffLeaderboardSection({ limit }: { limit: number }) {
@@ -471,7 +705,7 @@ export function StaffDashboardScreen({
             </header>
 
             <div className={styles.statsGrid}>
-              <Suspense fallback={<StatsGridSkeleton />}>
+              <Suspense fallback={<StatsGridFallback />}>
                 <StaffStatsGrid />
               </Suspense>
             </div>
@@ -538,16 +772,14 @@ export function StaffDashboardScreen({
         <div className={styles.rightCol}>
           <section aria-label="Bảng xếp hạng">
             <Suspense
-              fallback={<CardSkeleton className={styles.skeletonLeaderboard} />}
+              fallback={<LeaderboardSectionFallback limit={leaderboardLimit} />}
             >
               <StaffLeaderboardSection limit={leaderboardLimit} />
             </Suspense>
           </section>
 
           <section aria-label="Điểm năng lực">
-            <Suspense
-              fallback={<CardSkeleton className={styles.skeletonCompetency} />}
-            >
+            <Suspense fallback={<CompetencySectionFallback />}>
               <StaffCompetencySection />
             </Suspense>
           </section>
