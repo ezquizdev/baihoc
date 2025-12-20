@@ -45,6 +45,12 @@
 - Replaced the minimal `/profile` with a dashboard-styled profile page that supports viewing and editing name/school/DOB/avatar.
 - Added staff-only `/profile/[userId]` for viewing another user’s profile (students get 404 unless it’s their own ID).
 
+### feat(leaderboard): link staff leaderboard to profiles
+- Made staff dashboard leaderboard names link to `/profile/[userId]` for quick profile inspection.
+
+### fix(leaderboard): allow dynamic profile links
+- Relaxed leaderboard row link typing so dynamic `/profile/${userId}` hrefs compile under Next.js typed routes.
+
 ### fix(shell): satisfy typed-route Link hrefs
 - Updated dashboard/staff nav item href typing to align with Next.js typed routes and avoid build-time type errors.
 
