@@ -41,6 +41,10 @@
 ### chore(db): add indexes for dashboard metrics
 - Added `attempts(submitted_at)` submitted-only index and `xp_events` indexes to keep staff dashboard aggregations responsive as data grows.
 
+### feat(profile): add full profile pages (self + staff view)
+- Replaced the minimal `/profile` with a dashboard-styled profile page that supports viewing and editing name/school/DOB/avatar.
+- Added staff-only `/profile/[userId]` for viewing another user’s profile (students get 404 unless it’s their own ID).
+
 ### fix(shell): satisfy typed-route Link hrefs
 - Updated dashboard/staff nav item href typing to align with Next.js typed routes and avoid build-time type errors.
 
