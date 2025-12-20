@@ -7,6 +7,7 @@ import {
 } from "@/app/api/_utils/query";
 import { controllerListCatalogPage } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
+import type { DifficultyLevel } from "@/application/models/enums";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuthenticatedApi(request, {
@@ -33,12 +34,14 @@ export async function GET(request: NextRequest) {
   );
 
   try {
+    const difficultyLevels = parseNumberArray(searchParams, "difficultyLevels", {
+      min: 1,
+      max: 5,
+    })?.map((value) => value as DifficultyLevel);
+
     const { items, total } = await controllerListCatalogPage(auth.sub, {
       subjectIds: parseCommaIds(searchParams, "subjectIds"),
-      difficulty: parseNumberArray(searchParams, "difficultyLevels", {
-        min: 1,
-        max: 5,
-      }),
+      difficulty: difficultyLevels,
       search:
         searchParams.get("search") ?? searchParams.get("q") ?? undefined,
       status,
