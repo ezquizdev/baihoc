@@ -1,5 +1,6 @@
 "use client";
 
+import { FunnelSimple } from "phosphor-react";
 import { useEffect, useState } from "react";
 import type { DifficultyLevel } from "@/application/models/enums";
 import type { Subject } from "@/application/models/subject";
@@ -51,6 +52,13 @@ export function QuizFilters({
   onDurationRangeChange,
 }: QuizFiltersProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const isSubjectActive = selectedSubjectIds.length > 0;
+  const isDifficultyActive = selectedDifficulties.length > 0;
+  const isRangeActive =
+    minQuestions !== 0 ||
+    maxQuestions !== 50 ||
+    minDuration !== 0 ||
+    maxDuration !== 50;
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -150,18 +158,24 @@ export function QuizFilters({
 
         <div
           className={`${styles.dd} ${styles.ddWide} ${
-            openDropdown === "subject" ? styles.ddOpen : ""
-          }`}
+            isSubjectActive ? styles.ddActive : ""
+          } ${openDropdown === "subject" ? styles.ddOpen : ""}`}
           data-dropdown-root
         >
           <button
             type="button"
-            className={styles.ddButton}
+            className={`${styles.ddButton} ${
+              isSubjectActive ? styles.ddButtonActive : ""
+            }`}
             aria-expanded={openDropdown === "subject"}
             onClick={() => toggleDropdown("subject")}
           >
             <span className={styles.ddLabel}>Môn học</span>
-            <span className={styles.ddChevron} aria-hidden="true" />
+            {isSubjectActive ? (
+              <FunnelSimple size={16} weight="bold" className={styles.filterIcon} />
+            ) : (
+              <span className={styles.ddChevron} aria-hidden="true" />
+            )}
           </button>
           {openDropdown === "subject" ? (
             <div className={styles.ddPanel}>
@@ -193,18 +207,24 @@ export function QuizFilters({
 
         <div
           className={`${styles.dd} ${
-            openDropdown === "difficulty" ? styles.ddOpen : ""
-          }`}
+            isDifficultyActive ? styles.ddActive : ""
+          } ${openDropdown === "difficulty" ? styles.ddOpen : ""}`}
           data-dropdown-root
         >
           <button
             type="button"
-            className={styles.ddButton}
+            className={`${styles.ddButton} ${
+              isDifficultyActive ? styles.ddButtonActive : ""
+            }`}
             aria-expanded={openDropdown === "difficulty"}
             onClick={() => toggleDropdown("difficulty")}
           >
             <span className={styles.ddLabel}>Độ khó</span>
-            <span className={styles.ddChevron} aria-hidden="true" />
+            {isDifficultyActive ? (
+              <FunnelSimple size={16} weight="bold" className={styles.filterIcon} />
+            ) : (
+              <span className={styles.ddChevron} aria-hidden="true" />
+            )}
           </button>
           {openDropdown === "difficulty" ? (
             <div className={styles.ddPanel}>
@@ -240,13 +260,15 @@ export function QuizFilters({
 
         <div
           className={`${styles.dd} ${styles.ddSlider} ${
-            openDropdown === "range" ? styles.ddOpen : ""
-          }`}
+            isRangeActive ? styles.ddActive : ""
+          } ${openDropdown === "range" ? styles.ddOpen : ""}`}
           data-dropdown-root
         >
           <button
             type="button"
-            className={styles.ddButton}
+            className={`${styles.ddButton} ${
+              isRangeActive ? styles.ddButtonActive : ""
+            }`}
             aria-expanded={openDropdown === "range"}
             onClick={() => toggleDropdown("range")}
           >
@@ -254,7 +276,11 @@ export function QuizFilters({
               <span>Thời gian</span>
               <span>Số câu</span>
             </span>
-            <span className={styles.ddChevron} aria-hidden="true" />
+            {isRangeActive ? (
+              <FunnelSimple size={16} weight="bold" className={styles.filterIcon} />
+            ) : (
+              <span className={styles.ddChevron} aria-hidden="true" />
+            )}
           </button>
           {openDropdown === "range" ? (
             <div className={styles.ddPanel}>

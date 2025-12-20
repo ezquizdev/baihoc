@@ -1,6 +1,7 @@
 "use client";
 
-import { Clock, ListChecks, UsersThree } from "phosphor-react";
+import { BookmarkSimple, Clock, ListChecks, UsersThree } from "phosphor-react";
+import { useState } from "react";
 import type { QuizCatalogItem } from "@/application/models/quiz";
 import { DifficultyBadge, SubjectBadge } from "./quiz-badges";
 import styles from "./quiz-catalog.module.css";
@@ -14,12 +15,19 @@ export function QuizCard({
   tone?: "alt";
   onSelect?: (quiz: QuizCatalogItem) => void;
 }) {
+  const [bookmarked, setBookmarked] = useState(false);
   const minutes = quiz.estimatedTimeSeconds
     ? Math.round(quiz.estimatedTimeSeconds / 60)
     : null;
   const questionCount = quiz.questionCount ?? 0;
   const dateLabel = formatDate(quiz.updatedAt ?? quiz.createdAt);
   const ctaLabel = quiz.isChallenge ? "Thử thách ngay" : "Làm ngay";
+  const subjectBreakdown = quiz.subjectBreakdown ?? [];
+  const isMultiSubject = subjectBreakdown.length > 1;
+  const showDifficulty = quiz.difficulty !== "mixed";
+  const subjectBadge = isMultiSubject
+    ? { name: "Tổng hợp", slug: "mixed" }
+    : { name: quiz.subjectName, slug: quiz.subjectSlug };
 
   const handleSelect = () => {
     onSelect?.(quiz);
@@ -46,11 +54,22 @@ export function QuizCard({
         ) : null}
         <span className={styles.spacer} aria-hidden="true" />
         <button
-          className={styles.bookmark}
+          className={`${styles.bookmark} ${
+            bookmarked ? styles.bookmarkActive : ""
+          }`}
           type="button"
           aria-label="Lưu quiz"
-          onClick={(event) => event.stopPropagation()}
-        />
+          onClick={(event) => {
+            event.stopPropagation();
+            setBookmarked((prev) => !prev);
+          }}
+        >
+          <BookmarkSimple
+            size={18}
+            weight={bookmarked ? "fill" : "bold"}
+            color={bookmarked ? "#ffd400" : "#2b3b55"}
+          />
+        </button>
       </div>
 
       <div className={styles.quizBody}>
@@ -82,8 +101,10 @@ export function QuizCard({
           </div>
 
           <div className={styles.quizBadgeStack}>
-            <DifficultyBadge difficulty={quiz.difficulty} />
-            <SubjectBadge name={quiz.subjectName} slug={quiz.subjectSlug} />
+            {showDifficulty ? (
+              <DifficultyBadge difficulty={quiz.difficulty} />
+            ) : null}
+            <SubjectBadge name={subjectBadge.name} slug={subjectBadge.slug} />
           </div>
         </div>
 
@@ -98,7 +119,15 @@ export function QuizCard({
           }}
         >
           {ctaLabel}
-          <span className={styles.quizCtaArrow} aria-hidden="true" />
+          {quiz.isChallenge ? (
+            <>
+              <span className={styles.quizCtaArrow} aria-hidden="true" />
+              <span
+                className={`${styles.quizCtaArrow} ${styles.quizCtaArrowRight}`}
+                aria-hidden="true"
+              />
+            </>
+          ) : null}
         </button>
       </div>
     </article>

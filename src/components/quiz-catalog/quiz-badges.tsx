@@ -9,11 +9,12 @@ type DifficultyConfig = {
   className: string;
 };
 
-const difficultyMap: Record<QuizCatalogItem["difficulty"], DifficultyConfig> = {
+const difficultyMap: Partial<
+  Record<QuizCatalogItem["difficulty"], DifficultyConfig>
+> = {
   easy: { label: "Dễ", stars: 2, className: styles.difficultyEasy },
   medium: { label: "Trung bình", stars: 3, className: styles.difficultyMedium },
   hard: { label: "Khó", stars: 5, className: styles.difficultyHard },
-  mixed: { label: "Tổng hợp", stars: 4, className: styles.difficultyMixed },
 };
 
 export function DifficultyBadge({
@@ -24,6 +25,7 @@ export function DifficultyBadge({
   className?: string;
 }) {
   const config = difficultyMap[difficulty];
+  if (!config) return null;
   return (
     <div
       className={`${styles.difficultyBadge} ${config.className} ${
@@ -53,13 +55,14 @@ export function SubjectBadge({
       aria-label={`Môn ${name}`}
     >
       <span className={styles.subjectChip} aria-hidden="true" />
-      {name}
+      <span className={styles.subjectText}>{name}</span>
     </span>
   );
 }
 
 export function subjectToneClass(slug: string) {
   const normalized = slug.toLowerCase();
+  if (normalized.includes("mixed")) return styles.subjectMixed;
   if (normalized.includes("en")) return styles.subjectEn;
   if (normalized.includes("math")) return styles.subjectMath;
   if (normalized.includes("sci")) return styles.subjectSci;

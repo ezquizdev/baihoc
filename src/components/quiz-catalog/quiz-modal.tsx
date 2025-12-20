@@ -41,7 +41,17 @@ export function QuizModal({ quiz, onClose }: QuizModalProps) {
     : 0;
   const questionCount = quiz.questionCount ?? 0;
   const ctaLabel = quiz.isChallenge ? "Thử thách ngay" : "Làm bài ngay";
-  const topicClass = topicToneClass(quiz.subjectSlug, styles);
+  const subjectBreakdown =
+    quiz.subjectBreakdown && quiz.subjectBreakdown.length
+      ? quiz.subjectBreakdown
+      : [
+          {
+            subjectId: quiz.subjectId,
+            name: quiz.subjectName,
+            slug: quiz.subjectSlug,
+            questionCount,
+          },
+        ];
 
   return (
     <div className={styles.modal} role="presentation">
@@ -77,13 +87,23 @@ export function QuizModal({ quiz, onClose }: QuizModalProps) {
 
           <div className={styles.grid}>
             <div className={styles.topics}>
-              <div className={`${styles.topic} ${topicClass}`.trim()}>
-                <div className={styles.topicLeft}>
-                  <span className={styles.topicFlag} aria-hidden="true" />
-                  <span className={styles.topicName}>{quiz.subjectName}</span>
+              {subjectBreakdown.map((subject) => (
+                <div
+                  key={subject.subjectId}
+                  className={`${styles.topic} ${topicToneClass(
+                    subject.slug,
+                    styles,
+                  )}`.trim()}
+                >
+                  <div className={styles.topicLeft}>
+                    <span className={styles.topicFlag} aria-hidden="true" />
+                    <span className={styles.topicName}>{subject.name}</span>
+                  </div>
+                  <span className={styles.topicCount}>
+                    {subject.questionCount} câu
+                  </span>
                 </div>
-                <span className={styles.topicCount}>{questionCount} câu</span>
-              </div>
+              ))}
             </div>
 
             <div className={styles.right}>

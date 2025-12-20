@@ -21,6 +21,10 @@
 - Allowed dropdown panels to render outside the filter container.
 - Updated difficulty badges to render as N★ and improved mobile filter stacking.
 
+### fix(ui): catalog multi-subject and layout polish
+- Added subject breakdown metadata for multi-subject quizzes and updated modal rendering.
+- Adjusted card decorations, bookmark icon styling, filter active states, and leaderboard stacking.
+
 ### chore(db): add seed script
 - Added a database seed script to populate quizzes, subjects, questions, attempts, and XP for catalog testing.
 - Added `db:seed` npm script for convenience.
