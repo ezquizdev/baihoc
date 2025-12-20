@@ -2,6 +2,10 @@
 
 ## 2025-12-20
 
+### chore(db): add seed script
+- Added a database seed script to populate quizzes, subjects, questions, attempts, and XP for catalog testing.
+- Added `db:seed` npm script for convenience.
+
 ### feat(ui): build quiz catalog page
 - Added the `/quizzes` page with dashboard shell integration, filters, quiz grid, leaderboard, and pagination states.
 - Wired search input to catalog filters and added responsive catalog layout.
