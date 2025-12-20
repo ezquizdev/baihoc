@@ -1,5 +1,6 @@
 import type {
   DifficultyLevel,
+  QuizCatalogItem,
   QuizDetail,
   QuizListItem,
   QuizStatus,
@@ -12,6 +13,7 @@ import {
   getPublishedQuizDetail,
   getQuizDetailForStaff,
   listCatalogQuizzes,
+  listCatalogPage,
   listStaffQuizzes,
   publishQuiz,
   setQuizQuestions,
@@ -103,6 +105,25 @@ export async function controllerListCatalog(
   } = {},
 ): Promise<QuizListItem[]> {
   return listCatalogQuizzes(params);
+}
+
+export async function controllerListCatalogPage(
+  userId: string,
+  params: {
+    subjectIds?: string[];
+    difficulty?: DifficultyLevel[];
+    search?: string;
+    minQuestions?: number;
+    maxQuestions?: number;
+    minDurationMinutes?: number;
+    maxDurationMinutes?: number;
+    status?: "todo" | "done" | "all";
+    sort?: "newest" | "oldest";
+    limit?: number;
+    offset?: number;
+  } = {},
+): Promise<{ items: QuizCatalogItem[]; total: number }> {
+  return listCatalogPage(userId, params);
 }
 
 export async function controllerListStaffQuizzes(
