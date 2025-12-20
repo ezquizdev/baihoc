@@ -1,6 +1,5 @@
 import {
   type DifficultyLevel,
-  DifficultyValues,
   type QuestionStatus,
   QuestionStatusValues,
   type QuestionType,
@@ -55,6 +54,22 @@ export function parseEnumArray<T extends string>(
   return values.length ? values : undefined;
 }
 
+export function parseNumberArray(
+  searchParams: URLSearchParams,
+  key: string,
+  range?: { min?: number; max?: number },
+) {
+  const raw = searchParams.get(key);
+  if (!raw) return undefined;
+  const values = raw
+    .split(",")
+    .map((s) => Number(s.trim()))
+    .filter((value) => Number.isFinite(value))
+    .filter((value) => (range?.min !== undefined ? value >= range.min : true))
+    .filter((value) => (range?.max !== undefined ? value <= range.max : true));
+  return values.length ? values : undefined;
+}
+
 export function parseNumberRange(
   searchParams: URLSearchParams,
   minKey: string,
@@ -69,10 +84,11 @@ export function parseNumberRange(
 }
 
 export function parseDifficulty(searchParams: URLSearchParams) {
-  return parseEnum<DifficultyLevel>(
-    searchParams.get("difficulty"),
-    DifficultyValues,
-  );
+  const value = parseFiniteNumber(searchParams.get("difficulty"));
+  if (value === undefined) return undefined;
+  if (!Number.isInteger(value)) return undefined;
+  if (value < 1 || value > 5) return undefined;
+  return value as DifficultyLevel;
 }
 
 export function parseQuizVisibility(searchParams: URLSearchParams) {

@@ -17,16 +17,13 @@ export type QuizRow = {
   id: string;
   title: string;
   description: string | null;
-  subject_id: string;
-  difficulty: DifficultyLevel;
+  difficulty_level: DifficultyLevel;
   visibility: QuizVisibility;
   status: QuizStatus;
   is_challenge: boolean;
   estimated_time_seconds: number | null;
   thumbnail_url: string | null;
   featured_rank: number | null;
-  rating_count: number;
-  rating_avg: number;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -54,8 +51,6 @@ export type QuizQuestionRow = {
 };
 
 type QuizCatalogRow = QuizRow & {
-  subject_name: string;
-  subject_slug: string;
   question_count: number | null;
   attempt_count: number | null;
   user_attempted: boolean | null;
@@ -66,6 +61,7 @@ type QuizCatalogRow = QuizRow & {
     slug: string;
     questionCount: number;
   }> | null;
+  topic_ids: string[] | null;
 };
 
 const searchVectorSql =
@@ -76,16 +72,13 @@ function mapQuiz(row: QuizRow): Quiz {
     id: row.id,
     title: row.title,
     description: row.description,
-    subjectId: row.subject_id,
-    difficulty: row.difficulty,
+    difficulty: row.difficulty_level,
     visibility: row.visibility,
     status: row.status,
     isChallenge: row.is_challenge,
     estimatedTimeSeconds: row.estimated_time_seconds,
     thumbnailUrl: row.thumbnail_url,
     featuredRank: row.featured_rank,
-    ratingCount: row.rating_count,
-    ratingAvg: Number(row.rating_avg),
     createdBy: row.created_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -123,19 +116,21 @@ function mapQuestionRow(row: QuizQuestionRow) {
 }
 
 function mapCatalogRow(row: QuizCatalogRow): QuizCatalogItem {
+  const breakdown = row.subject_breakdown ?? [];
+  const primarySubject = breakdown.length === 1 ? breakdown[0] : null;
   return {
     ...mapQuiz(row),
-    subjectName: row.subject_name,
-    subjectSlug: row.subject_slug,
+    subjectName: primarySubject?.name ?? "Tổng hợp",
+    subjectSlug: primarySubject?.slug ?? "mixed",
     attemptCount: Number(row.attempt_count ?? 0),
-    subjectBreakdown: row.subject_breakdown ?? [],
+    subjectBreakdown: breakdown,
+    topicIds: row.topic_ids ?? undefined,
   };
 }
 
 export async function insertQuiz(input: {
   title: string;
   description?: string | null;
-  subjectId: string;
   difficulty: DifficultyLevel;
   visibility: QuizVisibility;
   status?: QuizStatus;
@@ -144,24 +139,22 @@ export async function insertQuiz(input: {
   thumbnailUrl?: string | null;
   featuredRank?: number | null;
   createdBy: string;
-  topicIds?: string[];
   challenge?: Partial<ChallengeSettings>;
 }) {
   const quiz = await withTransaction(async (client) => {
     const res = await client.query<QuizRow>(
       `INSERT INTO quizzes (
-        title, description, subject_id, difficulty, visibility, status,
+        title, description, difficulty_level, visibility, status,
         is_challenge, estimated_time_seconds, thumbnail_url, featured_rank,
-        rating_count, rating_avg, created_by, search_vector
+        created_by, search_vector
       ) VALUES (
-        $1, $2, $3, $4::difficulty_level, $5::quiz_visibility,
-        COALESCE($6::quiz_status, 'draft'),
-        COALESCE($7, false), $8, $9, $10, 0, 0, $11, ${searchVectorSql}
+        $1, $2, $3, $4::quiz_visibility,
+        COALESCE($5::quiz_status, 'draft'),
+        COALESCE($6, false), $7, $8, $9, $10, ${searchVectorSql}
       ) RETURNING *`,
       [
         input.title,
         input.description ?? null,
-        input.subjectId,
         input.difficulty,
         input.visibility,
         input.status ?? "draft",
@@ -176,10 +169,6 @@ export async function insertQuiz(input: {
     const quizRow = res.rows[0];
     if (!quizRow) {
       throw new Error("Failed to insert quiz");
-    }
-
-    if (input.topicIds?.length) {
-      await insertTopics(client, quizRow.id, input.topicIds);
     }
 
     if (quizRow.is_challenge && input.challenge) {
@@ -203,7 +192,6 @@ export async function updateQuiz(input: {
   quizId: string;
   title?: string;
   description?: string | null;
-  subjectId?: string;
   difficulty?: DifficultyLevel;
   visibility?: QuizVisibility;
   isChallenge?: boolean;
@@ -211,7 +199,6 @@ export async function updateQuiz(input: {
   thumbnailUrl?: string | null;
   featuredRank?: number | null;
   status?: QuizStatus;
-  topicIds?: string[];
   challenge?: Partial<ChallengeSettings> | null;
 }) {
   const fields: string[] = [];
@@ -227,9 +214,8 @@ export async function updateQuiz(input: {
   if (input.title !== undefined) push("title = $idx", input.title);
   if (input.description !== undefined)
     push("description = $idx", input.description);
-  if (input.subjectId !== undefined) push("subject_id = $idx", input.subjectId);
   if (input.difficulty !== undefined)
-    push("difficulty = $idx::difficulty_level", input.difficulty);
+    push("difficulty_level = $idx", input.difficulty);
   if (input.visibility !== undefined)
     push("visibility = $idx::quiz_visibility", input.visibility);
   if (input.isChallenge !== undefined)
@@ -269,10 +255,6 @@ export async function updateQuiz(input: {
 
     if (!updatedRow) {
       throw new Error("Quiz not found");
-    }
-
-    if (input.topicIds) {
-      await replaceTopics(client, input.quizId, input.topicIds);
     }
 
     if (updatedRow.is_challenge) {
@@ -359,10 +341,22 @@ export async function getQuizDetail(
   const quizRow = quizRes.rows[0];
   if (!quizRow) return null;
 
-  const topicsRes = await query<{ topic_id: string }>(
-    `SELECT topic_id FROM quiz_topics WHERE quiz_id = $1`,
-    [quizId],
-  );
+  const [topicsRes, subjectsRes] = await Promise.all([
+    query<{ topic_id: string }>(
+      `SELECT DISTINCT qt.topic_id
+       FROM quiz_questions qq
+       JOIN question_topics qt ON qt.question_id = qq.question_id
+       WHERE qq.quiz_id = $1`,
+      [quizId],
+    ),
+    query<{ subject_id: string }>(
+      `SELECT DISTINCT q.subject_id
+       FROM quiz_questions qq
+       JOIN questions q ON q.id = qq.question_id
+       WHERE qq.quiz_id = $1`,
+      [quizId],
+    ),
+  ]);
 
   const challengeRes = await query<ChallengeSettingsRow>(
     `SELECT * FROM challenge_settings WHERE quiz_id = $1`,
@@ -382,6 +376,7 @@ export async function getQuizDetail(
   return {
     ...mapQuiz(quizRow),
     topicIds: topicsRes.rows.map((r) => r.topic_id),
+    subjectIds: subjectsRes.rows.map((r) => r.subject_id),
     questions: questionsRes.rows.map(mapQuestionRow),
     challenge: mapChallenge(challengeRes.rows[0]),
   };
@@ -406,14 +401,29 @@ export async function listQuizzesForCatalog(params: {
     where.push(sql.replace("$idx", `$${values.length}`));
   };
 
-  if (params.subjectId) add("q.subject_id = $idx", params.subjectId);
+  if (params.subjectId) {
+    add(
+      `q.id IN (
+        SELECT qq.quiz_id
+        FROM quiz_questions qq
+        JOIN questions qn ON qn.id = qq.question_id
+        WHERE qn.subject_id = $idx
+      )`,
+      params.subjectId,
+    );
+  }
   if (params.difficulty)
-    add("q.difficulty = $idx::difficulty_level", params.difficulty);
+    add("q.difficulty_level = $idx", params.difficulty);
   if (params.visibility)
     add("q.visibility = $idx::quiz_visibility", params.visibility);
   if (params.topicIds?.length) {
     add(
-      "q.id IN (SELECT quiz_id FROM quiz_topics WHERE topic_id = ANY($idx::uuid[]))",
+      `q.id IN (
+        SELECT qq.quiz_id
+        FROM quiz_questions qq
+        JOIN question_topics qt ON qt.question_id = qq.question_id
+        WHERE qt.topic_id = ANY($idx::uuid[])
+      )`,
       params.topicIds,
     );
   }
@@ -438,20 +448,34 @@ export async function listQuizzesForCatalog(params: {
   const res = await query<
     QuizRow & {
       topic_ids: string[];
+      subject_ids: string[];
     }
   >(
     `SELECT q.*,
-            COALESCE(array_agg(qt.topic_id) FILTER (WHERE qt.topic_id IS NOT NULL), '{}') AS topic_ids,
+            COALESCE(qt.topic_ids, '{}') AS topic_ids,
+            COALESCE(qs.subject_ids, '{}') AS subject_ids,
             qc.question_count
      FROM quizzes q
-     LEFT JOIN quiz_topics qt ON qt.quiz_id = q.id
      LEFT JOIN (
        SELECT quiz_id, COUNT(*) AS question_count
        FROM quiz_questions
        GROUP BY quiz_id
      ) qc ON qc.quiz_id = q.id
+     LEFT JOIN (
+       SELECT qq.quiz_id,
+              array_agg(DISTINCT qt.topic_id) FILTER (WHERE qt.topic_id IS NOT NULL) AS topic_ids
+       FROM quiz_questions qq
+       JOIN question_topics qt ON qt.question_id = qq.question_id
+       GROUP BY qq.quiz_id
+     ) qt ON qt.quiz_id = q.id
+     LEFT JOIN (
+       SELECT qq.quiz_id,
+              array_agg(DISTINCT qn.subject_id) FILTER (WHERE qn.subject_id IS NOT NULL) AS subject_ids
+       FROM quiz_questions qq
+       JOIN questions qn ON qn.id = qq.question_id
+       GROUP BY qq.quiz_id
+     ) qs ON qs.quiz_id = q.id
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-     GROUP BY q.id, qc.question_count
      ORDER BY q.published_at DESC NULLS LAST, q.created_at DESC
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
     values,
@@ -459,7 +483,8 @@ export async function listQuizzesForCatalog(params: {
 
   return res.rows.map((row) => ({
     ...mapQuiz(row),
-    topicIds: row.topic_ids,
+    topicIds: row.topic_ids ?? [],
+    subjectIds: row.subject_ids ?? [],
   }));
 }
 
@@ -486,10 +511,18 @@ export async function listCatalogPage(params: {
   };
 
   if (params.subjectIds?.length) {
-    add("q.subject_id = ANY($idx::uuid[])", params.subjectIds);
+    add(
+      `q.id IN (
+        SELECT qq.quiz_id
+        FROM quiz_questions qq
+        JOIN questions qn ON qn.id = qq.question_id
+        WHERE qn.subject_id = ANY($idx::uuid[])
+      )`,
+      params.subjectIds,
+    );
   }
   if (params.difficulty?.length) {
-    add("q.difficulty = ANY($idx::difficulty_level[])", params.difficulty);
+    add("q.difficulty_level = ANY($idx::int[])", params.difficulty);
   }
   if (params.search) {
     add(
@@ -532,15 +565,13 @@ export async function listCatalogPage(params: {
 
   const res = await query<QuizCatalogRow>(
     `SELECT q.*,
-            s.name AS subject_name,
-            s.slug AS subject_slug,
             qc.question_count,
             ac.attempt_count,
             ua.user_attempted,
             sb.subject_breakdown,
+            tb.topic_ids,
             COUNT(*) OVER() AS total_count
      FROM quizzes q
-     JOIN subjects s ON s.id = q.subject_id
      LEFT JOIN (
        SELECT quiz_id, COUNT(*)::int AS question_count
        FROM quiz_questions
@@ -576,6 +607,15 @@ export async function listCatalogPage(params: {
        ) qb
        JOIN subjects subj ON subj.id = qb.subject_id
      ) sb ON true
+     LEFT JOIN LATERAL (
+       SELECT COALESCE(
+         array_agg(DISTINCT qt.topic_id) FILTER (WHERE qt.topic_id IS NOT NULL),
+         '{}'
+       ) AS topic_ids
+       FROM quiz_questions qq
+       JOIN question_topics qt ON qt.question_id = qq.question_id
+       WHERE qq.quiz_id = q.id
+     ) tb ON true
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
      ORDER BY ${orderBy}
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
@@ -613,19 +653,32 @@ export async function listQuizzesForStaff(params: {
   values.push(limit);
   values.push(offset);
 
-  const res = await query<QuizRow & { topic_ids: string[] }>(
+  const res = await query<QuizRow & { topic_ids: string[]; subject_ids: string[] }>(
     `SELECT q.*,
-            COALESCE(array_agg(qt.topic_id) FILTER (WHERE qt.topic_id IS NOT NULL), '{}') AS topic_ids,
+            COALESCE(qt.topic_ids, '{}') AS topic_ids,
+            COALESCE(qs.subject_ids, '{}') AS subject_ids,
             qc.question_count
      FROM quizzes q
-     LEFT JOIN quiz_topics qt ON qt.quiz_id = q.id
      LEFT JOIN (
        SELECT quiz_id, COUNT(*) AS question_count
        FROM quiz_questions
        GROUP BY quiz_id
      ) qc ON qc.quiz_id = q.id
+     LEFT JOIN (
+       SELECT qq.quiz_id,
+              array_agg(DISTINCT qt.topic_id) FILTER (WHERE qt.topic_id IS NOT NULL) AS topic_ids
+       FROM quiz_questions qq
+       JOIN question_topics qt ON qt.question_id = qq.question_id
+       GROUP BY qq.quiz_id
+     ) qt ON qt.quiz_id = q.id
+     LEFT JOIN (
+       SELECT qq.quiz_id,
+              array_agg(DISTINCT qn.subject_id) FILTER (WHERE qn.subject_id IS NOT NULL) AS subject_ids
+       FROM quiz_questions qq
+       JOIN questions qn ON qn.id = qq.question_id
+       GROUP BY qq.quiz_id
+     ) qs ON qs.quiz_id = q.id
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-     GROUP BY q.id, qc.question_count
      ORDER BY q.created_at DESC
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
     values,
@@ -633,7 +686,8 @@ export async function listQuizzesForStaff(params: {
 
   return res.rows.map((row) => ({
     ...mapQuiz(row),
-    topicIds: row.topic_ids,
+    topicIds: row.topic_ids ?? [],
+    subjectIds: row.subject_ids ?? [],
   }));
 }
 
@@ -650,37 +704,11 @@ export async function deleteQuiz(quizId: string) {
     await client.query(`DELETE FROM quiz_questions WHERE quiz_id = $1`, [
       quizId,
     ]);
-    await client.query(`DELETE FROM quiz_topics WHERE quiz_id = $1`, [quizId]);
     await client.query(`DELETE FROM challenge_settings WHERE quiz_id = $1`, [
       quizId,
     ]);
     await client.query(`DELETE FROM quizzes WHERE id = $1`, [quizId]);
   });
-}
-
-async function insertTopics(
-  client: PoolClient,
-  quizId: string,
-  topicIds: string[],
-) {
-  const values = topicIds.map((_, idx) => `($1, $${idx + 2})`).join(", ");
-  await client.query(
-    `INSERT INTO quiz_topics (quiz_id, topic_id)
-     VALUES ${values}
-     ON CONFLICT DO NOTHING`,
-    [quizId, ...topicIds],
-  );
-}
-
-async function replaceTopics(
-  client: PoolClient,
-  quizId: string,
-  topicIds: string[],
-) {
-  await client.query(`DELETE FROM quiz_topics WHERE quiz_id = $1`, [quizId]);
-  if (topicIds.length) {
-    await insertTopics(client, quizId, topicIds);
-  }
 }
 
 async function upsertChallengeInternal(

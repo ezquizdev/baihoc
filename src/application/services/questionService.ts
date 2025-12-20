@@ -22,11 +22,14 @@ type CreateQuestionInput = {
   stem: string;
   explanation?: string | null;
   tags?: string[];
+  topicIds?: string[];
   defaultScore?: number;
   createdBy: string;
   options?: Array<Omit<QuestionOption, "id" | "questionId">>;
   shortAnswers?: Array<Omit<ShortAnswerKey, "id" | "questionId">>;
   passage?: { content: string; mediaUrls?: string[] } | null;
+  passageId?: string | null;
+  passagePosition?: number;
 };
 
 export async function createQuestion(input: CreateQuestionInput) {
@@ -38,11 +41,14 @@ export async function createQuestion(input: CreateQuestionInput) {
     stem: input.stem.trim(),
     explanation: input.explanation ?? null,
     tags: input.tags ?? [],
+    topicIds: input.topicIds ?? [],
     defaultScore: input.defaultScore ?? 1,
     createdBy: input.createdBy,
     options: input.options,
     shortAnswers: input.shortAnswers,
     passage: input.passage ?? undefined,
+    passageId: input.passageId ?? undefined,
+    passagePosition: input.passagePosition,
   });
 }
 
@@ -62,11 +68,14 @@ export async function updateQuestion(
     stem: input.stem,
     explanation: input.explanation,
     tags: input.tags,
+    topicIds: input.topicIds,
     defaultScore: input.defaultScore,
     status: input.status,
     options: input.options,
     shortAnswers: input.shortAnswers,
     passage: input.passage ?? undefined,
+    passageId: input.passageId ?? undefined,
+    passagePosition: input.passagePosition,
   });
   if (!res) {
     throw new Error("Question not found");
@@ -76,7 +85,7 @@ export async function updateQuestion(
 
 export async function listQuestions(params: {
   subjectId?: string;
-  difficulty?: "easy" | "medium" | "hard" | "mixed";
+  difficulty?: DifficultyLevel;
   status?: QuestionStatus;
   search?: string;
   limit?: number;
@@ -109,6 +118,15 @@ function validateQuestionPayload(input: CreateQuestionInput, partial = false) {
   if (!partial && !input.stem?.trim()) {
     throw new Error("Question stem is required");
   }
+  if (input.defaultDifficulty !== undefined) {
+    if (
+      !Number.isInteger(input.defaultDifficulty) ||
+      input.defaultDifficulty < 1 ||
+      input.defaultDifficulty > 5
+    ) {
+      throw new Error("Difficulty must be an integer from 1 to 5");
+    }
+  }
   if (input.type === "mcq_single" || input.type === "mcq_multi") {
     if (input.options === undefined) {
       if (!partial) throw new Error("Options are required for MCQ");
@@ -136,11 +154,8 @@ function validateQuestionPayload(input: CreateQuestionInput, partial = false) {
       throw new Error("Provide at least one acceptable answer");
     }
   }
-
-  if (input.type === "passage") {
-    if (input.passage === undefined && !partial) {
-      throw new Error("Passage content is required");
-    }
+  if (input.passagePosition !== undefined && input.passagePosition <= 0) {
+    throw new Error("Passage position must be positive");
   }
 }
 

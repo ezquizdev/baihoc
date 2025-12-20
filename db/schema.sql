@@ -34,13 +34,6 @@ END $$;
 
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'difficulty_level') THEN
-    CREATE TYPE difficulty_level AS ENUM ('easy', 'medium', 'hard', 'mixed');
-  END IF;
-END $$;
-
-DO $$
-BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'quiz_visibility') THEN
     CREATE TYPE quiz_visibility AS ENUM ('free', 'premium');
   END IF;
@@ -56,7 +49,7 @@ END $$;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'question_type') THEN
-    CREATE TYPE question_type AS ENUM ('mcq_single', 'mcq_multi', 'short_answer', 'passage');
+    CREATE TYPE question_type AS ENUM ('mcq_single', 'mcq_multi', 'short_answer');
   END IF;
 END $$;
 
@@ -197,16 +190,13 @@ CREATE TABLE IF NOT EXISTS quizzes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL,
   description text,
-  subject_id uuid NOT NULL REFERENCES subjects(id),
-  difficulty difficulty_level NOT NULL DEFAULT 'mixed',
+  difficulty_level integer NOT NULL DEFAULT 3 CHECK (difficulty_level BETWEEN 1 AND 5),
   visibility quiz_visibility NOT NULL DEFAULT 'free',
   status quiz_status NOT NULL DEFAULT 'draft',
   is_challenge boolean NOT NULL DEFAULT false,
   estimated_time_seconds integer,
   thumbnail_url text,
   featured_rank integer,
-  rating_count integer NOT NULL DEFAULT 0,
-  rating_avg numeric(3,2) NOT NULL DEFAULT 0,
   created_by uuid NOT NULL REFERENCES users(id),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
@@ -216,14 +206,8 @@ CREATE TABLE IF NOT EXISTS quizzes (
 
 CREATE INDEX IF NOT EXISTS idx_quizzes_visibility_status ON quizzes(visibility, status);
 CREATE INDEX IF NOT EXISTS idx_quizzes_challenge ON quizzes(is_challenge);
-CREATE INDEX IF NOT EXISTS idx_quizzes_subject_difficulty ON quizzes(subject_id, difficulty);
+CREATE INDEX IF NOT EXISTS idx_quizzes_difficulty_level ON quizzes(difficulty_level);
 CREATE INDEX IF NOT EXISTS idx_quizzes_search ON quizzes USING GIN (search_vector);
-
-CREATE TABLE IF NOT EXISTS quiz_topics (
-  quiz_id uuid NOT NULL REFERENCES quizzes(id),
-  topic_id uuid NOT NULL REFERENCES topics(id),
-  PRIMARY KEY (quiz_id, topic_id)
-);
 
 CREATE TABLE IF NOT EXISTS challenge_settings (
   quiz_id uuid PRIMARY KEY REFERENCES quizzes(id),
@@ -237,7 +221,7 @@ CREATE TABLE IF NOT EXISTS challenge_settings (
 CREATE TABLE IF NOT EXISTS questions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   subject_id uuid NOT NULL REFERENCES subjects(id),
-  default_difficulty difficulty_level NOT NULL DEFAULT 'medium',
+  default_difficulty integer NOT NULL DEFAULT 3 CHECK (default_difficulty BETWEEN 1 AND 5),
   type question_type NOT NULL,
   stem text NOT NULL,
   explanation text,
@@ -255,6 +239,14 @@ CREATE INDEX IF NOT EXISTS idx_questions_subject_diff ON questions(subject_id, d
 CREATE INDEX IF NOT EXISTS idx_questions_tags ON questions USING GIN (tags);
 CREATE INDEX IF NOT EXISTS idx_questions_search ON questions USING GIN (search_vector);
 
+CREATE TABLE IF NOT EXISTS question_topics (
+  question_id uuid NOT NULL REFERENCES questions(id),
+  topic_id uuid NOT NULL REFERENCES topics(id),
+  PRIMARY KEY (question_id, topic_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_question_topics_topic ON question_topics(topic_id);
+
 CREATE TABLE IF NOT EXISTS passages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   content text NOT NULL,
@@ -264,7 +256,9 @@ CREATE TABLE IF NOT EXISTS passages (
 
 CREATE TABLE IF NOT EXISTS question_passages (
   question_id uuid PRIMARY KEY REFERENCES questions(id),
-  passage_id uuid NOT NULL REFERENCES passages(id)
+  passage_id uuid NOT NULL REFERENCES passages(id),
+  position integer NOT NULL DEFAULT 1 CHECK (position > 0),
+  UNIQUE(passage_id, position)
 );
 
 CREATE TABLE IF NOT EXISTS question_options (

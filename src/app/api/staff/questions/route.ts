@@ -10,18 +10,16 @@ import {
   controllerListQuestions,
 } from "@/application/controllers/questionController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import {
-  DifficultyValues,
-  QuestionTypeValues,
-} from "@/application/models/enums";
+import { QuestionTypeValues } from "@/application/models/enums";
 
 const createSchema = z.object({
   subjectId: z.string().uuid(),
-  defaultDifficulty: z.enum(DifficultyValues),
+  defaultDifficulty: z.number().int().min(1).max(5),
   type: z.enum(QuestionTypeValues),
   stem: z.string().min(1),
   explanation: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
+  topicIds: z.array(z.string().uuid()).optional(),
   defaultScore: z.number().positive().optional(),
   options: z
     .array(
@@ -48,6 +46,8 @@ const createSchema = z.object({
     })
     .nullable()
     .optional(),
+  passageId: z.string().uuid().nullable().optional(),
+  passagePosition: z.number().int().positive().optional(),
 });
 
 export async function GET(request: NextRequest) {

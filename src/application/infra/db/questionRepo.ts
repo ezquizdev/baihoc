@@ -24,6 +24,9 @@ export type QuestionRow = {
   created_at: string;
   updated_at: string;
   archived_at: string | null;
+  topic_ids?: string[] | null;
+  passage_id?: string | null;
+  passage_position?: number | null;
 };
 
 export type OptionRow = {
@@ -61,11 +64,14 @@ function mapQuestion(row: QuestionRow): Question {
     explanation: row.explanation,
     status: row.status,
     tags: row.tags ?? [],
+    topicIds: row.topic_ids ?? [],
     defaultScore: Number(row.default_score),
     createdBy: row.created_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     archivedAt: row.archived_at,
+    passageId: row.passage_id ?? null,
+    passagePosition: row.passage_position ?? null,
   };
 }
 
@@ -106,11 +112,14 @@ export async function insertQuestion(input: {
   explanation?: string | null;
   status?: QuestionStatus;
   tags?: string[];
+  topicIds?: string[];
   defaultScore?: number;
   createdBy: string;
   options?: Array<Omit<QuestionOption, "id" | "questionId">>;
   shortAnswers?: Array<Omit<ShortAnswerKey, "id" | "questionId">>;
   passage?: { content: string; mediaUrls?: string[] } | null;
+  passageId?: string | null;
+  passagePosition?: number;
 }): Promise<QuestionDetail> {
   return withTransaction(async (client) => {
     const questionRes = await client.query<QuestionRow>(
@@ -118,7 +127,7 @@ export async function insertQuestion(input: {
         subject_id, default_difficulty, type, stem, explanation, status,
         tags, default_score, created_by, search_vector
       ) VALUES (
-        $1, $2::difficulty_level, $3::question_type, $4, $5,
+        $1, $2, $3::question_type, $4, $5,
         COALESCE($6::question_status, 'active'),
         COALESCE($7::text[], '{}'),
         COALESCE($8, 1),
@@ -143,20 +152,35 @@ export async function insertQuestion(input: {
       throw new Error("Failed to create question");
     }
 
+    if (input.topicIds?.length) {
+      await replaceQuestionTopics(client, questionRow.id, input.topicIds);
+    }
+
     let passageRow: PassageRow | undefined;
+    let passageId = input.passageId ?? null;
     if (input.passage) {
       const passageRes = await client.query<PassageRow>(
         `INSERT INTO passages (content, media_urls) VALUES ($1, $2) RETURNING *`,
         [input.passage.content, input.passage.mediaUrls ?? []],
       );
       passageRow = passageRes.rows[0];
-      if (passageRow) {
-        await client.query(
-          `INSERT INTO question_passages (question_id, passage_id) VALUES ($1, $2)`,
-          [questionRow.id, passageRow.id],
-        );
-      }
+      passageId = passageRow?.id ?? null;
     }
+
+    if (passageId) {
+      await client.query(
+        `INSERT INTO question_passages (question_id, passage_id, position)
+         VALUES ($1, $2, $3)`,
+        [questionRow.id, passageId, input.passagePosition ?? 1],
+      );
+    }
+
+    const enrichedRow: QuestionRow = {
+      ...questionRow,
+      topic_ids: input.topicIds ?? [],
+      passage_id: passageId,
+      passage_position: passageId ? input.passagePosition ?? 1 : null,
+    };
 
     if (input.options?.length) {
       await insertOptions(client, questionRow.id, input.options);
@@ -171,7 +195,7 @@ export async function insertQuestion(input: {
     ]);
 
     return {
-      question: mapQuestion(questionRow),
+      question: mapQuestion(enrichedRow),
       options,
       shortAnswerKeys: answers,
       passage: mapPassage(passageRow),
@@ -188,10 +212,13 @@ export async function updateQuestion(input: {
   explanation?: string | null;
   status?: QuestionStatus;
   tags?: string[];
+  topicIds?: string[];
   defaultScore?: number;
   options?: Array<Omit<QuestionOption, "id" | "questionId">> | null;
   shortAnswers?: Array<Omit<ShortAnswerKey, "id" | "questionId">> | null;
   passage?: { content: string; mediaUrls?: string[] } | null;
+  passageId?: string | null;
+  passagePosition?: number;
 }): Promise<QuestionDetail | null> {
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -204,10 +231,7 @@ export async function updateQuestion(input: {
 
   if (input.subjectId !== undefined) push("subject_id = $idx", input.subjectId);
   if (input.defaultDifficulty !== undefined)
-    push(
-      "default_difficulty = $idx::difficulty_level",
-      input.defaultDifficulty,
-    );
+    push("default_difficulty = $idx", input.defaultDifficulty);
   if (input.type !== undefined) push("type = $idx::question_type", input.type);
   if (input.stem !== undefined) push("stem = $idx", input.stem);
   if (input.explanation !== undefined)
@@ -232,28 +256,48 @@ export async function updateQuestion(input: {
       );
     }
 
-    if (input.passage === null) {
+    if (input.topicIds !== undefined) {
+      await replaceQuestionTopics(client, input.questionId, input.topicIds);
+    }
+
+    const wantsPassageRemoval =
+      input.passage === null || input.passageId === null;
+
+    if (wantsPassageRemoval) {
       await client.query(
         `DELETE FROM question_passages WHERE question_id = $1`,
         [input.questionId],
       );
-    } else if (input.passage) {
-      const passageRes = await client.query<PassageRow>(
-        `INSERT INTO passages (content, media_urls)
-         VALUES ($1, $2)
-         ON CONFLICT DO NOTHING
-         RETURNING *`,
-        [input.passage.content, input.passage.mediaUrls ?? []],
-      );
-      const passageRow = passageRes.rows[0];
-      if (passageRow) {
-        await client.query(
-          `INSERT INTO question_passages (question_id, passage_id)
+    } else if (input.passage || input.passageId) {
+      let passageId = input.passageId ?? null;
+      if (input.passage) {
+        const passageRes = await client.query<PassageRow>(
+          `INSERT INTO passages (content, media_urls)
            VALUES ($1, $2)
-           ON CONFLICT (question_id) DO UPDATE SET passage_id = EXCLUDED.passage_id`,
-          [input.questionId, passageRow.id],
+           RETURNING *`,
+          [input.passage.content, input.passage.mediaUrls ?? []],
+        );
+        const passageRow = passageRes.rows[0];
+        passageId = passageRow?.id ?? null;
+      }
+
+      if (passageId) {
+        await client.query(
+          `INSERT INTO question_passages (question_id, passage_id, position)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (question_id)
+           DO UPDATE SET passage_id = EXCLUDED.passage_id,
+                         position = EXCLUDED.position`,
+          [input.questionId, passageId, input.passagePosition ?? 1],
         );
       }
+    } else if (input.passagePosition !== undefined) {
+      await client.query(
+        `UPDATE question_passages
+         SET position = $2
+         WHERE question_id = $1`,
+        [input.questionId, input.passagePosition],
+      );
     }
 
     if (input.options !== undefined) {
@@ -277,7 +321,18 @@ export async function updateQuestion(input: {
     }
 
     const baseQuestion = await client.query<QuestionRow>(
-      `SELECT * FROM questions WHERE id = $1`,
+      `SELECT q.*,
+              COALESCE(qt.topic_ids, '{}') AS topic_ids,
+              qp.passage_id,
+              qp.position AS passage_position
+       FROM questions q
+       LEFT JOIN (
+         SELECT question_id, array_agg(topic_id) AS topic_ids
+         FROM question_topics
+         GROUP BY question_id
+       ) qt ON qt.question_id = q.id
+       LEFT JOIN question_passages qp ON qp.question_id = q.id
+       WHERE q.id = $1`,
       [input.questionId],
     );
     const questionRow = baseQuestion.rows[0];
@@ -317,7 +372,7 @@ export async function listQuestions(params: {
 
   if (params.subjectId) add("subject_id = $idx", params.subjectId);
   if (params.difficulty)
-    add("default_difficulty = $idx::difficulty_level", params.difficulty);
+    add("default_difficulty = $idx", params.difficulty);
   if (params.status) add("status = $idx::question_status", params.status);
   if (params.search) {
     add("(stem ILIKE $idx OR explanation ILIKE $idx)", `%${params.search}%`);
@@ -329,9 +384,19 @@ export async function listQuestions(params: {
   values.push(offset);
 
   const res = await query<QuestionRow>(
-    `SELECT * FROM questions
+    `SELECT q.*,
+            COALESCE(qt.topic_ids, '{}') AS topic_ids,
+            qp.passage_id,
+            qp.position AS passage_position
+     FROM questions q
+     LEFT JOIN (
+       SELECT question_id, array_agg(topic_id) AS topic_ids
+       FROM question_topics
+       GROUP BY question_id
+     ) qt ON qt.question_id = q.id
+     LEFT JOIN question_passages qp ON qp.question_id = q.id
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-     ORDER BY created_at DESC
+     ORDER BY q.created_at DESC
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
     values,
   );
@@ -342,7 +407,18 @@ export async function getQuestionDetail(
   questionId: string,
 ): Promise<QuestionDetail | null> {
   const questionRes = await query<QuestionRow>(
-    `SELECT * FROM questions WHERE id = $1`,
+    `SELECT q.*,
+            COALESCE(qt.topic_ids, '{}') AS topic_ids,
+            qp.passage_id,
+            qp.position AS passage_position
+     FROM questions q
+     LEFT JOIN (
+       SELECT question_id, array_agg(topic_id) AS topic_ids
+       FROM question_topics
+       GROUP BY question_id
+     ) qt ON qt.question_id = q.id
+     LEFT JOIN question_passages qp ON qp.question_id = q.id
+     WHERE q.id = $1`,
     [questionId],
   );
   const row = questionRes.rows[0];
@@ -385,6 +461,9 @@ export async function deleteQuestion(questionId: string) {
     await client.query(`DELETE FROM short_answer_keys WHERE question_id = $1`, [
       questionId,
     ]);
+    await client.query(`DELETE FROM question_topics WHERE question_id = $1`, [
+      questionId,
+    ]);
     const passage = await client.query<{ passage_id: string }>(
       `SELECT passage_id FROM question_passages WHERE question_id = $1`,
       [questionId],
@@ -393,9 +472,17 @@ export async function deleteQuestion(questionId: string) {
       questionId,
     ]);
     if (passage.rows[0]) {
-      await client.query(`DELETE FROM passages WHERE id = $1`, [
-        passage.rows[0].passage_id,
-      ]);
+      const usage = await client.query<{ cnt: string }>(
+        `SELECT COUNT(*)::int AS cnt
+         FROM question_passages
+         WHERE passage_id = $1`,
+        [passage.rows[0].passage_id],
+      );
+      if (Number(usage.rows[0]?.cnt ?? 0) === 0) {
+        await client.query(`DELETE FROM passages WHERE id = $1`, [
+          passage.rows[0].passage_id,
+        ]);
+      }
     }
     await client.query(`DELETE FROM questions WHERE id = $1`, [questionId]);
   });
@@ -441,6 +528,24 @@ async function insertShortAnswers(
     `INSERT INTO short_answer_keys (question_id, acceptable_answer, case_sensitive)
      VALUES ${values.join(", ")}`,
     [questionId, ...params],
+  );
+}
+
+async function replaceQuestionTopics(
+  client: PoolClient,
+  questionId: string,
+  topicIds: string[],
+) {
+  await client.query(`DELETE FROM question_topics WHERE question_id = $1`, [
+    questionId,
+  ]);
+  if (!topicIds.length) return;
+  const values = topicIds.map((_, idx) => `($1, $${idx + 2})`).join(", ");
+  await client.query(
+    `INSERT INTO question_topics (question_id, topic_id)
+     VALUES ${values}
+     ON CONFLICT DO NOTHING`,
+    [questionId, ...topicIds],
   );
 }
 

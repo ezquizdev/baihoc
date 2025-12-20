@@ -46,7 +46,7 @@ export function QuizModal({ quiz, onClose }: QuizModalProps) {
       ? quiz.subjectBreakdown
       : [
           {
-            subjectId: quiz.subjectId,
+            subjectId: quiz.subjectSlug ?? "mixed",
             name: quiz.subjectName,
             slug: quiz.subjectSlug,
             questionCount,

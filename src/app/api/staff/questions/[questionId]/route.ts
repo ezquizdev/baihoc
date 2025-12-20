@@ -7,18 +7,18 @@ import {
 } from "@/application/controllers/questionController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 import {
-  DifficultyValues,
   QuestionStatusValues,
   QuestionTypeValues,
 } from "@/application/models/enums";
 
 const updateSchema = z.object({
   subjectId: z.string().uuid().optional(),
-  defaultDifficulty: z.enum(DifficultyValues).optional(),
+  defaultDifficulty: z.number().int().min(1).max(5).optional(),
   type: z.enum(QuestionTypeValues).optional(),
   stem: z.string().min(1).optional(),
   explanation: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
+  topicIds: z.array(z.string().uuid()).optional(),
   defaultScore: z.number().positive().optional(),
   status: z.enum(QuestionStatusValues).optional(),
   options: z
@@ -48,6 +48,8 @@ const updateSchema = z.object({
     })
     .nullable()
     .optional(),
+  passageId: z.string().uuid().nullable().optional(),
+  passagePosition: z.number().int().positive().optional(),
 });
 
 type Params = { questionId: string };

@@ -13,11 +13,12 @@ import {
 
 export async function controllerCreateQuestion(input: {
   subjectId: string;
-  defaultDifficulty: "easy" | "medium" | "hard" | "mixed";
+  defaultDifficulty: number;
   type: QuestionType;
   stem: string;
   explanation?: string | null;
   tags?: string[];
+  topicIds?: string[];
   defaultScore?: number;
   createdBy: string;
   options?: {
@@ -31,6 +32,8 @@ export async function controllerCreateQuestion(input: {
     caseSensitive?: boolean;
   }[];
   passage?: { content: string; mediaUrls?: string[] } | null;
+  passageId?: string | null;
+  passagePosition?: number;
 }): Promise<QuestionDetail> {
   return createQuestion({
     ...input,
@@ -51,11 +54,12 @@ export async function controllerUpdateQuestion(
   questionId: string,
   input: {
     subjectId?: string;
-    defaultDifficulty?: "easy" | "medium" | "hard" | "mixed";
+    defaultDifficulty?: number;
     type?: QuestionType;
     stem?: string;
     explanation?: string | null;
     tags?: string[];
+    topicIds?: string[];
     defaultScore?: number;
     status?: QuestionStatus;
     options?:
@@ -73,6 +77,8 @@ export async function controllerUpdateQuestion(
         }[]
       | null;
     passage?: { content: string; mediaUrls?: string[] } | null;
+    passageId?: string | null;
+    passagePosition?: number;
   },
 ) {
   return updateQuestion(questionId, {
@@ -92,7 +98,7 @@ export async function controllerUpdateQuestion(
 
 export async function controllerListQuestions(params: {
   subjectId?: string;
-  difficulty?: "easy" | "medium" | "hard" | "mixed";
+  difficulty?: number;
   status?: QuestionStatus;
   search?: string;
   limit?: number;

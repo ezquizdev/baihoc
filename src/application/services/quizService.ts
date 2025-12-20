@@ -25,7 +25,6 @@ import { ServiceError } from "@/application/services/errors";
 type CreateQuizInput = {
   title: string;
   description?: string | null;
-  subjectId: string;
   difficulty: DifficultyLevel;
   visibility: QuizVisibility;
   isChallenge?: boolean;
@@ -33,7 +32,6 @@ type CreateQuizInput = {
   thumbnailUrl?: string | null;
   featuredRank?: number | null;
   createdBy: string;
-  topicIds?: string[];
   challenge?: Partial<ChallengeSettings>;
 };
 
@@ -180,6 +178,15 @@ export async function getPublishedQuizDetail(
 function validateQuizInput(input: CreateQuizInput, partial = false) {
   if (!partial && !input.title?.trim()) {
     throw new Error("Quiz title is required");
+  }
+  if (input.difficulty !== undefined) {
+    if (
+      !Number.isInteger(input.difficulty) ||
+      input.difficulty < 1 ||
+      input.difficulty > 5
+    ) {
+      throw new Error("Difficulty must be an integer from 1 to 5");
+    }
   }
   if (input.isChallenge) {
     if (!input.challenge) {
