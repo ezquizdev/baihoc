@@ -2,6 +2,25 @@
 
 ## 2025-12-20
 
+### feat(ui): build quiz catalog page
+- Added the `/quizzes` page with dashboard shell integration, filters, quiz grid, leaderboard, and pagination states.
+- Wired search input to catalog filters and added responsive catalog layout.
+
+### feat(api): expand catalog endpoints
+- Added catalog endpoints for quizzes (paged with totals), subjects, and leaderboard.
+- Extended query parsing helpers for multi-select and range filters.
+
+### feat(catalog): add controllers and services
+- Added subject/leaderboard services and controllers alongside catalog page controller.
+- Added minute-to-second conversion in quiz catalog service layer.
+
+### feat(catalog): add infra queries
+- Added catalog query returning totals, subject info, and attempt counts with status/sort filters.
+- Added subject and leaderboard repositories plus new domain models.
+
+### docs(catalog): add design notes
+- Documented quiz catalog flows, filters, API shapes, and UI expectations in WIP notes.
+
 ### fix(dashboard): placeholder nav items
 - Replaced sidebar and profile menu links with placeholder anchors to avoid typed-routes errors before routes exist.
 - Added no-op click handler for placeholder links while keeping existing styles.
