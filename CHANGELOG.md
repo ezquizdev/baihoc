@@ -2,6 +2,10 @@
 
 ## 2025-12-20
 
+### feat(ui): refresh quiz card layout
+- Rebuilt quiz cards to match the legacy layout with tone backgrounds, date pill, stacked info, and internal CTA.
+- Added reusable difficulty and subject badge components and swapped to phosphor-react icons.
+
 ### chore(db): add seed script
 - Added a database seed script to populate quizzes, subjects, questions, attempts, and XP for catalog testing.
 - Added `db:seed` npm script for convenience.
