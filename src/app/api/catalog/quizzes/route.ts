@@ -1,13 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import {
   parseCommaIds,
-  parseDifficulty,
-  parseNumber,
+  parseEnumArray,
+  parseNumberRange,
   parsePagination,
-  parseQuizVisibility,
 } from "@/app/api/_utils/query";
-import { controllerListCatalog } from "@/application/controllers/quizController";
+import { controllerListCatalogPage } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
+import { DifficultyValues } from "@/application/models/enums";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuthenticatedApi(request, {
@@ -20,23 +20,50 @@ export async function GET(request: NextRequest) {
     limit: 20,
     offset: 0,
   });
+  const status = parseStatus(searchParams.get("status"));
+  const sort = parseSort(searchParams.get("sort"));
+  const { min: minQuestions, max: maxQuestions } = parseNumberRange(
+    searchParams,
+    "minQuestions",
+    "maxQuestions",
+  );
+  const { min: minDuration, max: maxDuration } = parseNumberRange(
+    searchParams,
+    "minDuration",
+    "maxDuration",
+  );
 
   try {
-    const items = await controllerListCatalog({
-      subjectId: searchParams.get("subjectId") ?? undefined,
-      topicIds: parseCommaIds(searchParams, "topicIds"),
-      difficulty: parseDifficulty(searchParams),
-      visibility: parseQuizVisibility(searchParams),
-      search: searchParams.get("search") ?? undefined,
+    const { items, total } = await controllerListCatalogPage(auth.sub, {
+      subjectIds: parseCommaIds(searchParams, "subjectIds"),
+      difficulty: parseEnumArray(searchParams, "difficulty", DifficultyValues),
+      search:
+        searchParams.get("search") ?? searchParams.get("q") ?? undefined,
+      status,
+      sort,
       limit,
       offset,
-      minQuestions: parseNumber(searchParams, "minQuestions"),
-      maxQuestions: parseNumber(searchParams, "maxQuestions"),
+      minQuestions,
+      maxQuestions,
+      minDurationMinutes: minDuration,
+      maxDurationMinutes: maxDuration,
     });
-    return NextResponse.json({ items });
+    return NextResponse.json({ items, total });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Không thể tải danh sách quiz";
     return NextResponse.json({ error: message }, { status: 400 });
   }
+}
+
+function parseStatus(value: string | null) {
+  if (!value) return undefined;
+  if (value === "todo" || value === "done" || value === "all") return value;
+  return undefined;
+}
+
+function parseSort(value: string | null) {
+  if (!value) return undefined;
+  if (value === "newest" || value === "oldest") return value;
+  return undefined;
 }
