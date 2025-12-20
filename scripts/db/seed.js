@@ -24,16 +24,14 @@ const config = {
   quizzes: Number(args.quizzes ?? 36),
   questionsPerSubject: Number(args.questions ?? 48),
   maxAttemptsPerQuiz: Number(args.maxAttempts ?? 18),
-  seed: args.seed ?? crypto.randomUUID(),
+  multiSubjectRate: Number(args.multiSubjectRate ?? 0.35),
 };
 
 const subjectSeeds = [
-  { name: "Toán học", slug: "math" },
-  { name: "Tiếng Anh", slug: "en" },
   { name: "Tiếng Việt", slug: "vi" },
+  { name: "Tiếng Anh", slug: "en" },
   { name: "Tư duy Khoa học", slug: "sci" },
-  { name: "Lịch sử", slug: "history" },
-  { name: "Địa lý", slug: "geo" },
+  { name: "Toán học", slug: "math" },
 ];
 
 const quizNameParts = [
@@ -89,124 +87,254 @@ const peopleLast = [
   "Ngô",
 ];
 
-const difficultyLevels = ["easy", "medium", "hard", "mixed"];
+const difficultyLevels = ["easy", "medium", "hard"];
 const quizVisibility = ["free", "premium"];
 
 async function main() {
   const client = new Client({ connectionString });
   try {
     await client.connect();
+    await client.query("BEGIN");
     console.log("Seeding database with config:", config);
 
-    const staff = await ensureUser(client, {
-      email: "staff@baihoc.dev",
-      fullName: "BaiHoc Staff",
-      role: "staff",
-      tier: "paid",
-      status: "active",
-      password: "Password123!",
-    });
+    const passwordHash = bcrypt.hashSync("Password123!", 10);
+    const staff = await upsertStaff(client, passwordHash);
 
-    const students = [];
+    const studentInputs = [];
     for (let i = 0; i < config.students; i += 1) {
       const fullName = `${pick(peopleLast)} ${pick(peopleFirst)}`;
-      const email = `student.${i + 1}@baihoc.dev`;
-      const student = await ensureUser(client, {
-        email,
+      studentInputs.push({
+        email: `student.${i + 1}@baihoc.dev`,
         fullName,
         role: "student",
         tier: Math.random() < 0.2 ? "paid" : "free",
         status: "active",
-        password: "Password123!",
+        passwordHash,
       });
-      students.push(student);
     }
+    await insertUsers(client, studentInputs);
+    const students = await fetchUsersByEmail(
+      client,
+      studentInputs.map((s) => s.email),
+    );
 
-    const subjects = [];
-    for (const seed of subjectSeeds) {
-      const subject = await ensureSubject(client, seed.name, seed.slug);
-      subjects.push(subject);
-    }
-
+    const subjects = await upsertSubjects(client, subjectSeeds);
+    const questionRows = [];
     const questionBank = new Map();
-    for (const subject of subjects) {
+    subjects.forEach((subject) => {
       const questionIds = [];
       for (let i = 0; i < config.questionsPerSubject; i += 1) {
+        const id = crypto.randomUUID();
         const difficulty = pick(difficultyLevels);
         const stem = `Câu hỏi ${i + 1} về ${subject.name}`;
         const explanation = `Giải thích cho câu hỏi ${i + 1} (${subject.name}).`;
-        const questionId = await insertQuestion(client, {
-          subjectId: subject.id,
-          subjectSlug: subject.slug,
+        questionRows.push([
+          id,
+          subject.id,
           difficulty,
+          "mcq_single",
           stem,
           explanation,
-          createdBy: staff.id,
-        });
-        questionIds.push(questionId);
+          "active",
+          [subject.slug],
+          1,
+          staff.id,
+        ]);
+        questionIds.push(id);
       }
       questionBank.set(subject.id, questionIds);
-    }
+    });
 
-    const quizzes = [];
+    await insertRows(
+      client,
+      "questions",
+      [
+        "id",
+        "subject_id",
+        "default_difficulty",
+        "type",
+        "stem",
+        "explanation",
+        "status",
+        "tags",
+        "default_score",
+        "created_by",
+      ],
+      questionRows,
+    );
+
+    const quizRows = [];
+    const quizQuestionRows = [];
+    const attemptRows = [];
+    const xpRows = [];
+    const challengeRows = [];
+
     for (let i = 0; i < config.quizzes; i += 1) {
-      const subject = pick(subjects);
+      const quizId = crypto.randomUUID();
+      const chosenSubjects = pickSubjects(
+        subjects,
+        config.multiSubjectRate,
+      );
+      const primarySubject = pick(chosenSubjects);
       const difficulty = pick(difficultyLevels);
       const visibility = pick(quizVisibility);
       const isChallenge = Math.random() < 0.2;
-      const title = `${subject.name} ${pick(quizNameParts)} #${i + 1}`;
+      const title = `${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`;
       const description = `Bộ câu hỏi ${title.toLowerCase()} dành cho luyện tập.`;
       const minutes = randomInt(10, 50);
       const timestamps = randomTimestamps(120);
 
-      const quiz = await insertQuiz(client, {
+      quizRows.push([
+        quizId,
         title,
         description,
-        subjectId: subject.id,
+        primarySubject.id,
         difficulty,
         visibility,
+        "published",
         isChallenge,
-        estimatedTimeSeconds: minutes * 60,
-        createdBy: staff.id,
-        createdAt: timestamps.createdAt,
-        updatedAt: timestamps.updatedAt,
-      });
-      quizzes.push({ ...quiz, subjectId: subject.id, isChallenge });
+        minutes * 60,
+        0,
+        0,
+        staff.id,
+        timestamps.createdAt,
+        timestamps.updatedAt,
+        timestamps.updatedAt,
+      ]);
 
       if (isChallenge) {
-        await insertChallenge(client, {
-          quizId: quiz.id,
-          startAt: shiftDate(timestamps.updatedAt, -1),
-          endAt: shiftDate(timestamps.updatedAt, 7),
-          timeLimitSeconds: minutes * 60,
-        });
+        challengeRows.push([
+          quizId,
+          shiftDate(timestamps.updatedAt, -1),
+          shiftDate(timestamps.updatedAt, 7),
+          minutes * 60,
+          {},
+        ]);
       }
 
-      const subjectQuestions = questionBank.get(subject.id) ?? [];
-      const questionCount = Math.min(
-        randomInt(8, 30),
-        subjectQuestions.length,
-      );
-      const selectedQuestions = sample(subjectQuestions, questionCount);
-      await insertQuizQuestions(client, quiz.id, selectedQuestions);
+      const questionTotal = randomInt(8, 30);
+      const distribution = distribute(questionTotal, chosenSubjects.length);
+      let position = 1;
+      chosenSubjects.forEach((subject, index) => {
+        const questionIds = questionBank.get(subject.id) ?? [];
+        const count = Math.min(distribution[index], questionIds.length);
+        const selectedQuestions = sample(questionIds, count);
+        selectedQuestions.forEach((questionId) => {
+          quizQuestionRows.push([quizId, questionId, position, null, true]);
+          position += 1;
+        });
+      });
 
+      const questionCount = Math.max(position - 1, 0);
       const attemptCount = randomInt(0, config.maxAttemptsPerQuiz);
       const attemptUsers = sample(students, attemptCount);
-      await insertAttempts(client, {
-        quizId: quiz.id,
-        totalQuestions: questionCount,
-        users: attemptUsers,
-        updatedAt: timestamps.updatedAt,
-        estimatedTimeSeconds: minutes * 60,
+      attemptUsers.forEach((user) => {
+        const startedAt = shiftDate(timestamps.updatedAt, -randomInt(1, 14));
+        const submittedAt = shiftDate(startedAt, randomInt(0, 2));
+        const correct = randomInt(0, questionCount || 1);
+        const percent = Math.round((correct / (questionCount || 1)) * 100);
+        const xp = randomInt(10, 80);
+        attemptRows.push([
+          user.id,
+          quizId,
+          "submitted",
+          startedAt,
+          submittedAt,
+          minutes * 60,
+          0,
+          correct,
+          percent,
+          correct,
+          questionCount || 1,
+          xp,
+          submittedAt,
+        ]);
+        xpRows.push([user.id, "attempt", xp, { quizId }, submittedAt]);
       });
     }
 
+    await insertRows(
+      client,
+      "quizzes",
+      [
+        "id",
+        "title",
+        "description",
+        "subject_id",
+        "difficulty",
+        "visibility",
+        "status",
+        "is_challenge",
+        "estimated_time_seconds",
+        "rating_count",
+        "rating_avg",
+        "created_by",
+        "created_at",
+        "updated_at",
+        "published_at",
+      ],
+      quizRows,
+    );
+
+    if (challengeRows.length) {
+      await insertRows(
+        client,
+        "challenge_settings",
+        ["quiz_id", "start_at", "end_at", "time_limit_seconds", "rules"],
+        challengeRows,
+        "ON CONFLICT (quiz_id) DO NOTHING",
+      );
+    }
+
+    await insertRows(
+      client,
+      "quiz_questions",
+      ["quiz_id", "question_id", "position", "score", "required"],
+      quizQuestionRows,
+      "ON CONFLICT (quiz_id, question_id) DO NOTHING",
+    );
+
+    if (attemptRows.length) {
+      await insertRows(
+        client,
+        "attempts",
+        [
+          "user_id",
+          "quiz_id",
+          "status",
+          "started_at",
+          "submitted_at",
+          "time_limit_seconds",
+          "remaining_seconds",
+          "score_raw",
+          "score_percent",
+          "correct_count",
+          "total_questions",
+          "xp_earned",
+          "created_at",
+        ],
+        attemptRows,
+      );
+    }
+
+    if (xpRows.length) {
+      await insertRows(
+        client,
+        "xp_events",
+        ["user_id", "source", "amount", "metadata", "created_at"],
+        xpRows,
+      );
+    }
+
+    await client.query("COMMIT");
+
     console.log(
-      `Seed complete: ${subjects.length} subjects, ${students.length} students, ${quizzes.length} quizzes.`,
+      `Seed complete: ${subjects.length} subjects, ${students.length} students, ${config.quizzes} quizzes.`,
     );
     console.log("Login creds: staff@baihoc.dev / Password123!");
     console.log("Sample student: student.1@baihoc.dev / Password123!");
   } catch (error) {
+    await client.query("ROLLBACK");
     console.error("Seed failed:", error.message);
     process.exitCode = 1;
   } finally {
@@ -223,174 +351,105 @@ function parseArgs(argv) {
   }, {});
 }
 
-async function ensureUser(client, input) {
-  const existing = await client.query(
-    `SELECT id, email, full_name FROM users WHERE email = $1 LIMIT 1`,
-    [input.email],
-  );
-  if (existing.rows[0]) {
-    return existing.rows[0];
-  }
-
-  const passwordHash = input.password
-    ? bcrypt.hashSync(input.password, 10)
-    : null;
-
+async function upsertStaff(client, passwordHash) {
   const res = await client.query(
     `INSERT INTO users (
       email, password_hash, full_name, role, tier, status,
       email_verified_at, profile_completed
     ) VALUES (
       $1, $2, $3,
-      $4::user_role,
-      $5::user_tier,
-      $6::user_status,
+      'staff'::user_role,
+      'paid'::user_tier,
+      'active'::user_status,
       now(),
       true
-    ) RETURNING id, email, full_name`,
-    [
-      input.email,
-      passwordHash,
-      input.fullName,
-      input.role,
-      input.tier,
-      input.status,
-    ],
+    )
+    ON CONFLICT (email) DO UPDATE
+      SET role = 'staff',
+          tier = 'paid',
+          status = 'active',
+          full_name = EXCLUDED.full_name,
+          email_verified_at = COALESCE(users.email_verified_at, now()),
+          profile_completed = true
+    RETURNING id, email, full_name`,
+    ["staff@baihoc.dev", passwordHash, "BaiHoc Staff"],
   );
   return res.rows[0];
 }
 
-async function ensureSubject(client, name, slug) {
-  const existing = await client.query(
-    `SELECT id, name, slug FROM subjects WHERE slug = $1 LIMIT 1`,
-    [slug],
+async function insertUsers(client, users) {
+  if (!users.length) return;
+  const columns = [
+    "email",
+    "password_hash",
+    "full_name",
+    "role",
+    "tier",
+    "status",
+    "email_verified_at",
+    "profile_completed",
+  ];
+  const rows = users.map((user) => [
+    user.email,
+    user.passwordHash,
+    user.fullName,
+    user.role,
+    user.tier,
+    user.status,
+    new Date().toISOString(),
+    true,
+  ]);
+  await insertRows(
+    client,
+    "users",
+    columns,
+    rows,
+    "ON CONFLICT (email) DO NOTHING",
   );
-  if (existing.rows[0]) return existing.rows[0];
+}
 
+async function fetchUsersByEmail(client, emails) {
+  if (!emails.length) return [];
+  const res = await client.query(
+    `SELECT id, email, full_name FROM users WHERE email = ANY($1)`,
+    [emails],
+  );
+  return res.rows;
+}
+
+async function upsertSubjects(client, seeds) {
+  const values = [];
+  const placeholders = seeds.map((seed, index) => {
+    values.push(seed.name, seed.slug);
+    const base = index * 2;
+    return `($${base + 1}, $${base + 2})`;
+  });
   const res = await client.query(
     `INSERT INTO subjects (name, slug)
-     VALUES ($1, $2)
+     VALUES ${placeholders.join(", ")}
+     ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
      RETURNING id, name, slug`,
-    [name, slug],
-  );
-  return res.rows[0];
-}
-
-async function insertQuestion(client, input) {
-  const res = await client.query(
-    `INSERT INTO questions (
-      subject_id, default_difficulty, type, stem, explanation, status,
-      tags, default_score, created_by, search_vector
-    ) VALUES (
-      $1, $2::difficulty_level, 'mcq_single', $3, $4, 'active',
-      $5::text[], 1, $6,
-      to_tsvector('simple', coalesce($3, '') || ' ' || coalesce($4, ''))
-    ) RETURNING id`,
-    [
-      input.subjectId,
-      input.difficulty,
-      input.stem,
-      input.explanation,
-      [input.subjectSlug],
-      input.createdBy,
-    ],
-  );
-  return res.rows[0].id;
-}
-
-async function insertQuiz(client, input) {
-  const res = await client.query(
-    `INSERT INTO quizzes (
-      title, description, subject_id, difficulty, visibility, status,
-      is_challenge, estimated_time_seconds, rating_count, rating_avg,
-      created_by, created_at, updated_at, published_at, search_vector
-    ) VALUES (
-      $1, $2, $3,
-      $4::difficulty_level, $5::quiz_visibility, 'published',
-      $6, $7, 0, 0,
-      $8, $9, $10, $10,
-      to_tsvector('simple', coalesce($1, '') || ' ' || coalesce($2, ''))
-    ) RETURNING id`,
-    [
-      input.title,
-      input.description,
-      input.subjectId,
-      input.difficulty,
-      input.visibility,
-      input.isChallenge,
-      input.estimatedTimeSeconds,
-      input.createdBy,
-      input.createdAt,
-      input.updatedAt,
-    ],
-  );
-  return { id: res.rows[0].id };
-}
-
-async function insertChallenge(client, input) {
-  await client.query(
-    `INSERT INTO challenge_settings (quiz_id, start_at, end_at, time_limit_seconds, rules)
-     VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (quiz_id) DO NOTHING`,
-    [input.quizId, input.startAt, input.endAt, input.timeLimitSeconds, {}],
-  );
-}
-
-async function insertQuizQuestions(client, quizId, questionIds) {
-  if (!questionIds.length) return;
-  const values = [];
-  const params = [];
-  let idx = 1;
-  questionIds.forEach((questionId, position) => {
-    params.push(`($${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4})`);
-    values.push(quizId, questionId, position + 1, null, true);
-    idx += 5;
-  });
-  await client.query(
-    `INSERT INTO quiz_questions (quiz_id, question_id, position, score, required)
-     VALUES ${params.join(", ")}
-     ON CONFLICT (quiz_id, question_id) DO NOTHING`,
     values,
   );
+  return res.rows;
 }
 
-async function insertAttempts(client, input) {
-  for (const user of input.users) {
-    const startedAt = shiftDate(input.updatedAt, -randomInt(1, 14));
-    const submittedAt = shiftDate(startedAt, randomInt(0, 2));
-    const correct = randomInt(0, input.totalQuestions);
-    const percent = Math.round((correct / input.totalQuestions) * 100);
-    const xp = randomInt(10, 80);
-
-    await client.query(
-      `INSERT INTO attempts (
-        user_id, quiz_id, status, started_at, submitted_at,
-        time_limit_seconds, remaining_seconds,
-        score_raw, score_percent, correct_count, total_questions, xp_earned
-      ) VALUES (
-        $1, $2, 'submitted', $3, $4,
-        $5, 0,
-        $6, $7, $8, $9, $10
-      )`,
-      [
-        user.id,
-        input.quizId,
-        startedAt,
-        submittedAt,
-        input.estimatedTimeSeconds,
-        correct,
-        percent,
-        correct,
-        input.totalQuestions,
-        xp,
-      ],
-    );
-
-    await client.query(
-      `INSERT INTO xp_events (user_id, source, amount, metadata)
-       VALUES ($1, 'attempt', $2, $3)`,
-      [user.id, xp, { quizId: input.quizId }],
-    );
+async function insertRows(client, table, columns, rows, conflictClause = "") {
+  if (!rows.length) return;
+  const batchSize = 500;
+  for (let i = 0; i < rows.length; i += batchSize) {
+    const batch = rows.slice(i, i + batchSize);
+    const values = [];
+    const placeholders = batch.map((row, rowIndex) => {
+      const base = rowIndex * columns.length;
+      row.forEach((value) => values.push(value));
+      const params = row.map((_, colIndex) => `$${base + colIndex + 1}`);
+      return `(${params.join(", ")})`;
+    });
+    const sql = `INSERT INTO ${table} (${columns.join(", ")}) VALUES ${
+      placeholders.join(", ")
+    } ${conflictClause}`;
+    await client.query(sql, values);
   }
 }
 
@@ -431,6 +490,23 @@ function shiftDate(isoString, days) {
   const date = new Date(isoString);
   date.setDate(date.getDate() + days);
   return date.toISOString();
+}
+
+function pickSubjects(subjects, rate) {
+  if (Math.random() > rate) return [pick(subjects)];
+  const total = randomInt(2, Math.min(3, subjects.length));
+  return sample(subjects, total);
+}
+
+function distribute(total, buckets) {
+  const base = Array.from({ length: buckets }, () => 1);
+  let remaining = Math.max(total - buckets, 0);
+  while (remaining > 0) {
+    const idx = randomInt(0, buckets - 1);
+    base[idx] += 1;
+    remaining -= 1;
+  }
+  return base;
 }
 
 main();
