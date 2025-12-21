@@ -44,6 +44,7 @@ beforeEach(() => {
 
 describe("questionService.updateQuestion", () => {
   it("preserves options=null when switching to short_answer", async () => {
+    vi.mocked(questionRepo.getQuestionDetail).mockResolvedValue(dummyDetail);
     vi.mocked(questionRepo.updateQuestion).mockResolvedValue(dummyDetail);
 
     await updateQuestion("q1", {
@@ -66,6 +67,7 @@ describe("questionService.updateQuestion", () => {
   });
 
   it("rejects MCQ updates with options=null", async () => {
+    vi.mocked(questionRepo.getQuestionDetail).mockResolvedValue(dummyDetail);
     await expect(
       updateQuestion("q1", {
         type: "mcq_single",
