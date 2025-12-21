@@ -11,10 +11,8 @@ import type {
   ShortAnswerKey,
 } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import styles from "./question-editor-screen.module.css";
-
-type DashboardNavItems = NonNullable<Parameters<typeof DashboardShell>[0]["navItems"]>;
 
 type QuestionEditorScreenProps =
   | {
@@ -44,16 +42,6 @@ type AnswerDraft = {
   acceptableAnswer: string;
   caseSensitive: boolean;
 };
-
-const staffNavItems = [
-  { key: "overview", label: "Tổng quan", href: "/staff/dashboard" },
-  { key: "quizzes", label: "Tất cả quiz", href: "/staff/quizzes" },
-  { key: "question-bank", label: "Kho câu hỏi", href: "/staff/questions" },
-  { key: "students", label: "Quản lý học sinh", href: "/staff/students" },
-  { key: "leaderboard", label: "Bảng xếp hạng", href: "/staff/leaderboard" },
-  { key: "analytics", label: "Phân tích thống kê", href: "/staff/analytics" },
-  { key: "settings", label: "Cài đặt", href: "/staff/settings" },
-] satisfies DashboardNavItems;
 
 export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
   const router = useRouter();
@@ -312,9 +300,8 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
   };
 
   return (
-    <DashboardShell
-      activeNav="question-bank"
-      navItems={staffNavItems}
+    <StaffShell
+      activeNav="questions"
       userEmail={props.session.email}
       userName={displayName}
       avatarUrl={props.session.avatarUrl}
@@ -727,7 +714,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
           ) : null}
         </section>
       </div>
-    </DashboardShell>
+    </StaffShell>
   );
 }
 

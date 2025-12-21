@@ -6,16 +6,14 @@ import type { SessionPayload } from "@/application/infra/auth/session";
 import type { DifficultyLevel } from "@/application/models/enums";
 import type { Question } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { QuizPagination } from "@/components/quiz-catalog/quiz-pagination";
+import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import {
   ManageQuestionsFilters,
   type QuestionStatusFilter,
 } from "./manage-questions-filters";
 import styles from "./manage-questions-screen.module.css";
 import { QuestionTable } from "./question-table";
-
-type DashboardNavItems = NonNullable<Parameters<typeof DashboardShell>[0]["navItems"]>;
 
 type ManageQuestionsScreenProps = {
   session: SessionPayload;
@@ -24,16 +22,6 @@ type ManageQuestionsScreenProps = {
   initialTotal: number;
   initialLimit: number;
 };
-
-const staffNavItems = [
-  { key: "overview", label: "Tổng quan", href: "/staff/dashboard" },
-  { key: "quizzes", label: "Tất cả quiz", href: "/staff/quizzes" },
-  { key: "question-bank", label: "Kho câu hỏi", href: "/staff/questions" },
-  { key: "students", label: "Quản lý học sinh", href: "/staff/students" },
-  { key: "leaderboard", label: "Bảng xếp hạng", href: "/staff/leaderboard" },
-  { key: "analytics", label: "Phân tích thống kê", href: "/staff/analytics" },
-  { key: "settings", label: "Cài đặt", href: "/staff/settings" },
-] satisfies DashboardNavItems;
 
 export function ManageQuestionsScreen({
   session,
@@ -121,9 +109,8 @@ export function ManageQuestionsScreen({
   };
 
   return (
-    <DashboardShell
-      activeNav="question-bank"
-      navItems={staffNavItems}
+    <StaffShell
+      activeNav="questions"
       userEmail={session.email}
       userName={displayName}
       avatarUrl={session.avatarUrl}
@@ -195,7 +182,7 @@ export function ManageQuestionsScreen({
           />
         </section>
       </div>
-    </DashboardShell>
+    </StaffShell>
   );
 }
 
