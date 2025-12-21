@@ -15,6 +15,8 @@ import {
 import styles from "./manage-questions-screen.module.css";
 import { QuestionTable } from "./question-table";
 
+type DashboardNavItems = NonNullable<Parameters<typeof DashboardShell>[0]["navItems"]>;
+
 type ManageQuestionsScreenProps = {
   session: SessionPayload;
   subjects: Subject[];
@@ -24,14 +26,14 @@ type ManageQuestionsScreenProps = {
 };
 
 const staffNavItems = [
-  { key: "overview", label: "Tổng quan" },
+  { key: "overview", label: "Tổng quan", href: "/staff/dashboard" },
   { key: "quizzes", label: "Tất cả quiz", href: "/staff/quizzes" },
   { key: "question-bank", label: "Kho câu hỏi", href: "/staff/questions" },
-  { key: "students", label: "Quản lý học sinh" },
-  { key: "leaderboard", label: "Bảng xếp hạng" },
-  { key: "analytics", label: "Phân tích thống kê" },
-  { key: "settings", label: "Cài đặt" },
-];
+  { key: "students", label: "Quản lý học sinh", href: "/staff/students" },
+  { key: "leaderboard", label: "Bảng xếp hạng", href: "/staff/leaderboard" },
+  { key: "analytics", label: "Phân tích thống kê", href: "/staff/analytics" },
+  { key: "settings", label: "Cài đặt", href: "/staff/settings" },
+] satisfies DashboardNavItems;
 
 export function ManageQuestionsScreen({
   session,
