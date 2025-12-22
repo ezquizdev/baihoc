@@ -7,6 +7,9 @@
 - `startOrResumeAttempt` now returns the attempt `status` so the UI can redirect without an extra attempt-state fetch.
 - Removed stale `CHALLENGE_ALREADY_ATTEMPTED` messaging and added clearer messages for challenge schedule/time-limit configuration errors.
 
+### fix(staff): add profile to staff nav
+- Added “Hồ sơ” to the staff sidebar nav so staff profile pages have the correct active highlight.
+
 ## 2025-12-25
 
 ### feat(staff-dashboard): add staff overview and role redirects

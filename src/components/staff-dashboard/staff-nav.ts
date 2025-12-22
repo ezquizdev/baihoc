@@ -7,6 +7,7 @@ export type StaffNavKey =
   | "students"
   | "leaderboard"
   | "analytics"
+  | "profile"
   | "settings";
 
 type NavHref = LinkProps<string>["href"];
@@ -22,5 +23,6 @@ export const staffNavItems: Array<{
   { key: "students", label: "Quản lý học sinh", href: "/staff/students" },
   { key: "leaderboard", label: "Bảng xếp hạng", href: "/staff/leaderboard" },
   { key: "analytics", label: "Phân tích thống kê", href: "/staff/analytics" },
+  { key: "profile", label: "Hồ sơ", href: "/profile" },
   { key: "settings", label: "Cài đặt", href: "/staff/settings" },
 ];
