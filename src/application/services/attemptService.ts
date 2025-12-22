@@ -18,6 +18,7 @@ import type {
   Attempt,
   AttemptAnswer,
   AttemptStateResponse,
+  AttemptStatus,
 } from "@/application/models/attempt";
 import type { QuestionType } from "@/application/models/enums";
 import { ServiceError } from "@/application/services/errors";
@@ -25,6 +26,7 @@ import { ServiceError } from "@/application/services/errors";
 type StartAttemptResult = {
   attemptId: string;
   resumed: boolean;
+  status: AttemptStatus;
 };
 
 type AutosaveInput = {
@@ -51,12 +53,12 @@ export async function startOrResumeAttempt(
   if (quizMeta.isChallenge) {
     const existing = await findChallengeAttempt(userId, quizId);
     if (existing) {
-      return { attemptId: existing.id, resumed: true };
+      return { attemptId: existing.id, resumed: true, status: existing.status };
     }
   } else {
     const existing = await findInProgressAttempt(userId, quizId);
     if (existing) {
-      return { attemptId: existing.id, resumed: true };
+      return { attemptId: existing.id, resumed: true, status: existing.status };
     }
   }
 
@@ -108,7 +110,7 @@ export async function startOrResumeAttempt(
     totalQuestions: quizMeta.totalQuestions,
   });
 
-  return { attemptId: created.id, resumed: false };
+  return { attemptId: created.id, resumed: false, status: created.status };
 }
 
 export async function getAttemptState(

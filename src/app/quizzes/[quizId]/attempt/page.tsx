@@ -19,8 +19,12 @@ export default async function QuizAttemptStartPage({
   const displayName = session.fullName ?? session.email.split("@")[0];
 
   let attemptId: string;
+  let attemptStatus: string;
   try {
-    ({ attemptId } = await controllerStartAttempt(session.sub, quizId));
+    ({ attemptId, status: attemptStatus } = await controllerStartAttempt(
+      session.sub,
+      quizId,
+    ));
   } catch (error) {
     const message = getAttemptStartMessage(error);
     return (
@@ -61,6 +65,9 @@ export default async function QuizAttemptStartPage({
     );
   }
 
+  if (attemptStatus !== "in_progress") {
+    redirect(`/attempts/${attemptId}/results`);
+  }
   redirect(`/attempts/${attemptId}`);
 }
 
@@ -77,10 +84,14 @@ function getAttemptStartMessage(error: unknown) {
       return "Quiz không tồn tại hoặc chưa được phát hành.";
     case "QUIZ_NO_QUESTIONS":
       return "Quiz hiện chưa có câu hỏi để làm.";
-    case "CHALLENGE_ALREADY_ATTEMPTED":
-      return "Bạn đã tham gia thử thách này trước đó.";
     case "CHALLENGE_NOT_ACTIVE":
       return "Thử thách chưa bắt đầu hoặc đã kết thúc.";
+    case "CHALLENGE_TIME_LIMIT_MISSING":
+      return "Thử thách chưa được cấu hình thời gian làm bài.";
+    case "CHALLENGE_SCHEDULE_MISSING":
+      return "Thử thách chưa được cấu hình lịch diễn ra.";
+    case "CHALLENGE_SCHEDULE_INVALID":
+      return "Lịch thử thách không hợp lệ.";
     default:
       return "Không thể bắt đầu quiz. Vui lòng thử lại.";
   }
