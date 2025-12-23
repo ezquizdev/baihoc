@@ -2,6 +2,10 @@
 
 ## 2025-12-26
 
+### fix(a11y): wire input labels and errors
+- Inputs now render a proper `<label htmlFor>` (avoids nested labels) and generate stable IDs.
+- Error/helper text is now connected via `aria-describedby`/`aria-errormessage`.
+
 ### fix(attempt): redirect completed attempts to results on start
 - `/quizzes/[quizId]/attempt` now routes straight to `/attempts/[attemptId]/results` when the resumed attempt is not `in_progress`.
 - `startOrResumeAttempt` now returns the attempt `status` so the UI can redirect without an extra attempt-state fetch.
