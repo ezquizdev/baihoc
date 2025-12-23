@@ -15,13 +15,21 @@ type QuizModalProps = {
 
 export function QuizModal({ quiz, onClose, onStart }: QuizModalProps) {
   const primaryRef = useRef<HTMLButtonElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!quiz) return;
+    restoreFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     document.body.classList.add("modal-open");
     primaryRef.current?.focus();
     return () => {
       document.body.classList.remove("modal-open");
+      restoreFocusRef.current?.focus?.();
+      restoreFocusRef.current = null;
     };
   }, [quiz]);
 
@@ -29,7 +37,36 @@ export function QuizModal({ quiz, onClose, onStart }: QuizModalProps) {
     if (!quiz) return;
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        event.preventDefault();
         onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const container = dialogRef.current;
+      if (!container) return;
+      const focusables = getFocusableElements(container);
+      if (focusables.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      const isShift = event.shiftKey;
+
+      if (isShift) {
+        if (active === first || !container.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (active === last || !container.contains(active)) {
+        event.preventDefault();
+        first.focus();
       }
     };
     document.addEventListener("keydown", handleKey);
@@ -59,6 +96,7 @@ export function QuizModal({ quiz, onClose, onStart }: QuizModalProps) {
       <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
       <div
         className={styles.dialog}
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="quiz-modal-title"
@@ -155,6 +193,20 @@ export function QuizModal({ quiz, onClose, onStart }: QuizModalProps) {
       </div>
     </div>
   );
+}
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  const selectors = [
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    "[tabindex]:not([tabindex='-1'])",
+  ];
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(selectors.join(",")),
+  ).filter((node) => node.getClientRects().length > 0);
 }
 
 function topicToneClass(slug: string, moduleStyles: typeof styles) {
