@@ -6,6 +6,9 @@
 - Inputs now render a proper `<label htmlFor>` (avoids nested labels) and generate stable IDs.
 - Error/helper text is now connected via `aria-describedby`/`aria-errormessage`.
 
+### fix(auth): revoke avatar preview URLs
+- Revokes old `blob:` preview URLs when changing/removing the avatar during registration to avoid leaking object URLs.
+
 ### fix(attempt): redirect completed attempts to results on start
 - `/quizzes/[quizId]/attempt` now routes straight to `/attempts/[attemptId]/results` when the resumed attempt is not `in_progress`.
 - `startOrResumeAttempt` now returns the attempt `status` so the UI can redirect without an extra attempt-state fetch.

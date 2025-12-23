@@ -26,6 +26,16 @@ export function ProfileFields({
   showTerms = true,
   fileInputRef,
 }: Props) {
+  const revokeObjectUrl = (url: string) => {
+    if (!url) return;
+    if (!url.startsWith("blob:")) return;
+    try {
+      URL.revokeObjectURL(url);
+    } catch {
+      // ignore
+    }
+  };
+
   const handleAvatarFile = (file: File | undefined | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -39,6 +49,7 @@ export function ProfileFields({
       return;
     }
     setError(null);
+    revokeObjectUrl(values.avatarPreview);
     onChange({
       avatarFile: file,
       avatarPreview: URL.createObjectURL(file),
@@ -46,6 +57,7 @@ export function ProfileFields({
   };
 
   const resetAvatar = () => {
+    revokeObjectUrl(values.avatarPreview);
     onChange({ avatarFile: null, avatarPreview: "" });
     if (fileInputRef?.current) fileInputRef.current.value = "";
   };
