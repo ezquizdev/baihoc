@@ -6,6 +6,10 @@
 - Added quiz subject breakdown aggregation in repo/service/controller layers.
 - Exposed `/api/catalog/quizzes/[quizId]/subjects` for per-quiz subject counts.
 
+### fix(ui): adjust catalog filter wrap and badges
+- Forced filter row to wrap below tabs earlier to prevent overlap at tight widths.
+- Reduced subject dropdown option size and allowed subject badges to wrap to two lines.
+
 ## 2025-12-20
 
 ### feat(ui): refresh quiz card layout
