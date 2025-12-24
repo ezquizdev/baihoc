@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const optionalNonEmptyString = z
+  .string()
+  .transform((value) => value.trim() || undefined)
+  .optional();
+
 const serverSchema = z.object({
   DATABASE_URL: z.string().url(),
   SUPABASE_URL: z.string().url(),
@@ -9,9 +14,9 @@ const serverSchema = z.object({
   BREVO_API_KEY: z.string().min(1),
   BREVO_SENDER_EMAIL: z.string().email(),
   BREVO_SENDER_NAME: z.string().min(1),
-  GOOGLE_CLIENT_ID: z.string().min(1),
-  GOOGLE_CLIENT_SECRET: z.string().min(1),
-  LLM_API_KEY: z.string().min(1),
+  GOOGLE_CLIENT_ID: optionalNonEmptyString,
+  GOOGLE_CLIENT_SECRET: optionalNonEmptyString,
+  LLM_API_KEY: optionalNonEmptyString,
 });
 
 const publicSchema = z.object({
@@ -19,7 +24,7 @@ const publicSchema = z.object({
   NEXT_PUBLIC_LOG_LEVEL: z
     .enum(["debug", "info", "warn", "error"])
     .default("info"),
-  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().min(1),
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: optionalNonEmptyString,
 });
 
 const mergedSchema = serverSchema.merge(publicSchema);
