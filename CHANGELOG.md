@@ -2,6 +2,9 @@
 
 ## 2025-12-24
 
+### fix(ui): make quiz cards open preview
+- Made the entire quiz card clickable to open the quick-view modal; CTA now triggers a placeholder start action.
+
 ### fix(ui): remove challenge CTA arrows
 - Removed decorative arrow glyphs from the challenge quiz card CTA button.
 

@@ -457,10 +457,16 @@
   cursor: pointer;
 }
 
+.quizCard:focus-within {
+  outline: 3px solid rgba(40, 104, 230, 0.32);
+  outline-offset: 3px;
+}
+
 .quizCardButton {
   position: absolute;
   inset: 0;
   border: none;
+  border-radius: inherit;
   background: transparent;
   cursor: pointer;
   z-index: 0;
@@ -510,6 +516,7 @@
   position: relative;
   z-index: 1;
   margin-bottom: 6px;
+  pointer-events: none;
 }
 
 .quizDate {
@@ -546,6 +553,7 @@
   display: grid;
   place-items: center;
   color: #2b3b55;
+  pointer-events: auto;
 }
 
 .bookmarkActive {
@@ -561,6 +569,7 @@
   min-width: 0;
   position: relative;
   z-index: 1;
+  pointer-events: none;
 }
 
 .quizTitle {
@@ -790,6 +799,7 @@
   gap: 10px;
   position: relative;
   z-index: 1;
+  pointer-events: auto;
 }
 
 .quizCta:hover {

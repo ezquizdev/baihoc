@@ -10,9 +10,11 @@ import styles from "./quiz-catalog.module.css";
 export function QuizCard({
   quiz,
   onSelect,
+  onStart,
 }: {
   quiz: QuizCatalogItem;
   onSelect?: (quiz: QuizCatalogItem) => void;
+  onStart?: (quiz: QuizCatalogItem) => void;
 }) {
   const [bookmarked, setBookmarked] = useState(false);
   const minutes = quiz.estimatedTimeSeconds
@@ -32,6 +34,14 @@ export function QuizCard({
     onSelect?.(quiz);
   };
 
+  const handleStart = () => {
+    if (onStart) {
+      onStart(quiz);
+      return;
+    }
+    window.alert("Tính năng làm bài đang được phát triển.");
+  };
+
   return (
     <article
       className={`${styles.quizCard} ${
@@ -41,7 +51,7 @@ export function QuizCard({
       <button
         type="button"
         className={styles.quizCardButton}
-        aria-label={`Quiz ${quiz.title}`}
+        aria-label={`Xem trước quiz ${quiz.title}`}
         onClick={handleSelect}
       />
       <div className={styles.quizHead}>
@@ -112,7 +122,7 @@ export function QuizCard({
           }`}
           onClick={(event) => {
             event.stopPropagation();
-            handleSelect();
+            handleStart();
           }}
         >
           {ctaLabel}
