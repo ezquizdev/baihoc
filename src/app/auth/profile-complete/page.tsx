@@ -20,10 +20,6 @@ export default async function ProfileCompletePage() {
       err instanceof Error ? err.message : "Không thể tải thông tin hồ sơ";
   }
   return (
-    <ProfileCompleteForm
-      userId={session.sub}
-      initialProfile={initialProfile}
-      errorMessage={error}
-    />
+    <ProfileCompleteForm initialProfile={initialProfile} errorMessage={error} />
   );
 }

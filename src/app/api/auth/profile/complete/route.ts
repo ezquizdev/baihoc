@@ -11,13 +11,16 @@ export async function POST(request: Request) {
     if (session instanceof NextResponse) return session;
 
     const body = await request.json();
-    if (!body.userId || !body.fullName) {
-      return NextResponse.json(
-        { error: "Thiếu mã người dùng hoặc họ tên" },
-        { status: 400 },
-      );
+    if (!body.fullName) {
+      return NextResponse.json({ error: "Thiếu họ tên" }, { status: 400 });
     }
-    const { user, sessionUser } = await controllerCompleteProfile(body);
+    const { user, sessionUser } = await controllerCompleteProfile({
+      userId: session.sub,
+      fullName: body.fullName,
+      school: body.school ?? null,
+      dateOfBirth: body.dateOfBirth ?? null,
+      avatarUrl: body.avatarUrl ?? null,
+    });
     await setSession(toSessionPayload(sessionUser));
     return NextResponse.json(
       { userId: user.id, profileCompleted: sessionUser.profileCompleted },
