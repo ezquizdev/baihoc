@@ -28,8 +28,8 @@ type QuizFiltersProps = {
 };
 
 const difficultyLabels: Record<DifficultyLabel, string> = {
-  easy: "Dễ",
-  medium: "Trung bình",
+  easy: "Nhẹ",
+  medium: "Vừa",
   hard: "Khó",
 };
 

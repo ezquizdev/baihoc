@@ -20,6 +20,7 @@
 - Allowed topbar search to expand to all remaining horizontal space.
 - Hid profile name on small screens (kept search in the topbar row).
 - Increased quiz subject badge max width to 110px for better wrapping.
+- Updated subject and difficulty badge labels/colors/icons to match the new spec (incl. “Tổng hợp” yellow-on-black).
 
 ## 2025-12-20
 

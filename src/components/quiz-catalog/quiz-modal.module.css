@@ -198,13 +198,13 @@
 }
 
 .topicEn .topicLeft {
-  background: #1e6cff;
-  color: #ffd400;
+  background: #ffd400;
+  color: #2f66ff;
 }
 
 .topicEn .topicFlag::before {
   content: "●";
-  color: #ffd400;
+  color: #2f66ff;
   font-size: 10px;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .topicSci .topicLeft {
-  background: #1e6cff;
+  background: #2f66ff;
   color: #ffd400;
 }
 
@@ -229,6 +229,17 @@
   content: "▲";
   color: #ffd400;
   font-size: 10px;
+}
+
+.topicMixed .topicLeft {
+  background: #0e1b2b;
+  color: #ffd400;
+}
+
+.topicMixed .topicFlag::before {
+  content: "★";
+  color: #ffd400;
+  font-size: 12px;
 }
 
 .right {

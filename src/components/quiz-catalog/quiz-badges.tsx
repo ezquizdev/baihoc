@@ -15,11 +15,11 @@ function difficultyConfig(
   if (!Number.isFinite(level)) return null;
   const safeLevel = Math.min(Math.max(Math.round(level), 1), 5);
   if (safeLevel <= 2) {
-    return { label: "Dễ", stars: safeLevel, className: styles.difficultyEasy };
+    return { label: "Nhẹ", stars: safeLevel, className: styles.difficultyEasy };
   }
   if (safeLevel <= 4) {
     return {
-      label: "Trung bình",
+      label: "Vừa",
       stars: safeLevel,
       className: styles.difficultyMedium,
     };
