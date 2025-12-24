@@ -12,12 +12,12 @@ describe("middleware", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
-  it("clears invalid session cookie and continues for non-auth path", async () => {
-    const req = createRequest("/dashboard", {
+  it("clears invalid session cookie and continues on auth path", async () => {
+    const req = createRequest("/auth/login", {
       cookies: { baihoc_session: "invalid" },
     });
     const res = (await middleware(req)) as NextResponse;
-    // middleware returns NextResponse.next(); invalid cookie should be cleared
+    // middleware should clear invalid cookie
     const cleared = res.cookies.get("baihoc_session");
     expect(cleared?.value ?? "").toBe("");
   });

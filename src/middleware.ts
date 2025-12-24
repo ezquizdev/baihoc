@@ -5,25 +5,12 @@ import { env } from "@/core/env";
 const SESSION_COOKIE = "baihoc_session";
 
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const isAuthPath = pathname.startsWith("/auth");
-  const hasFileExtension = /\.[^/]+$/.test(pathname);
-  const isAsset =
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/public") ||
-    pathname === "/favicon.ico" ||
-    hasFileExtension;
-
-  if (isAsset) return NextResponse.next();
-
   const session = await verifySession(req);
-  if (isAuthPath) return handleAuthPath(req, session);
-  return NextResponse.next();
+  return handleAuthPath(req, session);
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/auth/:path*"],
 };
 
 async function verifySession(req: NextRequest) {
