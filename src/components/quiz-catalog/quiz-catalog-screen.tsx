@@ -74,7 +74,6 @@ export function QuizCatalogScreen({
       initialLoadRef.current = false;
       return;
     }
-    void refreshKey;
 
     const controller = new AbortController();
     const run = async () => {
@@ -86,6 +85,9 @@ export function QuizCatalogScreen({
         params.set("offset", String((page - 1) * PAGE_SIZE));
         params.set("status", status);
         params.set("sort", sort);
+        if (refreshKey > 0) {
+          params.set("_refresh", String(refreshKey));
+        }
         if (debouncedSearch.trim()) {
           params.set("search", debouncedSearch.trim());
         }

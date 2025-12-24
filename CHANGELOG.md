@@ -13,6 +13,9 @@
 - Keeps keyboard focus inside the quiz preview modal and restores focus on close.
 - Handles `Escape` to close the dialog without leaking the key event to the page.
 
+### fix(catalog): force reload on refresh
+- Catalog fetch now includes a `_refresh` query param so manual refreshes don't get stuck behind cached responses.
+
 ### fix(attempt): redirect completed attempts to results on start
 - `/quizzes/[quizId]/attempt` now routes straight to `/attempts/[attemptId]/results` when the resumed attempt is not `in_progress`.
 - `startOrResumeAttempt` now returns the attempt `status` so the UI can redirect without an extra attempt-state fetch.
