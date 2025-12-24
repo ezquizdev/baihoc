@@ -2,6 +2,9 @@
 
 ## 2025-12-24
 
+### fix(ui): align modal right section on mobile
+- Switched the modal right-side block (difficulty + meta) to a side-by-side layout on small screens.
+
 ### fix(ui): center modal topic counts on mobile
 - Centered the per-topic question count text within the remaining row space on small screens.
 
