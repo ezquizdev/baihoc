@@ -565,3 +565,36 @@
     display: none;
   }
 }
+
+@media (max-width: 760px) {
+  .profileSummary {
+    min-width: 0;
+    padding: 6px;
+  }
+
+  .profileMeta {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .navButton {
+    order: 1;
+  }
+
+  .topActions {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .search {
+    order: 3;
+    flex-basis: 100%;
+    width: 100%;
+  }
+}
