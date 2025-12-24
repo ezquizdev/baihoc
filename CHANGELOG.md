@@ -2,6 +2,9 @@
 
 ## 2025-12-24
 
+### fix(ui): remove challenge CTA arrows
+- Removed decorative arrow glyphs from the challenge quiz card CTA button.
+
 ### fix(ui): color quiz cards by type
 - Updated quiz catalog cards to use yellow styling for challenge quizzes and blue styling for normal quizzes.
 

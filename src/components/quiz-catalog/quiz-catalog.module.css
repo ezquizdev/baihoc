@@ -800,35 +800,6 @@
   background: var(--brand-primary);
 }
 
-.quizCtaArrow {
-  width: 18px;
-  height: 12px;
-  position: relative;
-  flex: 0 0 auto;
-}
-
-.quizCtaArrow::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 196, 0, 0.95);
-  clip-path: polygon(
-    0 50%,
-    70% 0,
-    70% 35%,
-    100% 35%,
-    100% 65%,
-    70% 65%,
-    70% 100%
-  );
-  border-radius: 2px;
-  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.1);
-}
-
-.quizCtaArrowRight {
-  transform: scaleX(-1);
-}
-
 .leaderboard {
   padding: 12px;
   display: flex;

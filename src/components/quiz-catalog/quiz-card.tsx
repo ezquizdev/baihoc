@@ -116,15 +116,6 @@ export function QuizCard({
           }}
         >
           {ctaLabel}
-          {quiz.isChallenge ? (
-            <>
-              <span className={styles.quizCtaArrow} aria-hidden="true" />
-              <span
-                className={`${styles.quizCtaArrow} ${styles.quizCtaArrowRight}`}
-                aria-hidden="true"
-              />
-            </>
-          ) : null}
         </button>
       </div>
     </article>
