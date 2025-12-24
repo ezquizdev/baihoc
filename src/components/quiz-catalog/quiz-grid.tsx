@@ -21,14 +21,6 @@ export function QuizGrid({
   onSelect,
   onStart,
 }: QuizGridProps) {
-  if (isLoading) {
-    return (
-      <output className={styles.stateCard} aria-live="polite">
-        Đang tải danh sách quiz...
-      </output>
-    );
-  }
-
   if (error) {
     return (
       <div className={styles.stateCard} role="alert">
@@ -48,17 +40,29 @@ export function QuizGrid({
 
   if (!items.length) {
     return (
-      <output className={styles.stateCard}>Không tìm thấy quiz phù hợp.</output>
+      <output className={styles.stateCard}>
+        {isLoading
+          ? "Đang tải danh sách quiz..."
+          : "Không tìm thấy quiz phù hợp."}
+      </output>
     );
   }
 
   return (
-    <ul className={styles.quizGrid} aria-label="Danh sách quiz">
-      {items.map((quiz) => (
-        <li key={quiz.id} className={styles.quizGridItem}>
-          <QuizCard quiz={quiz} onSelect={onSelect} onStart={onStart} />
-        </li>
-      ))}
-    </ul>
+    <div className={styles.quizGridArea}>
+      <ul className={styles.quizGrid} aria-label="Danh sách quiz">
+        {items.map((quiz) => (
+          <li key={quiz.id} className={styles.quizGridItem}>
+            <QuizCard quiz={quiz} onSelect={onSelect} onStart={onStart} />
+          </li>
+        ))}
+      </ul>
+
+      {isLoading ? (
+        <output className={styles.quizGridLoading} aria-live="polite">
+          Đang tải danh sách quiz...
+        </output>
+      ) : null}
+    </div>
   );
 }

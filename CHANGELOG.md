@@ -2,6 +2,9 @@
 
 ## 2025-12-24
 
+### fix(ui): center catalog loading overlay
+- Switched quiz catalog loading state to an overlay so it stays centered without shifting the grid layout.
+
 ### fix(ui): show pagination for single page
 - Kept catalog pagination visible even when there is only 1 page (with prev/next disabled).
 
