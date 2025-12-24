@@ -466,7 +466,7 @@
   z-index: 0;
 }
 
-.quizCardAlt {
+.quizCardChallenge {
   background: #fff4c8;
 }
 
@@ -482,7 +482,7 @@
   pointer-events: none;
 }
 
-.quizCardAlt::before {
+.quizCardChallenge::before {
   background: rgba(255, 196, 0, 0.28);
 }
 
@@ -499,7 +499,7 @@
   pointer-events: none;
 }
 
-.quizCardAlt::after {
+.quizCardChallenge::after {
   background: rgba(47, 102, 255, 0);
 }
 

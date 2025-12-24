@@ -9,11 +9,9 @@ import styles from "./quiz-catalog.module.css";
 
 export function QuizCard({
   quiz,
-  tone,
   onSelect,
 }: {
   quiz: QuizCatalogItem;
-  tone?: "alt";
   onSelect?: (quiz: QuizCatalogItem) => void;
 }) {
   const [bookmarked, setBookmarked] = useState(false);
@@ -36,7 +34,9 @@ export function QuizCard({
 
   return (
     <article
-      className={`${styles.quizCard} ${tone === "alt" ? styles.quizCardAlt : ""}`}
+      className={`${styles.quizCard} ${
+        quiz.isChallenge ? styles.quizCardChallenge : ""
+      }`}
     >
       <button
         type="button"

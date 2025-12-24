@@ -2,6 +2,9 @@
 
 ## 2025-12-24
 
+### fix(ui): color quiz cards by type
+- Updated quiz catalog cards to use yellow styling for challenge quizzes and blue styling for normal quizzes.
+
 ### feat(user-admin): staff user management + allowlist backend
 - Added staff-only user admin APIs under `/api/staff/users/**` and `/api/staff/allowlist` with role/tier allowlist entries.
 - Added user admin services/controllers and audit logging for role/tier/status updates, email verification overrides, and reset triggers.
