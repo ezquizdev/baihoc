@@ -288,8 +288,8 @@
 }
 
 .search {
-  flex: 1 1 auto;
-  max-width: 760px;
+  flex: 1 1 0;
+  max-width: none;
   height: 40px;
   border-radius: 999px;
   background: var(--card);
@@ -299,7 +299,7 @@
   padding: 0 14px;
   gap: 12px;
   box-shadow: 0 10px 20px rgba(26, 46, 93, 0.05);
-  min-width: 180px;
+  min-width: 0;
 }
 
 .searchIcon {

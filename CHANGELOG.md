@@ -17,6 +17,7 @@
 - Switched filter wrapping to explicit 1-row/2-row/2x2/1-column layouts to avoid 3+1 rows.
 - Standardized filter dropdown widths/heights and moved wrap breakpoint earlier to prevent overlap.
 - Let flex wrapping + min-width drive row breaks and reduced breakpoint usage for filter layout.
+- Allowed topbar search to expand to all remaining horizontal space.
 
 ## 2025-12-20
 
