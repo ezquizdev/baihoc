@@ -27,8 +27,8 @@ import {
   insertUserStatusChange,
   listUserStatusChanges,
 } from "@/application/infra/db/userStatusRepo";
-import { ServiceError } from "@/application/services/errors";
 import { requestPasswordReset } from "@/application/services/authService";
+import { ServiceError } from "@/application/services/errors";
 import { normalizeEmail } from "@/application/utils/email";
 
 export async function listUsersWithTotal(filters: UserListFilters) {
