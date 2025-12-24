@@ -15,8 +15,8 @@ export function QuizPagination({
   pageSize,
   onPageChange,
 }: QuizPaginationProps) {
+  if (totalItems <= 0) return null;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  if (totalPages <= 1) return null;
 
   const pages = buildPages(page, totalPages);
 

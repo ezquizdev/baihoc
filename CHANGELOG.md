@@ -2,6 +2,9 @@
 
 ## 2025-12-24
 
+### fix(ui): show pagination for single page
+- Kept catalog pagination visible even when there is only 1 page (with prev/next disabled).
+
 ### fix(ui): add non-shifting card hover
 - Added a hover lift/shadow effect for quiz cards using transform to avoid layout reflow.
 
