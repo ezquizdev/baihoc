@@ -18,7 +18,7 @@
 - Standardized filter dropdown widths/heights and moved wrap breakpoint earlier to prevent overlap.
 - Let flex wrapping + min-width drive row breaks and reduced breakpoint usage for filter layout.
 - Allowed topbar search to expand to all remaining horizontal space.
-- Hid profile name on small screens and stacked search onto its own row on extra-small screens.
+- Hid profile name on small screens (kept search in the topbar row).
 
 ## 2025-12-20
 
