@@ -19,6 +19,7 @@
 - Let flex wrapping + min-width drive row breaks and reduced breakpoint usage for filter layout.
 - Allowed topbar search to expand to all remaining horizontal space.
 - Hid profile name on small screens (kept search in the topbar row).
+- Increased quiz subject badge max width to 110px for better wrapping.
 
 ## 2025-12-20
 
