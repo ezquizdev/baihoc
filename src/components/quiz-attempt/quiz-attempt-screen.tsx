@@ -63,41 +63,37 @@ export function QuizAttemptScreen({
       return message;
     };
 
-    const shouldConfirmForUrl = (url: string | URL | null | undefined) => {
-      if (!url) return false;
-      let targetUrl: URL | null = null;
+    const handleDocumentClick = (event: globalThis.MouseEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+      const anchor = target.closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      if (anchor.target === "_blank") return;
+      if (anchor.hasAttribute("download")) return;
+
+      let url: URL;
       try {
-        targetUrl = typeof url === "string" ? new URL(url, location.href) : url;
+        url = new URL(anchor.href);
       } catch {
-        targetUrl = null;
+        return;
       }
-      if (!targetUrl) return false;
       if (
-        targetUrl.pathname === window.location.pathname &&
-        targetUrl.search === window.location.search
+        url.pathname === window.location.pathname &&
+        url.search === window.location.search
       ) {
-        return false;
-      }
-      return true;
-    };
-
-    const originalPushState = window.history.pushState.bind(window.history);
-    const originalReplaceState = window.history.replaceState.bind(
-      window.history,
-    );
-
-    window.history.pushState = (state, title, url) => {
-      if (shouldConfirmForUrl(url) && !window.confirm(message)) {
         return;
       }
-      return originalPushState(state, title, url);
-    };
 
-    window.history.replaceState = (state, title, url) => {
-      if (shouldConfirmForUrl(url) && !window.confirm(message)) {
-        return;
-      }
-      return originalReplaceState(state, title, url);
+      if (window.confirm(message)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
     };
 
     const handlePopState = () => {
@@ -113,11 +109,11 @@ export function QuizAttemptScreen({
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("popstate", handlePopState);
+    document.addEventListener("click", handleDocumentClick, true);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       window.removeEventListener("popstate", handlePopState);
-      window.history.pushState = originalPushState;
-      window.history.replaceState = originalReplaceState;
+      document.removeEventListener("click", handleDocumentClick, true);
     };
   }, [leaveWarningEnabled]);
 
