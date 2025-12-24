@@ -27,6 +27,7 @@ import {
   insertUserStatusChange,
   listUserStatusChanges,
 } from "@/application/infra/db/userStatusRepo";
+import { ServiceError } from "@/application/services/errors";
 import { requestPasswordReset } from "@/application/services/authService";
 import { normalizeEmail } from "@/application/utils/email";
 
@@ -47,10 +48,7 @@ export async function updateUserAdmin(input: {
   actorUserId: string;
 }) {
   return withTransaction(async (client) => {
-    const current = await findUserById(input.userId, client);
-    if (!current) {
-      throw new Error("User not found");
-    }
+    const current = await getUserById(input.userId, client);
 
     const updated = await adminUpdateUser(
       input.userId,
@@ -119,6 +117,7 @@ export async function searchUserByEmail(email: string) {
 }
 
 export async function getUserHistory(userId: string) {
+  await getUserById(userId);
   const [membership, status] = await Promise.all([
     listMembershipHistory(userId),
     listUserStatusChanges(userId),
@@ -216,7 +215,9 @@ export async function addAllowlistBulk(
 
 export async function getUserById(userId: string, client?: PoolClient) {
   const user = await findUserById(userId, client);
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    throw new ServiceError("user_not_found", "User not found", 404);
+  }
   return user;
 }
 
