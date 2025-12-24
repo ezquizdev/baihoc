@@ -14,6 +14,7 @@
 ### fix(ui): align quiz catalog filter groups
 - Kept status tabs left-aligned without stretching full width.
 - Right-aligned filter controls and enabled clean wrapping with 1-per-row on small screens.
+- Switched filter wrapping to explicit 1-row/2-row/2x2/1-column layouts to avoid 3+1 rows.
 
 ## 2025-12-20
 
