@@ -526,6 +526,10 @@ describe("authService", () => {
     const stored = (
       userRepo as unknown as { __store: Record<string, MockUserRow> }
     ).__store["r@example.com"];
+    expect(stored.password_hash).toBeTruthy();
+    if (!stored.password_hash) {
+      throw new Error("Missing password hash");
+    }
     expect(await bcrypt.compare("NewPass123!", stored.password_hash)).toBe(
       true,
     );
