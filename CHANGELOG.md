@@ -11,6 +11,10 @@
 - Reduced subject dropdown option size and allowed subject badges to wrap to two lines.
 - Extended the wrap breakpoint so filters no longer overlap the tabs on wide screens.
 
+### fix(ui): align quiz catalog filter groups
+- Kept status tabs left-aligned without stretching full width.
+- Right-aligned filter controls and enabled clean wrapping with 1-per-row on small screens.
+
 ## 2025-12-20
 
 ### feat(ui): refresh quiz card layout
