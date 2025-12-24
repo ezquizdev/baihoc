@@ -27,6 +27,7 @@ import { env } from "@/core/env";
 const VERIFICATION_TTL_MINUTES = 60 * 24; // 24 hours
 const RESET_TTL_MINUTES = 60; // 1 hour
 const AVATAR_BUCKET = "avatars";
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5MB
 
 function ensurePasswordStrength(password: string) {
   if (password.length < 8) {
@@ -301,7 +302,13 @@ async function storeAvatar(userId: string, dataUrl: string) {
   }
   const mime = match[1];
   const base64 = match[2];
+  if (estimateBase64Bytes(base64) > MAX_AVATAR_BYTES) {
+    throw new Error("Ảnh đại diện quá lớn (tối đa 5MB)");
+  }
   const buffer = Buffer.from(base64, "base64");
+  if (buffer.byteLength > MAX_AVATAR_BYTES) {
+    throw new Error("Ảnh đại diện quá lớn (tối đa 5MB)");
+  }
   const ext = mime.split("/")[1] || "png";
   const path = `${userId}/${Date.now()}.${ext}`;
   const { error } = await supabaseServer.storage
@@ -320,14 +327,23 @@ async function storeAvatar(userId: string, dataUrl: string) {
 }
 
 async function uploadAvatarFromUrl(userKey: string, url: string) {
-  const res = await fetch(url);
+  const safeUrl = ensureSafeRemoteImageUrl(url);
+  const controller = new AbortController();
+  const res = await fetch(safeUrl, { signal: controller.signal });
   if (!res.ok) {
     throw new Error("Không thể tải ảnh đại diện từ Google");
   }
-  const arrayBuffer = await res.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  const mime = res.headers.get("content-type")?.split(";")[0] || "image/jpeg";
-  const ext = mime.split("/")[1] || "jpg";
+  const mime = res.headers.get("content-type")?.split(";")[0] || "";
+  if (!mime.startsWith("image/")) {
+    throw new Error("Định dạng ảnh đại diện không hợp lệ");
+  }
+  const contentLength = Number(res.headers.get("content-length") ?? "0");
+  if (contentLength && contentLength > MAX_AVATAR_BYTES) {
+    controller.abort();
+    throw new Error("Ảnh đại diện quá lớn (tối đa 5MB)");
+  }
+  const buffer = await readResponseWithLimit(res, controller, MAX_AVATAR_BYTES);
+  const ext = sanitizeImageExtension(mime) ?? "jpg";
   const path = `${userKey}/${Date.now()}.${ext}`;
   const { error } = await supabaseServer.storage
     .from(AVATAR_BUCKET)
@@ -352,4 +368,80 @@ async function normalizeAvatarUpload(userKey: string, avatarUrl: string) {
     return await uploadAvatarFromUrl(userKey, avatarUrl);
   }
   return avatarUrl;
+}
+
+function estimateBase64Bytes(base64: string) {
+  const stripped = base64.trim();
+  const padding = stripped.endsWith("==") ? 2 : stripped.endsWith("=") ? 1 : 0;
+  return Math.floor((stripped.length * 3) / 4) - padding;
+}
+
+function sanitizeImageExtension(mime: string) {
+  const ext = mime.split("/")[1]?.toLowerCase();
+  if (!ext) return null;
+  if (!/^[a-z0-9]+$/.test(ext)) return null;
+  return ext;
+}
+
+function ensureSafeRemoteImageUrl(rawUrl: string) {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error("Ảnh đại diện không hợp lệ");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error("Chỉ hỗ trợ ảnh đại diện qua HTTPS");
+  }
+  const hostname = parsed.hostname.toLowerCase();
+  if (
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1"
+  ) {
+    throw new Error("Ảnh đại diện không hợp lệ");
+  }
+  if (isPrivateIpV4(hostname)) {
+    throw new Error("Ảnh đại diện không hợp lệ");
+  }
+  return parsed.toString();
+}
+
+function isPrivateIpV4(hostname: string) {
+  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return false;
+  const parts = hostname.split(".").map((s) => Number(s));
+  if (parts.some((p) => !Number.isInteger(p) || p < 0 || p > 255)) return true;
+  const [a, b] = parts;
+  if (a === 10) return true;
+  if (a === 127) return true;
+  if (a === 0) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  return false;
+}
+
+async function readResponseWithLimit(
+  res: Response,
+  controller: AbortController,
+  maxBytes: number,
+) {
+  const reader = res.body?.getReader();
+  if (!reader) {
+    throw new Error("Không thể tải ảnh đại diện");
+  }
+  const chunks: Buffer[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      controller.abort();
+      throw new Error("Ảnh đại diện quá lớn (tối đa 5MB)");
+    }
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks, total);
 }
