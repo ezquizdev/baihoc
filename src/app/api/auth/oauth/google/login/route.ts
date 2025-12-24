@@ -5,13 +5,15 @@ import { setSession, toSessionPayload } from "@/application/infra/auth/session";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body.sub || !body.email) {
+    if (!body.accessToken) {
       return NextResponse.json(
-        { error: "Thiếu sub hoặc email" },
+        { error: "Thiếu access token" },
         { status: 400 },
       );
     }
-    const { user, sessionUser } = await controllerGoogleLogin(body);
+    const { user, sessionUser } = await controllerGoogleLogin({
+      accessToken: body.accessToken,
+    });
     await setSession(toSessionPayload(sessionUser));
     return NextResponse.json(
       {

@@ -119,12 +119,7 @@ export default function RegisterPage() {
   const isValidEmail = (email: string) =>
     /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
 
-  const handleGoogle = async (payload: {
-    sub: string;
-    email: string;
-    fullName?: string;
-    avatarUrl?: string;
-  }) => {
+  const handleGoogle = async (payload: { accessToken: string }) => {
     setError(null);
     setSuccess(null);
     try {
@@ -132,10 +127,7 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sub: payload.sub,
-          email: payload.email,
-          fullName: payload.fullName,
-          avatarUrl: payload.avatarUrl,
+          accessToken: payload.accessToken,
         }),
       });
       const data = await res.json();

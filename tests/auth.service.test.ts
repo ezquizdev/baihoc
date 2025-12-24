@@ -15,6 +15,9 @@ type AllowlistEntry = {
   tier: "free" | "paid";
 };
 
+const fetchMock = vi.fn();
+vi.stubGlobal("fetch", fetchMock);
+
 vi.mock("@/application/infra/db/userRepo", () => {
   const store: Record<string, MockUserRow> = {};
   return {
@@ -210,6 +213,30 @@ const {
 describe("authService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async (input, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : String(input);
+      if (url.startsWith("https://oauth2.googleapis.com/tokeninfo")) {
+        return new Response(
+          JSON.stringify({ aud: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      if (url === "https://www.googleapis.com/oauth2/v3/userinfo") {
+        const headers =
+          (init?.headers as Record<string, string> | undefined) ?? undefined;
+        const authHeader =
+          headers?.Authorization ?? headers?.authorization ?? "";
+        const token = authHeader.replace(/^Bearer\s+/i, "");
+        const [, email, sub] = token.split(":");
+        return new Response(JSON.stringify({ email, sub }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response("not found", { status: 404 });
+    });
+
     const store = (
       userRepo as unknown as { __store: Record<string, MockUserRow> }
     ).__store;
@@ -294,8 +321,7 @@ describe("authService", () => {
     });
 
     const user = await googleRegister({
-      sub: "g-sub",
-      email: "google-allow@example.com",
+      accessToken: "token:google-allow@example.com:g-sub",
     });
 
     expect(user.role).toBe("staff");
@@ -379,7 +405,7 @@ describe("authService", () => {
     });
 
     await expect(
-      googleLogin({ sub: "sub", email: "g@example.com" }),
+      googleLogin({ accessToken: "token:g@example.com:sub" }),
     ).rejects.toThrow(/vô hiệu hóa/);
   });
 
@@ -409,8 +435,7 @@ describe("authService", () => {
     });
     await expect(
       (await import("@/application/services/authService")).googleRegister({
-        sub: "sub-x",
-        email: "dup-google@example.com",
+        accessToken: "token:dup-google@example.com:sub-x",
       }),
     ).rejects.toThrow(/Email đã tồn tại/);
   });
@@ -418,7 +443,7 @@ describe("authService", () => {
   it("googleLogin fails for unknown account", async () => {
     (userRepo.findUserByEmail as unknown as Mock).mockResolvedValueOnce(null);
     await expect(
-      googleLogin({ sub: "newsub", email: "none@example.com" }),
+      googleLogin({ accessToken: "token:none@example.com:newsub" }),
     ).rejects.toThrow(/chưa được đăng ký/);
   });
 
@@ -459,8 +484,7 @@ describe("authService", () => {
       },
     );
     const user = await googleLogin({
-      sub: "link-sub",
-      email: "link@example.com",
+      accessToken: "token:link@example.com:link-sub",
     });
     expect(user.oauth_sub).toBe("link-sub");
     expect(user.oauth_provider).toBe("google");

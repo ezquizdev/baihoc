@@ -4,12 +4,7 @@ import { getGoogleCredential } from "@/lib/googleAuth";
 
 type Props = {
   label?: string;
-  onSuccess: (payload: {
-    sub: string;
-    email: string;
-    fullName?: string;
-    avatarUrl?: string;
-  }) => Promise<void> | void;
+  onSuccess: (payload: { accessToken: string }) => Promise<void> | void;
 };
 
 export function GoogleButton({
@@ -29,10 +24,7 @@ export function GoogleButton({
       }
       const payload = await getGoogleCredential(clientId);
       await onSuccess({
-        sub: payload.sub,
-        email: payload.email,
-        fullName: payload.name,
-        avatarUrl: payload.picture,
+        accessToken: payload.accessToken,
       });
     } catch (err) {
       const message =

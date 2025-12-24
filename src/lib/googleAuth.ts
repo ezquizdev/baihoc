@@ -30,6 +30,7 @@ declare global {
 }
 
 export type GoogleAuthResult = {
+  accessToken: string;
   sub: string;
   email: string;
   name?: string;
@@ -89,6 +90,7 @@ export async function getGoogleCredential(
             throw new Error("Không lấy được thông tin tài khoản Google");
           }
           resolve({
+            accessToken: response.access_token,
             sub: userinfo.sub,
             email: userinfo.email,
             name: userinfo.name,
