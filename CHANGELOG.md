@@ -9,6 +9,7 @@
 ### fix(ui): adjust catalog filter wrap and badges
 - Forced filter row to wrap below tabs earlier to prevent overlap at tight widths.
 - Reduced subject dropdown option size and allowed subject badges to wrap to two lines.
+- Extended the wrap breakpoint so filters no longer overlap the tabs on wide screens.
 
 ## 2025-12-20
 
