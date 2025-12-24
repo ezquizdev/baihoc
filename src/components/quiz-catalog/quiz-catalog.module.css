@@ -433,6 +433,12 @@
   min-height: 220px;
 }
 
+.quizGridAreaCenter {
+  display: grid;
+  place-items: center;
+  padding: 10px 0;
+}
+
 .quizGridLoading {
   position: absolute;
   inset: 0;
@@ -996,6 +1002,9 @@
   text-align: center;
   color: #2b3b55;
   font-weight: 700;
+  display: block;
+  width: min(520px, 100%);
+  margin: 0 auto;
 }
 
 .stateAction {

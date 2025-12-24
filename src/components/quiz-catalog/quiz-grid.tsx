@@ -23,16 +23,18 @@ export function QuizGrid({
 }: QuizGridProps) {
   if (error) {
     return (
-      <div className={styles.stateCard} role="alert">
-        {error}
-        <div>
-          <button
-            className={styles.stateAction}
-            type="button"
-            onClick={onRetry}
-          >
-            Thử lại
-          </button>
+      <div className={`${styles.quizGridArea} ${styles.quizGridAreaCenter}`}>
+        <div className={styles.stateCard} role="alert">
+          {error}
+          <div>
+            <button
+              className={styles.stateAction}
+              type="button"
+              onClick={onRetry}
+            >
+              Thử lại
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -40,11 +42,18 @@ export function QuizGrid({
 
   if (!items.length) {
     return (
-      <output className={styles.stateCard}>
-        {isLoading
-          ? "Đang tải danh sách quiz..."
-          : "Không tìm thấy quiz phù hợp."}
-      </output>
+      <div className={`${styles.quizGridArea} ${styles.quizGridAreaCenter}`}>
+        {!isLoading ? (
+          <output className={styles.stateCard}>
+            Không tìm thấy quiz phù hợp.
+          </output>
+        ) : null}
+        {isLoading ? (
+          <output className={styles.quizGridLoading} aria-live="polite">
+            Đang tải danh sách quiz...
+          </output>
+        ) : null}
+      </div>
     );
   }
 

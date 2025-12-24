@@ -2,6 +2,9 @@
 
 ## 2025-12-24
 
+### fix(ui): center catalog state cards
+- Centered catalog empty/error cards within the quiz grid column (with proper spacing from filters and leaderboard).
+
 ### fix(ui): align modal right section on mobile
 - Switched the modal right-side block (difficulty + meta) to a side-by-side layout on small screens.
 
