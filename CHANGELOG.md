@@ -2,6 +2,9 @@
 
 ## 2025-12-24
 
+### fix(ui): center modal topic counts on mobile
+- Centered the per-topic question count text within the remaining row space on small screens.
+
 ### fix(ui): center catalog loading overlay
 - Switched quiz catalog loading state to an overlay so it stays centered without shifting the grid layout.
 
