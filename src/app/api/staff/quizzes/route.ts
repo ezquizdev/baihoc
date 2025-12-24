@@ -6,7 +6,10 @@ import {
   controllerListStaffQuizzes,
 } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import { QuizVisibilityValues } from "@/application/models/enums";
+import {
+  type DifficultyLevel,
+  QuizVisibilityValues,
+} from "@/application/models/enums";
 
 const quizPayloadSchema = z.object({
   title: z.string().min(1),
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
     const parsed = quizPayloadSchema.parse(body);
     const quiz = await controllerCreateQuiz({
       ...parsed,
+      difficulty: parsed.difficulty as DifficultyLevel,
       createdBy: auth.sub,
     });
     return NextResponse.json({ quiz }, { status: 201 });

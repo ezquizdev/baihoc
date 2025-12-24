@@ -1,9 +1,6 @@
 export type UserRole = "student" | "staff";
 export type UserTier = "free" | "paid";
-export type UserStatus =
-  | "pending_verification"
-  | "active"
-  | "deactivated";
+export type UserStatus = "pending_verification" | "active" | "deactivated";
 
 export type User = {
   id: string;

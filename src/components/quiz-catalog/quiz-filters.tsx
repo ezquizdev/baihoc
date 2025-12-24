@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { DifficultyLabel } from "@/application/models/enums";
 import type { Subject } from "@/application/models/subject";
 import styles from "./quiz-catalog.module.css";
+import { getSubjectTone } from "./subject-tone";
 
 type StatusFilter = "todo" | "done" | "all";
 type SortOrder = "newest" | "oldest";
@@ -61,7 +62,7 @@ export function QuizFilters({
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      if (!(event.target instanceof Node)) return;
+      if (!(event.target instanceof Element)) return;
       const root = event.target.closest("[data-dropdown-root]");
       if (!root) {
         setOpenDropdown(null);
@@ -76,7 +77,7 @@ export function QuizFilters({
   };
 
   return (
-    <section className={`${styles.card} ${styles.filters}`} aria-label="Filters">
+    <section className={`cardBase ${styles.filters}`} aria-label="Filters">
       <div className={styles.tabs} role="tablist" aria-label="Trạng thái quiz">
         <button
           type="button"
@@ -113,7 +114,7 @@ export function QuizFilters({
         </button>
       </div>
 
-      <div className={styles.filterRow} aria-label="Bộ lọc">
+      <fieldset className={styles.filterRow} aria-label="Bộ lọc">
         <div
           className={`${styles.dd} ${styles.ddWide} ${
             openDropdown === "sort" ? styles.ddOpen : ""
@@ -131,7 +132,7 @@ export function QuizFilters({
           </button>
           {openDropdown === "sort" ? (
             <div className={styles.ddPanel}>
-              <div className={styles.ddList} aria-label="Ngày cập nhật">
+              <fieldset className={styles.ddList} aria-label="Ngày cập nhật">
                 <label className={styles.ck}>
                   <input
                     type="radio"
@@ -150,7 +151,7 @@ export function QuizFilters({
                   />
                   Cũ nhất
                 </label>
-              </div>
+              </fieldset>
             </div>
           ) : null}
         </div>
@@ -171,14 +172,18 @@ export function QuizFilters({
           >
             <span className={styles.ddLabel}>Môn học</span>
             {isSubjectActive ? (
-              <FunnelSimple size={16} weight="bold" className={styles.filterIcon} />
+              <FunnelSimple
+                size={16}
+                weight="bold"
+                className={styles.filterIcon}
+              />
             ) : (
               <span className={styles.ddChevron} aria-hidden="true" />
             )}
           </button>
           {openDropdown === "subject" ? (
             <div className={styles.ddPanel}>
-              <div className={styles.ddList} aria-label="Chọn môn học">
+              <fieldset className={styles.ddList} aria-label="Chọn môn học">
                 {subjects.map((subject) => {
                   const selected = selectedSubjectIds.includes(subject.id);
                   return (
@@ -199,7 +204,7 @@ export function QuizFilters({
                     </label>
                   );
                 })}
-              </div>
+              </fieldset>
             </div>
           ) : null}
         </div>
@@ -220,14 +225,18 @@ export function QuizFilters({
           >
             <span className={styles.ddLabel}>Độ khó</span>
             {isDifficultyActive ? (
-              <FunnelSimple size={16} weight="bold" className={styles.filterIcon} />
+              <FunnelSimple
+                size={16}
+                weight="bold"
+                className={styles.filterIcon}
+              />
             ) : (
               <span className={styles.ddChevron} aria-hidden="true" />
             )}
           </button>
           {openDropdown === "difficulty" ? (
             <div className={styles.ddPanel}>
-              <div className={styles.ddList} aria-label="Chọn độ khó">
+              <fieldset className={styles.ddList} aria-label="Chọn độ khó">
                 {Object.entries(difficultyLabels).map(([value, label]) => {
                   const level = value as DifficultyLabel;
                   const selected = selectedDifficulties.includes(level);
@@ -252,7 +261,7 @@ export function QuizFilters({
                     </div>
                   );
                 })}
-              </div>
+              </fieldset>
             </div>
           ) : null}
         </div>
@@ -276,7 +285,11 @@ export function QuizFilters({
               <span>Số câu</span>
             </span>
             {isRangeActive ? (
-              <FunnelSimple size={16} weight="bold" className={styles.filterIcon} />
+              <FunnelSimple
+                size={16}
+                weight="bold"
+                className={styles.filterIcon}
+              />
             ) : (
               <span className={styles.ddChevron} aria-hidden="true" />
             )}
@@ -314,7 +327,7 @@ export function QuizFilters({
             </div>
           ) : null}
         </div>
-      </div>
+      </fieldset>
     </section>
   );
 }
@@ -374,12 +387,19 @@ function DoubleRange({
 }
 
 function subjectUnderlineClass(slug: string, moduleStyles: typeof styles) {
-  const normalized = slug.toLowerCase();
-  if (normalized.includes("math")) return moduleStyles.subjectUnderlineSky;
-  if (normalized.includes("sci")) return moduleStyles.subjectUnderlineBlue;
-  if (normalized.includes("vi")) return moduleStyles.subjectUnderlineRed;
-  if (normalized.includes("en")) return moduleStyles.subjectUnderlineYellow;
-  return "";
+  const tone = getSubjectTone(slug);
+  switch (tone) {
+    case "math":
+      return moduleStyles.subjectUnderlineSky;
+    case "sci":
+      return moduleStyles.subjectUnderlineBlue;
+    case "vi":
+      return moduleStyles.subjectUnderlineRed;
+    case "en":
+      return moduleStyles.subjectUnderlineYellow;
+    default:
+      return "";
+  }
 }
 
 function difficultyRateClass(
@@ -391,7 +411,6 @@ function difficultyRateClass(
       return moduleStyles.rateEasy;
     case "medium":
       return moduleStyles.rateMedium;
-    case "hard":
     default:
       return moduleStyles.rateHard;
   }

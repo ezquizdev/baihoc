@@ -1,6 +1,7 @@
 "use client";
 
 import type { LeaderboardEntry } from "@/application/models/leaderboard";
+import { formatNumberVi } from "@/lib/formatters";
 import styles from "./quiz-catalog.module.css";
 
 type QuizLeaderboardProps = {
@@ -10,12 +11,12 @@ type QuizLeaderboardProps = {
 export function QuizLeaderboard({ items }: QuizLeaderboardProps) {
   return (
     <aside
-      className={`${styles.card} ${styles.leaderboard}`}
+      className={`cardBase ${styles.leaderboard}`}
       aria-label="Leaderboard"
     >
       <div className={styles.sectionHead}>
         <h3>Bảng xếp hạng</h3>
-        <a href="#">Xem tất cả</a>
+        <button type="button">Xem tất cả</button>
       </div>
 
       <table className={styles.leaderboardTable} aria-label="Leaderboard table">
@@ -37,7 +38,7 @@ export function QuizLeaderboard({ items }: QuizLeaderboardProps) {
                     {entry.fullName}
                   </div>
                 </td>
-                <td className={styles.xp}>{formatNumber(entry.xp)}</td>
+                <td className={styles.xp}>{formatNumberVi(entry.xp)}</td>
               </tr>
             ))
           ) : (
@@ -49,8 +50,4 @@ export function QuizLeaderboard({ items }: QuizLeaderboardProps) {
       </table>
     </aside>
   );
-}
-
-function formatNumber(value: number) {
-  return new Intl.NumberFormat("vi-VN").format(value);
 }

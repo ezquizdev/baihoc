@@ -2,6 +2,11 @@
 
 ## 2025-12-24
 
+### fix(repo): restore checks and typings
+- Updated Next.js route handler params typing and wrapped email verification in Suspense for build stability.
+- Tightened quiz/question/auth typing (difficulty, challenge, repo return types) and added missing pg/bcryptjs type deps.
+- Resolved Biome/a11y issues across catalog/dashboard UI and aligned tests/mocks with current enums and email mapping.
+
 ### feat(api): add quiz subject breakdown endpoint
 - Added quiz subject breakdown aggregation in repo/service/controller layers.
 - Exposed `/api/catalog/quizzes/[quizId]/subjects` for per-quiz subject counts.

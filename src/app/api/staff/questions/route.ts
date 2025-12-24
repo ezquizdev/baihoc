@@ -10,7 +10,10 @@ import {
   controllerListQuestions,
 } from "@/application/controllers/questionController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import { QuestionTypeValues } from "@/application/models/enums";
+import {
+  type DifficultyLevel,
+  QuestionTypeValues,
+} from "@/application/models/enums";
 
 const createSchema = z.object({
   subjectId: z.string().uuid(),
@@ -61,7 +64,7 @@ export async function GET(request: NextRequest) {
   try {
     const items = await controllerListQuestions({
       subjectId: searchParams.get("subjectId") ?? undefined,
-      difficulty: parseDifficulty(searchParams),
+      difficulty: parseDifficulty(searchParams) as DifficultyLevel | undefined,
       status: parseQuestionStatus(searchParams),
       search: searchParams.get("search") ?? undefined,
       limit,
@@ -83,6 +86,7 @@ export async function POST(request: NextRequest) {
     const parsed = createSchema.parse(body);
     const question = await controllerCreateQuestion({
       ...parsed,
+      defaultDifficulty: parsed.defaultDifficulty as DifficultyLevel,
       createdBy: auth.sub,
     });
     return NextResponse.json({ question }, { status: 201 });

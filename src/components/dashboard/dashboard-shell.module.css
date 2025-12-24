@@ -5,9 +5,9 @@
   --muted: #6b7a90;
   --line: #e6eeff;
 
-  --primary: #2868e6;
-  --primary-2: #1f54d6;
-  --accent: #ffc400;
+  --primary: var(--brand-primary);
+  --primary-2: var(--brand-primary-2);
+  --accent: var(--brand-accent);
 
   --radius-lg: 18px;
   --radius-md: 14px;
@@ -510,13 +510,6 @@
   font-weight: 800;
   margin: 6px 0 0;
   color: #1f3b86;
-}
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
 }
 
 @media (max-width: 900px) {

@@ -52,7 +52,7 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const displayName = userName ?? userEmail.split("@")[0];
   const toggleId = "dashboard-nav-toggle";
-  const handlePlaceholderClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  const handlePlaceholderClick = (event: MouseEvent<HTMLElement>) => {
     event.preventDefault();
   };
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -206,33 +206,33 @@ export function DashboardShell({
                   role="menu"
                   aria-label="Tùy chọn hồ sơ"
                 >
-                  <a
-                    href="#"
+                  <button
+                    type="button"
                     role="menuitem"
                     className={styles.profileLink}
                     onClick={handlePlaceholderClick}
                   >
                     <span className={styles.menuDot} aria-hidden="true" /> Hồ sơ
-                  </a>
-                  <a
-                    href="#"
+                  </button>
+                  <button
+                    type="button"
                     role="menuitem"
                     className={styles.profileLink}
                     onClick={handlePlaceholderClick}
                   >
                     <span className={styles.menuDot} aria-hidden="true" /> Cài
                     đặt
-                  </a>
+                  </button>
                   <div className={styles.profileSeparator} aria-hidden="true" />
-                  <a
-                    href="#"
+                  <button
+                    type="button"
                     role="menuitem"
                     className={styles.profileLink}
                     onClick={handlePlaceholderClick}
                   >
                     <span className={styles.menuDot} aria-hidden="true" /> Đăng
                     xuất
-                  </a>
+                  </button>
                 </div>
               </details>
             </div>

@@ -3,6 +3,7 @@
 import { BookmarkSimple, Clock, ListChecks, UsersThree } from "phosphor-react";
 import { useState } from "react";
 import type { QuizCatalogItem } from "@/application/models/quiz";
+import { formatDateVi, formatNumberVi } from "@/lib/formatters";
 import { DifficultyBadge, SubjectBadge } from "./quiz-badges";
 import styles from "./quiz-catalog.module.css";
 
@@ -20,7 +21,7 @@ export function QuizCard({
     ? Math.round(quiz.estimatedTimeSeconds / 60)
     : null;
   const questionCount = quiz.questionCount ?? 0;
-  const dateLabel = formatDate(quiz.updatedAt ?? quiz.createdAt);
+  const dateLabel = formatDateVi(quiz.updatedAt ?? quiz.createdAt);
   const ctaLabel = quiz.isChallenge ? "Thử thách ngay" : "Làm ngay";
   const subjectBreakdown = quiz.subjectBreakdown ?? [];
   const isMultiSubject = subjectBreakdown.length > 1;
@@ -36,17 +37,13 @@ export function QuizCard({
   return (
     <article
       className={`${styles.quizCard} ${tone === "alt" ? styles.quizCardAlt : ""}`}
-      aria-label={`Quiz ${quiz.title}`}
-      role="button"
-      tabIndex={0}
-      onClick={handleSelect}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          handleSelect();
-        }
-      }}
     >
+      <button
+        type="button"
+        className={styles.quizCardButton}
+        aria-label={`Quiz ${quiz.title}`}
+        onClick={handleSelect}
+      />
       <div className={styles.quizHead}>
         <span className={styles.quizDate}>{dateLabel}</span>
         {quiz.visibility === "premium" ? (
@@ -81,7 +78,7 @@ export function QuizCard({
               <span className={styles.metaIcon} aria-hidden="true">
                 <UsersThree size={12} weight="bold" />
               </span>
-              {formatNumber(quiz.attemptCount)} lượt
+              {formatNumberVi(quiz.attemptCount)} lượt
             </div>
             <div className={styles.quizMetaItem}>
               <span className={styles.metaIcon} aria-hidden="true">
@@ -132,15 +129,4 @@ export function QuizCard({
       </div>
     </article>
   );
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return "—";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "—";
-  return parsed.toLocaleDateString("vi-VN");
-}
-
-function formatNumber(value: number) {
-  return new Intl.NumberFormat("vi-VN").format(value);
 }

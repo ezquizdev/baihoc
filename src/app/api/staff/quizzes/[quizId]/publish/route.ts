@@ -4,11 +4,15 @@ import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 
 type Params = { quizId: string };
 
-export async function POST(request: NextRequest, context: { params: Params }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<Params> },
+) {
   const auth = await requireAuthenticatedApi(request, { role: "staff" });
   if (auth instanceof NextResponse) return auth;
   try {
-    const quiz = await controllerPublishQuiz(context.params.quizId);
+    const { quizId } = await context.params;
+    const quiz = await controllerPublishQuiz(quizId);
     return NextResponse.json({ quiz });
   } catch (error) {
     const message =

@@ -1,14 +1,23 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 
 type CardProps = PropsWithChildren<{
   title?: string;
   description?: string;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
+  className?: string;
 }>;
 
-export function Card({ title, description, actions, children }: CardProps) {
+export function Card({
+  title,
+  description,
+  actions,
+  className,
+  children,
+}: CardProps) {
   return (
-    <div className="w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+    <div
+      className={`w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-sm ${className ?? ""}`}
+    >
       {(title || description) && (
         <div className="mb-6 space-y-2">
           {title && (

@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/application/services/emailService", () => ({
-  sendTransactionalEmail: vi.fn(async (payload) => ({
+vi.mock("@/application/infra/email/brevo", () => ({
+  sendEmailViaBrevo: vi.fn(async () => ({
     messageId: "mocked-message-id",
-    payload,
   })),
 }));
 
+import { sendEmailViaBrevo } from "@/application/infra/email/brevo";
 import { sendTransactionalEmail } from "@/application/services/emailService";
 
 describe("emailService", () => {
@@ -15,9 +15,16 @@ describe("emailService", () => {
       to: [{ email: "someone@example.com", name: "Someone" }],
       subject: "Test",
       text: "Hello",
+      tags: ["welcome"],
     };
     const result = await sendTransactionalEmail(payload);
     expect(result.messageId).toBe("mocked-message-id");
-    expect(result.payload).toEqual(payload);
+    expect(sendEmailViaBrevo).toHaveBeenCalledWith({
+      to: payload.to,
+      subject: payload.subject,
+      htmlContent: undefined,
+      textContent: payload.text,
+      tags: payload.tags,
+    });
   });
 });

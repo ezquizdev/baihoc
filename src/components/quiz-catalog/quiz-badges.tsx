@@ -2,6 +2,7 @@
 
 import type { QuizCatalogItem } from "@/application/models/quiz";
 import styles from "./quiz-catalog.module.css";
+import { getSubjectTone, isMixedSubject } from "./subject-tone";
 
 type DifficultyConfig = {
   label: string;
@@ -41,6 +42,7 @@ export function DifficultyBadge({
       className={`${styles.difficultyBadge} ${config.className} ${
         className ?? ""
       }`.trim()}
+      role="img"
       aria-label={`Độ khó ${config.label}`}
     >
       <span className={styles.difficultyLabel}>{config.label}</span>
@@ -58,10 +60,14 @@ export function SubjectBadge({
   slug: string;
   className?: string;
 }) {
-  const toneClass = subjectToneClass(slug);
+  const tone = getSubjectTone(slug);
+  const toneClass = isMixedSubject(slug)
+    ? styles.subjectMixed
+    : subjectToneClass(tone);
   return (
     <span
       className={`${styles.subjectBadge} ${toneClass} ${className ?? ""}`.trim()}
+      role="img"
       aria-label={`Môn ${name}`}
     >
       <span className={styles.subjectChip} aria-hidden="true" />
@@ -70,12 +76,17 @@ export function SubjectBadge({
   );
 }
 
-export function subjectToneClass(slug: string) {
-  const normalized = slug.toLowerCase();
-  if (normalized.includes("mixed")) return styles.subjectMixed;
-  if (normalized.includes("en")) return styles.subjectEn;
-  if (normalized.includes("math")) return styles.subjectMath;
-  if (normalized.includes("sci")) return styles.subjectSci;
-  if (normalized.includes("vi")) return styles.subjectVi;
-  return "";
+function subjectToneClass(tone: ReturnType<typeof getSubjectTone>) {
+  switch (tone) {
+    case "en":
+      return styles.subjectEn;
+    case "math":
+      return styles.subjectMath;
+    case "sci":
+      return styles.subjectSci;
+    case "vi":
+      return styles.subjectVi;
+    default:
+      return "";
+  }
 }

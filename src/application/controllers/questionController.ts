@@ -1,3 +1,4 @@
+import type { DifficultyLevel } from "@/application/models/enums";
 import type {
   QuestionDetail,
   QuestionStatus,
@@ -6,6 +7,7 @@ import type {
 import {
   archiveQuestion,
   createQuestion,
+  deleteQuestionWithRules,
   getQuestionDetail,
   listQuestions,
   updateQuestion,
@@ -13,7 +15,7 @@ import {
 
 export async function controllerCreateQuestion(input: {
   subjectId: string;
-  defaultDifficulty: number;
+  defaultDifficulty: DifficultyLevel;
   type: QuestionType;
   stem: string;
   explanation?: string | null;
@@ -54,7 +56,7 @@ export async function controllerUpdateQuestion(
   questionId: string,
   input: {
     subjectId?: string;
-    defaultDifficulty?: number;
+    defaultDifficulty?: DifficultyLevel;
     type?: QuestionType;
     stem?: string;
     explanation?: string | null;
@@ -98,7 +100,7 @@ export async function controllerUpdateQuestion(
 
 export async function controllerListQuestions(params: {
   subjectId?: string;
-  difficulty?: number;
+  difficulty?: DifficultyLevel;
   status?: QuestionStatus;
   search?: string;
   limit?: number;

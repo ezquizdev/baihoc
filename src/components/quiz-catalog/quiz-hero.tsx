@@ -4,7 +4,7 @@ import styles from "./quiz-catalog.module.css";
 
 export function QuizHero() {
   return (
-    <section className={`${styles.card} ${styles.hero}`} aria-label="Quiz hero">
+    <section className={`cardBase ${styles.hero}`} aria-label="Quiz hero">
       <div>
         <h1 className={styles.heroTitle}>
           <span>Làm</span>Quiz Thôi!!!

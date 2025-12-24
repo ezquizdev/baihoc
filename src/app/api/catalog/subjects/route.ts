@@ -13,7 +13,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ items });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Không thể tải danh sách môn học";
+      error instanceof Error
+        ? error.message
+        : "Không thể tải danh sách môn học";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

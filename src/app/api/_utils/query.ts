@@ -1,5 +1,4 @@
 import {
-  type DifficultyLevel,
   type QuestionStatus,
   QuestionStatusValues,
   type QuestionType,
@@ -88,7 +87,7 @@ export function parseDifficulty(searchParams: URLSearchParams) {
   if (value === undefined) return undefined;
   if (!Number.isInteger(value)) return undefined;
   if (value < 1 || value > 5) return undefined;
-  return value as DifficultyLevel;
+  return value;
 }
 
 export function parseQuizVisibility(searchParams: URLSearchParams) {

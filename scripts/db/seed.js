@@ -245,10 +245,7 @@ async function main() {
 
     for (let i = 0; i < config.quizzes; i += 1) {
       const quizId = crypto.randomUUID();
-      const chosenSubjects = pickSubjects(
-        subjects,
-        config.multiSubjectRate,
-      );
+      const chosenSubjects = pickSubjects(subjects, config.multiSubjectRate);
       const primarySubject = pick(chosenSubjects);
       const difficulty = pick(difficultyLevels);
       const visibility = pick(quizVisibility);
@@ -549,13 +546,15 @@ async function insertRows(client, table, columns, rows, conflictClause = "") {
     const values = [];
     const placeholders = batch.map((row, rowIndex) => {
       const base = rowIndex * columns.length;
-      row.forEach((value) => values.push(value));
+      row.forEach((value) => {
+        values.push(value);
+      });
       const params = row.map((_, colIndex) => `$${base + colIndex + 1}`);
       return `(${params.join(", ")})`;
     });
-    const sql = `INSERT INTO ${table} (${columns.join(", ")}) VALUES ${
-      placeholders.join(", ")
-    } ${conflictClause}`;
+    const sql = `INSERT INTO ${table} (${columns.join(", ")}) VALUES ${placeholders.join(
+      ", ",
+    )} ${conflictClause}`;
     await client.query(sql, values);
   }
 }

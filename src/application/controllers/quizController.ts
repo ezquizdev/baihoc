@@ -1,5 +1,8 @@
 import type {
+  DifficultyLabel,
   DifficultyLevel,
+} from "@/application/models/enums";
+import type {
   QuizCatalogItem,
   QuizDetail,
   QuizListItem,
@@ -12,9 +15,8 @@ import {
   deleteQuizWithRules,
   getPublishedQuizDetail,
   getQuizDetailForStaff,
-  getQuizSubjectBreakdown,
-  listCatalogQuizzes,
   listCatalogPage,
+  listCatalogQuizzes,
   listStaffQuizzes,
   publishQuiz,
   setQuizQuestions,
@@ -108,7 +110,7 @@ export async function controllerListCatalogPage(
   userId: string,
   params: {
     subjectIds?: string[];
-    difficulty?: DifficultyLevel[];
+    difficulty?: DifficultyLabel[];
     search?: string;
     minQuestions?: number;
     maxQuestions?: number;
@@ -142,8 +144,4 @@ export async function controllerGetStaffQuizDetail(
 
 export async function controllerGetPublishedQuiz(quizId: string) {
   return getPublishedQuizDetail(quizId);
-}
-
-export async function controllerGetQuizSubjectBreakdown(quizId: string) {
-  return getQuizSubjectBreakdown(quizId);
 }

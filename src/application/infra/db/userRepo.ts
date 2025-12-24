@@ -2,10 +2,7 @@ import { query } from "@/application/infra/db/pool";
 
 export type UserRole = "student" | "staff";
 export type UserTier = "free" | "paid";
-export type UserStatus =
-  | "pending_verification"
-  | "active"
-  | "deactivated";
+export type UserStatus = "pending_verification" | "active" | "deactivated";
 export type OAuthProvider = "google";
 
 export type UserRow = {
@@ -28,7 +25,7 @@ export type UserRow = {
   updated_at: string;
 };
 
-export async function findUserByEmail(email: string) {
+export async function findUserByEmail(email: string): Promise<UserRow | null> {
   const res = await query<UserRow>(
     `SELECT * FROM users WHERE email = $1 LIMIT 1`,
     [email],
@@ -36,7 +33,10 @@ export async function findUserByEmail(email: string) {
   return res.rows[0] ?? null;
 }
 
-export async function findUserByOAuth(provider: OAuthProvider, sub: string) {
+export async function findUserByOAuth(
+  provider: OAuthProvider,
+  sub: string,
+): Promise<UserRow | null> {
   const res = await query<UserRow>(
     `SELECT * FROM users WHERE oauth_provider = $1 AND oauth_sub = $2 LIMIT 1`,
     [provider, sub],
@@ -44,7 +44,7 @@ export async function findUserByOAuth(provider: OAuthProvider, sub: string) {
   return res.rows[0] ?? null;
 }
 
-export async function findUserById(id: string) {
+export async function findUserById(id: string): Promise<UserRow | null> {
   const res = await query<UserRow>(`SELECT * FROM users WHERE id = $1`, [id]);
   return res.rows[0] ?? null;
 }

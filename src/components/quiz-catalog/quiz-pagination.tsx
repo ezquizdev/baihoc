@@ -33,9 +33,9 @@ export function QuizPagination({
         Trước
       </button>
 
-      {pages.map((item, index) =>
-        item === "ellipsis" ? (
-          <span key={`ellipsis-${index}`} className={styles.pagerEllipsis}>
+      {pages.map((item) =>
+        typeof item === "string" ? (
+          <span key={item} className={styles.pagerEllipsis}>
             ...
           </span>
         ) : (
@@ -79,11 +79,11 @@ function buildPages(current: number, total: number) {
     .filter((page) => page >= 1 && page <= total)
     .sort((a, b) => a - b);
 
-  const result: Array<number | "ellipsis"> = [];
+  const result: Array<number | string> = [];
   let prev = 0;
   sorted.forEach((page) => {
     if (prev && page - prev > 1) {
-      result.push("ellipsis");
+      result.push(`ellipsis-${prev}-${page}`);
     }
     result.push(page);
     prev = page;

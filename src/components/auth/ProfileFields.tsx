@@ -16,7 +16,7 @@ type Props = {
   onChange: (updates: Partial<ProfileValues>) => void;
   setError: (msg: string | null) => void;
   showTerms?: boolean;
-  fileInputRef?: RefObject<HTMLInputElement>;
+  fileInputRef?: RefObject<HTMLInputElement | null>;
 };
 
 export function ProfileFields({
