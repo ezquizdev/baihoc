@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
-import { verifyEmailWithToken } from "@/application/services/authService";
+import { z } from "zod";
+import { controllerVerifyEmail } from "@/application/controllers/authController";
+
+const verifySchema = z
+  .object({
+    token: z.string().min(1),
+  })
+  .passthrough();
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body.token) {
+    const parsed = verifySchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({ error: "Thiếu mã xác minh" }, { status: 400 });
     }
-    const userId = await verifyEmailWithToken(body.token);
+    const userId = await controllerVerifyEmail(parsed.data.token);
     return NextResponse.json({ userId, verified: true });
   } catch (error) {
     const message =

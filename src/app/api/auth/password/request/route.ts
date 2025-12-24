@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
-import { requestPasswordReset } from "@/application/services/authService";
+import { z } from "zod";
+import { controllerRequestPasswordReset } from "@/application/controllers/authController";
+
+const requestSchema = z
+  .object({
+    email: z.string().min(1),
+  })
+  .passthrough();
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body.email) {
+    const parsed = requestSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({ error: "Thiếu email" }, { status: 400 });
     }
-    await requestPasswordReset(body.email);
+    await controllerRequestPasswordReset(parsed.data.email);
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message =

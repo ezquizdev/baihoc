@@ -19,6 +19,10 @@
 ### fix(attempt): avoid history monkey-patching for leave warnings
 - In-progress attempt leave confirmation now uses capture-phase link interception instead of patching `history.pushState/replaceState`.
 
+### refactor(auth): validate auth routes and use controllers
+- Auth API routes now validate payloads with `zod` and call controllers (keeps route/service boundaries consistent).
+- Google OAuth userinfo verification now prefers `GOOGLE_CLIENT_ID` (falls back to `NEXT_PUBLIC_GOOGLE_CLIENT_ID`).
+
 ### fix(attempt): redirect completed attempts to results on start
 - `/quizzes/[quizId]/attempt` now routes straight to `/attempts/[attemptId]/results` when the resumed attempt is not `in_progress`.
 - `startOrResumeAttempt` now returns the attempt `status` so the UI can redirect without an extra attempt-state fetch.

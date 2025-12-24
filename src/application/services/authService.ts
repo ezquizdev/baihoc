@@ -365,7 +365,7 @@ async function normalizeAvatarUpload(userKey: string, avatarUrl: string) {
 }
 
 async function getGoogleUserInfoFromAccessToken(accessToken: string) {
-  const aud = env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const aud = env.GOOGLE_CLIENT_ID ?? env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   if (!aud) {
     throw new Error("Google client ID is not configured");
   }

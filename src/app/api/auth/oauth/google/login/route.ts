@@ -1,18 +1,26 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { controllerGoogleLogin } from "@/application/controllers/authController";
 import { setSession, toSessionPayload } from "@/application/infra/auth/session";
+
+const googleSchema = z
+  .object({
+    accessToken: z.string().min(1),
+  })
+  .passthrough();
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body.accessToken) {
+    const parsed = googleSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
         { error: "Thiếu access token" },
         { status: 400 },
       );
     }
     const { user, sessionUser } = await controllerGoogleLogin({
-      accessToken: body.accessToken,
+      accessToken: parsed.data.accessToken,
     });
     await setSession(toSessionPayload(sessionUser));
     return NextResponse.json(

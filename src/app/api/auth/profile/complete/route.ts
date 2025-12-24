@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { controllerCompleteProfile } from "@/application/controllers/authController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 import { setSession, toSessionPayload } from "@/application/infra/auth/session";
+
+const profileSchema = z
+  .object({
+    fullName: z.string().min(1),
+    school: z.string().nullable().optional(),
+    dateOfBirth: z.string().nullable().optional(),
+    avatarUrl: z.string().nullable().optional(),
+  })
+  .passthrough();
 
 export async function POST(request: Request) {
   try {
@@ -11,15 +21,16 @@ export async function POST(request: Request) {
     if (session instanceof NextResponse) return session;
 
     const body = await request.json();
-    if (!body.fullName) {
+    const parsed = profileSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({ error: "Thiếu họ tên" }, { status: 400 });
     }
     const { user, sessionUser } = await controllerCompleteProfile({
       userId: session.sub,
-      fullName: body.fullName,
-      school: body.school ?? null,
-      dateOfBirth: body.dateOfBirth ?? null,
-      avatarUrl: body.avatarUrl ?? null,
+      fullName: parsed.data.fullName,
+      school: parsed.data.school ?? null,
+      dateOfBirth: parsed.data.dateOfBirth ?? null,
+      avatarUrl: parsed.data.avatarUrl ?? null,
     });
     await setSession(toSessionPayload(sessionUser));
     return NextResponse.json(

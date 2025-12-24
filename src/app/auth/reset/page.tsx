@@ -1,4 +1,4 @@
-import { verifyResetToken } from "@/application/services/authService";
+import { controllerVerifyResetToken } from "@/application/controllers/authController";
 import { ResetForm } from "./ResetForm";
 
 type Props = {
@@ -11,7 +11,7 @@ export default async function ResetPage({ searchParams }: Props) {
   let tokenValid = false;
   try {
     if (token) {
-      await verifyResetToken(token);
+      await controllerVerifyResetToken(token);
       tokenValid = true;
     }
   } catch {

@@ -1,11 +1,26 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { controllerLoginWithEmail } from "@/application/controllers/authController";
 import { setSession, toSessionPayload } from "@/application/infra/auth/session";
+
+const loginSchema = z
+  .object({
+    email: z.string(),
+    password: z.string(),
+  })
+  .passthrough();
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { user, sessionUser } = await controllerLoginWithEmail(body);
+    const parsed = loginSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Thiếu email hoặc mật khẩu" },
+        { status: 400 },
+      );
+    }
+    const { user, sessionUser } = await controllerLoginWithEmail(parsed.data);
     await setSession(toSessionPayload(sessionUser));
     return NextResponse.json(
       {
