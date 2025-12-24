@@ -202,6 +202,7 @@ const {
   loginWithEmail,
   verifyEmailWithToken,
   googleLogin,
+  googleRegister,
   resetPasswordWithToken,
   requestPasswordReset,
 } = await import("@/application/services/authService");
@@ -274,6 +275,31 @@ describe("authService", () => {
     expect(user.email_verified_at).toBeTruthy();
     expect(tokenRepo.createEmailVerificationToken).not.toHaveBeenCalled();
     expect(emailService.sendTransactionalEmail).not.toHaveBeenCalled();
+    const membershipRecords = (
+      membershipRepo as unknown as { __records: Array<{ userId: string }> }
+    ).__records;
+    expect(membershipRecords).toHaveLength(1);
+    expect(membershipRecords[0].userId).toBe(user.id);
+  });
+
+  it("googleRegister applies allowlist role/tier when present", async () => {
+    (
+      allowlistRepo as unknown as {
+        __setAllowlistEntry: (entry: AllowlistEntry | null) => void;
+      }
+    ).__setAllowlistEntry({
+      email: "google-allow@example.com",
+      role: "staff",
+      tier: "paid",
+    });
+
+    const user = await googleRegister({
+      sub: "g-sub",
+      email: "google-allow@example.com",
+    });
+
+    expect(user.role).toBe("staff");
+    expect(user.tier).toBe("paid");
     const membershipRecords = (
       membershipRepo as unknown as { __records: Array<{ userId: string }> }
     ).__records;
