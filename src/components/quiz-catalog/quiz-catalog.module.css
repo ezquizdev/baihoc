@@ -455,11 +455,24 @@
   flex-direction: column;
   padding: 12px;
   cursor: pointer;
+  transform: translateY(0);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
 }
 
 .quizCard:focus-within {
   outline: 3px solid rgba(40, 104, 230, 0.32);
   outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quizCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(26, 46, 93, 0.12);
+    border-color: rgba(47, 102, 255, 0.22);
+  }
 }
 
 .quizCardButton {

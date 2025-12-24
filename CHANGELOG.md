@@ -2,6 +2,9 @@
 
 ## 2025-12-24
 
+### fix(ui): add non-shifting card hover
+- Added a hover lift/shadow effect for quiz cards using transform to avoid layout reflow.
+
 ### fix(ui): make quiz cards open preview
 - Made the entire quiz card clickable to open the quick-view modal; CTA now triggers a placeholder start action.
 
