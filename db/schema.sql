@@ -168,6 +168,31 @@ CREATE TABLE IF NOT EXISTS course_student_allowlist (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'course_student_allowlist'
+      AND column_name = 'role'
+  ) THEN
+    ALTER TABLE course_student_allowlist
+    ADD COLUMN role user_role NOT NULL DEFAULT 'student';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'course_student_allowlist'
+      AND column_name = 'tier'
+  ) THEN
+    ALTER TABLE course_student_allowlist
+    ADD COLUMN tier user_tier NOT NULL DEFAULT 'paid';
+  END IF;
+END $$;
+
 -- Taxonomy
 CREATE TABLE IF NOT EXISTS subjects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

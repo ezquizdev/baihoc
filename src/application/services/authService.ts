@@ -1,4 +1,6 @@
 import bcrypt from "bcryptjs";
+import { findAllowlistEntryByEmail } from "@/application/infra/db/allowlistRepo";
+import { insertAllowlistUpgrade } from "@/application/infra/db/membershipRepo";
 import {
   consumeEmailVerificationToken,
   consumePasswordResetToken,
@@ -74,6 +76,8 @@ export async function registerWithEmail(input: {
     ? await normalizeAvatarUpload(email, input.avatarUrl)
     : null;
   const passwordHash = await bcrypt.hash(input.password, 10);
+  const allowlistEntry = await findAllowlistEntryByEmail(email);
+  const allowlisted = Boolean(allowlistEntry);
   const user = await createUser({
     email,
     password_hash: passwordHash,
@@ -81,9 +85,16 @@ export async function registerWithEmail(input: {
     school: input.school,
     date_of_birth: input.dateOfBirth,
     avatar_url: uploadedAvatar,
-    status: "pending_verification",
+    role: allowlisted ? allowlistEntry?.role : "student",
+    status: allowlisted ? "active" : "pending_verification",
+    tier: allowlisted ? allowlistEntry?.tier : "free",
+    email_verified_at: allowlisted ? new Date().toISOString() : null,
     profile_completed: true,
   });
+
+  if (allowlisted && allowlistEntry?.tier === "paid") {
+    await insertAllowlistUpgrade(user.id);
+  }
 
   const rawToken = await createEmailVerificationToken(
     user.id,

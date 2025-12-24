@@ -1,4 +1,5 @@
-import { query } from "@/application/infra/db/pool";
+import type { PoolClient } from "pg";
+import { pool, query } from "@/application/infra/db/pool";
 
 export type UserRole = "student" | "staff";
 export type UserTier = "free" | "paid";
@@ -44,9 +45,73 @@ export async function findUserByOAuth(
   return res.rows[0] ?? null;
 }
 
-export async function findUserById(id: string): Promise<UserRow | null> {
-  const res = await query<UserRow>(`SELECT * FROM users WHERE id = $1`, [id]);
+export async function findUserById(
+  id: string,
+  client?: PoolClient,
+): Promise<UserRow | null> {
+  const executor = client ?? pool;
+  const res = await executor.query<UserRow>(`SELECT * FROM users WHERE id = $1`, [
+    id,
+  ]);
   return res.rows[0] ?? null;
+}
+
+export type UserListFilters = {
+  search?: string;
+  role?: UserRole;
+  tier?: UserTier;
+  status?: UserStatus;
+  limit?: number;
+  offset?: number;
+};
+
+function buildUserFilterWhere(filters: UserListFilters) {
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.search) {
+    params.push(`%${filters.search.toLowerCase()}%`);
+    conditions.push(
+      `(lower(email) LIKE $${params.length} OR lower(full_name) LIKE $${params.length})`,
+    );
+  }
+  if (filters.role) {
+    params.push(filters.role);
+    conditions.push(`role = $${params.length}`);
+  }
+  if (filters.tier) {
+    params.push(filters.tier);
+    conditions.push(`tier = $${params.length}`);
+  }
+  if (filters.status) {
+    params.push(filters.status);
+    conditions.push(`status = $${params.length}`);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  return { where, params } as const;
+}
+
+export async function listUsers(filters: UserListFilters) {
+  const { where, params } = buildUserFilterWhere(filters);
+  const limit = filters.limit ?? 20;
+  const offset = filters.offset ?? 0;
+  const res = await query<UserRow>(
+    `SELECT * FROM users ${where}
+     ORDER BY created_at DESC
+     LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset],
+  );
+  return res.rows;
+}
+
+export async function countUsers(filters: UserListFilters) {
+  const { where, params } = buildUserFilterWhere(filters);
+  const res = await query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM users ${where}`,
+    params,
+  );
+  return Number(res.rows[0]?.count ?? 0);
 }
 
 export type CreateUserInput = {
@@ -100,9 +165,14 @@ export async function createUser(input: CreateUserInput) {
   return res.rows[0];
 }
 
-export async function markEmailVerified(userId: string) {
-  await query(
-    `UPDATE users SET status = 'active', email_verified_at = now(), updated_at = now() WHERE id = $1`,
+export async function markEmailVerified(userId: string, client?: PoolClient) {
+  const executor = client ?? pool;
+  await executor.query(
+    `UPDATE users
+     SET status = 'active',
+         email_verified_at = now(),
+         updated_at = now()
+     WHERE id = $1`,
     [userId],
   );
 }
@@ -148,6 +218,31 @@ export async function updateUserProfile(
       input.avatar_url ?? null,
       input.profile_completed ?? null,
     ],
+  );
+  return res.rows[0] ?? null;
+}
+
+export type UserAdminUpdateInput = {
+  role?: UserRole;
+  tier?: UserTier;
+  status?: UserStatus;
+};
+
+export async function adminUpdateUser(
+  userId: string,
+  input: UserAdminUpdateInput,
+  client?: PoolClient,
+) {
+  const executor = client ?? pool;
+  const res = await executor.query<UserRow>(
+    `UPDATE users
+     SET role = COALESCE($2, role),
+         tier = COALESCE($3, tier),
+         status = COALESCE($4, status),
+         updated_at = now()
+     WHERE id = $1
+     RETURNING *`,
+    [userId, input.role ?? null, input.tier ?? null, input.status ?? null],
   );
   return res.rows[0] ?? null;
 }

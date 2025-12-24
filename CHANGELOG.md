@@ -2,6 +2,18 @@
 
 ## 2025-12-24
 
+### feat(user-admin): staff user management + allowlist backend
+- Added staff-only user admin APIs under `/api/staff/users/**` and `/api/staff/allowlist` with role/tier allowlist entries.
+- Added user admin services/controllers and audit logging for role/tier/status updates, email verification overrides, and reset triggers.
+- Allowlist audits store email in metadata (target_id null).
+
+### feat(auth): allowlist-aware signup role/tier
+- Registration checks `course_student_allowlist` for role/tier, auto-verifies allowlisted signups, and records membership history for paid tier.
+- `/api/auth/register` now returns the created user status.
+
+### chore(db): extend allowlist table
+- Added `role` and `tier` columns to `course_student_allowlist` with defaults.
+
 ### fix(repo): restore checks and typings
 - Updated Next.js route handler params typing and wrapped email verification in Suspense for build stability.
 - Tightened quiz/question/auth typing (difficulty, challenge, repo return types) and added missing pg/bcryptjs type deps.
