@@ -128,12 +128,13 @@
   flex: 1 1 auto;
   min-width: 0;
   margin-left: auto;
+  --filter-width: 190px;
 }
 
 .dd {
   position: relative;
   flex: 0 0 auto;
-  width: 170px;
+  width: var(--filter-width);
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -142,11 +143,11 @@
 }
 
 .ddWide {
-  width: 220px;
+  width: var(--filter-width);
 }
 
 .ddSlider {
-  width: 240px;
+  width: var(--filter-width);
 }
 
 .ddOpen {
@@ -173,6 +174,7 @@
   border: 0;
   background: transparent;
   padding: 12px 14px;
+  min-height: 48px;
   font-size: 15px;
   font-weight: 900;
   color: #0e1b2b;
@@ -925,7 +927,7 @@
   cursor: pointer;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1500px) {
   .filters {
     flex-wrap: wrap;
   }
