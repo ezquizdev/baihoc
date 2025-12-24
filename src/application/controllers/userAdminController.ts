@@ -45,7 +45,9 @@ const toAdminDetail = (row: UserRow): UserAdminDetail => ({
   dateOfBirth: row.date_of_birth,
 });
 
-const toMembershipEntry = (row: MembershipHistoryRow): MembershipHistoryEntry => ({
+const toMembershipEntry = (
+  row: MembershipHistoryRow,
+): MembershipHistoryEntry => ({
   id: row.id,
   userId: row.user_id,
   fromTier: row.from_tier,
@@ -107,7 +109,9 @@ export async function controllerAdminGetUser(userId: string) {
   return toAdminDetail(user);
 }
 
-export async function controllerAdminUserHistory(userId: string): Promise<UserHistory> {
+export async function controllerAdminUserHistory(
+  userId: string,
+): Promise<UserHistory> {
   const history = await getUserHistory(userId);
   return {
     membership: history.membership.map(toMembershipEntry),

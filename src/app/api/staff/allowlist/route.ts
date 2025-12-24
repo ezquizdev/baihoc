@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { parsePagination } from "@/app/api/_utils/query";
 import {
   controllerAdminAllowlistAdd,
   controllerAdminAllowlistBulk,
@@ -7,7 +8,6 @@ import {
   controllerAdminAllowlistRemove,
 } from "@/application/controllers/userAdminController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import { parsePagination } from "@/app/api/_utils/query";
 
 const roleValues = ["student", "staff"] as const;
 const tierValues = ["free", "paid"] as const;
@@ -86,11 +86,12 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const parsed = z
-      .object({ email: z.string().email() })
-      .safeParse(body);
+    const parsed = z.object({ email: z.string().email() }).safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Email không hợp lệ" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Email không hợp lệ" },
+        { status: 400 },
+      );
     }
     await controllerAdminAllowlistRemove({
       email: parsed.data.email,

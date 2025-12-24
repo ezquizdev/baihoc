@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { parsePagination } from "@/app/api/_utils/query";
 import { controllerAdminListUsers } from "@/application/controllers/userAdminController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
-import { parsePagination } from "@/app/api/_utils/query";
 
 const roleValues = ["student", "staff"] as const;
 const tierValues = ["free", "paid"] as const;

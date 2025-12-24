@@ -140,14 +140,12 @@ export async function addAllowlistEmail(input: {
   actorUserId: string;
 }) {
   const email = normalizeEmail(input.email);
-  await insertAllowlistEmail(
-    {
-      email,
-      role: input.role,
-      tier: input.tier,
-      addedBy: input.actorUserId,
-    },
-  );
+  await insertAllowlistEmail({
+    email,
+    role: input.role,
+    tier: input.tier,
+    addedBy: input.actorUserId,
+  });
   await insertAuditLog({
     actorUserId: input.actorUserId,
     action: "allowlist_add",
@@ -180,7 +178,10 @@ export async function addAllowlistBulk(
   entries: Array<{ email: string; role?: UserRole; tier?: UserTier }>,
   actorUserId: string,
 ): Promise<{ added: number }> {
-  const unique = new Map<string, { email: string; role?: UserRole; tier?: UserTier }>();
+  const unique = new Map<
+    string,
+    { email: string; role?: UserRole; tier?: UserTier }
+  >();
   entries.forEach((entry) => {
     const email = normalizeEmail(entry.email);
     if (!email) return;
@@ -191,14 +192,12 @@ export async function addAllowlistBulk(
 
   let added = 0;
   for (const entry of unique.values()) {
-    await insertAllowlistEmail(
-      {
-        email: entry.email,
-        role: entry.role,
-        tier: entry.tier,
-        addedBy: actorUserId,
-      },
-    );
+    await insertAllowlistEmail({
+      email: entry.email,
+      role: entry.role,
+      tier: entry.tier,
+      addedBy: actorUserId,
+    });
     await insertAuditLog({
       actorUserId,
       action: "allowlist_add",

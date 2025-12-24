@@ -50,9 +50,10 @@ export async function findUserById(
   client?: PoolClient,
 ): Promise<UserRow | null> {
   const executor = client ?? pool;
-  const res = await executor.query<UserRow>(`SELECT * FROM users WHERE id = $1`, [
-    id,
-  ]);
+  const res = await executor.query<UserRow>(
+    `SELECT * FROM users WHERE id = $1`,
+    [id],
+  );
   return res.rows[0] ?? null;
 }
 

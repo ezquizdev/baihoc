@@ -12,7 +12,9 @@ export async function GET(request: NextRequest) {
 
   const url = new URL(request.url);
   const emailParam = url.searchParams.get("email");
-  const parsed = emailSchema.safeParse(emailParam ? normalizeEmail(emailParam) : null);
+  const parsed = emailSchema.safeParse(
+    emailParam ? normalizeEmail(emailParam) : null,
+  );
   if (!parsed.success) {
     return NextResponse.json({ error: "Email không hợp lệ" }, { status: 400 });
   }

@@ -93,10 +93,12 @@ vi.mock("@/application/infra/db/allowlistRepo", () => {
     insertAllowlistEmail: vi.fn(
       async (input: { email: string; role?: string; tier?: string }) => {
         const existing = records.find((r) => r.email === input.email);
-        const nextRole = (input.role as AllowlistRecord["role"] | undefined) ??
+        const nextRole =
+          (input.role as AllowlistRecord["role"] | undefined) ??
           existing?.role ??
           "student";
-        const nextTier = (input.tier as AllowlistRecord["tier"] | undefined) ??
+        const nextTier =
+          (input.tier as AllowlistRecord["tier"] | undefined) ??
           existing?.tier ??
           "paid";
         if (existing) {
