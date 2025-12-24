@@ -272,6 +272,8 @@ describe("authService", () => {
     expect(user.tier).toBe("paid");
     expect(user.status).toBe("active");
     expect(user.email_verified_at).toBeTruthy();
+    expect(tokenRepo.createEmailVerificationToken).not.toHaveBeenCalled();
+    expect(emailService.sendTransactionalEmail).not.toHaveBeenCalled();
     const membershipRecords = (
       membershipRepo as unknown as { __records: Array<{ userId: string }> }
     ).__records;

@@ -96,16 +96,18 @@ export async function registerWithEmail(input: {
     await insertAllowlistUpgrade(user.id);
   }
 
-  const rawToken = await createEmailVerificationToken(
-    user.id,
-    VERIFICATION_TTL_MINUTES,
-  );
-  const verifyLink = `${env.NEXT_PUBLIC_APP_URL}/auth/verify?token=${rawToken}`;
-  await sendTransactionalEmail({
-    to: [{ email: user.email, name: user.full_name }],
-    subject: "Xác minh tài khoản BaiHoc",
-    text: `Xin chào ${user.full_name},\n\nVui lòng xác minh email của bạn tại liên kết sau: ${verifyLink}\n\nCảm ơn,\nĐội ngũ ${siteConfig.name}`,
-  });
+  if (!allowlisted) {
+    const rawToken = await createEmailVerificationToken(
+      user.id,
+      VERIFICATION_TTL_MINUTES,
+    );
+    const verifyLink = `${env.NEXT_PUBLIC_APP_URL}/auth/verify?token=${rawToken}`;
+    await sendTransactionalEmail({
+      to: [{ email: user.email, name: user.full_name }],
+      subject: "Xác minh tài khoản BaiHoc",
+      text: `Xin chào ${user.full_name},\n\nVui lòng xác minh email của bạn tại liên kết sau: ${verifyLink}\n\nCảm ơn,\nĐội ngũ ${siteConfig.name}`,
+    });
+  }
 
   return user;
 }

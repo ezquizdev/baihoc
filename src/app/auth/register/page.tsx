@@ -102,7 +102,11 @@ export default function RegisterPage() {
       if (!res.ok) {
         throw new Error(data.error || "Đăng ký thất bại");
       }
-      setSuccess("Đăng ký thành công. Vui lòng kiểm tra email để xác minh.");
+      if (data.status === "active") {
+        setSuccess("Đăng ký thành công. Bạn có thể đăng nhập ngay bây giờ.");
+      } else {
+        setSuccess("Đăng ký thành công. Vui lòng kiểm tra email để xác minh.");
+      }
       setTimeout(() => router.push("/auth/login"), 1200);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Đăng ký thất bại";
