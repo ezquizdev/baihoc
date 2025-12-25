@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { formatNumberVi } from "@/lib/formatters";
 import styles from "./leaderboard-card.module.css";
 
 type LeaderboardRow = {
@@ -81,7 +82,7 @@ export function LeaderboardCard({
                     {row.name}
                   </div>
                 </td>
-                <td className={styles.xp}>{row.xp}</td>
+                <td className={styles.xp}>{formatNumberVi(row.xp)}</td>
               </tr>
             ))}
           </tbody>
