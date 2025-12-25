@@ -75,6 +75,9 @@
 ### fix(staff): remove hard caps from quiz range filters
 - Made quiz duration/question range filters adapt to the actual dataset so large quizzes are not hidden by default.
 
+### fix(ui): make nested modal escape close top-most
+- Prevented the quiz builder from closing when pressing Escape inside the question-bank picker modal.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
