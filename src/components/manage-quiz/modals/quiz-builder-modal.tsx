@@ -60,6 +60,7 @@ export function QuizBuilderModal({
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
+    void quizId;
     setQuiz(null);
     setDescription("");
     setQuestions([]);
@@ -218,7 +219,9 @@ export function QuizBuilderModal({
   const questionIds = questions.map((q) => q.id);
   const questionPositionById = useMemo(() => {
     const map = new Map<string, number>();
-    questions.forEach((q, idx) => map.set(q.id, idx + 1));
+    questions.forEach((q, idx) => {
+      map.set(q.id, idx + 1);
+    });
     return map;
   }, [questions]);
 

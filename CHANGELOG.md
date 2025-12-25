@@ -12,6 +12,9 @@
 ### fix(staff): stabilize quiz builder hook order
 - Fixed a client-side crash when opening the quiz builder by ensuring all hooks run unconditionally.
 
+### chore(lint): fix quiz builder biome warnings
+- Tweaked quiz builder hooks/utilities to satisfy Biome lint rules.
+
 ### refactor(staff): hide quiz archive UI
 - Removed archive/restore buttons and archived visual indicators from staff quiz cards and filters.
 - Replaced the staff-only bookmark control with a draft status chip.
