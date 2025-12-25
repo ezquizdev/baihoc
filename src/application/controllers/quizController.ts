@@ -36,7 +36,6 @@ export async function controllerCreateQuiz(input: {
     startAt: string;
     endAt: string;
     timeLimitSeconds: number;
-    rules?: unknown;
   };
 }) {
   return createQuiz(input);
@@ -57,7 +56,6 @@ export async function controllerUpdateQuiz(
       startAt: string;
       endAt: string;
       timeLimitSeconds: number;
-      rules?: unknown;
     } | null;
   },
 ) {

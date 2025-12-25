@@ -42,7 +42,6 @@ export function QuizInfoModal({
   const [challengeStart, setChallengeStart] = useState("");
   const [challengeEnd, setChallengeEnd] = useState("");
   const [challengeLimitMinutes, setChallengeLimitMinutes] = useState(15);
-  const [challengeRulesText, setChallengeRulesText] = useState("");
 
   useEffect(() => {
     if (!quizId) return;
@@ -87,9 +86,6 @@ export function QuizInfoModal({
           nextQuiz.estimatedTimeSeconds ??
           900;
         setChallengeLimitMinutes(Math.max(1, Math.round(fallbackLimit / 60)));
-        setChallengeRulesText(
-          JSON.stringify(nextQuiz.challenge?.rules ?? {}, null, 2),
-        );
         requestAnimationFrame(() => primaryRef.current?.focus());
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
@@ -184,20 +180,10 @@ export function QuizInfoModal({
           Number.isFinite(challengeLimitMinutes) && challengeLimitMinutes > 0
             ? challengeLimitMinutes
             : safeMinutes;
-        let rules: unknown = {};
-        const trimmedRules = challengeRulesText.trim();
-        if (trimmedRules) {
-          try {
-            rules = JSON.parse(trimmedRules);
-          } catch {
-            throw new Error("Rules (JSON) không hợp lệ.");
-          }
-        }
         payload.challenge = {
           startAt,
           endAt,
           timeLimitSeconds: Math.max(1, Math.round(safeLimitMinutes)) * 60,
-          rules,
         };
       } else {
         payload.challenge = null;
@@ -432,18 +418,6 @@ export function QuizInfoModal({
                         disabled={disabled}
                       />
                       <span>phút</span>
-                    </div>
-                    <div className={styles.formRow}>
-                      <div className={styles.label}>Rules (JSON):</div>
-                      <textarea
-                        className={styles.dashArea}
-                        rows={5}
-                        value={challengeRulesText}
-                        onChange={(event) =>
-                          setChallengeRulesText(event.target.value)
-                        }
-                        disabled={disabled}
-                      />
                     </div>
                   </>
                 ) : null}

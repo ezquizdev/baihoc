@@ -250,9 +250,21 @@ CREATE TABLE IF NOT EXISTS challenge_settings (
   quiz_id uuid PRIMARY KEY REFERENCES quizzes(id),
   start_at timestamptz NOT NULL,
   end_at timestamptz NOT NULL,
-  time_limit_seconds integer NOT NULL,
-  rules jsonb
+  time_limit_seconds integer NOT NULL
 );
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'challenge_settings'
+      AND column_name = 'rules'
+  ) THEN
+    ALTER TABLE challenge_settings DROP COLUMN rules;
+  END IF;
+END $$;
 
 -- Questions
 CREATE TABLE IF NOT EXISTS questions (

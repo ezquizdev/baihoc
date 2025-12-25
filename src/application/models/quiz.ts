@@ -28,7 +28,6 @@ export type ChallengeSettings = {
   startAt: string;
   endAt: string;
   timeLimitSeconds: number;
-  rules: unknown;
 };
 
 export type QuizQuestionLink = {

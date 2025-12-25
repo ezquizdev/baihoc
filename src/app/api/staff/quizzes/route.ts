@@ -24,7 +24,6 @@ const quizPayloadSchema = z.object({
       startAt: z.string(),
       endAt: z.string(),
       timeLimitSeconds: z.number().int().positive(),
-      rules: z.any().optional(),
     })
     .optional(),
 });

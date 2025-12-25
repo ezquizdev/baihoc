@@ -277,7 +277,6 @@ async function main() {
           shiftDate(timestamps.updatedAt, -1),
           shiftDate(timestamps.updatedAt, 7),
           minutes * 60,
-          {},
         ]);
       }
 
@@ -349,7 +348,7 @@ async function main() {
       await insertRows(
         client,
         "challenge_settings",
-        ["quiz_id", "start_at", "end_at", "time_limit_seconds", "rules"],
+        ["quiz_id", "start_at", "end_at", "time_limit_seconds"],
         challengeRows,
         "ON CONFLICT (quiz_id) DO NOTHING",
       );
