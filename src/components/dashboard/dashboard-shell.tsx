@@ -3,7 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, MagnifyingGlass } from "phosphor-react";
+import {
+  Bell,
+  GearSix,
+  MagnifyingGlass,
+  SignOut,
+  UserCircle,
+} from "phosphor-react";
 import type { FormEvent, MouseEvent, ReactNode } from "react";
 import styles from "./dashboard-shell.module.css";
 
@@ -241,25 +247,41 @@ export function DashboardShell({
                     role="menuitem"
                     className={styles.profileLink}
                   >
-                    <span className={styles.menuDot} aria-hidden="true" /> Hồ sơ
+                    <UserCircle
+                      size={18}
+                      weight="bold"
+                      className={styles.profileIcon}
+                      aria-hidden="true"
+                    />
+                    Hồ sơ
                   </Link>
                   <Link
                     href="/profile"
                     role="menuitem"
                     className={styles.profileLink}
                   >
-                    <span className={styles.menuDot} aria-hidden="true" /> Cài
-                    đặt
+                    <GearSix
+                      size={18}
+                      weight="bold"
+                      className={styles.profileIcon}
+                      aria-hidden="true"
+                    />
+                    Cài đặt
                   </Link>
                   <div className={styles.profileSeparator} aria-hidden="true" />
                   <button
                     type="button"
                     role="menuitem"
-                    className={styles.profileLink}
+                    className={`${styles.profileLink} ${styles.profileLinkDestructive}`}
                     onClick={handleLogout}
                   >
-                    <span className={styles.menuDot} aria-hidden="true" /> Đăng
-                    xuất
+                    <SignOut
+                      size={18}
+                      weight="bold"
+                      className={styles.profileIcon}
+                      aria-hidden="true"
+                    />
+                    Đăng xuất
                   </button>
                 </div>
               </details>

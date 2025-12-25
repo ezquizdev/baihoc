@@ -598,8 +598,23 @@
   font-family: inherit;
 }
 
+.profileIcon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  opacity: 0.92;
+}
+
 .profileLink:hover {
   background: #f1f5ff;
+}
+
+.profileLinkDestructive {
+  color: #d43b3b;
+}
+
+.profileLinkDestructive:hover {
+  background: #fff0f0;
 }
 
 .profileLink:focus-visible {

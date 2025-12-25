@@ -56,6 +56,9 @@
 - Added focus/hover/active states for staff dashboard CTAs and section links.
 - Improved numeric alignment and prevented long topic names from overflowing.
 
+### fix(ui): add icons to profile menu
+- Added icons to profile menu items and styled “Đăng xuất” as a destructive (red) action.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
