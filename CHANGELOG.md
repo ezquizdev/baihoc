@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### chore(dev): ignore Playwright dev artifacts
+- Ignored `.playwright-dev.*` files so local UI testing doesn’t dirty `git status`.
+
 ### fix(catalog): fix quiz search SQL placeholders
 - Fixed placeholder substitution so search filters like `(title ILIKE ... OR description ILIKE ...)` no longer produce invalid SQL.
 
