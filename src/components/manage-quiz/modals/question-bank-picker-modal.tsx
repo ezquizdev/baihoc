@@ -162,6 +162,7 @@ export function QuestionBankPickerModal({
               className={styles.pickerLink}
               href="/staff/questions/new"
               target="_blank"
+              rel="noopener noreferrer"
             >
               + Tạo câu hỏi
             </Link>
@@ -296,6 +297,7 @@ export function QuestionBankPickerModal({
                             className={styles.pickerLink}
                             href={`/staff/questions/${q.id}`}
                             target="_blank"
+                            rel="noopener noreferrer"
                           >
                             Mở
                           </Link>
