@@ -159,6 +159,11 @@ export function DashboardShell({
     });
   }, [isFeatureSearch, navItems]);
 
+  const settingsHref = useMemo<Parameters<typeof Link>[0]["href"]>(() => {
+    const href = navItems.find((item) => item.key === "settings")?.href;
+    return href ?? "/profile";
+  }, [navItems]);
+
   const featureSuggestions = useMemo(() => {
     if (!isFeatureSearch || !featureOpen) return [];
     const query = normalizeForSearch(featureQuery);
@@ -209,6 +214,7 @@ export function DashboardShell({
     onSearchSubmit(value);
   };
   const handleLogout = async () => {
+    setProfileOpen(false);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {
@@ -571,6 +577,7 @@ export function DashboardShell({
                     href="/profile"
                     role="menuitem"
                     className={styles.profileLink}
+                    onClick={() => setProfileOpen(false)}
                   >
                     <UserCircle
                       size={18}
@@ -581,9 +588,10 @@ export function DashboardShell({
                     Hồ sơ
                   </Link>
                   <Link
-                    href="/profile"
+                    href={settingsHref}
                     role="menuitem"
                     className={styles.profileLink}
+                    onClick={() => setProfileOpen(false)}
                   >
                     <GearSix
                       size={18}
