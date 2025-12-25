@@ -255,16 +255,6 @@ export function QuestionEditModal({
               Hủy
             </button>
             <button
-              className={`${styles.pillBtn} ${styles.pillAccent} ${
-                disabled ? styles.pillDisabled : ""
-              }`}
-              type="button"
-              onClick={() => window.alert("Chưa hỗ trợ: xem trước câu hỏi")}
-              disabled={disabled}
-            >
-              Xem trước
-            </button>
-            <button
               className={`${styles.pillBtn} ${styles.pillPrimary} ${
                 disabled || !canSave ? styles.pillDisabled : ""
               }`}

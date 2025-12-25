@@ -18,6 +18,9 @@
 ### fix(build): type quiz builder drag announcements
 - Added explicit typing for dnd-kit accessibility callbacks to satisfy TypeScript strict mode.
 
+### refactor(staff): remove preview action from question modal
+- Removed the “Xem trước” button from the staff question edit modal inside the quiz builder flow.
+
 ### refactor(staff): hide quiz archive UI
 - Removed archive/restore buttons and archived visual indicators from staff quiz cards and filters.
 - Replaced the staff-only bookmark control with a draft status chip.
