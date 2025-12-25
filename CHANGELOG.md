@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### fix(attempt): prevent autosave after submission
+- Guarded autosave writes with an attempt row lock to avoid autosaves overwriting graded answers after submit (multi-tab safety).
+
 ### fix(ui): make attempt autosave more reliable
 - Serialized per-question autosave requests to avoid out-of-order overwrites during rapid answering/typing.
 - Stabilized the “Đang lưu...” indicator for concurrent saves and handled 409 already-submitted autosaves by showing the success modal.

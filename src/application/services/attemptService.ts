@@ -135,17 +135,25 @@ export async function autosaveAttempt(
     rejectExpired: true,
   });
 
-  await saveAttemptAnswers({
+  const savedAttempt = await saveAttemptAnswers({
     attemptId,
     answers: normalized,
     remainingSeconds,
   });
+  if (!savedAttempt) {
+    throw new ServiceError("ATTEMPT_NOT_FOUND", "Attempt not found", 404);
+  }
+  if (savedAttempt.status !== "in_progress") {
+    throw new ServiceError(
+      "ATTEMPT_ALREADY_SUBMITTED",
+      "Attempt already submitted",
+      409,
+    );
+  }
 
   return {
     attempt: {
-      ...mapAttemptRow(attempt),
-      remainingSeconds:
-        remainingSeconds ?? mapAttemptRow(attempt).remainingSeconds,
+      ...mapAttemptRow(savedAttempt),
     },
   };
 }

@@ -515,14 +515,29 @@ export async function saveAttemptAnswers(input: {
   attemptId: string;
   answers: AttemptAnswerInput[];
   remainingSeconds?: number | null;
-}) {
-  if (!input.answers.length && input.remainingSeconds === undefined) return;
-  await withTransaction(async (client) => {
+}): Promise<AttemptRow | null> {
+  return withTransaction(async (client) => {
+    const attemptRes = await client.query<AttemptRow>(
+      `SELECT * FROM attempts WHERE id = $1 FOR UPDATE`,
+      [input.attemptId],
+    );
+    const attemptRow = attemptRes.rows[0];
+    if (!attemptRow) return null;
+
+    if (attemptRow.status !== "in_progress") {
+      return attemptRow;
+    }
+
+    let updatedAttemptRow = attemptRow;
     if (input.remainingSeconds !== undefined) {
-      await client.query(
-        `UPDATE attempts SET remaining_seconds = $2 WHERE id = $1`,
+      const updatedRes = await client.query<AttemptRow>(
+        `UPDATE attempts SET remaining_seconds = $2 WHERE id = $1 RETURNING *`,
         [input.attemptId, input.remainingSeconds],
       );
+      const updated = updatedRes.rows[0];
+      if (updated) {
+        updatedAttemptRow = updated;
+      }
     }
     if (input.answers.length) {
       await upsertAutosaveAnswers(client, input.attemptId, input.answers);
@@ -536,6 +551,7 @@ export async function saveAttemptAnswers(input: {
         },
       );
     }
+    return updatedAttemptRow;
   });
 }
 
