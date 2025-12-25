@@ -109,7 +109,9 @@ export function QuizBuilderModal({
     } else {
       delete document.body.dataset.dndDragging;
     }
-    return () => delete document.body.dataset.dndDragging;
+    return () => {
+      delete document.body.dataset.dndDragging;
+    };
   }, [activeQuestionId, quizId]);
 
   const visibilityText = quiz?.visibility === "premium" ? "VIP" : "Miễn phí";
