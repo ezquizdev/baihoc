@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BookOpen, FastForward, Trophy, WarningCircle } from "phosphor-react";
 import type { StaffDashboardOverviewDto } from "@/application/models/staffDashboard";
 import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
+import { SubjectBadge } from "@/components/quiz-catalog/quiz-badges";
 import { formatNumberVi } from "@/lib/formatters";
 import styles from "./staff-dashboard-screen.module.css";
 
@@ -177,9 +178,10 @@ export function StaffDashboardScreen({
                     <p className={styles.statLabel}>Chủ đề sai nhiều</p>
                   </div>
                   {stats?.mostWrongTopic ? (
-                    <span className={styles.topicBadge}>
-                      {stats.mostWrongTopic.subjectName}
-                    </span>
+                    <SubjectBadge
+                      name={stats.mostWrongTopic.subjectName}
+                      slug={stats.mostWrongTopic.subjectSlug}
+                    />
                   ) : null}
                 </div>
                 {stats?.mostWrongTopic ? (

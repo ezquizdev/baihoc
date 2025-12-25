@@ -12,6 +12,7 @@ export type StaffDashboardStatsDto = {
   attemptsTodayCount: number;
   mostWrongTopic: {
     subjectName: string;
+    subjectSlug: string;
     topicName: string;
     wrongCount: number;
   } | null;

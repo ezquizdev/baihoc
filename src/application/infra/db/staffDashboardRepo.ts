@@ -48,17 +48,20 @@ export async function getAttemptsTodayCount(): Promise<number> {
 
 type MostWrongTopicRow = {
   subject_name: string;
+  subject_slug: string;
   topic_name: string;
   wrong_count: number;
 };
 
 export async function getMostWrongTopic(windowDays: number): Promise<{
   subjectName: string;
+  subjectSlug: string;
   topicName: string;
   wrongCount: number;
 } | null> {
   const res = await query<MostWrongTopicRow>(
     `SELECT s.name AS subject_name,
+            s.slug AS subject_slug,
             t.name AS topic_name,
             COUNT(*)::int AS wrong_count
      FROM attempt_answers aa
@@ -70,7 +73,7 @@ export async function getMostWrongTopic(windowDays: number): Promise<{
        AND a.status IN ('submitted', 'auto_submitted')
        AND a.submitted_at IS NOT NULL
        AND a.submitted_at >= now() - ($1::int * interval '1 day')
-     GROUP BY s.name, t.name
+     GROUP BY s.name, s.slug, t.name
      ORDER BY wrong_count DESC
      LIMIT 1`,
     [windowDays],
@@ -79,6 +82,7 @@ export async function getMostWrongTopic(windowDays: number): Promise<{
   if (!row) return null;
   return {
     subjectName: row.subject_name,
+    subjectSlug: row.subject_slug,
     topicName: row.topic_name,
     wrongCount: row.wrong_count,
   };
