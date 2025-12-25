@@ -77,6 +77,34 @@ export async function startOrResumeAttempt(
       400,
     );
   }
+  if (quizMeta.isChallenge) {
+    const startAt = quizMeta.challengeStartAt;
+    const endAt = quizMeta.challengeEndAt;
+    if (!startAt || !endAt) {
+      throw new ServiceError(
+        "CHALLENGE_SCHEDULE_MISSING",
+        "Challenge schedule missing",
+        400,
+      );
+    }
+    const now = Date.now();
+    const startMs = new Date(startAt).getTime();
+    const endMs = new Date(endAt).getTime();
+    if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
+      throw new ServiceError(
+        "CHALLENGE_SCHEDULE_INVALID",
+        "Challenge schedule invalid",
+        400,
+      );
+    }
+    if (now < startMs || now > endMs) {
+      throw new ServiceError(
+        "CHALLENGE_NOT_ACTIVE",
+        "Thử thách chưa bắt đầu hoặc đã kết thúc.",
+        409,
+      );
+    }
+  }
 
   const created = await createAttempt({
     userId,

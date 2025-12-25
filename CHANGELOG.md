@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### fix(attempt): enforce challenge schedule window
+- Prevented starting new challenge attempts outside `challenge_settings.start_at/end_at` (resuming an in-progress attempt is still allowed).
+
 ### fix(attempt): prevent autosave after submission
 - Guarded autosave writes with an attempt row lock to avoid autosaves overwriting graded answers after submit (multi-tab safety).
 
