@@ -65,6 +65,9 @@
 ### fix(ui): disable dashboard search autofill
 - Disabled browser autofill/autocorrect for the dashboard search input to avoid noisy suggestions.
 
+### feat(shell): add dashboard feature search omnibox
+- Added a suggest-as-you-type feature search dropdown on dashboards with keyboard (↑/↓/Enter/Escape) and click navigation.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

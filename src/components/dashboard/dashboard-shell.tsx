@@ -15,10 +15,25 @@ import {
   type MouseEvent,
   type ReactNode,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import styles from "./dashboard-shell.module.css";
+
+type FeatureSearchItem = {
+  label: string;
+  href: Parameters<typeof Link>[0]["href"];
+  keywords?: string[];
+};
+
+function normalizeForSearch(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
 type NavItem = {
   key: string;
@@ -94,6 +109,72 @@ export function DashboardShell({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [notificationsOpen]);
+
+  const isFeatureSearch = !onSearchChange && !onSearchSubmit;
+  const [featureQuery, setFeatureQuery] = useState("");
+  const [featureOpen, setFeatureOpen] = useState(false);
+  const [featureActiveIndex, setFeatureActiveIndex] = useState(0);
+  const searchRef = useRef<HTMLFormElement | null>(null);
+
+  const featureItems = useMemo<FeatureSearchItem[]>(() => {
+    if (!isFeatureSearch) return [];
+    const items: FeatureSearchItem[] = [];
+    navItems.forEach((item) => {
+      if (!item.href) return;
+      items.push({ label: item.label, href: item.href });
+    });
+    items.push({ label: "Hồ sơ", href: "/profile" });
+
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      const hrefKey =
+        typeof item.href === "string" ? item.href : JSON.stringify(item.href);
+      const key = `${normalizeForSearch(item.label)}|${hrefKey}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [isFeatureSearch, navItems]);
+
+  const featureSuggestions = useMemo(() => {
+    if (!isFeatureSearch || !featureOpen) return [];
+    const query = normalizeForSearch(featureQuery);
+    const base = featureItems;
+    const filtered = query
+      ? base.filter((item) => {
+          const haystack = `${item.label} ${(item.keywords ?? []).join(" ")}`;
+          return normalizeForSearch(haystack).includes(query);
+        })
+      : base;
+    return filtered.slice(0, 8);
+  }, [featureItems, featureOpen, featureQuery, isFeatureSearch]);
+
+  useEffect(() => {
+    if (!isFeatureSearch || !featureOpen) return;
+    const handleOutsideClick = (event: globalThis.MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (searchRef.current?.contains(target)) return;
+      setFeatureOpen(false);
+    };
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setFeatureOpen(false);
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [featureOpen, isFeatureSearch]);
+
+  useEffect(() => {
+    if (!featureOpen) return;
+    if (featureActiveIndex < featureSuggestions.length) return;
+    setFeatureActiveIndex(0);
+  }, [featureActiveIndex, featureOpen, featureSuggestions.length]);
+
   const handlePlaceholderClick = (event: MouseEvent<HTMLElement>) => {
     event.preventDefault();
   };
@@ -113,8 +194,22 @@ export function DashboardShell({
     router.replace("/auth/login");
     router.refresh();
   };
-  const inputProps =
+  const standardInputProps =
     searchValue !== undefined ? { value: searchValue } : undefined;
+
+  const navigateFeatureHref = (href: FeatureSearchItem["href"]) => {
+    setFeatureOpen(false);
+    setFeatureQuery("");
+    if (typeof href === "string") {
+      router.push(href);
+      return;
+    }
+    if ("pathname" in href && typeof href.pathname === "string") {
+      router.push(href.pathname);
+      return;
+    }
+    router.push("/");
+  };
 
   return (
     <div className={styles.shell}>
@@ -206,33 +301,165 @@ export function DashboardShell({
               </div>
             </label>
 
-            <form
-              className={styles.search}
-              aria-label="Tìm kiếm"
-              onSubmit={handleSearchSubmit}
-              autoComplete="off"
-            >
-              <div className={styles.searchIcon} aria-hidden="true">
-                <MagnifyingGlass size={18} weight="bold" />
-              </div>
-              <input
-                className={styles.searchInput}
-                placeholder={searchPlaceholder}
-                type="search"
-                name={searchName}
+            {isFeatureSearch ? (
+              <form
+                className={styles.search}
+                aria-label="Tìm kiếm"
+                onSubmit={handleSearchSubmit}
                 autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="none"
-                spellCheck={false}
-                {...inputProps}
-                onChange={
-                  onSearchChange
-                    ? (event) => onSearchChange(event.target.value)
-                    : undefined
-                }
-                disabled={searchDisabled}
-              />
-            </form>
+                ref={searchRef}
+              >
+                <div className={styles.searchIcon} aria-hidden="true">
+                  <MagnifyingGlass size={18} weight="bold" />
+                </div>
+                <input
+                  className={styles.searchInput}
+                  placeholder={searchPlaceholder}
+                  type="search"
+                  name={searchName}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  value={featureQuery}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setFeatureQuery(value);
+                    setFeatureActiveIndex(0);
+                    setFeatureOpen(value.trim().length > 0);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "ArrowDown") {
+                      event.preventDefault();
+                      if (!featureOpen) {
+                        setFeatureOpen(true);
+                        setFeatureActiveIndex(0);
+                        return;
+                      }
+                      setFeatureActiveIndex((prev) => {
+                        const count = Math.max(featureSuggestions.length, 1);
+                        return (prev + 1) % count;
+                      });
+                      return;
+                    }
+                    if (event.key === "ArrowUp") {
+                      event.preventDefault();
+                      if (!featureOpen) {
+                        setFeatureOpen(true);
+                        setFeatureActiveIndex(0);
+                        return;
+                      }
+                      setFeatureActiveIndex((prev) => {
+                        const count = Math.max(featureSuggestions.length, 1);
+                        return (prev - 1 + count) % count;
+                      });
+                      return;
+                    }
+                    if (event.key === "Enter") {
+                      if (!featureOpen) return;
+                      if (featureSuggestions.length === 0) return;
+                      event.preventDefault();
+                      const selected =
+                        featureSuggestions[featureActiveIndex] ??
+                        featureSuggestions[0];
+                      if (!selected) return;
+                      navigateFeatureHref(selected.href);
+                      return;
+                    }
+                    if (event.key === "Escape") {
+                      if (!featureOpen) return;
+                      event.preventDefault();
+                      setFeatureOpen(false);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (featureQuery.trim().length === 0) return;
+                    setFeatureOpen(true);
+                  }}
+                  onBlur={(event) => {
+                    const nextTarget = event.relatedTarget as Node | null;
+                    if (nextTarget && searchRef.current?.contains(nextTarget)) {
+                      return;
+                    }
+                    setFeatureOpen(false);
+                  }}
+                  role="combobox"
+                  aria-expanded={featureOpen}
+                  aria-haspopup="listbox"
+                  aria-controls="dashboard-feature-suggestions"
+                  aria-autocomplete="list"
+                  disabled={searchDisabled}
+                />
+
+                {featureOpen ? (
+                  <div
+                    id="dashboard-feature-suggestions"
+                    className={styles.searchSuggestions}
+                    role="listbox"
+                    aria-label="Gợi ý tính năng"
+                  >
+                    {featureSuggestions.length ? (
+                      featureSuggestions.map((item, index) => {
+                        const isActive = index === featureActiveIndex;
+                        return (
+                          <button
+                            key={`${item.label}-${String(item.href)}`}
+                            type="button"
+                            role="option"
+                            aria-selected={isActive}
+                            tabIndex={-1}
+                            className={`${styles.searchSuggestionItem} ${
+                              isActive ? styles.searchSuggestionItemActive : ""
+                            }`}
+                            onMouseEnter={() => setFeatureActiveIndex(index)}
+                            onClick={() => navigateFeatureHref(item.href)}
+                          >
+                            <span className={styles.searchSuggestionLabel}>
+                              {item.label}
+                            </span>
+                            <span className={styles.searchSuggestionMeta}>
+                              Enter
+                            </span>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className={styles.searchSuggestionEmpty}>
+                        Không tìm thấy tính năng
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </form>
+            ) : (
+              <form
+                className={styles.search}
+                aria-label="Tìm kiếm"
+                onSubmit={handleSearchSubmit}
+                autoComplete="off"
+              >
+                <div className={styles.searchIcon} aria-hidden="true">
+                  <MagnifyingGlass size={18} weight="bold" />
+                </div>
+                <input
+                  className={styles.searchInput}
+                  placeholder={searchPlaceholder}
+                  type="search"
+                  name={searchName}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  {...standardInputProps}
+                  onChange={
+                    onSearchChange
+                      ? (event) => onSearchChange(event.target.value)
+                      : undefined
+                  }
+                  disabled={searchDisabled}
+                />
+              </form>
+            )}
 
             <div className={styles.topActions}>
               <details
