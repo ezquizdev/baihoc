@@ -26,8 +26,18 @@
   box-shadow: 0 18px 60px rgba(19, 33, 66, 0.22);
   padding: 18px 18px 16px;
   overflow: hidden;
+  max-height: calc(100vh - 36px);
+  display: flex;
+  flex-direction: column;
   isolation: isolate;
   outline: none;
+}
+
+.dialogBody {
+  overflow: auto;
+  padding-right: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .dialogLarge {
@@ -307,6 +317,8 @@
 .builderScroll {
   overflow: auto;
   padding-right: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .builderHead {

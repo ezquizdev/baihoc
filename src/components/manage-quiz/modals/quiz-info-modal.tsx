@@ -213,211 +213,221 @@ export function QuizInfoModal({
           </button>
         </div>
 
-        {loading ? <output aria-live="polite">Đang tải quiz...</output> : null}
+        <div className={styles.dialogBody}>
+          {loading ? (
+            <output aria-live="polite">Đang tải quiz...</output>
+          ) : null}
 
-        {!loading && quiz ? (
-          <>
-            <textarea
-              ref={primaryRef}
-              className={styles.titleInput}
-              rows={2}
-              placeholder="Tên quiz ..."
-              aria-label="Tên quiz"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              disabled={disabled}
-            />
+          {!loading && quiz ? (
+            <>
+              <textarea
+                ref={primaryRef}
+                className={styles.titleInput}
+                rows={2}
+                placeholder="Tên quiz ..."
+                aria-label="Tên quiz"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                disabled={disabled}
+              />
 
-            <div className={styles.infoPanel}>
-              <h3 id={titleId} className={styles.infoTitle}>
-                Thông tin quiz
-              </h3>
+              <div className={styles.infoPanel}>
+                <h3 id={titleId} className={styles.infoTitle}>
+                  Thông tin quiz
+                </h3>
 
-              <div className={styles.formRow}>
-                <div className={styles.label}>Mô tả quiz:</div>
-                <textarea
-                  className={styles.dashArea}
-                  placeholder=".............................................................."
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  disabled={disabled}
-                />
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.label}>Visibility:</div>
-                <label className={styles.ck}>
-                  <input
-                    type="radio"
-                    name="visibility"
-                    checked={visibility === "free"}
-                    onChange={() => setVisibility("free")}
+                <div className={styles.formRow}>
+                  <div className={styles.label}>Mô tả quiz:</div>
+                  <textarea
+                    className={styles.dashArea}
+                    placeholder=".............................................................."
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
                     disabled={disabled}
                   />
-                  Free
-                </label>
-                <label className={styles.ck}>
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.label}>Visibility:</div>
+                  <label className={styles.ck}>
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={visibility === "free"}
+                      onChange={() => setVisibility("free")}
+                      disabled={disabled}
+                    />
+                    Free
+                  </label>
+                  <label className={styles.ck}>
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={visibility === "premium"}
+                      onChange={() => setVisibility("premium")}
+                      disabled={disabled}
+                    />
+                    Premium
+                  </label>
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.label}>Độ khó mặc định:</div>
+                  <div
+                    className={styles.diffPicks}
+                    role="radiogroup"
+                    aria-label="Độ khó"
+                  >
+                    {[5, 4, 3, 2, 1].map((level) => (
+                      <label
+                        key={level}
+                        className={`${styles.ck} ${styles.diffOpt}`}
+                      >
+                        <input
+                          type="radio"
+                          name="difficulty"
+                          checked={difficulty === level}
+                          onChange={() =>
+                            setDifficulty(level as DifficultyLevel)
+                          }
+                          disabled={disabled}
+                        />
+                        <span
+                          className={`${styles.chip2} ${diffChipClass(level, styles)}`}
+                        >
+                          {level} ★
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.label}>Thời gian làm:</div>
                   <input
-                    type="radio"
-                    name="visibility"
-                    checked={visibility === "premium"}
-                    onChange={() => setVisibility("premium")}
+                    className={styles.dashInput}
+                    type="number"
+                    min={1}
+                    max={300}
+                    value={minutes}
+                    onChange={(event) => {
+                      const next = Number(event.target.value);
+                      setMinutes(Number.isFinite(next) ? next : 15);
+                    }}
                     disabled={disabled}
                   />
-                  Premium
-                </label>
-              </div>
+                  <span>phút</span>
+                </div>
 
-              <div className={styles.formRow}>
-                <div className={styles.label}>Độ khó mặc định:</div>
-                <div
-                  className={styles.diffPicks}
-                  role="radiogroup"
-                  aria-label="Độ khó"
-                >
-                  {[5, 4, 3, 2, 1].map((level) => (
-                    <label
-                      key={level}
-                      className={`${styles.ck} ${styles.diffOpt}`}
-                    >
+                <div className={styles.formRow}>
+                  <div className={styles.label}>Đặt làm Challenge:</div>
+                  <label className={styles.ck}>
+                    <input
+                      type="radio"
+                      name="challenge"
+                      checked={isChallenge}
+                      onChange={() => setIsChallenge(true)}
+                      disabled={disabled}
+                    />
+                    Có
+                  </label>
+                  <label className={styles.ck}>
+                    <input
+                      type="radio"
+                      name="challenge"
+                      checked={!isChallenge}
+                      onChange={() => setIsChallenge(false)}
+                      disabled={disabled}
+                    />
+                    Không
+                  </label>
+                </div>
+
+                {isChallenge ? (
+                  <>
+                    <div className={styles.formRow}>
+                      <div className={styles.label}>Bắt đầu:</div>
                       <input
-                        type="radio"
-                        name="difficulty"
-                        checked={difficulty === level}
-                        onChange={() => setDifficulty(level as DifficultyLevel)}
+                        className={styles.dashInput}
+                        type="datetime-local"
+                        value={challengeStart}
+                        onChange={(event) =>
+                          setChallengeStart(event.target.value)
+                        }
                         disabled={disabled}
                       />
-                      <span
-                        className={`${styles.chip2} ${diffChipClass(level, styles)}`}
-                      >
-                        {level} ★
-                      </span>
-                    </label>
-                  ))}
+                    </div>
+                    <div className={styles.formRow}>
+                      <div className={styles.label}>Kết thúc:</div>
+                      <input
+                        className={styles.dashInput}
+                        type="datetime-local"
+                        value={challengeEnd}
+                        onChange={(event) =>
+                          setChallengeEnd(event.target.value)
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+                    <div className={styles.formRow}>
+                      <div className={styles.label}>Giới hạn:</div>
+                      <input
+                        className={styles.dashInput}
+                        type="number"
+                        min={1}
+                        max={300}
+                        value={challengeLimitMinutes}
+                        onChange={(event) => {
+                          const next = Number(event.target.value);
+                          setChallengeLimitMinutes(
+                            Number.isFinite(next) ? next : 15,
+                          );
+                        }}
+                        disabled={disabled}
+                      />
+                      <span>phút</span>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+
+              {error ? (
+                <div className={styles.inlineError} role="alert">
+                  {error}
                 </div>
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.label}>Thời gian làm:</div>
-                <input
-                  className={styles.dashInput}
-                  type="number"
-                  min={1}
-                  max={300}
-                  value={minutes}
-                  onChange={(event) => {
-                    const next = Number(event.target.value);
-                    setMinutes(Number.isFinite(next) ? next : 15);
-                  }}
-                  disabled={disabled}
-                />
-                <span>phút</span>
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.label}>Đặt làm Challenge:</div>
-                <label className={styles.ck}>
-                  <input
-                    type="radio"
-                    name="challenge"
-                    checked={isChallenge}
-                    onChange={() => setIsChallenge(true)}
-                    disabled={disabled}
-                  />
-                  Có
-                </label>
-                <label className={styles.ck}>
-                  <input
-                    type="radio"
-                    name="challenge"
-                    checked={!isChallenge}
-                    onChange={() => setIsChallenge(false)}
-                    disabled={disabled}
-                  />
-                  Không
-                </label>
-              </div>
-
-              {isChallenge ? (
-                <>
-                  <div className={styles.formRow}>
-                    <div className={styles.label}>Bắt đầu:</div>
-                    <input
-                      className={styles.dashInput}
-                      type="datetime-local"
-                      value={challengeStart}
-                      onChange={(event) =>
-                        setChallengeStart(event.target.value)
-                      }
-                      disabled={disabled}
-                    />
-                  </div>
-                  <div className={styles.formRow}>
-                    <div className={styles.label}>Kết thúc:</div>
-                    <input
-                      className={styles.dashInput}
-                      type="datetime-local"
-                      value={challengeEnd}
-                      onChange={(event) => setChallengeEnd(event.target.value)}
-                      disabled={disabled}
-                    />
-                  </div>
-                  <div className={styles.formRow}>
-                    <div className={styles.label}>Giới hạn:</div>
-                    <input
-                      className={styles.dashInput}
-                      type="number"
-                      min={1}
-                      max={300}
-                      value={challengeLimitMinutes}
-                      onChange={(event) => {
-                        const next = Number(event.target.value);
-                        setChallengeLimitMinutes(
-                          Number.isFinite(next) ? next : 15,
-                        );
-                      }}
-                      disabled={disabled}
-                    />
-                    <span>phút</span>
-                  </div>
-                </>
               ) : null}
+            </>
+          ) : null}
+
+          {!loading && !quiz && error ? (
+            <div className={styles.inlineError} role="alert">
+              {error}
             </div>
+          ) : null}
+        </div>
 
-            {error ? (
-              <div className={styles.inlineError} role="alert">
-                {error}
-              </div>
-            ) : null}
-
-            <div className={styles.modalActions}>
-              <button
-                className={`${styles.pillBtn} ${styles.pillPrimary} ${
-                  disabled || !challengeValidation.ok ? styles.pillDisabled : ""
-                }`}
-                type="button"
-                disabled={disabled || !challengeValidation.ok}
-                onClick={() => submit("continue")}
-              >
-                Tiếp tục
-              </button>
-              <button
-                className={`${styles.pillBtn} ${styles.pillAccent} ${
-                  disabled || !challengeValidation.ok ? styles.pillDisabled : ""
-                }`}
-                type="button"
-                disabled={disabled || !challengeValidation.ok}
-                onClick={() => submit("save")}
-              >
-                {saving ? "Đang lưu..." : "Lưu"}
-              </button>
-            </div>
-          </>
-        ) : null}
-
-        {!loading && !quiz && error ? (
-          <div className={styles.inlineError} role="alert">
-            {error}
+        {!loading && quiz ? (
+          <div className={styles.modalActions}>
+            <button
+              className={`${styles.pillBtn} ${styles.pillPrimary} ${
+                disabled || !challengeValidation.ok ? styles.pillDisabled : ""
+              }`}
+              type="button"
+              disabled={disabled || !challengeValidation.ok}
+              onClick={() => submit("continue")}
+            >
+              Tiếp tục
+            </button>
+            <button
+              className={`${styles.pillBtn} ${styles.pillAccent} ${
+                disabled || !challengeValidation.ok ? styles.pillDisabled : ""
+              }`}
+              type="button"
+              disabled={disabled || !challengeValidation.ok}
+              onClick={() => submit("save")}
+            >
+              {saving ? "Đang lưu..." : "Lưu"}
+            </button>
           </div>
         ) : null}
       </div>

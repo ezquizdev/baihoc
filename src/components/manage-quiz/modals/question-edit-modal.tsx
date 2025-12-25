@@ -178,98 +178,102 @@ export function QuestionEditModal({
           </button>
         </div>
 
-        {loading ? (
-          <output aria-live="polite">Đang tải câu hỏi...</output>
-        ) : null}
+        <div className={styles.dialogBody}>
+          {loading ? (
+            <output aria-live="polite">Đang tải câu hỏi...</output>
+          ) : null}
+
+          {!loading && detail ? (
+            <>
+              <div id={titleId} className={styles.qeditTitle}>
+                {`Câu ${target.position}:`}
+              </div>
+              <p className={styles.qeditText}>{detail.question.stem}</p>
+
+              {!isMcq ? (
+                <div className={styles.inlineError} role="alert">
+                  Hiện chỉ hỗ trợ chỉnh sửa câu hỏi trắc nghiệm (MCQ).
+                </div>
+              ) : (
+                <div>
+                  {options.map((opt, idx) => (
+                    <div key={opt.position} className={styles.ansRow}>
+                      <input
+                        type="text"
+                        value={opt.text}
+                        onChange={(event) => {
+                          const nextText = event.target.value;
+                          setOptions((prev) =>
+                            prev.map((o, oi) =>
+                              oi === idx ? { ...o, text: nextText } : o,
+                            ),
+                          );
+                        }}
+                        disabled={disabled}
+                      />
+                      <button
+                        type="button"
+                        className={`${styles.pick} ${
+                          opt.isCorrect ? styles.pickActive : ""
+                        }`}
+                        onClick={() => pickCorrect(idx)}
+                        aria-label="Chọn đáp án đúng"
+                        disabled={disabled}
+                      >
+                        ✓
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {error ? (
+                <div className={styles.inlineError} role="alert">
+                  {error}
+                </div>
+              ) : null}
+            </>
+          ) : null}
+
+          {!loading && !detail && error ? (
+            <div className={styles.inlineError} role="alert">
+              {error}
+            </div>
+          ) : null}
+        </div>
 
         {!loading && detail ? (
-          <>
-            <div id={titleId} className={styles.qeditTitle}>
-              {`Câu ${target.position}:`}
-            </div>
-            <p className={styles.qeditText}>{detail.question.stem}</p>
-
-            {!isMcq ? (
-              <div className={styles.inlineError} role="alert">
-                Hiện chỉ hỗ trợ chỉnh sửa câu hỏi trắc nghiệm (MCQ).
-              </div>
-            ) : (
-              <div>
-                {options.map((opt, idx) => (
-                  <div key={opt.position} className={styles.ansRow}>
-                    <input
-                      type="text"
-                      value={opt.text}
-                      onChange={(event) => {
-                        const nextText = event.target.value;
-                        setOptions((prev) =>
-                          prev.map((o, oi) =>
-                            oi === idx ? { ...o, text: nextText } : o,
-                          ),
-                        );
-                      }}
-                      disabled={disabled}
-                    />
-                    <button
-                      type="button"
-                      className={`${styles.pick} ${
-                        opt.isCorrect ? styles.pickActive : ""
-                      }`}
-                      onClick={() => pickCorrect(idx)}
-                      aria-label="Chọn đáp án đúng"
-                      disabled={disabled}
-                    >
-                      ✓
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {error ? (
-              <div className={styles.inlineError} role="alert">
-                {error}
-              </div>
-            ) : null}
-
-            <div className={styles.qeditFooter}>
-              <button
-                className={`${styles.pillBtn} ${styles.pillDanger} ${
-                  disabled ? styles.pillDisabled : ""
-                }`}
-                type="button"
-                onClick={onClose}
-                disabled={disabled}
-              >
-                Hủy
-              </button>
-              <button
-                className={`${styles.pillBtn} ${styles.pillAccent} ${
-                  disabled ? styles.pillDisabled : ""
-                }`}
-                type="button"
-                onClick={() => window.alert("Chưa hỗ trợ: xem trước câu hỏi")}
-                disabled={disabled}
-              >
-                Xem trước
-              </button>
-              <button
-                className={`${styles.pillBtn} ${styles.pillPrimary} ${
-                  disabled || !canSave ? styles.pillDisabled : ""
-                }`}
-                type="button"
-                onClick={save}
-                disabled={disabled || !canSave}
-              >
-                {saving ? "Đang lưu..." : "Lưu"}
-              </button>
-            </div>
-          </>
-        ) : null}
-
-        {!loading && !detail && error ? (
-          <div className={styles.inlineError} role="alert">
-            {error}
+          <div className={styles.qeditFooter}>
+            <button
+              className={`${styles.pillBtn} ${styles.pillDanger} ${
+                disabled ? styles.pillDisabled : ""
+              }`}
+              type="button"
+              onClick={onClose}
+              disabled={disabled}
+            >
+              Hủy
+            </button>
+            <button
+              className={`${styles.pillBtn} ${styles.pillAccent} ${
+                disabled ? styles.pillDisabled : ""
+              }`}
+              type="button"
+              onClick={() => window.alert("Chưa hỗ trợ: xem trước câu hỏi")}
+              disabled={disabled}
+            >
+              Xem trước
+            </button>
+            <button
+              className={`${styles.pillBtn} ${styles.pillPrimary} ${
+                disabled || !canSave ? styles.pillDisabled : ""
+              }`}
+              type="button"
+              onClick={save}
+              disabled={disabled || !canSave}
+            >
+              {saving ? "Đang lưu..." : "Lưu"}
+            </button>
           </div>
         ) : null}
       </div>
