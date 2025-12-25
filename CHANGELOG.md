@@ -106,6 +106,10 @@
 - Switched sidebar brand to a larger blue logo mark (icon-only) and removed the subtitle for a cleaner header.
 - Increased sidebar nav label contrast and active-state emphasis.
 
+### fix(staff-dashboard): stream sections with skeletons
+- Staff dashboard now renders static layout immediately and streams each data section independently with skeleton loading placeholders.
+- Updated the “Chủ đề sai nhiều” subject badge to render as text-only (no icon) to save space.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
