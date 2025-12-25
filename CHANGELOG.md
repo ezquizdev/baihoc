@@ -13,6 +13,9 @@
 ### fix(ui): balance staff competency widget
 - Widened the right column and reduced typography sizing in the competency block for better visual balance.
 
+### fix(ui): stabilize staff dashboard responsive widths
+- Increased the staff dashboard right-column minimum width and stacked earlier to keep the competency widget readable across screen sizes.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
