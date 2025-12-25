@@ -72,6 +72,9 @@
 ### fix(staff): prevent duplicate MCQ option positions
 - Ensured the question editor assigns a unique `position` when adding new MCQ options after deletions.
 
+### fix(staff): remove hard caps from quiz range filters
+- Made quiz duration/question range filters adapt to the actual dataset so large quizzes are not hidden by default.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
