@@ -99,6 +99,9 @@
 - Removed the icon from the “Chủ đề sai nhiều” tile to make room for the subject badge.
 - Increased emphasis for the student count + today attempts numbers, and bumped competency bucket list typography.
 
+### fix(shell): show “Enter” hint only for active suggestion
+- Hid the “Enter” hint pill for non-active items in the dashboard feature search dropdown.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

@@ -456,7 +456,13 @@ export function DashboardShell({
                             <span className={styles.searchSuggestionLabel}>
                               {item.label}
                             </span>
-                            <span className={styles.searchSuggestionMeta}>
+                            <span
+                              className={`${styles.searchSuggestionMeta} ${
+                                isActive
+                                  ? ""
+                                  : styles.searchSuggestionMetaHidden
+                              }`}
+                            >
                               Enter
                             </span>
                           </button>
