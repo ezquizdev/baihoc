@@ -41,6 +41,10 @@
 ### fix(shell): satisfy typed-route Link hrefs
 - Updated dashboard/staff nav item href typing to align with Next.js typed routes and avoid build-time type errors.
 
+### fix(ui): improve dashboard shell interactions
+- Added consistent hover/active/focus-visible states to navigation, topbar controls, and support CTA.
+- Improved topbar search focus ring and prevented scroll chaining in the sidebar.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
