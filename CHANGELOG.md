@@ -55,6 +55,9 @@
 ### fix(attempt): create challenge attempts safely
 - Avoided `ON CONFLICT` against a deferrable unique constraint by retrying on unique-violation and returning the existing attempt.
 
+### fix(db): compute search_vector on insert
+- Fixed quiz/question inserts to build `search_vector` from the inserted title/stem + description/explanation values.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

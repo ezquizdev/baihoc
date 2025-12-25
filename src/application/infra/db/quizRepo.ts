@@ -66,6 +66,8 @@ type QuizCatalogRow = QuizRow & {
 
 const searchVectorSql =
   "to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(description, ''))";
+const insertSearchVectorSql =
+  "to_tsvector('simple', coalesce($1, '') || ' ' || coalesce($2, ''))";
 
 function mapQuiz(row: QuizRow): Quiz {
   return {
@@ -150,7 +152,7 @@ export async function insertQuiz(input: {
       ) VALUES (
         $1, $2, $3, $4::quiz_visibility,
         COALESCE($5::quiz_status, 'draft'),
-        COALESCE($6, false), $7, $8, $9, $10, ${searchVectorSql}
+        COALESCE($6, false), $7, $8, $9, $10, ${insertSearchVectorSql}
       ) RETURNING *`,
       [
         input.title,

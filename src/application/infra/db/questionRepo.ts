@@ -53,6 +53,8 @@ export type PassageRow = {
 
 const searchVectorSql =
   "to_tsvector('simple', coalesce(stem, '') || ' ' || coalesce(explanation, ''))";
+const insertSearchVectorSql =
+  "to_tsvector('simple', coalesce($4, '') || ' ' || coalesce($5, ''))";
 
 function mapQuestion(row: QuestionRow): Question {
   return {
@@ -132,7 +134,7 @@ export async function insertQuestion(input: {
         COALESCE($7::text[], '{}'),
         COALESCE($8, 1),
         $9,
-        ${searchVectorSql}
+        ${insertSearchVectorSql}
       )
       RETURNING *`,
       [
