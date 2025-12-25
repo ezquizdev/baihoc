@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-12-25
+
+### feat(staff-dashboard): add staff overview and role redirects
+- Added staff-only “Tổng quan” dashboard at `/staff/dashboard` matching the teacher mock (charts are placeholders), plus stub staff pages for sidebar navigation.
+- Implemented role-based redirects for `/` and `/auth/**` (staff → `/staff/dashboard`, student → `/dashboard`) and redirect staff away from the student dashboard.
+- Added staff dashboard repo/service/controller to compute overview metrics, recent activity, leaderboard, and competency distributions with per-subject XP bucket configs.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

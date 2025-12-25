@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import { DailyChallengeCard } from "@/components/dashboard/daily-challenge-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
@@ -31,6 +32,9 @@ const leaderboard: LeaderboardRow[] = [
 
 export default async function DashboardPage() {
   const session = await requireAuthenticatedPage({ next: "/dashboard" });
+  if (session.role === "staff") {
+    redirect("/staff/dashboard");
+  }
   const displayName = session.fullName ?? session.email.split("@")[0];
 
   return (

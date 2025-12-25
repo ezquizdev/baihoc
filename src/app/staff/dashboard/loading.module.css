@@ -1,0 +1,83 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.skeleton {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    90deg,
+    rgba(231, 239, 255, 0.85),
+    rgba(255, 255, 255, 0.85),
+    rgba(231, 239, 255, 0.85)
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  border: 1px solid var(--line);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+.banner {
+  height: 110px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  border: 0;
+  box-shadow: var(--shadow);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 18px;
+}
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.statsRow {
+  height: 132px;
+}
+
+.charts {
+  height: 250px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  border: 0;
+  box-shadow: var(--shadow);
+}
+
+.activity {
+  height: 220px;
+}
+
+.leaderboard {
+  height: 260px;
+}
+
+.competency {
+  height: 360px;
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
