@@ -85,16 +85,22 @@ export async function controllerUpdateQuestion(
 ) {
   return updateQuestion(questionId, {
     ...input,
-    options: input.options?.map((o) => ({
-      label: o.label ?? null,
-      text: o.text,
-      isCorrect: o.isCorrect,
-      position: o.position,
-    })),
-    shortAnswers: input.shortAnswers?.map((a) => ({
-      acceptableAnswer: a.acceptableAnswer,
-      caseSensitive: a.caseSensitive ?? false,
-    })),
+    options:
+      input.options === null
+        ? null
+        : input.options?.map((o) => ({
+            label: o.label ?? null,
+            text: o.text,
+            isCorrect: o.isCorrect,
+            position: o.position,
+          })),
+    shortAnswers:
+      input.shortAnswers === null
+        ? null
+        : input.shortAnswers?.map((a) => ({
+            acceptableAnswer: a.acceptableAnswer,
+            caseSensitive: a.caseSensitive ?? false,
+          })),
   });
 }
 

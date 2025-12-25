@@ -32,6 +32,14 @@ type CreateQuestionInput = {
   passagePosition?: number;
 };
 
+type UpdateQuestionInput = Partial<
+  Omit<CreateQuestionInput, "options" | "shortAnswers">
+> & {
+  status?: QuestionStatus;
+  options?: Array<Omit<QuestionOption, "id" | "questionId">> | null;
+  shortAnswers?: Array<Omit<ShortAnswerKey, "id" | "questionId">> | null;
+};
+
 export async function createQuestion(input: CreateQuestionInput) {
   validateQuestionPayload(input);
   return insertQuestion({
@@ -54,7 +62,7 @@ export async function createQuestion(input: CreateQuestionInput) {
 
 export async function updateQuestion(
   questionId: string,
-  input: Partial<CreateQuestionInput> & { status?: QuestionStatus },
+  input: UpdateQuestionInput,
 ) {
   const needsStructuralValidation =
     input.type !== undefined ||
@@ -68,14 +76,48 @@ export async function updateQuestion(
     }
     const effectiveType = input.type ?? existing.question.type;
 
-    if (input.options !== undefined && effectiveType === "short_answer") {
-      throw new Error("Options can only be set for MCQ questions");
+    const optionsProvided = input.options !== undefined;
+    const shortAnswersProvided = input.shortAnswers !== undefined;
+
+    const isMcq =
+      effectiveType === "mcq_single" || effectiveType === "mcq_multi";
+
+    if (effectiveType === "short_answer") {
+      if (optionsProvided && input.options !== null) {
+        throw new Error("Options can only be set for MCQ questions");
+      }
+      if (shortAnswersProvided && input.shortAnswers === null) {
+        throw new Error("Short-answer keys are required");
+      }
+    } else if (isMcq) {
+      if (optionsProvided && input.options === null) {
+        throw new Error("Options are required for MCQ");
+      }
+      if (shortAnswersProvided && input.shortAnswers !== null) {
+        throw new Error(
+          "Short-answer keys can only be set for short-answer questions",
+        );
+      }
     }
-    if (input.shortAnswers !== undefined && effectiveType !== "short_answer") {
-      throw new Error(
-        "Short-answer keys can only be set for short-answer questions",
-      );
-    }
+
+    const resolvedOptions = isMcq
+      ? (input.options ??
+        existing.options.map((option) => ({
+          label: option.label,
+          text: option.text,
+          isCorrect: option.isCorrect,
+          position: option.position,
+        })))
+      : undefined;
+
+    const resolvedShortAnswers =
+      effectiveType === "short_answer"
+        ? (input.shortAnswers ??
+          existing.shortAnswerKeys.map((key) => ({
+            acceptableAnswer: key.acceptableAnswer,
+            caseSensitive: key.caseSensitive,
+          })))
+        : undefined;
 
     validateQuestionPayload({
       subjectId: input.subjectId ?? existing.question.subjectId,
@@ -88,24 +130,8 @@ export async function updateQuestion(
       topicIds: input.topicIds ?? existing.question.topicIds,
       defaultScore: input.defaultScore ?? existing.question.defaultScore,
       createdBy: existing.question.createdBy,
-      options:
-        effectiveType === "mcq_single" || effectiveType === "mcq_multi"
-          ? (input.options ??
-            existing.options.map((option) => ({
-              label: option.label,
-              text: option.text,
-              isCorrect: option.isCorrect,
-              position: option.position,
-            })))
-          : undefined,
-      shortAnswers:
-        effectiveType === "short_answer"
-          ? (input.shortAnswers ??
-            existing.shortAnswerKeys.map((key) => ({
-              acceptableAnswer: key.acceptableAnswer,
-              caseSensitive: key.caseSensitive,
-            })))
-          : undefined,
+      options: resolvedOptions,
+      shortAnswers: resolvedShortAnswers,
       passage: input.passage ?? undefined,
       passageId: input.passageId ?? undefined,
       passagePosition:
