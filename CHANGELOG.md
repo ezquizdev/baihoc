@@ -10,6 +10,9 @@
 ### fix(ui): match staff competency card layout
 - Styled the “Điểm Năng lực Trung bình” card to match the teacher dashboard mock (top split layout + 4 subject tiles row).
 
+### fix(ui): balance staff competency widget
+- Widened the right column and reduced typography sizing in the competency block for better visual balance.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
