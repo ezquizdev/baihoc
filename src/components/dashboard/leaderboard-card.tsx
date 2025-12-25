@@ -47,44 +47,46 @@ export function LeaderboardCard({
         ) : null}
       </div>
 
-      <table className={styles.table} aria-label="Bảng xếp hạng">
-        <thead>
-          <tr>
-            <th style={{ width: "56px" }}>#</th>
-            <th>Họ và tên</th>
-            <th style={{ width: "120px", textAlign: "right" }}>
-              {scoreHeader}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.rank}>
-              <td className={styles.rank}>{row.rank}</td>
-              <td>
-                <div className={styles.nameCell}>
-                  <div
-                    className={`${styles.avatar} ${row.avatarUrl ? styles.avatarHasImage : ""}`}
-                    aria-hidden="true"
-                  >
-                    {row.avatarUrl ? (
-                      <Image
-                        src={row.avatarUrl}
-                        alt="Avatar"
-                        fill
-                        sizes="32px"
-                        style={{ objectFit: "cover" }}
-                      />
-                    ) : null}
-                  </div>
-                  {row.name}
-                </div>
-              </td>
-              <td className={styles.xp}>{row.xp}</td>
+      <div className={styles.tableWrap}>
+        <table className={styles.table} aria-label="Bảng xếp hạng">
+          <thead>
+            <tr>
+              <th style={{ width: "56px" }}>#</th>
+              <th>Họ và tên</th>
+              <th style={{ width: "120px", textAlign: "right" }}>
+                {scoreHeader}
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.rank}>
+                <td className={styles.rank}>{row.rank}</td>
+                <td>
+                  <div className={styles.nameCell}>
+                    <div
+                      className={`${styles.avatar} ${row.avatarUrl ? styles.avatarHasImage : ""}`}
+                      aria-hidden="true"
+                    >
+                      {row.avatarUrl ? (
+                        <Image
+                          src={row.avatarUrl}
+                          alt="Avatar"
+                          fill
+                          sizes="32px"
+                          style={{ objectFit: "cover" }}
+                        />
+                      ) : null}
+                    </div>
+                    {row.name}
+                  </div>
+                </td>
+                <td className={styles.xp}>{row.xp}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

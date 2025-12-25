@@ -49,6 +49,9 @@
 - Improved CTA affordance (hover/active/focus-visible) for the student welcome banner and card header actions.
 - Added subtle leaderboard row hover highlighting for easier scanning.
 
+### fix(ui): prevent leaderboard table overflow
+- Wrapped leaderboard tables in a scroll container so narrow screens don’t clip columns.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
