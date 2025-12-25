@@ -220,7 +220,6 @@ CREATE TABLE IF NOT EXISTS quizzes (
   status quiz_status NOT NULL DEFAULT 'draft',
   is_challenge boolean NOT NULL DEFAULT false,
   estimated_time_seconds integer,
-  thumbnail_url text,
   featured_rank integer,
   created_by uuid NOT NULL REFERENCES users(id),
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -233,6 +232,19 @@ CREATE INDEX IF NOT EXISTS idx_quizzes_visibility_status ON quizzes(visibility, 
 CREATE INDEX IF NOT EXISTS idx_quizzes_challenge ON quizzes(is_challenge);
 CREATE INDEX IF NOT EXISTS idx_quizzes_difficulty_level ON quizzes(difficulty_level);
 CREATE INDEX IF NOT EXISTS idx_quizzes_search ON quizzes USING GIN (search_vector);
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'quizzes'
+      AND column_name = 'thumbnail_url'
+  ) THEN
+    ALTER TABLE quizzes DROP COLUMN thumbnail_url;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS challenge_settings (
   quiz_id uuid PRIMARY KEY REFERENCES quizzes(id),

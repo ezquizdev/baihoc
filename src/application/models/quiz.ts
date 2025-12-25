@@ -15,7 +15,6 @@ export type Quiz = {
   status: QuizStatus;
   isChallenge: boolean;
   estimatedTimeSeconds: number | null;
-  thumbnailUrl: string | null;
   featuredRank: number | null;
   createdBy: string;
   createdAt: string;
