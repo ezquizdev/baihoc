@@ -69,6 +69,9 @@
 - Allowed PATCH payloads to pass `null` through for `options`, `shortAnswers`, and `passage` so staff editors can clear/replace related rows safely.
 - Added unit coverage for update null-handling.
 
+### fix(staff): prevent duplicate MCQ option positions
+- Ensured the question editor assigns a unique `position` when adding new MCQ options after deletions.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
