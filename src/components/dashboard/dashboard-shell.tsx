@@ -210,6 +210,7 @@ export function DashboardShell({
               className={styles.search}
               aria-label="Tìm kiếm"
               onSubmit={handleSearchSubmit}
+              autoComplete="off"
             >
               <div className={styles.searchIcon} aria-hidden="true">
                 <MagnifyingGlass size={18} weight="bold" />
@@ -219,6 +220,10 @@ export function DashboardShell({
                 placeholder={searchPlaceholder}
                 type="search"
                 name={searchName}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
                 {...inputProps}
                 onChange={
                   onSearchChange

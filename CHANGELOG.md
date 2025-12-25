@@ -62,6 +62,9 @@
 ### feat(ui): add notifications popover shell
 - Added a clickable notifications button in the topbar that opens a styled popover (placeholder content for now).
 
+### fix(ui): disable dashboard search autofill
+- Disabled browser autofill/autocorrect for the dashboard search input to avoid noisy suggestions.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
