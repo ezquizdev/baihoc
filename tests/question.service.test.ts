@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { QuestionDetail } from "@/application/models/question";
 import { updateQuestion } from "@/application/services/questionService";
 
 vi.mock("@/application/infra/db/questionRepo", () => ({
@@ -14,7 +15,7 @@ vi.mock("@/application/infra/db/questionRepo", () => ({
 
 const questionRepo = await import("@/application/infra/db/questionRepo");
 
-const dummyDetail = {
+const dummyDetail: QuestionDetail = {
   question: {
     id: "q1",
     subjectId: "00000000-0000-0000-0000-000000000000",
@@ -36,7 +37,7 @@ const dummyDetail = {
   options: [],
   shortAnswerKeys: [],
   passage: null,
-} as const;
+};
 
 beforeEach(() => {
   vi.clearAllMocks();

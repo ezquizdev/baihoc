@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AttemptRow } from "@/application/infra/db/attemptRepo";
 import {
   autosaveAttempt,
   startOrResumeAttempt,
@@ -22,7 +23,7 @@ vi.mock("@/application/infra/db/attemptRepo", () => ({
 
 const attemptRepo = await import("@/application/infra/db/attemptRepo");
 
-const baseAttemptRow = {
+const baseAttemptRow: AttemptRow = {
   id: "attempt-1",
   user_id: "user-1",
   quiz_id: "quiz-1",

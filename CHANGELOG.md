@@ -26,6 +26,9 @@
 ### fix(quiz): enforce unique question IDs
 - Quiz question lists now reject duplicate question IDs and use `questionRepo` to validate question existence (keeps DB access in infra).
 
+### chore(test): align Vitest typings
+- `tsconfig.json` now includes `vitest/globals`, and unit tests use explicit domain types to satisfy TypeScript.
+
 ### fix(attempt): redirect completed attempts to results on start
 - `/quizzes/[quizId]/attempt` now routes straight to `/attempts/[attemptId]/results` when the resumed attempt is not `in_progress`.
 - `startOrResumeAttempt` now returns the attempt `status` so the UI can redirect without an extra attempt-state fetch.
