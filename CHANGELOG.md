@@ -74,6 +74,9 @@
 ### fix(build): satisfy typed routes in dashboard navigation
 - Fixed TypeScript typed-route navigation for the dashboard omnibox and quick-action links so production builds pass.
 
+### fix(shell): improve dashboard feature search UX
+- Show feature suggestions on focus/typing, added `aria-activedescendant`, and prevented click blur issues in the omnibox dropdown.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

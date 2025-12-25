@@ -327,7 +327,7 @@ export function DashboardShell({
                     const value = event.target.value;
                     setFeatureQuery(value);
                     setFeatureActiveIndex(0);
-                    setFeatureOpen(value.trim().length > 0);
+                    setFeatureOpen(true);
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "ArrowDown") {
@@ -374,7 +374,6 @@ export function DashboardShell({
                     }
                   }}
                   onFocus={() => {
-                    if (featureQuery.trim().length === 0) return;
                     setFeatureOpen(true);
                   }}
                   onBlur={(event) => {
@@ -388,6 +387,11 @@ export function DashboardShell({
                   aria-expanded={featureOpen}
                   aria-haspopup="listbox"
                   aria-controls="dashboard-feature-suggestions"
+                  aria-activedescendant={
+                    featureOpen && featureSuggestions.length
+                      ? `dashboard-feature-option-${featureActiveIndex}`
+                      : undefined
+                  }
                   aria-autocomplete="list"
                   disabled={searchDisabled}
                 />
@@ -402,16 +406,22 @@ export function DashboardShell({
                     {featureSuggestions.length ? (
                       featureSuggestions.map((item, index) => {
                         const isActive = index === featureActiveIndex;
+                        const hrefKey =
+                          typeof item.href === "string"
+                            ? item.href
+                            : JSON.stringify(item.href);
                         return (
                           <button
-                            key={`${item.label}-${String(item.href)}`}
+                            key={`${item.label}-${hrefKey}`}
                             type="button"
                             role="option"
+                            id={`dashboard-feature-option-${index}`}
                             aria-selected={isActive}
                             tabIndex={-1}
                             className={`${styles.searchSuggestionItem} ${
                               isActive ? styles.searchSuggestionItemActive : ""
                             }`}
+                            onMouseDown={(event) => event.preventDefault()}
                             onMouseEnter={() => setFeatureActiveIndex(index)}
                             onClick={() => navigateFeatureHref(item.href)}
                           >
