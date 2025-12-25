@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### fix(ui): show friendly attempt load errors
+- Rendered in-page error cards for attempt and results pages (with retry + back-to-quizzes links) instead of falling into a generic Next.js error boundary.
+
 ### fix(ui): add attempt tablet breakpoint
 - Added a dedicated `max-width: 760px` layout for the attempt header so the timer, title, and status pills wrap cleanly.
 
