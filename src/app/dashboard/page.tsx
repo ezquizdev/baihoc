@@ -4,7 +4,10 @@ import { DailyChallengeCard } from "@/components/dashboard/daily-challenge-card"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
 import { PromoBanner } from "@/components/dashboard/promo-banner";
-import { QuickActionsCard } from "@/components/dashboard/quick-actions-card";
+import {
+  type QuickAction,
+  QuickActionsCard,
+} from "@/components/dashboard/quick-actions-card";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
 import layoutStyles from "./dashboard-page.module.css";
@@ -16,11 +19,11 @@ type LeaderboardRow = {
 };
 
 const quickActions = [
-  "TẤT CẢ",
-  "TỰ LUYỆN QUIZ CÙNG AI",
-  "QUIZ NGẪU NHIÊN",
-  "TẤT CẢ CHALLENGE",
-];
+  { label: "TẤT CẢ", href: "/quizzes" },
+  { label: "TỰ LUYỆN QUIZ CÙNG AI", disabled: true },
+  { label: "QUIZ NGẪU NHIÊN", disabled: true },
+  { label: "TẤT CẢ CHALLENGE", disabled: true },
+] satisfies QuickAction[];
 
 const leaderboard: LeaderboardRow[] = [
   { rank: 1, name: "Trần Bảo Quyên", xp: 1047 },
