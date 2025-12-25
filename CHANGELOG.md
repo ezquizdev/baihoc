@@ -52,6 +52,9 @@
 ### chore(changelog): log manage quiz polish commits
 - Logged the manage quiz polish commits.
 
+### fix(attempt): create challenge attempts safely
+- Avoided `ON CONFLICT` against a deferrable unique constraint by retrying on unique-violation and returning the existing attempt.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

@@ -248,42 +248,63 @@ export async function createAttempt(input: {
   remainingSeconds: number | null;
   totalQuestions: number;
 }): Promise<AttemptRow> {
-  const res = await query<AttemptRow>(
-    `INSERT INTO attempts (
-       user_id,
-       quiz_id,
-       challenge_id,
-       time_limit_seconds,
-       remaining_seconds,
-       total_questions
-     ) VALUES ($1, $2, $3, $4, $5, $6)
-     ON CONFLICT ON CONSTRAINT attempts_unique_challenge_per_user
-     DO NOTHING
-     RETURNING *`,
-    [
-      input.userId,
-      input.quizId,
-      input.challengeId,
-      input.timeLimitSeconds,
-      input.remainingSeconds,
-      input.totalQuestions,
-    ],
-  );
-  const row =
-    res.rows[0] ??
-    (input.challengeId
-      ? (
-          await query<AttemptRow>(
-            `SELECT * FROM attempts
-             WHERE user_id = $1 AND challenge_id = $2
-             ORDER BY started_at DESC
-             LIMIT 1`,
-            [input.userId, input.challengeId],
-          )
-        ).rows[0]
-      : undefined);
-  if (!row) throw new Error("Failed to create attempt");
-  return row;
+  const params = [
+    input.userId,
+    input.quizId,
+    input.challengeId,
+    input.timeLimitSeconds,
+    input.remainingSeconds,
+    input.totalQuestions,
+  ];
+
+  if (!input.challengeId) {
+    const res = await query<AttemptRow>(
+      `INSERT INTO attempts (
+         user_id,
+         quiz_id,
+         challenge_id,
+         time_limit_seconds,
+         remaining_seconds,
+         total_questions
+       ) VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      params,
+    );
+    const row = res.rows[0];
+    if (!row) throw new Error("Failed to create attempt");
+    return row;
+  }
+
+  try {
+    const res = await query<AttemptRow>(
+      `INSERT INTO attempts (
+         user_id,
+         quiz_id,
+         challenge_id,
+         time_limit_seconds,
+         remaining_seconds,
+         total_questions
+       ) VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      params,
+    );
+    const row = res.rows[0];
+    if (!row) throw new Error("Failed to create attempt");
+    return row;
+  } catch (error) {
+    if ((error as { code?: string } | null)?.code === "23505") {
+      const existing = await query<AttemptRow>(
+        `SELECT * FROM attempts
+         WHERE user_id = $1 AND challenge_id = $2
+         ORDER BY started_at DESC
+         LIMIT 1`,
+        [input.userId, input.challengeId],
+      );
+      const row = existing.rows[0];
+      if (row) return row;
+    }
+    throw error;
+  }
 }
 
 export async function getAttemptById(
