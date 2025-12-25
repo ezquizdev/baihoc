@@ -376,82 +376,132 @@
   line-height: 1.25;
 }
 
+.competencyCard {
+  padding: 16px;
+}
+
+.competencyTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.competencyLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.competencyHeading {
+  margin: 0;
+  font-weight: 900;
+  font-size: 15px;
+  line-height: 1.1;
+  letter-spacing: 0.2px;
+}
+
+.competencyHeading span {
+  display: block;
+}
+
 .competencyBig {
-  font-size: 44px;
+  font-size: 72px;
   font-weight: 950;
-  letter-spacing: 0.4px;
-  margin: 2px 0 10px;
+  letter-spacing: -1.2px;
+  line-height: 0.95;
+  margin: 0;
 }
 
 .bucketList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
+  min-width: 120px;
+  margin-top: 4px;
 }
 
 .bucketRow {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 10px;
-  color: var(--muted);
-  font-weight: 750;
-  font-size: 12px;
+  gap: 16px;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .bucketLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  color: var(--muted);
 }
 
-.bucketDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 4px;
-  background: #d7e3ff;
+.bucketValue {
+  color: var(--text);
+  font-weight: 950;
 }
 
 .subjectGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .subjectCard {
-  border-radius: 16px;
-  padding: 12px;
-  color: white;
-  min-height: 142px;
+  border-radius: var(--radius-md);
+  padding: 12px 10px;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   position: relative;
   overflow: hidden;
 }
 
-.subjectTitle {
-  margin: 0;
-  font-weight: 900;
-  font-size: 13px;
+.subjectUpper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.subjectLabel {
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
+}
+
+.subjectName {
+  font-weight: 950;
+  font-size: 18px;
+  line-height: 1.05;
   letter-spacing: 0.2px;
 }
 
 .subjectValue {
   font-weight: 950;
-  font-size: 28px;
+  font-size: 34px;
   margin-top: 6px;
+  line-height: 1;
 }
 
 .subjectBuckets {
-  margin-top: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 750;
-  opacity: 0.95;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 850;
+  opacity: 0.96;
+  margin-top: auto;
 }
 
 .subjectBucketRow {
@@ -462,27 +512,31 @@
 }
 
 .subjectEmpty {
-  margin-top: 10px;
-  font-size: 12px;
-  font-weight: 750;
-  opacity: 0.95;
+  margin-top: auto;
+  font-size: 11px;
+  font-weight: 850;
+  text-align: center;
+  opacity: 0.96;
 }
 
 .subjectVi {
-  background: #ff4d4d;
+  background: #ce3838;
+  color: white;
 }
 
 .subjectEn {
-  background: #ffd24d;
-  color: #14223d;
+  background: #ffd700;
+  color: #2864d2;
 }
 
 .subjectMath {
-  background: #ff8a4d;
+  background: #f1f6ff;
+  color: #ce3838;
 }
 
 .subjectSci {
-  background: #3f8cff;
+  background: #2864d2;
+  color: #ffd700;
 }
 
 @media (max-width: 1100px) {
@@ -505,6 +559,10 @@
     grid-template-columns: 1fr;
   }
 
+  .subjectGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .activityItem {
     grid-template-columns: 1fr;
     gap: 6px;
@@ -516,12 +574,22 @@
     grid-template-columns: 1fr;
   }
 
+  .competencyTop {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .bucketList {
+    width: 100%;
+    min-width: 0;
+  }
+
   .subjectGrid {
     grid-template-columns: 1fr;
   }
 
   .competencyBig {
-    font-size: 38px;
+    font-size: 56px;
   }
 
   .chartPanel {

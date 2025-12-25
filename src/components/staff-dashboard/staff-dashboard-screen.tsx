@@ -298,25 +298,31 @@ export function StaffDashboardScreen({
                 </div>
               </div>
             ) : competency ? (
-              <div className={styles.card}>
-                <div className={styles.cardTitleRow}>
-                  <h4 className={styles.cardTitle}>Điểm Năng lực Trung bình</h4>
-                </div>
-                <div className={styles.competencyBig}>
-                  {formatNumberVi(competency.overall.averageScore)}
-                </div>
+              <div className={`${styles.card} ${styles.competencyCard}`}>
+                <div className={styles.competencyTop}>
+                  <div className={styles.competencyLeft}>
+                    <h4 className={styles.competencyHeading}>
+                      <span>Điểm Năng lực</span>
+                      <span>Trung bình</span>
+                    </h4>
+                    <div className={styles.competencyBig}>
+                      {formatNumberVi(competency.overall.averageScore)}
+                    </div>
+                  </div>
 
-                <ul className={styles.bucketList} aria-label="Phân bố điểm">
-                  {competency.overall.buckets.map((bucket) => (
-                    <li key={bucket.label} className={styles.bucketRow}>
-                      <span className={styles.bucketLabel}>
-                        <span className={styles.bucketDot} aria-hidden="true" />
-                        {bucket.label}
-                      </span>
-                      <span>{formatNumberVi(bucket.count)}</span>
-                    </li>
-                  ))}
-                </ul>
+                  <ul className={styles.bucketList} aria-label="Phân bố điểm">
+                    {competency.overall.buckets.map((bucket) => (
+                      <li key={bucket.label} className={styles.bucketRow}>
+                        <span className={styles.bucketLabel}>
+                          {bucket.label}
+                        </span>
+                        <span className={styles.bucketValue}>
+                          {formatNumberVi(bucket.count)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
                 <section
                   className={styles.subjectGrid}
@@ -327,26 +333,33 @@ export function StaffDashboardScreen({
                       key={subject.subjectId}
                       className={`${styles.subjectCard} ${subjectVariant(subject.subjectSlug)}`}
                     >
-                      <h5 className={styles.subjectTitle}>
-                        Năng lực {subject.subjectName}
-                      </h5>
-                      {subject.hasEnoughData ? (
-                        <>
+                      <div className={styles.subjectUpper}>
+                        <div className={styles.subjectLabel}>Năng lực</div>
+                        <div className={styles.subjectName}>
+                          {subject.subjectName}
+                        </div>
+                        {subject.hasEnoughData ? (
                           <div className={styles.subjectValue}>
                             {formatNumberVi(subject.averageScore)}
                           </div>
-                          <div className={styles.subjectBuckets}>
-                            {subject.buckets.map((bucket) => (
-                              <div
-                                key={bucket.label}
-                                className={styles.subjectBucketRow}
-                              >
-                                <span>{bucket.label}</span>
-                                <span>{formatNumberVi(bucket.count)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </>
+                        ) : null}
+                      </div>
+
+                      {subject.hasEnoughData ? (
+                        <ul
+                          className={styles.subjectBuckets}
+                          aria-label={`Phân bố ${subject.subjectName}`}
+                        >
+                          {subject.buckets.map((bucket) => (
+                            <li
+                              key={bucket.label}
+                              className={styles.subjectBucketRow}
+                            >
+                              <span>{bucket.label}</span>
+                              <span>{formatNumberVi(bucket.count)}</span>
+                            </li>
+                          ))}
+                        </ul>
                       ) : (
                         <div className={styles.subjectEmpty}>
                           Chưa đủ dữ liệu theo môn

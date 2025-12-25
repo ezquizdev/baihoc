@@ -7,6 +7,9 @@
 - Implemented role-based redirects for `/` and `/auth/**` (staff → `/staff/dashboard`, student → `/dashboard`) and redirect staff away from the student dashboard.
 - Added staff dashboard repo/service/controller to compute overview metrics, recent activity, leaderboard, and competency distributions with per-subject XP bucket configs.
 
+### fix(ui): match staff competency card layout
+- Styled the “Điểm Năng lực Trung bình” card to match the teacher dashboard mock (top split layout + 4 subject tiles row).
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
