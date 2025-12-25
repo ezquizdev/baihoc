@@ -546,6 +546,7 @@ async function StaffLeaderboardSection({ limit }: { limit: number }) {
           name: entry.fullName,
           xp: entry.score,
           avatarUrl: entry.avatarUrl,
+          href: `/profile/${entry.userId}`,
         }))}
         scoreHeader="Điểm Năng lực"
       />

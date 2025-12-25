@@ -8,6 +8,7 @@ type LeaderboardRow = {
   name: string;
   xp: number;
   avatarUrl?: string | null;
+  href?: Parameters<typeof Link>[0]["href"];
 };
 
 type LeaderboardCardProps = {
@@ -79,7 +80,13 @@ export function LeaderboardCard({
                         />
                       ) : null}
                     </div>
-                    {row.name}
+                    {row.href ? (
+                      <Link className={styles.nameLink} href={row.href}>
+                        {row.name}
+                      </Link>
+                    ) : (
+                      row.name
+                    )}
                   </div>
                 </td>
                 <td className={styles.xp}>{formatNumberVi(row.xp)}</td>
