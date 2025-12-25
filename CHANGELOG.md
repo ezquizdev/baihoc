@@ -95,6 +95,10 @@
 ### fix(auth): redirect to dashboards after login
 - When no `next` query is provided, redirect users to their role dashboard (`/dashboard` or `/staff/dashboard`) instead of `/profile` after login; profile completion now redirects to the same target.
 
+### fix(staff-dashboard): refine stats/competency typography
+- Removed the icon from the “Chủ đề sai nhiều” tile to make room for the subject badge.
+- Increased emphasis for the student count + today attempts numbers, and bumped competency bucket list typography.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, FastForward, Trophy, WarningCircle } from "phosphor-react";
+import { BookOpen, FastForward, Trophy } from "phosphor-react";
 import type { StaffDashboardOverviewDto } from "@/application/models/staffDashboard";
 import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
 import { SubjectBadge } from "@/components/quiz-catalog/quiz-badges";
@@ -104,7 +104,7 @@ export function StaffDashboardScreen({
                     <p className={styles.statLabel}>Học sinh</p>
                   </div>
                 </div>
-                <div className={styles.statValue}>
+                <div className={`${styles.statValue} ${styles.statValueLarge}`}>
                   {formatOrDash(stats?.studentCount)}
                 </div>
                 {statsError ? (
@@ -158,7 +158,7 @@ export function StaffDashboardScreen({
                     <p className={styles.statLabel}>Lượt làm hôm nay</p>
                   </div>
                 </div>
-                <div className={styles.statValue}>
+                <div className={`${styles.statValue} ${styles.statValueLarge}`}>
                   {formatOrDash(stats?.attemptsTodayCount)}
                 </div>
                 {statsError ? (
@@ -168,15 +168,7 @@ export function StaffDashboardScreen({
 
               <div className={styles.statCard}>
                 <div className={styles.statTop}>
-                  <div className={styles.statTopLeft}>
-                    <div
-                      className={`${styles.statIcon} ${styles.statIconTopics}`}
-                      aria-hidden="true"
-                    >
-                      <WarningCircle size={18} weight="bold" />
-                    </div>
-                    <p className={styles.statLabel}>Chủ đề sai nhiều</p>
-                  </div>
+                  <p className={styles.statLabel}>Chủ đề sai nhiều</p>
                   {stats?.mostWrongTopic ? (
                     <SubjectBadge
                       name={stats.mostWrongTopic.subjectName}
