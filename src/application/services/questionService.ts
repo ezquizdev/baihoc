@@ -56,10 +56,68 @@ export async function updateQuestion(
   questionId: string,
   input: Partial<CreateQuestionInput> & { status?: QuestionStatus },
 ) {
-  validateQuestionPayload(
-    { ...input, questionId } as CreateQuestionInput,
-    true,
-  );
+  const needsStructuralValidation =
+    input.type !== undefined ||
+    input.options !== undefined ||
+    input.shortAnswers !== undefined;
+
+  if (needsStructuralValidation) {
+    const existing = await getQuestionDetailRepo(questionId);
+    if (!existing) {
+      throw new Error("Question not found");
+    }
+    const effectiveType = input.type ?? existing.question.type;
+
+    if (input.options !== undefined && effectiveType === "short_answer") {
+      throw new Error("Options can only be set for MCQ questions");
+    }
+    if (input.shortAnswers !== undefined && effectiveType !== "short_answer") {
+      throw new Error(
+        "Short-answer keys can only be set for short-answer questions",
+      );
+    }
+
+    validateQuestionPayload({
+      subjectId: input.subjectId ?? existing.question.subjectId,
+      defaultDifficulty:
+        input.defaultDifficulty ?? existing.question.defaultDifficulty,
+      type: effectiveType,
+      stem: input.stem ?? existing.question.stem,
+      explanation: input.explanation ?? existing.question.explanation,
+      tags: input.tags ?? existing.question.tags,
+      topicIds: input.topicIds ?? existing.question.topicIds,
+      defaultScore: input.defaultScore ?? existing.question.defaultScore,
+      createdBy: existing.question.createdBy,
+      options:
+        effectiveType === "mcq_single" || effectiveType === "mcq_multi"
+          ? (input.options ??
+            existing.options.map((option) => ({
+              label: option.label,
+              text: option.text,
+              isCorrect: option.isCorrect,
+              position: option.position,
+            })))
+          : undefined,
+      shortAnswers:
+        effectiveType === "short_answer"
+          ? (input.shortAnswers ??
+            existing.shortAnswerKeys.map((key) => ({
+              acceptableAnswer: key.acceptableAnswer,
+              caseSensitive: key.caseSensitive,
+            })))
+          : undefined,
+      passage: input.passage ?? undefined,
+      passageId: input.passageId ?? undefined,
+      passagePosition:
+        input.passagePosition ?? existing.question.passagePosition ?? undefined,
+    });
+  } else {
+    validateQuestionPayload(
+      { ...input, questionId } as CreateQuestionInput,
+      true,
+    );
+  }
+
   const res = await updateQuestionRepo({
     questionId,
     subjectId: input.subjectId,
