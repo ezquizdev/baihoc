@@ -1,5 +1,22 @@
 # Changelog
 
+## 2025-12-25
+
+### feat(staff): add manage quiz filters and grid
+- Added manage quiz filter controls and staff quiz grid/card building blocks.
+
+### feat(staff): add manage quiz modals
+- Added quiz info, quiz builder, and question edit modals for staff quiz management.
+
+### feat(staff): add manage quiz screen hydration
+- Added the staff manage quiz screen with full-dataset hydration, client-side filtering, and pagination.
+
+### feat(staff): add staff quizzes page
+- Added the staff-only `/staff/quizzes` page with initial server preload and auth guard.
+
+### chore(changelog): log staff manage quiz commits
+- Logged the above staff manage quiz UI commits.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
