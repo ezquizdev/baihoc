@@ -10,9 +10,10 @@ import { getSubjectTone, isMixedSubject } from "./subject-tone";
 type QuizModalProps = {
   quiz: QuizCatalogItem | null;
   onClose: () => void;
+  onStart?: (quiz: QuizCatalogItem) => void;
 };
 
-export function QuizModal({ quiz, onClose }: QuizModalProps) {
+export function QuizModal({ quiz, onClose, onStart }: QuizModalProps) {
   const primaryRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -139,7 +140,12 @@ export function QuizModal({ quiz, onClose }: QuizModalProps) {
         </div>
 
         <div className={styles.actions}>
-          <button ref={primaryRef} className={styles.primary} type="button">
+          <button
+            ref={primaryRef}
+            className={styles.primary}
+            type="button"
+            onClick={() => onStart?.(quiz)}
+          >
             {ctaLabel}
           </button>
           <button className={styles.secondary} type="button" onClick={onClose}>

@@ -2,6 +2,11 @@
 
 ## 2025-12-25
 
+### feat(ui): add quiz attempt screen
+- Wired quiz catalog CTA to start/resume an attempt and navigate to `/attempts/[attemptId]`.
+- Added attempt-taking UI (timer, question navigator, autosave, submit confirm/success modals) and a minimal results page at `/attempts/[attemptId]/results`.
+- Added a 5-second submit grace window to tolerate network latency at the deadline.
+
 ### feat(attempt): add attempt domain models
 - Added attempt status + attempt question/answer domain types.
 

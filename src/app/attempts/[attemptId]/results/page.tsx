@@ -1,0 +1,176 @@
+import { controllerGetAttemptState } from "@/application/controllers/attemptController";
+import { controllerGetPublishedQuiz } from "@/application/controllers/quizController";
+import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
+import type {
+  AttemptAnswer,
+  AttemptQuestion,
+} from "@/application/models/attempt";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { Card } from "@/components/ui/card";
+
+type AttemptResultsPageProps = {
+  params: Promise<{ attemptId: string }>;
+};
+
+export default async function AttemptResultsPage({
+  params,
+}: AttemptResultsPageProps) {
+  const { attemptId } = await params;
+  const session = await requireAuthenticatedPage({
+    next: `/attempts/${attemptId}/results`,
+  });
+  const displayName = session.fullName ?? session.email.split("@")[0];
+
+  const state = await controllerGetAttemptState(session.sub, attemptId);
+
+  let quizTitle = "Quiz";
+  try {
+    const quiz = await controllerGetPublishedQuiz(state.quizId);
+    quizTitle = quiz.title ?? quizTitle;
+  } catch {
+    // Fallback title if quiz lookup fails.
+  }
+
+  const answerMap = new Map<string, AttemptAnswer>();
+  for (const answer of state.answers) {
+    answerMap.set(answer.questionId, answer);
+  }
+
+  const answeredCount = state.questions.reduce((count, question) => {
+    const answer = answerMap.get(question.id);
+    if (!answer) return count;
+    if (question.type === "short_answer") {
+      return answer.textAnswer ? count + 1 : count;
+    }
+    return answer.selectedOptionIds?.length ? count + 1 : count;
+  }, 0);
+
+  return (
+    <DashboardShell
+      activeNav="quizzes"
+      userEmail={session.email}
+      userName={displayName}
+      avatarUrl={session.avatarUrl}
+      searchDisabled
+      searchPlaceholder="Tìm kiếm"
+    >
+      <Card
+        title={`Kết quả: ${quizTitle}`}
+        description={`Trạng thái: ${state.attempt.status} • Đã trả lời ${answeredCount}/${state.questions.length} câu`}
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          <Stat label="Điểm" value={`${state.attempt.scorePercent}%`} />
+          <Stat
+            label="Đúng"
+            value={`${state.attempt.correctCount}/${state.attempt.totalQuestions}`}
+          />
+          <Stat label="XP" value={`${state.attempt.xpEarned}`} />
+        </div>
+
+        <div className="space-y-4">
+          {state.questions.map((question) => (
+            <QuestionResultRow
+              key={question.id}
+              question={question}
+              answer={answerMap.get(question.id)}
+            />
+          ))}
+        </div>
+      </Card>
+    </DashboardShell>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="text-xs font-semibold text-slate-500">{label}</div>
+      <div className="mt-1 text-xl font-extrabold text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+function QuestionResultRow({
+  question,
+  answer,
+}: {
+  question: AttemptQuestion;
+  answer?: AttemptAnswer;
+}) {
+  const isCorrect = answer?.isCorrect;
+  const badge =
+    isCorrect === undefined ? (
+      <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
+        Chưa chấm
+      </span>
+    ) : isCorrect ? (
+      <span className="rounded-lg bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
+        Đúng
+      </span>
+    ) : (
+      <span className="rounded-lg bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700">
+        Sai
+      </span>
+    );
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="text-sm font-extrabold text-slate-900">
+          Câu {question.position}
+        </div>
+        {badge}
+      </div>
+
+      {question.passage ? (
+        <div className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Đoạn văn
+          </div>
+          <div className="whitespace-pre-wrap">{question.passage.content}</div>
+        </div>
+      ) : null}
+
+      <div className="mt-3 whitespace-pre-wrap text-sm text-slate-800">
+        {question.stem}
+      </div>
+
+      <div className="mt-4 text-sm">
+        <div className="text-xs font-semibold text-slate-500">
+          Câu trả lời của bạn
+        </div>
+        <div className="mt-1 text-slate-800">
+          {renderUserAnswer(question, answer)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function renderUserAnswer(question: AttemptQuestion, answer?: AttemptAnswer) {
+  if (!answer) return <span className="text-slate-500">—</span>;
+  if (question.type === "short_answer") {
+    return answer.textAnswer ? (
+      <span>{answer.textAnswer}</span>
+    ) : (
+      <span className="text-slate-500">—</span>
+    );
+  }
+
+  const selected = new Set(answer.selectedOptionIds ?? []);
+  const selectedOptions = question.options.filter((opt) =>
+    selected.has(opt.id),
+  );
+  if (!selectedOptions.length) return <span className="text-slate-500">—</span>;
+
+  return (
+    <ul className="list-disc space-y-1 pl-5">
+      {selectedOptions.map((opt) => (
+        <li key={opt.id}>
+          {opt.label ? `${opt.label}. ` : ""}
+          {opt.text}
+        </li>
+      ))}
+    </ul>
+  );
+}

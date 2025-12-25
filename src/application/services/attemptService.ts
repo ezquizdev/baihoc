@@ -17,16 +17,10 @@ import {
 import type {
   Attempt,
   AttemptAnswer,
-  AttemptQuestion,
+  AttemptStateResponse,
 } from "@/application/models/attempt";
 import type { QuestionType } from "@/application/models/enums";
 import { ServiceError } from "@/application/services/errors";
-
-type AttemptState = {
-  attempt: Attempt;
-  questions: AttemptQuestion[];
-  answers: AttemptAnswer[];
-};
 
 type StartAttemptResult = {
   attemptId: string;
@@ -99,7 +93,7 @@ export async function startOrResumeAttempt(
 export async function getAttemptState(
   userId: string,
   attemptId: string,
-): Promise<AttemptState> {
+): Promise<AttemptStateResponse> {
   const state = await getAttemptStateRepo(attemptId);
   if (!state) {
     throw new ServiceError("ATTEMPT_NOT_FOUND", "Attempt not found", 404);
@@ -185,6 +179,9 @@ export async function submitAttempt(
     attempt.time_limit_seconds !== null &&
     remainingSeconds !== null &&
     remainingSeconds <= 0;
+  const isWithinSubmitGrace =
+    attempt.time_limit_seconds !== null &&
+    isWithinGraceWindow(attempt.started_at, attempt.time_limit_seconds, 5);
 
   const gradingData = await listQuizGradingData(attempt.quiz_id);
   if (!gradingData.length) {
@@ -193,9 +190,10 @@ export async function submitAttempt(
   const gradingMap = new Map(gradingData.map((q) => [q.questionId, q]));
 
   const existingAnswers = await listAttemptAnswers(attemptId);
-  const normalized = isExpired
-    ? []
-    : normalizeSubmitAnswers(input.answers, gradingMap);
+  const normalized =
+    isExpired && !isWithinSubmitGrace
+      ? []
+      : normalizeSubmitAnswers(input.answers, gradingMap);
   const merged = mergeAnswers(existingAnswers, normalized);
 
   const { gradedAnswers, correctCount, scoreRaw, scorePercent } = gradeAnswers(
@@ -236,8 +234,8 @@ export async function submitAttempt(
 
 function applyRemainingClamp(
   attempt: Attempt,
-  state: AttemptState,
-): AttemptState {
+  state: AttemptStateResponse,
+): AttemptStateResponse {
   if (attempt.status !== "in_progress" || attempt.timeLimitSeconds === null) {
     return state;
   }
@@ -281,6 +279,18 @@ function computeServerRemaining(
   const started = new Date(startedAt).getTime();
   const elapsedSeconds = Math.floor((Date.now() - started) / 1000);
   return Math.max(0, timeLimitSeconds - elapsedSeconds);
+}
+
+function isWithinGraceWindow(
+  startedAt: string,
+  timeLimitSeconds: number,
+  graceSeconds: number,
+): boolean {
+  const started = new Date(startedAt).getTime();
+  const elapsedSeconds = Math.floor((Date.now() - started) / 1000);
+  const unclampedRemaining = timeLimitSeconds - elapsedSeconds;
+  if (unclampedRemaining > 0) return false;
+  return unclampedRemaining >= -Math.max(0, graceSeconds);
 }
 
 type AttemptTimingRow = {

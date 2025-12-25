@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { DifficultyLabel } from "@/application/models/enums";
@@ -35,6 +36,7 @@ export function QuizCatalogScreen({
   subjects,
   leaderboard,
 }: QuizCatalogScreenProps) {
+  const router = useRouter();
   const displayName = session.fullName ?? session.email.split("@")[0];
   const [status, setStatus] = useState<StatusFilter>("todo");
   const [sort, setSort] = useState<SortOrder>("newest");
@@ -190,7 +192,27 @@ export function QuizCatalogScreen({
   };
 
   const handleStartQuiz = (quiz: QuizCatalogItem) => {
-    window.alert(`Bắt đầu làm quiz: ${quiz.title}`);
+    const run = async () => {
+      try {
+        const response = await fetch("/api/attempts", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ quizId: quiz.id }),
+        });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload?.error ?? "Không thể bắt đầu quiz");
+        }
+        const payload = (await response.json()) as { attemptId?: string };
+        if (!payload.attemptId) {
+          throw new Error("Không thể bắt đầu quiz");
+        }
+        router.push(`/attempts/${payload.attemptId}`);
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : "Có lỗi xảy ra");
+      }
+    };
+    run();
   };
 
   return (
@@ -250,7 +272,14 @@ export function QuizCatalogScreen({
           <QuizLeaderboard items={leaderboard} />
         </section>
       </div>
-      <QuizModal quiz={selectedQuiz} onClose={() => setSelectedQuiz(null)} />
+      <QuizModal
+        quiz={selectedQuiz}
+        onClose={() => setSelectedQuiz(null)}
+        onStart={(quiz) => {
+          setSelectedQuiz(null);
+          handleStartQuiz(quiz);
+        }}
+      />
     </DashboardShell>
   );
 }

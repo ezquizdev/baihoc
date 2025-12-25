@@ -202,6 +202,63 @@ describe("attemptService", () => {
     expect(result.attempt.status).toBe("submitted");
   });
 
+  it("accepts submit within grace window after expiry", async () => {
+    const expiredAttempt = {
+      ...baseAttemptRow,
+      started_at: new Date(Date.now() - 62_000).toISOString(),
+      time_limit_seconds: 60,
+      remaining_seconds: 60,
+    };
+    vi.mocked(attemptRepo.getAttemptById).mockResolvedValue(expiredAttempt);
+    vi.mocked(attemptRepo.listQuizGradingData).mockResolvedValue([
+      {
+        questionId: "q1",
+        type: "mcq_single",
+        defaultScore: 2,
+        score: null,
+        position: 1,
+        optionIds: ["opt-1", "opt-2"],
+        correctOptionIds: ["opt-1"],
+        shortAnswerKeys: [],
+      },
+      {
+        questionId: "q2",
+        type: "short_answer",
+        defaultScore: 3,
+        score: null,
+        position: 2,
+        optionIds: [],
+        correctOptionIds: [],
+        shortAnswerKeys: [{ acceptableAnswer: "Paris", caseSensitive: false }],
+      },
+    ]);
+    vi.mocked(attemptRepo.listAttemptAnswers).mockResolvedValue([]);
+    vi.mocked(attemptRepo.submitAttempt).mockResolvedValue({
+      status: "ok",
+      attempt: {
+        ...baseAttemptState.attempt,
+        status: "submitted",
+        scoreRaw: 5,
+        scorePercent: 100,
+        correctCount: 2,
+        xpEarned: 100,
+      },
+    });
+
+    await submitAttempt("user-1", "attempt-1", {
+      answers: [
+        { questionId: "q1", selectedOptionIds: ["opt-1"] },
+        { questionId: "q2", textAnswer: "paris" },
+      ],
+      remainingSeconds: 0,
+    });
+
+    const call = vi.mocked(attemptRepo.submitAttempt).mock.calls[0]?.[0];
+    expect(call?.scoreRaw).toBe(5);
+    expect(call?.scorePercent).toBe(100);
+    expect(call?.correctCount).toBe(2);
+  });
+
   it("blocks double submit", async () => {
     vi.mocked(attemptRepo.getAttemptById).mockResolvedValue(baseAttemptRow);
     vi.mocked(attemptRepo.listQuizGradingData).mockResolvedValue([
