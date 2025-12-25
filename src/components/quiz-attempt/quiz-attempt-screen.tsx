@@ -15,6 +15,7 @@ import type {
   AttemptStateResponse,
 } from "@/application/models/attempt";
 import { Input } from "@/components/ui/input";
+import { RichText } from "@/components/ui/rich-text";
 import styles from "./quiz-attempt.module.css";
 
 type AnswerDraft = {
@@ -505,7 +506,11 @@ export function QuizAttemptScreen({
               disabled={attempt.status !== "in_progress" || submitting}
             >
               {opt.label ? `${opt.label}. ` : ""}
-              {opt.text}
+              <RichText
+                content={opt.text}
+                variant="inline"
+                allowLinks={false}
+              />
             </button>
           );
         })}
@@ -553,16 +558,22 @@ export function QuizAttemptScreen({
           {activeQuestion.passage ? (
             <div className={styles.passage}>
               <div className={styles.passageTitle}>Đoạn văn</div>
-              <div className={styles.passageContent}>
-                {activeQuestion.passage.content}
-              </div>
+              <RichText
+                content={activeQuestion.passage.content}
+                className={styles.passageContent}
+                allowLinks
+              />
             </div>
           ) : null}
 
           <div className={styles.questionHeading}>
             Câu {activeQuestion.position}:
           </div>
-          <div className={styles.stem}>{activeQuestion.stem}</div>
+          <RichText
+            content={activeQuestion.stem}
+            className={styles.stem}
+            allowLinks
+          />
 
           {activeQuestion.type === "mcq_multi" &&
           activeQuestion.options.length ? (

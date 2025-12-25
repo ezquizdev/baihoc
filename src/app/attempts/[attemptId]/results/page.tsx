@@ -8,6 +8,7 @@ import type {
 } from "@/application/models/attempt";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Card } from "@/components/ui/card";
+import { RichText } from "@/components/ui/rich-text";
 
 type AttemptResultsPageProps = {
   params: Promise<{ attemptId: string }>;
@@ -223,13 +224,15 @@ function QuestionResultRow({
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Đoạn văn
           </div>
-          <div className="whitespace-pre-wrap">{question.passage.content}</div>
+          <RichText content={question.passage.content} allowLinks />
         </div>
       ) : null}
 
-      <div className="mt-3 whitespace-pre-wrap text-sm text-slate-800">
-        {question.stem}
-      </div>
+      <RichText
+        content={question.stem}
+        className="mt-3 text-sm text-slate-800"
+        allowLinks
+      />
 
       <div className="mt-4 text-sm">
         <div className="text-xs font-semibold text-slate-500">
@@ -247,7 +250,11 @@ function renderUserAnswer(question: AttemptQuestion, answer?: AttemptAnswer) {
   if (!answer) return <span className="text-slate-500">—</span>;
   if (question.type === "short_answer") {
     return answer.textAnswer ? (
-      <span>{answer.textAnswer}</span>
+      <RichText
+        content={answer.textAnswer}
+        variant="inline"
+        allowLinks={false}
+      />
     ) : (
       <span className="text-slate-500">—</span>
     );
@@ -264,7 +271,7 @@ function renderUserAnswer(question: AttemptQuestion, answer?: AttemptAnswer) {
       {selectedOptions.map((opt) => (
         <li key={opt.id}>
           {opt.label ? `${opt.label}. ` : ""}
-          {opt.text}
+          <RichText content={opt.text} variant="inline" allowLinks={false} />
         </li>
       ))}
     </ul>

@@ -2,6 +2,10 @@
 
 ## 2025-12-25
 
+### feat(ui): render markdown + math in quiz content
+- Added a `RichText` renderer (Markdown + LaTeX-like via KaTeX) and used it for question passages/stems/options and short answers on attempt + results pages.
+- Added a basic unit test to ensure markdown + KaTeX rendering works.
+
 ### chore(dev): ignore Playwright dev artifacts
 - Ignored `.playwright-dev.*` files so local UI testing doesn’t dirty `git status`.
 
