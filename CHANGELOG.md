@@ -6,6 +6,9 @@
 - Added a `RichText` renderer (Markdown + LaTeX-like via KaTeX) and used it for question passages/stems/options and short answers on attempt + results pages.
 - Added a basic unit test to ensure markdown + KaTeX rendering works.
 
+### chore(seed): add markdown + math examples
+- Updated seed question/passage text to include Markdown formatting and LaTeX-like formulas for easy visual verification.
+
 ### chore(dev): ignore Playwright dev artifacts
 - Ignored `.playwright-dev.*` files so local UI testing doesn’t dirty `git status`.
 
