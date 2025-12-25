@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BookOpen, FastForward, Trophy, WarningCircle } from "phosphor-react";
 import type { StaffDashboardOverviewDto } from "@/application/models/staffDashboard";
 import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
 import { formatNumberVi } from "@/lib/formatters";
@@ -92,7 +93,15 @@ export function StaffDashboardScreen({
             <div className={styles.statsGrid}>
               <div className={styles.statCard}>
                 <div className={styles.statTop}>
-                  <p className={styles.statLabel}>Học sinh</p>
+                  <div className={styles.statTopLeft}>
+                    <div
+                      className={`${styles.statIcon} ${styles.statIconStudents}`}
+                      aria-hidden="true"
+                    >
+                      <Trophy size={18} weight="fill" />
+                    </div>
+                    <p className={styles.statLabel}>Học sinh</p>
+                  </div>
                 </div>
                 <div className={styles.statValue}>
                   {formatOrDash(stats?.studentCount)}
@@ -104,7 +113,15 @@ export function StaffDashboardScreen({
 
               <div className={styles.statCard}>
                 <div className={styles.statTop}>
-                  <p className={styles.statLabel}>Câu hỏi</p>
+                  <div className={styles.statTopLeft}>
+                    <div
+                      className={`${styles.statIcon} ${styles.statIconQuestions}`}
+                      aria-hidden="true"
+                    >
+                      <BookOpen size={18} weight="bold" />
+                    </div>
+                    <p className={styles.statLabel}>Câu hỏi</p>
+                  </div>
                 </div>
                 <div className={styles.statValue}>
                   {formatOrDash(stats?.questionCount)}
@@ -130,7 +147,15 @@ export function StaffDashboardScreen({
 
               <div className={styles.statCard}>
                 <div className={styles.statTop}>
-                  <p className={styles.statLabel}>Lượt làm hôm nay</p>
+                  <div className={styles.statTopLeft}>
+                    <div
+                      className={`${styles.statIcon} ${styles.statIconAttempts}`}
+                      aria-hidden="true"
+                    >
+                      <FastForward size={18} weight="bold" />
+                    </div>
+                    <p className={styles.statLabel}>Lượt làm hôm nay</p>
+                  </div>
                 </div>
                 <div className={styles.statValue}>
                   {formatOrDash(stats?.attemptsTodayCount)}
@@ -142,7 +167,15 @@ export function StaffDashboardScreen({
 
               <div className={styles.statCard}>
                 <div className={styles.statTop}>
-                  <p className={styles.statLabel}>Chủ đề sai nhiều</p>
+                  <div className={styles.statTopLeft}>
+                    <div
+                      className={`${styles.statIcon} ${styles.statIconTopics}`}
+                      aria-hidden="true"
+                    >
+                      <WarningCircle size={18} weight="bold" />
+                    </div>
+                    <p className={styles.statLabel}>Chủ đề sai nhiều</p>
+                  </div>
                   {stats?.mostWrongTopic ? (
                     <span className={styles.topicBadge}>
                       {stats.mostWrongTopic.subjectName}

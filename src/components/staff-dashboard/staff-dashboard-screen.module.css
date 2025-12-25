@@ -189,11 +189,56 @@
   gap: 10px;
 }
 
+.statTopLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.statIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(230, 238, 255, 0.9);
+  background: #f7faff;
+  box-shadow: 0 10px 18px rgba(26, 46, 93, 0.06);
+}
+
+.statIconStudents {
+  background: rgba(255, 196, 0, 0.18);
+  border-color: rgba(255, 196, 0, 0.28);
+  color: #ffc400;
+}
+
+.statIconQuestions {
+  background: rgba(40, 104, 230, 0.12);
+  border-color: rgba(40, 104, 230, 0.22);
+  color: var(--primary-2);
+}
+
+.statIconAttempts {
+  background: rgba(47, 102, 255, 0.14);
+  border-color: rgba(47, 102, 255, 0.24);
+  color: var(--primary);
+}
+
+.statIconTopics {
+  background: rgba(229, 57, 53, 0.12);
+  border-color: rgba(229, 57, 53, 0.22);
+  color: #e53935;
+}
+
 .statLabel {
   margin: 0;
   font-size: 13px;
   color: var(--muted);
   font-weight: 700;
+  min-width: 0;
 }
 
 .statValue {

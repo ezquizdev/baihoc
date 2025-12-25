@@ -86,6 +86,9 @@
 ### fix(ui): format dashboard leaderboard scores
 - Formatted leaderboard score values using Vietnamese number formatting for easier scanning.
 
+### feat(ui): add icons to staff stat cards
+- Added decorative icons to the staff dashboard stat tiles for quicker visual scanning.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
