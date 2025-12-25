@@ -15,6 +15,9 @@
 ### chore(lint): fix quiz builder biome warnings
 - Tweaked quiz builder hooks/utilities to satisfy Biome lint rules.
 
+### fix(build): type quiz builder drag announcements
+- Added explicit typing for dnd-kit accessibility callbacks to satisfy TypeScript strict mode.
+
 ### refactor(staff): hide quiz archive UI
 - Removed archive/restore buttons and archived visual indicators from staff quiz cards and filters.
 - Replaced the staff-only bookmark control with a draft status chip.

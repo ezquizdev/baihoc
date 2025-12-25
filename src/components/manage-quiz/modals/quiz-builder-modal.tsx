@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type Announcements,
   closestCenter,
   DndContext,
   type DragCancelEvent,
@@ -8,6 +9,7 @@ import {
   type DragStartEvent,
   KeyboardSensor,
   PointerSensor,
+  type ScreenReaderInstructions,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -231,34 +233,38 @@ export function QuizBuilderModal({
       return position ? `Câu ${position}` : "Câu hỏi";
     };
 
+    const announcements: Announcements = {
+      onDragStart({ active }) {
+        return `Bắt đầu kéo ${labelFor(active.id)}.`;
+      },
+      onDragOver({ active, over }) {
+        if (!over) return `${labelFor(active.id)} không còn ở vị trí hợp lệ.`;
+        const from = labelFor(active.id);
+        const to = labelFor(over.id);
+        if (from === to) return;
+        return `${from} đang ở vị trí của ${to}.`;
+      },
+      onDragEnd({ active, over }) {
+        if (!over) return `Đã thả ${labelFor(active.id)}.`;
+        const from = labelFor(active.id);
+        const to = labelFor(over.id);
+        if (from === to) return `Đã thả ${from}.`;
+        return `${from} đã được di chuyển tới vị trí của ${to}.`;
+      },
+      onDragCancel({ active }) {
+        return `Đã hủy kéo ${labelFor(active.id)}.`;
+      },
+    };
+
+    const screenReaderInstructions: ScreenReaderInstructions = {
+      draggable:
+        "Để sắp xếp câu hỏi: nhấn Space để nhấc, dùng ↑/↓ để di chuyển, nhấn Space lần nữa để thả, hoặc nhấn Escape để hủy.",
+    };
+
     return {
-      announcements: {
-        onDragStart({ active }) {
-          return `Bắt đầu kéo ${labelFor(active.id)}.`;
-        },
-        onDragOver({ active, over }) {
-          if (!over) return `${labelFor(active.id)} không còn ở vị trí hợp lệ.`;
-          const from = labelFor(active.id);
-          const to = labelFor(over.id);
-          if (from === to) return;
-          return `${from} đang ở vị trí của ${to}.`;
-        },
-        onDragEnd({ active, over }) {
-          if (!over) return `Đã thả ${labelFor(active.id)}.`;
-          const from = labelFor(active.id);
-          const to = labelFor(over.id);
-          if (from === to) return `Đã thả ${from}.`;
-          return `${from} đã được di chuyển tới vị trí của ${to}.`;
-        },
-        onDragCancel({ active }) {
-          return `Đã hủy kéo ${labelFor(active.id)}.`;
-        },
-      },
-      screenReaderInstructions: {
-        draggable:
-          "Để sắp xếp câu hỏi: nhấn Space để nhấc, dùng ↑/↓ để di chuyển, nhấn Space lần nữa để thả, hoặc nhấn Escape để hủy.",
-      },
-    } as const;
+      announcements,
+      screenReaderInstructions,
+    };
   }, [questionPositionById]);
 
   if (!quizId) return null;
