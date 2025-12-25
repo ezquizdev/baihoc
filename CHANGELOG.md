@@ -2,6 +2,10 @@
 
 ## 2025-12-25
 
+### fix(ui): prevent attempt modal overlap after submit/expiry
+- Ensured auto-submit closes the confirmation modal (no double-modal overlap at the deadline).
+- Disabled attempt navigation/actions once an attempt is no longer in progress.
+
 ### chore(format): biome
 - Applied Biome formatting fixes to keep `npm run lint` passing.
 
