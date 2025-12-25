@@ -242,6 +242,17 @@ CREATE TABLE IF NOT EXISTS challenge_settings (
   rules jsonb
 );
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'challenge_settings_end_after_start'
+  ) THEN
+    ALTER TABLE challenge_settings
+    ADD CONSTRAINT challenge_settings_end_after_start
+    CHECK (end_at > start_at);
+  END IF;
+END $$;
+
 -- Questions
 CREATE TABLE IF NOT EXISTS questions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -386,6 +397,9 @@ CREATE TABLE IF NOT EXISTS attempt_answer_events (
   event_type text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS idx_attempt_answer_events_attempt_created_at
+ON attempt_answer_events(attempt_id, created_at DESC);
 
 -- XP and leaderboard
 CREATE TABLE IF NOT EXISTS xp_events (
