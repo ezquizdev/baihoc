@@ -2,6 +2,10 @@
 
 ## 2025-12-25
 
+### fix(ui): improve attempt accessibility
+- Added focus trapping + ARIA labelling for attempt modals.
+- Improved screen-reader labels for the question navigator (answered/flagged/current state).
+
 ### fix(attempt): enforce challenge schedule window
 - Prevented starting new challenge attempts outside `challenge_settings.start_at/end_at` (resuming an in-progress attempt is still allowed).
 
