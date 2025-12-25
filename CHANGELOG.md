@@ -35,6 +35,9 @@
 ### fix(ui): align staff dashboard loading layout
 - Matched the staff dashboard loading skeleton grid/breakpoints to the final layout to reduce layout shift.
 
+### fix(ui): render staff dashboard scaffolding during load
+- Updated staff dashboard fallbacks so titles/labels/icons render immediately; only values and rows use skeletons while data streams in.
+
 ### chore(db): add indexes for dashboard metrics
 - Added `attempts(submitted_at)` submitted-only index and `xp_events` indexes to keep staff dashboard aggregations responsive as data grows.
 

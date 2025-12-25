@@ -470,6 +470,53 @@
   box-shadow: none;
 }
 
+.skeletonBlock {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    rgba(231, 239, 255, 0.85),
+    rgba(255, 255, 255, 0.85),
+    rgba(231, 239, 255, 0.85)
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  border: 1px solid rgba(230, 238, 255, 0.9);
+}
+
+.skeletonInline {
+  display: inline-block;
+}
+
+.skeletonBlockOnColor {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0.34),
+    rgba(255, 255, 255, 0.18)
+  );
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.leaderboardSkeletonAvatar {
+  background: linear-gradient(
+    90deg,
+    rgba(231, 239, 255, 0.85),
+    rgba(255, 255, 255, 0.85),
+    rgba(231, 239, 255, 0.85)
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  border: 1px solid rgba(230, 238, 255, 0.9);
+}
+
+.leaderboardSkeletonAvatar::after {
+  display: none;
+}
+
+.skeletonLeaderboardCard {
+  min-height: 290px;
+}
+
 @keyframes shimmer {
   0% {
     background-position: 0% 0;
