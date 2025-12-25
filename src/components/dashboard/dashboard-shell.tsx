@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, MagnifyingGlass } from "phosphor-react";
 import type { FormEvent, MouseEvent, ReactNode } from "react";
 import styles from "./dashboard-shell.module.css";
@@ -28,11 +30,11 @@ type DashboardShellProps = {
 };
 
 const defaultNav: NavItem[] = [
-  { key: "overview", label: "Tổng quan" },
-  { key: "quizzes", label: "Tất cả bài trắc nghiệm" },
+  { key: "overview", label: "Tổng quan", href: "/dashboard" },
+  { key: "quizzes", label: "Tất cả bài trắc nghiệm", href: "/quizzes" },
   { key: "history", label: "Lịch sử" },
   { key: "leaderboard", label: "Bảng xếp hạng" },
-  { key: "settings", label: "Cài đặt" },
+  { key: "settings", label: "Cài đặt", href: "/profile" },
 ];
 
 export function DashboardShell({
@@ -50,17 +52,27 @@ export function DashboardShell({
   onSearchChange,
   onSearchSubmit,
 }: DashboardShellProps) {
+  const router = useRouter();
   const displayName = userName ?? userEmail.split("@")[0];
   const toggleId = "dashboard-nav-toggle";
   const handlePlaceholderClick = (event: MouseEvent<HTMLElement>) => {
     event.preventDefault();
   };
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
-    if (!onSearchSubmit) return;
     event.preventDefault();
+    if (!onSearchSubmit) return;
     const formData = new FormData(event.currentTarget);
     const value = String(formData.get(searchName) ?? "");
     onSearchSubmit(value);
+  };
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore network errors and still proceed to login screen.
+    }
+    router.replace("/auth/login");
+    router.refresh();
   };
   const inputProps =
     searchValue !== undefined ? { value: searchValue } : undefined;
@@ -101,17 +113,31 @@ export function DashboardShell({
                 .filter(Boolean)
                 .join(" ");
 
-              const href = item.href ?? "#";
+              if (!item.href) {
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className={linkClass}
+                    onClick={handlePlaceholderClick}
+                    aria-disabled="true"
+                  >
+                    <span className={styles.dot} aria-hidden="true" />
+                    {item.label}
+                  </button>
+                );
+              }
+
               return (
-                <a
+                <Link
                   key={item.key}
-                  href={href}
+                  href={item.href}
                   className={linkClass}
-                  onClick={item.href ? undefined : handlePlaceholderClick}
+                  aria-current={isActive ? "page" : undefined}
                 >
                   <span className={styles.dot} aria-hidden="true" />
                   {item.label}
-                </a>
+                </Link>
               );
             })}
           </nav>
@@ -144,7 +170,7 @@ export function DashboardShell({
             <form
               className={styles.search}
               aria-label="Tìm kiếm"
-              onSubmit={onSearchSubmit ? handleSearchSubmit : undefined}
+              onSubmit={handleSearchSubmit}
             >
               <div className={styles.searchIcon} aria-hidden="true">
                 <MagnifyingGlass size={18} weight="bold" />
@@ -206,29 +232,27 @@ export function DashboardShell({
                   role="menu"
                   aria-label="Tùy chọn hồ sơ"
                 >
-                  <button
-                    type="button"
+                  <Link
+                    href="/profile"
                     role="menuitem"
                     className={styles.profileLink}
-                    onClick={handlePlaceholderClick}
                   >
                     <span className={styles.menuDot} aria-hidden="true" /> Hồ sơ
-                  </button>
-                  <button
-                    type="button"
+                  </Link>
+                  <Link
+                    href="/profile"
                     role="menuitem"
                     className={styles.profileLink}
-                    onClick={handlePlaceholderClick}
                   >
                     <span className={styles.menuDot} aria-hidden="true" /> Cài
                     đặt
-                  </button>
+                  </Link>
                   <div className={styles.profileSeparator} aria-hidden="true" />
                   <button
                     type="button"
                     role="menuitem"
                     className={styles.profileLink}
-                    onClick={handlePlaceholderClick}
+                    onClick={handleLogout}
                   >
                     <span className={styles.menuDot} aria-hidden="true" /> Đăng
                     xuất
@@ -240,7 +264,7 @@ export function DashboardShell({
 
           <main className={styles.main}>
             {pageTitle ? (
-              <div className={styles.pageTitle}>{pageTitle}</div>
+              <h1 className={styles.pageTitle}>{pageTitle}</h1>
             ) : null}
             {children}
           </main>
