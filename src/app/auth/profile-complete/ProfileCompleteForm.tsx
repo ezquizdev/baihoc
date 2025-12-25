@@ -14,10 +14,16 @@ import { fileToDataUrl } from "@/lib/fileHelpers";
 type Props = {
   initialProfile: Partial<ProfileValues> & { avatarUrl?: string | null };
   errorMessage?: string | null;
+  redirectTo: string;
 };
 
-export function ProfileCompleteForm({ initialProfile, errorMessage }: Props) {
+export function ProfileCompleteForm({
+  initialProfile,
+  errorMessage,
+  redirectTo,
+}: Props) {
   const router = useRouter();
+  type RouterHref = Parameters<typeof router.push>[0];
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [profile, setProfile] = useState<ProfileValues>({
     fullName: initialProfile.fullName ?? "",
@@ -56,7 +62,7 @@ export function ProfileCompleteForm({ initialProfile, errorMessage }: Props) {
         throw new Error(data.error || "Cập nhật hồ sơ thất bại");
       }
       setDone(true);
-      setTimeout(() => router.push("/dashboard"), 1000);
+      setTimeout(() => router.push(redirectTo as RouterHref), 1000);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Cập nhật hồ sơ thất bại";

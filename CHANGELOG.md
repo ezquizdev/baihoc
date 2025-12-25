@@ -92,6 +92,9 @@
 ### fix(staff-dashboard): reuse quiz subject badge for “Chủ đề sai nhiều”
 - Exposed subject slug in the staff dashboard “most wrong topic” metric and rendered it using the same SubjectBadge styling as quiz cards.
 
+### fix(auth): redirect to dashboards after login
+- When no `next` query is provided, redirect users to their role dashboard (`/dashboard` or `/staff/dashboard`) instead of `/profile` after login; profile completion now redirects to the same target.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
