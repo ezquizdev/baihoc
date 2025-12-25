@@ -2,6 +2,10 @@
 
 ## 2025-12-25
 
+### fix(ui): improve attempt hover colors
+- Fixed hover states so selected MCQ options and the active question navigator button keep their highlight colors.
+- Added consistent hover feedback for attempt action + modal buttons.
+
 ### fix(ui): prevent accidental success modal dismissal
 - Disabled Escape/backdrop dismissal for the submit success modal so users aren’t navigated away unintentionally.
 
