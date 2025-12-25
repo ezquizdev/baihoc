@@ -34,6 +34,8 @@ export function QuizInfoModal({
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [featuredRank, setFeaturedRank] = useState("");
   const [visibility, setVisibility] = useState<QuizVisibility>("free");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>(5);
   const [minutes, setMinutes] = useState(15);
@@ -41,6 +43,7 @@ export function QuizInfoModal({
   const [challengeStart, setChallengeStart] = useState("");
   const [challengeEnd, setChallengeEnd] = useState("");
   const [challengeLimitMinutes, setChallengeLimitMinutes] = useState(15);
+  const [challengeRulesText, setChallengeRulesText] = useState("");
 
   useEffect(() => {
     if (!quizId) return;
@@ -65,6 +68,12 @@ export function QuizInfoModal({
         setQuiz(nextQuiz);
         setTitle(nextQuiz.title ?? "");
         setDescription(nextQuiz.description ?? "");
+        setThumbnailUrl(nextQuiz.thumbnailUrl ?? "");
+        setFeaturedRank(
+          nextQuiz.featuredRank !== null && nextQuiz.featuredRank !== undefined
+            ? String(nextQuiz.featuredRank)
+            : "",
+        );
         setVisibility(nextQuiz.visibility ?? "free");
         setDifficulty((nextQuiz.difficulty ?? 5) as DifficultyLevel);
         setMinutes(
@@ -80,6 +89,9 @@ export function QuizInfoModal({
           nextQuiz.estimatedTimeSeconds ??
           900;
         setChallengeLimitMinutes(Math.max(1, Math.round(fallbackLimit / 60)));
+        setChallengeRulesText(
+          JSON.stringify(nextQuiz.challenge?.rules ?? {}, null, 2),
+        );
         requestAnimationFrame(() => primaryRef.current?.focus());
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
@@ -138,6 +150,21 @@ export function QuizInfoModal({
       const titleTrimmed = title.trim();
       if (titleTrimmed) payload.title = titleTrimmed;
       payload.description = description.trim() ? description.trim() : null;
+      payload.thumbnailUrl = thumbnailUrl.trim() ? thumbnailUrl.trim() : null;
+      const featuredRankTrimmed = featuredRank.trim();
+      if (!featuredRankTrimmed) {
+        payload.featuredRank = null;
+      } else {
+        const parsedRank = Number(featuredRankTrimmed);
+        if (
+          !Number.isFinite(parsedRank) ||
+          !Number.isInteger(parsedRank) ||
+          parsedRank < 0
+        ) {
+          throw new Error("Featured rank không hợp lệ.");
+        }
+        payload.featuredRank = parsedRank;
+      }
       payload.visibility = visibility;
       payload.difficulty = difficulty;
       const safeMinutes =
@@ -160,10 +187,20 @@ export function QuizInfoModal({
           Number.isFinite(challengeLimitMinutes) && challengeLimitMinutes > 0
             ? challengeLimitMinutes
             : safeMinutes;
+        let rules: unknown = {};
+        const trimmedRules = challengeRulesText.trim();
+        if (trimmedRules) {
+          try {
+            rules = JSON.parse(trimmedRules);
+          } catch {
+            throw new Error("Rules (JSON) không hợp lệ.");
+          }
+        }
         payload.challenge = {
           startAt,
           endAt,
           timeLimitSeconds: Math.max(1, Math.round(safeLimitMinutes)) * 60,
+          rules,
         };
       } else {
         payload.challenge = null;
@@ -243,6 +280,30 @@ export function QuizInfoModal({
                     placeholder=".............................................................."
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
+                    disabled={disabled}
+                  />
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.label}>Thumbnail URL:</div>
+                  <input
+                    className={styles.dashInput}
+                    type="url"
+                    placeholder="https://..."
+                    value={thumbnailUrl}
+                    onChange={(event) => setThumbnailUrl(event.target.value)}
+                    disabled={disabled}
+                  />
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.label}>Featured rank:</div>
+                  <input
+                    className={styles.dashInput}
+                    type="number"
+                    min={0}
+                    value={featuredRank}
+                    onChange={(event) => setFeaturedRank(event.target.value)}
                     disabled={disabled}
                   />
                 </div>
@@ -386,6 +447,18 @@ export function QuizInfoModal({
                         disabled={disabled}
                       />
                       <span>phút</span>
+                    </div>
+                    <div className={styles.formRow}>
+                      <div className={styles.label}>Rules (JSON):</div>
+                      <textarea
+                        className={styles.dashArea}
+                        rows={5}
+                        value={challengeRulesText}
+                        onChange={(event) =>
+                          setChallengeRulesText(event.target.value)
+                        }
+                        disabled={disabled}
+                      />
                     </div>
                   </>
                 ) : null}

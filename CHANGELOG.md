@@ -81,6 +81,9 @@
 ### fix(security): add noopener to staff blank links
 - Added `rel=\"noopener noreferrer\"` to staff links that open in a new tab.
 
+### feat(staff): expose all quiz/challenge fields in UI
+- Extended the staff quiz info modal to edit `thumbnailUrl`, `featuredRank`, and `challenge.rules` (JSON).
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
