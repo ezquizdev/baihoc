@@ -215,7 +215,9 @@ async function main() {
         const id = crypto.randomUUID();
         const difficulty = pick(difficultyLevels);
         const type =
-          standaloneTypeSequence[(i - generated) % standaloneTypeSequence.length];
+          standaloneTypeSequence[
+            (i - generated) % standaloneTypeSequence.length
+          ];
         const stem = buildQuestionStem({
           subjectName: subject.name,
           subjectSlug: subject.slug,
