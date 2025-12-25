@@ -30,6 +30,7 @@ export function StaffQuizCard({
   const [publishing, setPublishing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [mutationError, setMutationError] = useState<QuizMutationError>(null);
 
   const primarySubject = useMemo(() => {
@@ -48,8 +49,10 @@ export function StaffQuizCard({
     : null;
   const questionCount = quiz.questionCount ?? 0;
   const dateLabel = formatDateVi(quiz.updatedAt ?? quiz.createdAt);
-  const canPublish = quiz.status !== "published";
-  const busy = publishing || deleting || archiving;
+  const isArchived = quiz.status === "archived";
+  const canPublish = quiz.status === "draft";
+  const canArchive = quiz.status === "published";
+  const busy = publishing || deleting || archiving || restoring;
 
   const publishQuiz = async () => {
     setMutationError(null);
@@ -121,6 +124,29 @@ export function StaffQuizCard({
     }
   };
 
+  const restoreQuiz = async () => {
+    setMutationError(null);
+    try {
+      setRestoring(true);
+      const response = await fetch(`/api/staff/quizzes/${quiz.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "draft" }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error ?? "Không thể khôi phục quiz");
+      }
+      onMutated();
+    } catch (err) {
+      setMutationError({
+        message: err instanceof Error ? err.message : "Có lỗi xảy ra",
+      });
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   return (
     <article className={cardStyles.quizCard} aria-label={`Quiz ${quiz.id}`}>
       <div className={cardStyles.quizHead}>
@@ -128,6 +154,7 @@ export function StaffQuizCard({
         {quiz.visibility === "premium" ? (
           <span className={cardStyles.vip}>VIP</span>
         ) : null}
+        {isArchived ? <span className={cardStyles.vip}>LƯU TRỮ</span> : null}
         <span className={cardStyles.spacer} aria-hidden="true" />
         <button
           className={`${cardStyles.bookmark} ${
@@ -196,6 +223,30 @@ export function StaffQuizCard({
             {publishing ? "Đang đăng..." : "Đăng"}
           </button>
         ) : null}
+        {canArchive ? (
+          <button
+            type="button"
+            className={`${cardStyles.btn} ${cardStyles.btnYellow} ${
+              busy ? cardStyles.btnDisabled : ""
+            }`}
+            disabled={busy}
+            onClick={archiveQuiz}
+          >
+            {archiving ? "Đang lưu trữ..." : "Lưu trữ"}
+          </button>
+        ) : null}
+        {isArchived ? (
+          <button
+            type="button"
+            className={`${cardStyles.btn} ${cardStyles.btnYellow} ${
+              busy ? cardStyles.btnDisabled : ""
+            }`}
+            disabled={busy}
+            onClick={restoreQuiz}
+          >
+            {restoring ? "Đang khôi phục..." : "Khôi phục"}
+          </button>
+        ) : null}
         <button
           type="button"
           className={`${cardStyles.btn} ${cardStyles.btnRed} ${
@@ -212,18 +263,22 @@ export function StaffQuizCard({
         <div className={cardStyles.cardError} role="alert">
           {mutationError.code === "QUIZ_HAS_ATTEMPTS" ? (
             <div>
-              Quiz đã có lượt thi. Hãy lưu trữ thay vì xóa.
+              {isArchived
+                ? "Quiz đã có lượt thi. Không thể xóa."
+                : "Quiz đã có lượt thi. Hãy lưu trữ thay vì xóa."}
               <div className={cardStyles.cardErrorActions}>
-                <button
-                  type="button"
-                  className={`${cardStyles.btn} ${cardStyles.btnYellow} ${
-                    busy ? cardStyles.btnDisabled : ""
-                  }`}
-                  disabled={busy}
-                  onClick={archiveQuiz}
-                >
-                  {archiving ? "Đang lưu trữ..." : "Lưu trữ"}
-                </button>
+                {!isArchived ? (
+                  <button
+                    type="button"
+                    className={`${cardStyles.btn} ${cardStyles.btnYellow} ${
+                      busy ? cardStyles.btnDisabled : ""
+                    }`}
+                    disabled={busy}
+                    onClick={archiveQuiz}
+                  >
+                    {archiving ? "Đang lưu trữ..." : "Lưu trữ"}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className={`${cardStyles.btn} ${cardStyles.btnBlue}`}

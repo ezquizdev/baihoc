@@ -11,12 +11,14 @@ import { QuizLeaderboard } from "@/components/quiz-catalog/quiz-leaderboard";
 import { QuizPagination } from "@/components/quiz-catalog/quiz-pagination";
 import { ManageQuizFilters } from "./manage-quiz-filters";
 import styles from "./manage-quiz-screen.module.css";
+import { CreateQuizModal } from "./modals/create-quiz-modal";
 import { QuestionEditModal } from "./modals/question-edit-modal";
 import { QuizBuilderModal } from "./modals/quiz-builder-modal";
 import { QuizInfoModal } from "./modals/quiz-info-modal";
 import { StaffQuizGrid } from "./staff-quiz-grid";
 
 type SortOrder = "newest" | "oldest";
+type StatusFilter = "active" | "draft" | "published" | "archived" | "all";
 
 type ManageQuizScreenProps = {
   session: SessionPayload;
@@ -33,7 +35,7 @@ const RANGE_MAX = 50;
 const staffNavItems = [
   { key: "overview", label: "Tổng quan" },
   { key: "quizzes", label: "Tất cả quiz", href: "/staff/quizzes" },
-  { key: "question-bank", label: "Kho câu hỏi" },
+  { key: "question-bank", label: "Kho câu hỏi", href: "/staff/questions" },
   { key: "students", label: "Quản lý học sinh" },
   { key: "leaderboard", label: "Bảng xếp hạng" },
   { key: "analytics", label: "Phân tích thống kê" },
@@ -48,6 +50,7 @@ export function ManageQuizScreen({
   leaderboard,
 }: ManageQuizScreenProps) {
   const displayName = session.fullName ?? session.email.split("@")[0];
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [sort, setSort] = useState<SortOrder>("newest");
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<
@@ -64,6 +67,7 @@ export function ManageQuizScreen({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [createOpen, setCreateOpen] = useState(false);
   const [infoQuizId, setInfoQuizId] = useState<string | null>(null);
   const [builderQuizId, setBuilderQuizId] = useState<string | null>(null);
   const [builderRefreshKey, setBuilderRefreshKey] = useState(0);
@@ -127,6 +131,10 @@ export function ManageQuizScreen({
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      if (createOpen) {
+        setCreateOpen(false);
+        return;
+      }
       if (questionTarget) {
         setQuestionTarget(null);
         return;
@@ -141,17 +149,29 @@ export function ManageQuizScreen({
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [builderQuizId, infoQuizId, questionTarget]);
+  }, [builderQuizId, createOpen, infoQuizId, questionTarget]);
 
   useEffect(() => {
-    const open = Boolean(infoQuizId || builderQuizId || questionTarget);
+    const open = Boolean(
+      createOpen || infoQuizId || builderQuizId || questionTarget,
+    );
     document.body.classList.toggle("modal-open", open);
     return () => document.body.classList.remove("modal-open");
-  }, [builderQuizId, infoQuizId, questionTarget]);
+  }, [builderQuizId, createOpen, infoQuizId, questionTarget]);
 
   const filtered = useMemo(() => {
     const query = debouncedSearch.trim().toLowerCase();
-    let out = allQuizzes.filter((quiz) => quiz.status !== "archived");
+    let out = allQuizzes;
+
+    if (statusFilter === "active") {
+      out = out.filter((quiz) => quiz.status !== "archived");
+    } else if (statusFilter === "draft") {
+      out = out.filter((quiz) => quiz.status === "draft");
+    } else if (statusFilter === "published") {
+      out = out.filter((quiz) => quiz.status === "published");
+    } else if (statusFilter === "archived") {
+      out = out.filter((quiz) => quiz.status === "archived");
+    }
 
     if (query) {
       out = out.filter((quiz) => quiz.title.toLowerCase().includes(query));
@@ -199,6 +219,7 @@ export function ManageQuizScreen({
     minQuestions,
     selectedDifficulties,
     selectedSubjectIds,
+    statusFilter,
     sort,
   ]);
 
@@ -292,14 +313,28 @@ export function ManageQuizScreen({
               Quản lý quiz: chỉnh sửa, xóa, đăng / lưu nháp và cập nhật câu hỏi.
             </p>
           </div>
-          <div className={styles.heroFigure} aria-hidden="true">
-            <div className={styles.heroHead} />
-            <div className={styles.heroArm} />
-            <div className={styles.heroBody} />
+          <div className={styles.heroRight}>
+            <button
+              type="button"
+              className={styles.heroCta}
+              onClick={() => setCreateOpen(true)}
+            >
+              + Tạo quiz
+            </button>
+            <div className={styles.heroFigure} aria-hidden="true">
+              <div className={styles.heroHead} />
+              <div className={styles.heroArm} />
+              <div className={styles.heroBody} />
+            </div>
           </div>
         </section>
 
         <ManageQuizFilters
+          statusFilter={statusFilter}
+          onStatusFilterChange={(next) => {
+            setStatusFilter(next);
+            setPage(1);
+          }}
           sort={sort}
           onSortChange={handleSortChange}
           subjects={subjects}
@@ -350,6 +385,7 @@ export function ManageQuizScreen({
       <QuizBuilderModal
         quizId={builderQuizId}
         refreshKey={builderRefreshKey}
+        subjects={subjects}
         onClose={() => {
           setQuestionTarget(null);
           setBuilderQuizId(null);
@@ -365,6 +401,15 @@ export function ManageQuizScreen({
         target={questionTarget}
         onClose={() => setQuestionTarget(null)}
         onSaved={() => setBuilderRefreshKey((prev) => prev + 1)}
+      />
+
+      <CreateQuizModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(quizId) => {
+          setRefreshKey((prev) => prev + 1);
+          setInfoQuizId(quizId);
+        }}
       />
     </DashboardShell>
   );

@@ -61,6 +61,10 @@
 ### fix(db): fix dynamic SQL placeholder replacement
 - Replaced single-use `.replace()` with `.replaceAll()` so SQL fragments with multiple `$idx` placeholders work correctly.
 
+### feat(staff): add question bank + quiz builder picker
+- Added staff `/staff/questions` question bank page with table UX and full CRUD flows.
+- Added question-bank picker modal for quickly adding questions inside the quiz builder.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

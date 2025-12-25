@@ -1,5 +1,6 @@
 import {
   archiveQuestion as archiveQuestionRepo,
+  countQuestions,
   deleteQuestion,
   getQuestionDetail as getQuestionDetailRepo,
   insertQuestion,
@@ -91,7 +92,17 @@ export async function listQuestions(params: {
   limit?: number;
   offset?: number;
 }) {
-  return listQuestionsRepo(params);
+  const search = params.search?.trim();
+  const [items, total] = await Promise.all([
+    listQuestionsRepo({ ...params, search: search || undefined }),
+    countQuestions({
+      subjectId: params.subjectId,
+      difficulty: params.difficulty,
+      status: params.status,
+      search: search || undefined,
+    }),
+  ]);
+  return { items, total };
 }
 
 export async function getQuestionDetail(questionId: string) {

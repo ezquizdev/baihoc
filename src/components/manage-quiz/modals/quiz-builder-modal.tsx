@@ -6,11 +6,14 @@ import type {
   QuizDetail,
   QuizQuestionSummary,
 } from "@/application/models/quiz";
+import type { Subject } from "@/application/models/subject";
 import styles from "./manage-quiz-modals.module.css";
+import { QuestionBankPickerModal } from "./question-bank-picker-modal";
 
 type QuizBuilderModalProps = {
   quizId: string | null;
   refreshKey: number;
+  subjects: Subject[];
   onClose: () => void;
   onEditQuestion: (questionId: string, position: number) => void;
   onMutated: () => void;
@@ -19,6 +22,7 @@ type QuizBuilderModalProps = {
 export function QuizBuilderModal({
   quizId,
   refreshKey,
+  subjects,
   onClose,
   onEditQuestion,
   onMutated,
@@ -30,6 +34,7 @@ export function QuizBuilderModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bankOpen, setBankOpen] = useState(false);
 
   useEffect(() => {
     if (!quizId) return;
@@ -216,7 +221,7 @@ export function QuizBuilderModal({
                 <button
                   className={`${styles.toolBtn} ${styles.toolBlue}`}
                   type="button"
-                  onClick={() => window.alert("Chưa hỗ trợ: mở kho câu hỏi")}
+                  onClick={() => setBankOpen(true)}
                   disabled={toolDisabled}
                 >
                   Chọn câu hỏi từ kho
@@ -224,12 +229,10 @@ export function QuizBuilderModal({
                 <button
                   className={`${styles.toolBtn} ${styles.toolYellow}`}
                   type="button"
-                  onClick={() =>
-                    window.alert("Chưa hỗ trợ: nhập câu hỏi thủ công")
-                  }
+                  onClick={() => window.open("/staff/questions/new", "_blank")}
                   disabled={toolDisabled}
                 >
-                  Nhập câu hỏi thủ công
+                  Tạo câu hỏi mới
                 </button>
                 <button
                   className={`${styles.toolBtn} ${styles.toolDark}`}
@@ -250,6 +253,92 @@ export function QuizBuilderModal({
                   <div key={q.id} className={styles.qCard} data-qid={q.id}>
                     <div className={styles.qTitle}>{`Câu ${idx + 1}:`}</div>
                     <p className={styles.qText}>{q.stem}</p>
+                    <div className={styles.qMetaRow}>
+                      <label className={styles.qMetaItem}>
+                        <span>Điểm</span>
+                        <input
+                          className={styles.qScoreInput}
+                          type="number"
+                          min={1}
+                          placeholder={String(q.defaultScore)}
+                          value={q.score ?? ""}
+                          onChange={(event) => {
+                            const raw = event.target.value;
+                            setQuestions((prev) =>
+                              prev.map((item) =>
+                                item.id === q.id
+                                  ? {
+                                      ...item,
+                                      score: raw ? Number(raw) : null,
+                                    }
+                                  : item,
+                              ),
+                            );
+                          }}
+                          disabled={toolDisabled}
+                        />
+                        <span className={styles.qMetaHint}>
+                          mặc định: {q.defaultScore}
+                        </span>
+                      </label>
+
+                      <label className={styles.qMetaToggle}>
+                        <input
+                          type="checkbox"
+                          checked={q.required}
+                          onChange={() => {
+                            setQuestions((prev) =>
+                              prev.map((item) =>
+                                item.id === q.id
+                                  ? { ...item, required: !item.required }
+                                  : item,
+                              ),
+                            );
+                          }}
+                          disabled={toolDisabled}
+                        />
+                        Bắt buộc
+                      </label>
+
+                      <div className={styles.qMove}>
+                        <button
+                          type="button"
+                          className={`${styles.smallBtn} ${styles.smallGray}`}
+                          onClick={() => {
+                            if (idx === 0) return;
+                            setQuestions((prev) => {
+                              const next = [...prev];
+                              const tmp = next[idx - 1];
+                              next[idx - 1] = next[idx];
+                              next[idx] = tmp;
+                              return next;
+                            });
+                          }}
+                          disabled={toolDisabled || idx === 0}
+                          aria-label="Đưa lên"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.smallBtn} ${styles.smallGray}`}
+                          onClick={() => {
+                            if (idx >= questions.length - 1) return;
+                            setQuestions((prev) => {
+                              const next = [...prev];
+                              const tmp = next[idx + 1];
+                              next[idx + 1] = next[idx];
+                              next[idx] = tmp;
+                              return next;
+                            });
+                          }}
+                          disabled={toolDisabled || idx >= questions.length - 1}
+                          aria-label="Đưa xuống"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    </div>
                     <div className={styles.qActions}>
                       <button
                         className={`${styles.smallBtn} ${styles.smallBlue}`}
@@ -328,6 +417,31 @@ export function QuizBuilderModal({
           ) : null}
         </div>
       </div>
+
+      <QuestionBankPickerModal
+        open={bankOpen}
+        subjects={subjects}
+        existingQuestionIds={questions.map((q) => q.id)}
+        onClose={() => setBankOpen(false)}
+        onAdd={(selected) => {
+          setQuestions((prev) => {
+            const existing = new Set(prev.map((q) => q.id));
+            const additions = selected
+              .filter((q) => !existing.has(q.id))
+              .map((q, idx) => ({
+                id: q.id,
+                stem: q.stem,
+                type: q.type,
+                defaultScore: q.defaultScore,
+                position: prev.length + idx + 1,
+                score: null,
+                required: true,
+              }));
+            return [...prev, ...additions];
+          });
+          setBankOpen(false);
+        }}
+      />
     </div>
   );
 }

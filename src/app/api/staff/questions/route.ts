@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     offset: 0,
   });
   try {
-    const items = await controllerListQuestions({
+    const result = await controllerListQuestions({
       subjectId: searchParams.get("subjectId") ?? undefined,
       difficulty: parseDifficulty(searchParams) as DifficultyLevel | undefined,
       status: parseQuestionStatus(searchParams),
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
     });
-    return NextResponse.json({ items });
+    return NextResponse.json({ items: result.items, total: result.total });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Không thể tải câu hỏi";
