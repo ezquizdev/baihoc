@@ -742,14 +742,12 @@ function buildPassageContent({
   subjectName,
   subjectSlug,
   groupIndex,
-  groupSize,
-  startPosition,
+  groupSize: _groupSize,
+  startPosition: _startPosition,
 }) {
-  const endPosition = startPosition + groupSize - 1;
-  const title = `Dựa vào đoạn văn dưới đây để trả lời câu hỏi ${startPosition}–${endPosition}:`;
   const bodyParts = [
     `Chủ đề: **${subjectName}** (${subjectSlug.toUpperCase()})`,
-    `Đây là đoạn văn mẫu #${groupIndex + 1} được seed để kiểm tra UI hiển thị "đoạn văn" (Markdown + LaTeX-like).`,
+    `Đây là đoạn thông tin mẫu #${groupIndex + 1} được seed để kiểm tra UI hiển thị phần "thông tin chung" (Markdown + LaTeX).`,
     "Bạn có thể cuộn, chuyển câu, và kiểm tra việc giữ nguyên đoạn văn khi đổi câu trong cùng nhóm.",
   ];
 
@@ -760,11 +758,17 @@ function buildPassageContent({
     bodyParts.push(["- Dòng 1: *markdown*", "- Dòng 2: $x^2 + 1$"].join("\n"));
   }
 
-  return `${title}\n\n${bodyParts.join("\n\n")}`;
+  return bodyParts.join("\n\n");
 }
 
-function buildQuestionStem({ subjectName, subjectSlug, index, type, passage }) {
-  const prefix = passage ? `Câu hỏi ${index} (đoạn văn)` : `Câu hỏi ${index}`;
+function buildQuestionStem({
+  subjectName,
+  subjectSlug,
+  index,
+  type,
+  passage: _passage,
+}) {
+  const prefix = `Câu hỏi ${index}`;
   const typeHint =
     type === "mcq_multi"
       ? "Chọn nhiều đáp án đúng."
@@ -808,7 +812,7 @@ function seedQuestionMeta({
   const labels = ["A", "B", "C", "D"];
   const optionTexts = labels.map((label) => {
     const base = `${subject.name} • ${
-      passage ? "Đoạn văn" : "Cơ bản"
+      passage ? "Theo thông tin chung" : "Cơ bản"
     } • ${label} (${subject.slug.toUpperCase()}-${index})`;
     if (index % 2 === 0 && label === "A") {
       return `**${base}**\n\nInline: $\\sqrt{${index}}$`;
