@@ -61,6 +61,7 @@ export type AttemptStateResponse = {
   attempt: Attempt;
   ownerId: string;
   quizId: string;
+  quizTitle: string | null;
   questions: AttemptQuestion[];
   answers: AttemptAnswer[];
 };

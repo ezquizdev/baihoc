@@ -320,9 +320,15 @@ export async function getAttemptById(
 export async function getAttemptState(
   attemptId: string,
 ): Promise<AttemptStateResult | null> {
-  const res = await query<AttemptRow>(`SELECT * FROM attempts WHERE id = $1`, [
-    attemptId,
-  ]);
+  const res = await query<
+    AttemptRow & { quiz_title: string | null | undefined }
+  >(
+    `SELECT a.*, q.title AS quiz_title
+     FROM attempts a
+     LEFT JOIN quizzes q ON q.id = a.quiz_id
+     WHERE a.id = $1`,
+    [attemptId],
+  );
   const attemptRow = res.rows[0];
   if (!attemptRow) return null;
   const [questions, answers] = await Promise.all([
@@ -333,6 +339,7 @@ export async function getAttemptState(
     attempt: mapAttempt(attemptRow),
     ownerId: attemptRow.user_id,
     quizId: attemptRow.quiz_id,
+    quizTitle: attemptRow.quiz_title ?? null,
     questions,
     answers,
   };

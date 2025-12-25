@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { controllerGetAttemptState } from "@/application/controllers/attemptController";
-import { controllerGetPublishedQuiz } from "@/application/controllers/quizController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { QuizAttemptScreen } from "@/components/quiz-attempt/quiz-attempt-screen";
@@ -95,13 +94,7 @@ export default async function AttemptPage({ params }: AttemptPageProps) {
     );
   }
 
-  let quizTitle = "Quiz";
-  try {
-    const quiz = await controllerGetPublishedQuiz(state.quizId);
-    quizTitle = quiz.title ?? quizTitle;
-  } catch {
-    // Fallback title if quiz lookup fails.
-  }
+  const quizTitle = state.quizTitle ?? "Quiz";
 
   return (
     <DashboardShell
