@@ -59,6 +59,9 @@
 ### fix(ui): add icons to profile menu
 - Added icons to profile menu items and styled “Đăng xuất” as a destructive (red) action.
 
+### feat(ui): add notifications popover shell
+- Added a clickable notifications button in the topbar that opens a styled popover (placeholder content for now).
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

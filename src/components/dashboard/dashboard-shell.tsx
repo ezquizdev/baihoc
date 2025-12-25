@@ -10,7 +10,14 @@ import {
   SignOut,
   UserCircle,
 } from "phosphor-react";
-import type { FormEvent, MouseEvent, ReactNode } from "react";
+import {
+  type FormEvent,
+  type MouseEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import styles from "./dashboard-shell.module.css";
 
 type NavItem = {
@@ -65,6 +72,28 @@ export function DashboardShell({
   const router = useRouter();
   const displayName = userName ?? userEmail.split("@")[0];
   const toggleId = "dashboard-nav-toggle";
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notificationsRef = useRef<HTMLDetailsElement | null>(null);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+    const handleOutsideClick = (event: globalThis.MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (notificationsRef.current?.contains(target)) return;
+      setNotificationsOpen(false);
+    };
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setNotificationsOpen(false);
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [notificationsOpen]);
   const handlePlaceholderClick = (event: MouseEvent<HTMLElement>) => {
     event.preventDefault();
   };
@@ -201,13 +230,35 @@ export function DashboardShell({
             </form>
 
             <div className={styles.topActions}>
-              <button
-                className={`${styles.iconButton} ${styles.bell}`}
-                type="button"
-                aria-label="Thông báo"
+              <details
+                className={styles.notifications}
+                ref={notificationsRef}
+                open={notificationsOpen}
+                onToggle={(event) => {
+                  setNotificationsOpen(
+                    (event.currentTarget as HTMLDetailsElement).open,
+                  );
+                }}
               >
-                <Bell size={20} weight="bold" color="#2b3b55" />
-              </button>
+                <summary
+                  className={`${styles.iconButton} ${styles.notificationSummary}`}
+                  aria-label="Thông báo"
+                >
+                  <Bell size={20} weight="bold" color="#2b3b55" />
+                </summary>
+                <div
+                  className={styles.notificationMenu}
+                  role="menu"
+                  aria-label="Thông báo"
+                >
+                  <div className={styles.notificationHeader}>
+                    <div className={styles.notificationTitle}>Thông báo</div>
+                  </div>
+                  <div className={styles.notificationEmpty}>
+                    Chưa có thông báo
+                  </div>
+                </div>
+              </details>
 
               <details className={styles.profile}>
                 <summary
