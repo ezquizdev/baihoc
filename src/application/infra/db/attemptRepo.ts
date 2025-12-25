@@ -429,6 +429,25 @@ export async function listQuizQuestionMeta(
   }));
 }
 
+export async function listQuizQuestionMetaByIds(
+  quizId: string,
+  questionIds: string[],
+): Promise<QuizQuestionMeta[]> {
+  if (!questionIds.length) return [];
+  const res = await query<{ question_id: string; type: QuestionType }>(
+    `SELECT qq.question_id, q.type
+     FROM quiz_questions qq
+     JOIN questions q ON q.id = qq.question_id
+     WHERE qq.quiz_id = $1
+       AND qq.question_id = ANY($2)`,
+    [quizId, questionIds],
+  );
+  return res.rows.map((row) => ({
+    questionId: row.question_id,
+    type: row.type,
+  }));
+}
+
 export async function listQuizGradingData(
   quizId: string,
 ): Promise<QuizQuestionGrading[]> {

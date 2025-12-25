@@ -15,7 +15,7 @@ vi.mock("@/application/infra/db/attemptRepo", () => ({
   getQuizAttemptMeta: vi.fn(),
   listAttemptAnswers: vi.fn(),
   listQuizGradingData: vi.fn(),
-  listQuizQuestionMeta: vi.fn(),
+  listQuizQuestionMetaByIds: vi.fn(),
   saveAttemptAnswers: vi.fn(),
   submitAttempt: vi.fn(),
 }));
@@ -139,7 +139,7 @@ describe("attemptService", () => {
       remaining_seconds: 10,
     };
     vi.mocked(attemptRepo.getAttemptById).mockResolvedValue(expiredAttempt);
-    vi.mocked(attemptRepo.listQuizQuestionMeta).mockResolvedValue([
+    vi.mocked(attemptRepo.listQuizQuestionMetaByIds).mockResolvedValue([
       { questionId: "q1", type: "mcq_single" },
     ]);
 
