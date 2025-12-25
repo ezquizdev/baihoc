@@ -6,6 +6,9 @@
 - Prevented the quiz builder from wiping unsaved question selections when a question is edited and saved.
 - Reset builder state cleanly when switching between quizzes.
 
+### fix(a11y): localize quiz builder drag announcements
+- Localized drag-and-drop screen reader announcements and removed internal IDs from the live region output.
+
 ### refactor(staff): hide quiz archive UI
 - Removed archive/restore buttons and archived visual indicators from staff quiz cards and filters.
 - Replaced the staff-only bookmark control with a draft status chip.

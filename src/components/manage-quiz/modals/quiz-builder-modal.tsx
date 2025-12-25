@@ -218,6 +218,47 @@ export function QuizBuilderModal({
   if (!quizId) return null;
 
   const questionIds = questions.map((q) => q.id);
+  const questionPositionById = useMemo(() => {
+    const map = new Map<string, number>();
+    questions.forEach((q, idx) => map.set(q.id, idx + 1));
+    return map;
+  }, [questions]);
+
+  const dndAccessibility = useMemo(() => {
+    const labelFor = (id: unknown) => {
+      const position = questionPositionById.get(String(id));
+      return position ? `Câu ${position}` : "Câu hỏi";
+    };
+
+    return {
+      announcements: {
+        onDragStart({ active }) {
+          return `Bắt đầu kéo ${labelFor(active.id)}.`;
+        },
+        onDragOver({ active, over }) {
+          if (!over) return `${labelFor(active.id)} không còn ở vị trí hợp lệ.`;
+          const from = labelFor(active.id);
+          const to = labelFor(over.id);
+          if (from === to) return;
+          return `${from} đang ở vị trí của ${to}.`;
+        },
+        onDragEnd({ active, over }) {
+          if (!over) return `Đã thả ${labelFor(active.id)}.`;
+          const from = labelFor(active.id);
+          const to = labelFor(over.id);
+          if (from === to) return `Đã thả ${from}.`;
+          return `${from} đã được di chuyển tới vị trí của ${to}.`;
+        },
+        onDragCancel({ active }) {
+          return `Đã hủy kéo ${labelFor(active.id)}.`;
+        },
+      },
+      screenReaderInstructions: {
+        draggable:
+          "Để sắp xếp câu hỏi: nhấn Space để nhấc, dùng ↑/↓ để di chuyển, nhấn Space lần nữa để thả, hoặc nhấn Escape để hủy.",
+      },
+    } as const;
+  }, [questionPositionById]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveQuestionId(String(event.active.id));
@@ -340,6 +381,7 @@ export function QuizBuilderModal({
 
               <DndContext
                 sensors={sensors}
+                accessibility={dndAccessibility}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragCancel={handleDragCancel}
