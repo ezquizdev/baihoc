@@ -1,4 +1,4 @@
-import { query } from "@/application/infra/db/pool";
+import { listQuestionIdsByIds } from "@/application/infra/db/questionRepo";
 import {
   deleteQuiz,
   getQuizDetail as getQuizDetailRepo,
@@ -67,9 +67,11 @@ export async function setQuizQuestions(
     await replaceQuizQuestions(quizId, []);
     return;
   }
+  const questionIds = questions.map((q) => q.questionId);
+  ensureUnique(questionIds);
   const positions = questions.map((q, idx) => q.position ?? idx + 1);
   ensureSequential(positions);
-  await ensureQuestionsExist(questions.map((q) => q.questionId));
+  await ensureQuestionsExist(questionIds);
   const normalized = questions.map((q, idx) => ({
     questionId: q.questionId,
     position: q.position ?? idx + 1,
@@ -215,12 +217,15 @@ function ensureSequential(positions: number[]) {
   });
 }
 
+function ensureUnique(ids: string[]) {
+  const unique = new Set(ids);
+  if (unique.size !== ids.length) {
+    throw new Error("Duplicate question IDs are not allowed");
+  }
+}
+
 async function ensureQuestionsExist(questionIds: string[]) {
-  const res = await query<{ id: string }>(
-    `SELECT id FROM questions WHERE id = ANY($1::uuid[])`,
-    [questionIds],
-  );
-  const found = new Set(res.rows.map((r) => r.id));
+  const found = new Set(await listQuestionIdsByIds(questionIds));
   const missing = questionIds.filter((id) => !found.has(id));
   if (missing.length) {
     throw new Error(`Questions not found: ${missing.join(", ")}`);

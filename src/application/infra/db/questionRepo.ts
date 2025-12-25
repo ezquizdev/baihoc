@@ -483,6 +483,17 @@ export async function isQuestionUsed(questionId: string) {
   return Number(res.rows[0]?.cnt ?? 0) > 0;
 }
 
+export async function listQuestionIdsByIds(questionIds: string[]) {
+  if (!questionIds.length) return [];
+  const res = await query<{ id: string }>(
+    `SELECT id
+     FROM questions
+     WHERE id = ANY($1::uuid[])`,
+    [questionIds],
+  );
+  return res.rows.map((row) => row.id);
+}
+
 export async function deleteQuestion(questionId: string) {
   await withTransaction(async (client) => {
     await client.query(`DELETE FROM question_options WHERE question_id = $1`, [
