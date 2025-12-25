@@ -2,6 +2,11 @@
 
 ## 2025-12-25
 
+### fix(ui): polish staff quiz cards
+- Centered and stabilized the action button row (prevents awkward wrapping).
+- Matched quiz/challenge visual styling with the quiz catalog card tone and decorations.
+- Moved time to the meta section and relied on card styling to indicate quiz vs challenge.
+
 ### fix(build): resolve TypeScript build errors
 - Fixed question payload validator types to allow `null` for `options`/`shortAnswers` in PATCH updates.
 - Fixed a React effect cleanup to return `void` (not the boolean result of `delete`).
