@@ -76,4 +76,3 @@ describe("questionService.updateQuestion", () => {
     expect(questionRepo.updateQuestion).not.toHaveBeenCalled();
   });
 });
-

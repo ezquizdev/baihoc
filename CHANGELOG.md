@@ -84,6 +84,9 @@
 ### feat(staff): expose all quiz/challenge fields in UI
 - Extended the staff quiz info modal to edit `thumbnailUrl`, `featuredRank`, and `challenge.rules` (JSON).
 
+### chore(format): biome
+- Applied Biome formatting fixes.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
