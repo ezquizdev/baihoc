@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### feat(ui): redirect quiz catalog start to attempt-prep screen
+- Changed “Làm bài/Thử thách” CTA to navigate immediately to `/quizzes/[quizId]/attempt`, then create/resume the attempt there with a clear loading state.
+
 ### fix(ui): improve attempt hover colors
 - Fixed hover states so selected MCQ options and the active question navigator button keep their highlight colors.
 - Added consistent hover feedback for attempt action + modal buttons.

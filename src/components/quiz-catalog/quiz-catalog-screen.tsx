@@ -192,27 +192,7 @@ export function QuizCatalogScreen({
   };
 
   const handleStartQuiz = (quiz: QuizCatalogItem) => {
-    const run = async () => {
-      try {
-        const response = await fetch("/api/attempts", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ quizId: quiz.id }),
-        });
-        if (!response.ok) {
-          const payload = await response.json().catch(() => ({}));
-          throw new Error(payload?.error ?? "Không thể bắt đầu quiz");
-        }
-        const payload = (await response.json()) as { attemptId?: string };
-        if (!payload.attemptId) {
-          throw new Error("Không thể bắt đầu quiz");
-        }
-        router.push(`/attempts/${payload.attemptId}`);
-      } catch (err) {
-        window.alert(err instanceof Error ? err.message : "Có lỗi xảy ra");
-      }
-    };
-    run();
+    router.push(`/quizzes/${quiz.id}/attempt`);
   };
 
   return (
