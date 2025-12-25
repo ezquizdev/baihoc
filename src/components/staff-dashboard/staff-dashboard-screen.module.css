@@ -69,12 +69,22 @@
   border: 1px solid rgba(255, 255, 255, 0.25);
   transition:
     transform 0.12s ease,
+    box-shadow 0.12s ease,
     opacity 0.12s ease;
 }
 
 .actionPill:hover {
   transform: translateY(-1px);
   opacity: 0.96;
+}
+
+.actionPill:active {
+  transform: translateY(0);
+  opacity: 0.98;
+}
+
+.actionPill:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.65);
 }
 
 .actionPillPrimary {
@@ -135,10 +145,26 @@
   font-weight: 700;
   color: var(--primary-2);
   text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition:
+    background 0.12s ease,
+    transform 0.12s ease;
 }
 
 .sectionAction:hover {
-  text-decoration: underline;
+  background: #f1f5ff;
+  transform: translateY(-0.5px);
+  text-decoration: none;
+}
+
+.sectionAction:active {
+  transform: translateY(0);
+}
+
+.sectionAction:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
 }
 
 .statsGrid {
@@ -175,6 +201,7 @@
   font-weight: 900;
   letter-spacing: 0.2px;
   margin-top: 8px;
+  font-variant-numeric: tabular-nums;
 }
 
 .statSplit {
@@ -217,6 +244,7 @@
   margin-top: 10px;
   font-weight: 850;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .mutedHint {
@@ -412,6 +440,7 @@
   letter-spacing: -1.2px;
   line-height: 0.95;
   margin: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .bucketList {
@@ -432,6 +461,7 @@
   gap: 16px;
   font-size: 12px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .bucketLabel {
@@ -489,6 +519,7 @@
   font-size: 32px;
   margin-top: 6px;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .subjectBuckets {
@@ -502,6 +533,7 @@
   font-weight: 850;
   opacity: 0.96;
   margin-top: auto;
+  font-variant-numeric: tabular-nums;
 }
 
 .subjectBucketRow {
@@ -601,5 +633,12 @@
 
   .actionPill {
     flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actionPill,
+  .sectionAction {
+    transition: none;
   }
 }

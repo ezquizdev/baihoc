@@ -52,6 +52,10 @@
 ### fix(ui): prevent leaderboard table overflow
 - Wrapped leaderboard tables in a scroll container so narrow screens don’t clip columns.
 
+### fix(ui): polish staff dashboard interactions
+- Added focus/hover/active states for staff dashboard CTAs and section links.
+- Improved numeric alignment and prevented long topic names from overflowing.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
