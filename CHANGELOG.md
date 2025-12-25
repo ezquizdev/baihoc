@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### fix(ui): hide search on attempt screens
+- Hid the dashboard search bar on attempt start/attempt/results pages since it doesn’t apply there.
+
 ### fix(ui): improve attempt accessibility
 - Added focus trapping + ARIA labelling for attempt modals.
 - Improved screen-reader labels for the question navigator (answered/flagged/current state).

@@ -30,6 +30,7 @@ export default async function AttemptPage({ params }: AttemptPageProps) {
         userName={displayName}
         avatarUrl={session.avatarUrl}
         searchDisabled
+        hideSearch
         searchPlaceholder="Tìm kiếm"
       >
         <Card
@@ -67,6 +68,7 @@ export default async function AttemptPage({ params }: AttemptPageProps) {
         userName={displayName}
         avatarUrl={session.avatarUrl}
         searchDisabled
+        hideSearch
         searchPlaceholder="Tìm kiếm"
       >
         <Card
@@ -108,6 +110,7 @@ export default async function AttemptPage({ params }: AttemptPageProps) {
       userName={displayName}
       avatarUrl={session.avatarUrl}
       searchDisabled
+      hideSearch
       searchPlaceholder="Tìm kiếm"
     >
       <QuizAttemptScreen

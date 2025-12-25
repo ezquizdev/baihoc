@@ -35,6 +35,7 @@ export default async function AttemptResultsPage({
         userName={displayName}
         avatarUrl={session.avatarUrl}
         searchDisabled
+        hideSearch
         searchPlaceholder="Tìm kiếm"
       >
         <Card
@@ -72,6 +73,7 @@ export default async function AttemptResultsPage({
         userName={displayName}
         avatarUrl={session.avatarUrl}
         searchDisabled
+        hideSearch
         searchPlaceholder="Tìm kiếm"
       >
         <Card
@@ -127,6 +129,7 @@ export default async function AttemptResultsPage({
       userName={displayName}
       avatarUrl={session.avatarUrl}
       searchDisabled
+      hideSearch
       searchPlaceholder="Tìm kiếm"
     >
       <Card
