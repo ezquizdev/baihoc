@@ -440,11 +440,20 @@
   font-size: 22px;
 }
 
+.builderHint {
+  margin: -6px 0 10px;
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
 .qList {
+  list-style: none;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-bottom: 10px;
+  margin: 0;
+  padding: 0 0 10px;
 }
 
 .qCard {
@@ -474,10 +483,54 @@
   z-index: 1;
 }
 
+.qCardDragging {
+  opacity: 0.92;
+  border-color: rgba(40, 104, 230, 0.35);
+  box-shadow: 0 18px 45px rgba(30, 108, 255, 0.12);
+}
+
+.qTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+
+.qDragHandle {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(43, 59, 85, 0.12);
+  background: rgba(43, 59, 85, 0.06);
+  color: #2b3b55;
+  cursor: grab;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 1000;
+  line-height: 1;
+  user-select: none;
+  touch-action: none;
+}
+
+.qDragHandle:active {
+  cursor: grabbing;
+}
+
+.qDragHandle:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.35);
+  outline-offset: 2px;
+}
+
+.qDragHandle:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 .qTitle {
   font-weight: 1000;
   color: #0e1b2b;
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 14px;
 }
 
