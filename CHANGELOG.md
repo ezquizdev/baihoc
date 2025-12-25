@@ -2,6 +2,29 @@
 
 ## 2025-12-25
 
+### feat(attempt): add attempt domain models
+- Added attempt status + attempt question/answer domain types.
+
+### feat(attempt): add attempt repositories
+- Implemented attempt DB repository for start/resume, state queries, autosave, submit writes, and grading data fetch.
+- Added XP insert helper used during attempt submission.
+
+### feat(attempt): implement attempt service and controller
+- Added attempt service with timer enforcement, server-side grading, and XP awarding on submit.
+- Added controller wrappers for attempt lifecycle endpoints.
+
+### feat(api): add attempt start/autosave/submit routes
+- Added authenticated attempt APIs under `/api/attempts` for start, state fetch, autosave, and submit.
+
+### test(attempt): add attempt service coverage
+- Added unit coverage for start/resume, autosave expiry rules, submit grading, and double-submit protection.
+
+### chore(seed): set challenge_id on seeded attempts
+- Populated `attempts.challenge_id` for challenge quizzes to exercise once-per-user constraints in dev seed data.
+
+### docs(changelog): log attempt engine backend
+- Recorded the attempt engine backend changes.
+
 ### feat(staff): add manage quiz filters and grid
 - Added manage quiz filter controls and staff quiz grid/card building blocks.
 

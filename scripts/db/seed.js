@@ -308,6 +308,7 @@ async function main() {
         attemptRows.push([
           user.id,
           quizId,
+          isChallenge ? quizId : null,
           "submitted",
           startedAt,
           submittedAt,
@@ -371,6 +372,7 @@ async function main() {
         [
           "user_id",
           "quiz_id",
+          "challenge_id",
           "status",
           "started_at",
           "submitted_at",
