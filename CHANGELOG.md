@@ -2,6 +2,10 @@
 
 ## 2025-12-25
 
+### fix(staff): preserve quiz builder state on question save
+- Prevented the quiz builder from wiping unsaved question selections when a question is edited and saved.
+- Reset builder state cleanly when switching between quizzes.
+
 ### refactor(staff): hide quiz archive UI
 - Removed archive/restore buttons and archived visual indicators from staff quiz cards and filters.
 - Replaced the staff-only bookmark control with a draft status chip.

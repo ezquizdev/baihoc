@@ -59,6 +59,15 @@ export function QuizBuilderModal({
   const [bankOpen, setBankOpen] = useState(false);
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
 
+  useEffect(() => {
+    setQuiz(null);
+    setDescription("");
+    setQuestions([]);
+    setError(null);
+    setBankOpen(false);
+    setActiveQuestionId(null);
+  }, [quizId]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
@@ -86,11 +95,24 @@ export function QuizBuilderModal({
         if (!nextQuiz) throw new Error("Không thể tải quiz");
         setQuiz(nextQuiz);
         setDescription(nextQuiz.description ?? "");
-        setQuestions(
-          [...(nextQuiz.questions ?? [])].sort(
-            (a, b) => a.position - b.position,
-          ),
+        const nextQuestions = [...(nextQuiz.questions ?? [])].sort(
+          (a, b) => a.position - b.position,
         );
+        setQuestions((prev) => {
+          if (prev.length === 0) return nextQuestions;
+          if (nextQuestions.length === 0) return prev;
+          const freshById = new Map(nextQuestions.map((q) => [q.id, q]));
+          return prev.map((q) => {
+            const fresh = freshById.get(q.id);
+            if (!fresh) return q;
+            return {
+              ...q,
+              stem: fresh.stem,
+              type: fresh.type,
+              defaultScore: fresh.defaultScore,
+            };
+          });
+        });
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Không thể tải quiz");
