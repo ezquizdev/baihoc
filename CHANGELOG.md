@@ -2,6 +2,10 @@
 
 ## 2025-12-25
 
+### fix(ui): make attempt autosave more reliable
+- Serialized per-question autosave requests to avoid out-of-order overwrites during rapid answering/typing.
+- Stabilized the “Đang lưu...” indicator for concurrent saves and handled 409 already-submitted autosaves by showing the success modal.
+
 ### fix(ui): prevent attempt modal overlap after submit/expiry
 - Ensured auto-submit closes the confirmation modal (no double-modal overlap at the deadline).
 - Disabled attempt navigation/actions once an attempt is no longer in progress.
