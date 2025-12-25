@@ -9,6 +9,9 @@
 ### fix(a11y): localize quiz builder drag announcements
 - Localized drag-and-drop screen reader announcements and removed internal IDs from the live region output.
 
+### fix(staff): stabilize quiz builder hook order
+- Fixed a client-side crash when opening the quiz builder by ensuring all hooks run unconditionally.
+
 ### refactor(staff): hide quiz archive UI
 - Removed archive/restore buttons and archived visual indicators from staff quiz cards and filters.
 - Replaced the staff-only bookmark control with a draft status chip.

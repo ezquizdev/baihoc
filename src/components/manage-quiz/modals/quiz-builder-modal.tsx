@@ -215,8 +215,6 @@ export function QuizBuilderModal({
 
   const toolDisabled = useMemo(() => loading || saving, [loading, saving]);
 
-  if (!quizId) return null;
-
   const questionIds = questions.map((q) => q.id);
   const questionPositionById = useMemo(() => {
     const map = new Map<string, number>();
@@ -259,6 +257,8 @@ export function QuizBuilderModal({
       },
     } as const;
   }, [questionPositionById]);
+
+  if (!quizId) return null;
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveQuestionId(String(event.active.id));
