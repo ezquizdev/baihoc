@@ -58,6 +58,9 @@
 ### fix(db): compute search_vector on insert
 - Fixed quiz/question inserts to build `search_vector` from the inserted title/stem + description/explanation values.
 
+### fix(db): fix dynamic SQL placeholder replacement
+- Replaced single-use `.replace()` with `.replaceAll()` so SQL fragments with multiple `$idx` placeholders work correctly.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
