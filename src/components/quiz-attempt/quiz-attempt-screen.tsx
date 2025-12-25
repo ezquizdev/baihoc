@@ -603,6 +603,7 @@ export function QuizAttemptScreen({
         secondaryLabel="Về trang chủ"
         onPrimary={() => router.push(`/attempts/${attemptId}/results`)}
         onSecondary={() => router.push("/dashboard")}
+        dismissible={false}
       />
     </div>
   );
@@ -644,6 +645,7 @@ function AttemptModal({
   onSecondary,
   disablePrimary,
   primaryVariant,
+  dismissible = true,
 }: {
   open: boolean;
   title: string;
@@ -654,6 +656,7 @@ function AttemptModal({
   onSecondary: () => void;
   disablePrimary?: boolean;
   primaryVariant: "danger" | "success";
+  dismissible?: boolean;
 }) {
   const primaryRef = useRef<HTMLButtonElement | null>(null);
 
@@ -667,7 +670,7 @@ function AttemptModal({
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !dismissible) return;
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onSecondary();
@@ -675,7 +678,7 @@ function AttemptModal({
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [open, onSecondary]);
+  }, [dismissible, open, onSecondary]);
 
   if (!open) return null;
 
@@ -690,7 +693,7 @@ function AttemptModal({
     <div className={styles.modal} role="presentation">
       <div
         className={styles.backdrop}
-        onClick={onSecondary}
+        onClick={dismissible ? onSecondary : undefined}
         aria-hidden="true"
       />
       <div className={styles.dialog} role="dialog" aria-modal="true">
