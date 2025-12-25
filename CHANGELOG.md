@@ -77,6 +77,9 @@
 ### fix(shell): improve dashboard feature search UX
 - Show feature suggestions on focus/typing, added `aria-activedescendant`, and prevented click blur issues in the omnibox dropdown.
 
+### fix(shell): close profile menu on outside click
+- Made the profile dropdown dismiss on outside click or Escape for more predictable topbar behavior.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

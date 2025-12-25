@@ -90,6 +90,8 @@ export function DashboardShell({
   const toggleId = "dashboard-nav-toggle";
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationsRef = useRef<HTMLDetailsElement | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDetailsElement | null>(null);
 
   useEffect(() => {
     if (!notificationsOpen) return;
@@ -110,6 +112,26 @@ export function DashboardShell({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [notificationsOpen]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handleOutsideClick = (event: globalThis.MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (profileRef.current?.contains(target)) return;
+      setProfileOpen(false);
+    };
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setProfileOpen(false);
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [profileOpen]);
 
   const isFeatureSearch = !onSearchChange && !onSearchSubmit;
   const [featureQuery, setFeatureQuery] = useState("");
@@ -503,7 +525,16 @@ export function DashboardShell({
                 </div>
               </details>
 
-              <details className={styles.profile}>
+              <details
+                className={styles.profile}
+                ref={profileRef}
+                open={profileOpen}
+                onToggle={(event) => {
+                  setProfileOpen(
+                    (event.currentTarget as HTMLDetailsElement).open,
+                  );
+                }}
+              >
                 <summary
                   className={styles.profileSummary}
                   aria-label="Mở menu hồ sơ"
