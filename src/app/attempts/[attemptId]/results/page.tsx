@@ -100,6 +100,41 @@ export default async function AttemptResultsPage({
     );
   }
 
+  if (state.attempt.status === "in_progress") {
+    return (
+      <DashboardShell
+        activeNav="quizzes"
+        userEmail={session.email}
+        userName={displayName}
+        avatarUrl={session.avatarUrl}
+        searchDisabled
+        hideSearch
+        searchPlaceholder="Tìm kiếm"
+      >
+        <Card
+          title="Chưa có kết quả"
+          description="Bạn chưa nộp bài. Hãy quay lại màn làm bài để tiếp tục."
+          actions={
+            <div className="flex flex-wrap gap-3">
+              <Link
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2868e6] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1f54b8]"
+                href={`/attempts/${attemptId}`}
+              >
+                Tiếp tục làm bài
+              </Link>
+              <Link
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-50"
+                href="/quizzes"
+              >
+                Về danh sách quiz
+              </Link>
+            </div>
+          }
+        />
+      </DashboardShell>
+    );
+  }
+
   const quizTitle = state.quizTitle ?? "Quiz";
 
   const answerMap = new Map<string, AttemptAnswer>();
