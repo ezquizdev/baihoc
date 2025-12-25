@@ -206,6 +206,19 @@
   flex-wrap: wrap;
 }
 
+.actionsLeft {
+  display: flex;
+  align-items: center;
+}
+
+.actionsRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .actionButton {
   border: 0;
   border-radius: 14px;
@@ -554,6 +567,11 @@
   }
 
   .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actionsRight {
     flex-direction: column;
     align-items: stretch;
   }
