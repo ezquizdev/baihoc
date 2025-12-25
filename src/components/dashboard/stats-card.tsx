@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "./stats-card.module.css";
@@ -9,6 +10,7 @@ type Kpi = { label: string; value: string };
 type StatsCardProps = {
   title: string;
   actionLabel?: string;
+  actionHref?: Parameters<typeof Link>[0]["href"];
   onActionClick?: () => void;
   progressValue: number;
   progressLabel: string;
@@ -33,6 +35,7 @@ type Bubble = {
 export function StatsCard({
   title,
   actionLabel,
+  actionHref,
   onActionClick,
   progressValue,
   progressLabel,
@@ -97,7 +100,11 @@ export function StatsCard({
     <div className={`${styles.card} ${className ?? ""}`}>
       <div className={styles.header}>
         <h3 className={styles.title}>{title}</h3>
-        {actionLabel ? (
+        {actionLabel && actionHref ? (
+          <Link className={styles.action} href={actionHref}>
+            {actionLabel}
+          </Link>
+        ) : actionLabel && onActionClick ? (
           <button
             type="button"
             className={styles.action}

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./leaderboard-card.module.css";
 
 type LeaderboardRow = {
@@ -11,6 +12,7 @@ type LeaderboardRow = {
 type LeaderboardCardProps = {
   title: string;
   actionLabel?: string;
+  actionHref?: Parameters<typeof Link>[0]["href"];
   onActionClick?: () => void;
   rows: LeaderboardRow[];
   className?: string;
@@ -20,6 +22,7 @@ type LeaderboardCardProps = {
 export function LeaderboardCard({
   title,
   actionLabel,
+  actionHref,
   onActionClick,
   rows,
   className,
@@ -29,7 +32,11 @@ export function LeaderboardCard({
     <div className={`${styles.card} ${className ?? ""}`}>
       <div className={styles.header}>
         <h3 className={styles.title}>{title}</h3>
-        {actionLabel ? (
+        {actionLabel && actionHref ? (
+          <Link className={styles.action} href={actionHref}>
+            {actionLabel}
+          </Link>
+        ) : actionLabel && onActionClick ? (
           <button
             type="button"
             className={styles.action}

@@ -25,6 +25,10 @@
 - Added stub student pages for `/dashboard/history` and `/dashboard/leaderboard` so sidebar navigation routes exist.
 - Wired default dashboard nav items to these new routes.
 
+### fix(dashboard): make dashboard CTAs navigable
+- Updated dashboard cards to support link-based actions (avoids dead “Xem …” buttons).
+- Wired student dashboard CTA to `/quizzes` and switched staff dashboard links to `next/link` for smoother navigation.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
