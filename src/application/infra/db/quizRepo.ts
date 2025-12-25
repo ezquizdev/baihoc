@@ -206,7 +206,7 @@ export async function updateQuiz(input: {
   let idx = 1;
 
   const push = (sql: string, value: unknown) => {
-    fields.push(sql.replace("$idx", `$${idx}`));
+    fields.push(sql.replaceAll("$idx", `$${idx}`));
     params.push(value);
     idx += 1;
   };
@@ -398,7 +398,7 @@ export async function listQuizzesForCatalog(params: {
 
   const add = (sql: string, value: unknown) => {
     values.push(value);
-    where.push(sql.replace("$idx", `$${values.length}`));
+    where.push(sql.replaceAll("$idx", `$${values.length}`));
   };
 
   if (params.subjectId) {
@@ -506,7 +506,7 @@ export async function listCatalogPage(params: {
 
   const add = (sql: string, value: unknown) => {
     values.push(value);
-    where.push(sql.replace("$idx", `$${values.length}`));
+    where.push(sql.replaceAll("$idx", `$${values.length}`));
   };
 
   if (params.subjectIds?.length) {
@@ -636,7 +636,7 @@ export async function listQuizzesForStaff(params: {
   const values: unknown[] = [];
   const add = (sql: string, value: unknown) => {
     values.push(value);
-    where.push(sql.replace("$idx", `$${values.length}`));
+    where.push(sql.replaceAll("$idx", `$${values.length}`));
   };
 
   if (params.status) add("q.status = $idx::quiz_status", params.status);
