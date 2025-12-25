@@ -326,7 +326,7 @@ export function StaffDashboardScreen({
                   className={styles.subjectGrid}
                   aria-label="Năng lực theo môn"
                 >
-                  {competency.subjects.slice(0, 4).map((subject) => (
+                  {competency.subjects.map((subject) => (
                     <div
                       key={subject.subjectId}
                       className={`${styles.subjectCard} ${subjectVariant(subject.subjectSlug)}`}
