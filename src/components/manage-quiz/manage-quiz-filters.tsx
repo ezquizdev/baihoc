@@ -8,7 +8,7 @@ import { getSubjectTone } from "@/components/quiz-catalog/subject-tone";
 import styles from "./manage-quiz-filters.module.css";
 
 type SortOrder = "newest" | "oldest";
-type StatusFilter = "active" | "draft" | "published" | "archived" | "all";
+type StatusFilter = "active" | "draft" | "published" | "all";
 
 type ManageQuizFiltersProps = {
   statusFilter: StatusFilter;
@@ -134,15 +134,6 @@ export function ManageQuizFilters({
                     onChange={() => onStatusFilterChange("published")}
                   />
                   Đã xuất bản
-                </label>
-                <label className={styles.ck}>
-                  <input
-                    type="radio"
-                    name="quizStatus"
-                    checked={statusFilter === "archived"}
-                    onChange={() => onStatusFilterChange("archived")}
-                  />
-                  Đã lưu trữ
                 </label>
                 <label className={styles.ck}>
                   <input

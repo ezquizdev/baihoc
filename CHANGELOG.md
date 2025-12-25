@@ -2,6 +2,10 @@
 
 ## 2025-12-25
 
+### refactor(staff): hide quiz archive UI
+- Removed archive/restore buttons and archived visual indicators from staff quiz cards and filters.
+- Replaced the staff-only bookmark control with a draft status chip.
+
 ### refactor(challenge): remove challenge rules
 - Removed the `challenge_settings.rules` column and the staff UI/API field.
 

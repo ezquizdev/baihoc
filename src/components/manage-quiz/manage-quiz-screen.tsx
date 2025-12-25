@@ -18,7 +18,7 @@ import { QuizInfoModal } from "./modals/quiz-info-modal";
 import { StaffQuizGrid } from "./staff-quiz-grid";
 
 type SortOrder = "newest" | "oldest";
-type StatusFilter = "active" | "draft" | "published" | "archived" | "all";
+type StatusFilter = "active" | "draft" | "published" | "all";
 
 type ManageQuizScreenProps = {
   session: SessionPayload;
@@ -194,7 +194,7 @@ export function ManageQuizScreen({
 
   const filtered = useMemo(() => {
     const query = debouncedSearch.trim().toLowerCase();
-    let out = allQuizzes;
+    let out = allQuizzes.filter((quiz) => quiz.status !== "archived");
 
     if (statusFilter === "active") {
       out = out.filter((quiz) => quiz.status !== "archived");
@@ -202,8 +202,6 @@ export function ManageQuizScreen({
       out = out.filter((quiz) => quiz.status === "draft");
     } else if (statusFilter === "published") {
       out = out.filter((quiz) => quiz.status === "published");
-    } else if (statusFilter === "archived") {
-      out = out.filter((quiz) => quiz.status === "archived");
     }
 
     if (query) {

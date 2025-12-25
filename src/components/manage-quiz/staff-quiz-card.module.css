@@ -91,21 +91,15 @@
   margin-left: auto;
 }
 
-.bookmark {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  border: 1px solid rgba(219, 231, 255, 0.95);
-  background: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  color: #2b3b55;
-}
-
-.bookmarkActive {
-  background: rgba(255, 214, 65, 0.22);
-  border-color: rgba(255, 214, 65, 0.9);
+.draftChip {
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.3px;
+  background: rgba(47, 102, 255, 0.12);
+  color: #1f3b86;
+  border: 1px solid rgba(47, 102, 255, 0.22);
+  padding: 5px 9px;
+  border-radius: 999px;
 }
 
 .quizTitle {
@@ -172,6 +166,10 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 10px;
+}
+
+.actionsTwo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .btn {
