@@ -48,6 +48,9 @@
 ### feat(leaderboard): link staff leaderboard to profiles
 - Made staff dashboard leaderboard names link to `/profile/[userId]` for quick profile inspection.
 
+### fix(leaderboard): allow dynamic profile links
+- Relaxed leaderboard row link typing so dynamic `/profile/${userId}` hrefs compile under Next.js typed routes.
+
 ### fix(shell): satisfy typed-route Link hrefs
 - Updated dashboard/staff nav item href typing to align with Next.js typed routes and avoid build-time type errors.
 

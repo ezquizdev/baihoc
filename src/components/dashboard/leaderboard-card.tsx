@@ -8,7 +8,7 @@ type LeaderboardRow = {
   name: string;
   xp: number;
   avatarUrl?: string | null;
-  href?: Parameters<typeof Link>[0]["href"];
+  href?: string;
 };
 
 type LeaderboardCardProps = {
@@ -81,7 +81,10 @@ export function LeaderboardCard({
                       ) : null}
                     </div>
                     {row.href ? (
-                      <Link className={styles.nameLink} href={row.href}>
+                      <Link
+                        className={styles.nameLink}
+                        href={row.href as Parameters<typeof Link>[0]["href"]}
+                      >
                         {row.name}
                       </Link>
                     ) : (
