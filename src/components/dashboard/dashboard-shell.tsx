@@ -32,8 +32,8 @@ type DashboardShellProps = {
 const defaultNav: NavItem[] = [
   { key: "overview", label: "Tổng quan", href: "/dashboard" },
   { key: "quizzes", label: "Tất cả bài trắc nghiệm", href: "/quizzes" },
-  { key: "history", label: "Lịch sử" },
-  { key: "leaderboard", label: "Bảng xếp hạng" },
+  { key: "history", label: "Lịch sử", href: "/dashboard/history" },
+  { key: "leaderboard", label: "Bảng xếp hạng", href: "/dashboard/leaderboard" },
   { key: "settings", label: "Cài đặt", href: "/profile" },
 ];
 

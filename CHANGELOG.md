@@ -21,6 +21,10 @@
 - Switched the dashboard page title to an `h1` for better document structure.
 - Updated sidebar navigation + profile menu to use real links where possible, and added a working logout action.
 
+### feat(dashboard): add student dashboard stub pages
+- Added stub student pages for `/dashboard/history` and `/dashboard/leaderboard` so sidebar navigation routes exist.
+- Wired default dashboard nav items to these new routes.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
