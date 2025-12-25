@@ -71,6 +71,9 @@
 ### fix(dashboard): make student quick actions clickable
 - Made the student dashboard quick actions render as interactive tiles; “TẤT CẢ” navigates to `/quizzes` while the rest are disabled placeholders.
 
+### fix(build): satisfy typed routes in dashboard navigation
+- Fixed TypeScript typed-route navigation for the dashboard omnibox and quick-action links so production builds pass.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards

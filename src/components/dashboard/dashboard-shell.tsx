@@ -85,6 +85,7 @@ export function DashboardShell({
   onSearchSubmit,
 }: DashboardShellProps) {
   const router = useRouter();
+  type RouterHref = Parameters<typeof router.push>[0];
   const displayName = userName ?? userEmail.split("@")[0];
   const toggleId = "dashboard-nav-toggle";
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -205,10 +206,10 @@ export function DashboardShell({
       return;
     }
     if ("pathname" in href && typeof href.pathname === "string") {
-      router.push(href.pathname);
+      router.push(href.pathname as RouterHref);
       return;
     }
-    router.push("/");
+    router.push("/" as RouterHref);
   };
 
   return (
