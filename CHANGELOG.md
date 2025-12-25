@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### fix(ui): add attempt tablet breakpoint
+- Added a dedicated `max-width: 760px` layout for the attempt header so the timer, title, and status pills wrap cleanly.
+
 ### feat(ui): add quiz attempt screen
 - Wired quiz catalog CTA to start/resume an attempt and navigate to `/attempts/[attemptId]`.
 - Added attempt-taking UI (timer, question navigator, autosave, submit confirm/success modals) and a minimal results page at `/attempts/[attemptId]/results`.
