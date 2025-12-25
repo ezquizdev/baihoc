@@ -2,6 +2,9 @@
 
 ## 2025-12-25
 
+### feat(ui): add attempt loading states
+- Added route-level loading UIs for attempt + results pages so navigation shows a clear spinner while server data loads.
+
 ### feat(ui): redirect quiz catalog start to attempt-prep screen
 - Changed “Làm bài/Thử thách” CTA to navigate immediately to `/quizzes/[quizId]/attempt`, then create/resume the attempt there with a clear loading state.
 
