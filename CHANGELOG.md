@@ -65,6 +65,10 @@
 - Added staff `/staff/questions` question bank page with table UX and full CRUD flows.
 - Added question-bank picker modal for quickly adding questions inside the quiz builder.
 
+### fix(question): preserve null-clearing semantics on update
+- Allowed PATCH payloads to pass `null` through for `options`, `shortAnswers`, and `passage` so staff editors can clear/replace related rows safely.
+- Added unit coverage for update null-handling.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
