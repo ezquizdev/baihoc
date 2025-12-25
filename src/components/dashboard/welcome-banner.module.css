@@ -64,6 +64,37 @@
   flex: 0 0 auto;
   position: relative;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 12px 22px rgba(10, 22, 48, 0.16);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(10, 22, 48, 0.2);
+  opacity: 0.98;
+}
+
+.cta:active {
+  transform: translateY(0);
+  box-shadow: 0 12px 22px rgba(10, 22, 48, 0.16);
+}
+
+.cta:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.75);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta {
+    transition: none;
+  }
 }
 
 @media (max-width: 520px) {

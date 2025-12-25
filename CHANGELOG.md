@@ -45,6 +45,10 @@
 - Added consistent hover/active/focus-visible states to navigation, topbar controls, and support CTA.
 - Improved topbar search focus ring and prevented scroll chaining in the sidebar.
 
+### fix(ui): polish dashboard card CTAs
+- Improved CTA affordance (hover/active/focus-visible) for the student welcome banner and card header actions.
+- Added subtle leaderboard row hover highlighting for easier scanning.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
