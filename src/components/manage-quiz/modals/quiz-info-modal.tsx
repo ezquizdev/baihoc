@@ -248,7 +248,7 @@ export function QuizInfoModal({
                 </div>
 
                 <div className={styles.formRow}>
-                  <div className={styles.label}>Visibility:</div>
+                  <div className={styles.label}>Quyền truy cập:</div>
                   <label className={styles.ck}>
                     <input
                       type="radio"
@@ -257,7 +257,7 @@ export function QuizInfoModal({
                       onChange={() => setVisibility("free")}
                       disabled={disabled}
                     />
-                    Free
+                    Miễn phí
                   </label>
                   <label className={styles.ck}>
                     <input
@@ -267,7 +267,7 @@ export function QuizInfoModal({
                       onChange={() => setVisibility("premium")}
                       disabled={disabled}
                     />
-                    Premium
+                    VIP
                   </label>
                 </div>
 

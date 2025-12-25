@@ -67,7 +67,7 @@ export function QuizBuilderModal({
     return () => controller.abort();
   }, [quizId, refreshKey]);
 
-  const visibilityText = quiz?.visibility === "premium" ? "Premium" : "Free";
+  const visibilityText = quiz?.visibility === "premium" ? "VIP" : "Miễn phí";
   const difficultyText = quiz ? `${quiz.difficulty}★` : "—";
   const minutesText = quiz?.estimatedTimeSeconds
     ? Math.round(quiz.estimatedTimeSeconds / 60)
@@ -195,7 +195,7 @@ export function QuizBuilderModal({
 
               <div className={styles.builderInfoBar}>
                 <div className={styles.infoItem}>
-                  Visibility: <b>{visibilityText}</b>
+                  Quyền truy cập: <b>{visibilityText}</b>
                 </div>
                 <div className={styles.infoItem}>
                   Độ khó mặc định:{" "}
