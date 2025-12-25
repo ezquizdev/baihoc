@@ -10,7 +10,7 @@ import styles from "./dashboard-shell.module.css";
 type NavItem = {
   key: string;
   label: string;
-  href?: string;
+  href?: Parameters<typeof Link>[0]["href"];
 };
 
 type DashboardShellProps = {
@@ -33,7 +33,11 @@ const defaultNav: NavItem[] = [
   { key: "overview", label: "Tổng quan", href: "/dashboard" },
   { key: "quizzes", label: "Tất cả bài trắc nghiệm", href: "/quizzes" },
   { key: "history", label: "Lịch sử", href: "/dashboard/history" },
-  { key: "leaderboard", label: "Bảng xếp hạng", href: "/dashboard/leaderboard" },
+  {
+    key: "leaderboard",
+    label: "Bảng xếp hạng",
+    href: "/dashboard/leaderboard",
+  },
   { key: "settings", label: "Cài đặt", href: "/profile" },
 ];
 

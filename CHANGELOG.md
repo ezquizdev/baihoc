@@ -38,6 +38,9 @@
 ### chore(db): add indexes for dashboard metrics
 - Added `attempts(submitted_at)` submitted-only index and `xp_events` indexes to keep staff dashboard aggregations responsive as data grows.
 
+### fix(shell): satisfy typed-route Link hrefs
+- Updated dashboard/staff nav item href typing to align with Next.js typed routes and avoid build-time type errors.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
