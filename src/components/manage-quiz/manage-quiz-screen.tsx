@@ -30,6 +30,16 @@ const PAGE_SIZE = 9;
 const RANGE_MIN = 0;
 const RANGE_MAX = 50;
 
+const staffNavItems = [
+  { key: "overview", label: "Tổng quan" },
+  { key: "quizzes", label: "Tất cả quiz", href: "/staff/quizzes" },
+  { key: "question-bank", label: "Kho câu hỏi" },
+  { key: "students", label: "Quản lý học sinh" },
+  { key: "leaderboard", label: "Bảng xếp hạng" },
+  { key: "analytics", label: "Phân tích thống kê" },
+  { key: "settings", label: "Cài đặt" },
+];
+
 export function ManageQuizScreen({
   session,
   initialQuizzes,
@@ -254,6 +264,7 @@ export function ManageQuizScreen({
   return (
     <DashboardShell
       activeNav="quizzes"
+      navItems={staffNavItems}
       userEmail={session.email}
       userName={displayName}
       avatarUrl={session.avatarUrl}
