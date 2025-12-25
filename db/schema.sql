@@ -361,6 +361,9 @@ CREATE TABLE IF NOT EXISTS attempts (
 CREATE INDEX IF NOT EXISTS idx_attempts_user_started ON attempts(user_id, started_at DESC);
 CREATE INDEX IF NOT EXISTS idx_attempts_quiz_status ON attempts(quiz_id, status);
 CREATE INDEX IF NOT EXISTS idx_attempts_status_in_progress ON attempts(status) WHERE status = 'in_progress';
+CREATE INDEX IF NOT EXISTS idx_attempts_submitted_recent
+ON attempts(submitted_at DESC)
+WHERE submitted_at IS NOT NULL AND status IN ('submitted', 'auto_submitted');
 
 CREATE TABLE IF NOT EXISTS attempt_answers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -396,6 +399,14 @@ CREATE TABLE IF NOT EXISTS xp_events (
   metadata jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS idx_xp_events_user_created
+ON xp_events(user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_xp_events_quiz_id
+ON xp_events(((metadata->>'quizId')::uuid))
+WHERE metadata ? 'quizId'
+  AND (metadata->>'quizId') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 
 CREATE TABLE IF NOT EXISTS leaderboard_snapshots (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
