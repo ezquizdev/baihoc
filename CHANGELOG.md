@@ -40,6 +40,18 @@
 ### chore(changelog): log staff manage quiz commits
 - Logged the above staff manage quiz UI commits.
 
+### fix(staff): add staff nav items to manage quiz
+- Added staff dashboard navigation items to the manage quiz screen.
+
+### fix(staff): make manage quiz modals scrollable
+- Kept manage quiz modal actions visible by making dialog bodies scroll within the viewport.
+
+### fix(staff): localize manage quiz visibility labels
+- Localized quiz visibility labels to Vietnamese (Miễn phí/VIP) in manage quiz modals.
+
+### chore(changelog): log manage quiz polish commits
+- Logged the manage quiz polish commits.
+
 ## 2025-12-24
 
 ### fix(ui): center catalog state cards
