@@ -1,11 +1,12 @@
 import type { PoolClient } from "pg";
 import { pool } from "@/application/infra/db/pool";
+import type { UserStatus } from "@/application/infra/db/userRepo";
 
 export type UserStatusChangeRow = {
   id: string;
   user_id: string;
-  from_status: "pending_verification" | "active" | "suspended" | "deactivated";
-  to_status: "pending_verification" | "active" | "suspended" | "deactivated";
+  from_status: UserStatus;
+  to_status: UserStatus;
   reason: string | null;
   changed_by: string | null;
   created_at: string;
@@ -14,8 +15,8 @@ export type UserStatusChangeRow = {
 export async function insertUserStatusChange(
   input: {
     userId: string;
-    fromStatus: UserStatusChangeRow["from_status"];
-    toStatus: UserStatusChangeRow["to_status"];
+    fromStatus: UserStatus;
+    toStatus: UserStatus;
     reason?: string | null;
     changedBy?: string | null;
   },

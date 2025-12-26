@@ -2,35 +2,65 @@
 
 BaiHoc is an online learning and exam-prep platform that mixes quizzes, time-bound challenges, and an AI study companion. Students practice, track progress, and compare results, while staff manage content and analytics.
 
+### Documentation
+
+- Database schema: `db/schema.sql`
+- Application layering: `src/application/README.md`
+- Changelog: `CHANGELOG.md`
+
 ### Tech Stack
 
 - **Framework**: Next.js (App Router) with TypeScript.
-- **UI**: React components in `src/app`.
-- **Business Logic**: Controllers/services/models under `src/application`.
-- **Data/Integrations**: Supabase (database/storage), Brevo (email), plus an external LLM for AI explanations.
+- **UI**: React components in `src/app` and `src/components`.
+- **Business Logic**: `src/application` (controllers/services/models/infra).
+- **Database**: Postgres via `pg` (`DATABASE_URL`) (works with Supabase-hosted Postgres).
+- **Storage**: Supabase Storage (bucket `avatars`) for avatar uploads.
+- **Email**: Brevo (verification + password reset).
+- **Auth**: custom users table + JWT session cookie (not Supabase Auth).
+- **Optional**: Google OAuth (GIS) and an LLM API key (no AI features wired yet).
 
 ### Local Development
 
 ```bash
 npm install
+```
+
+Create an env file:
+
+```bash
+cp .env.example .env.local
+```
+
+Environment variables are validated via `src/core/env.ts` (most are required for the app to boot).
+
+Database setup (dev):
+
+```bash
+npm run db:init
+npm run db:seed
+```
+
+Start the app:
+
+```bash
 npm run dev
 ```
 
-Environment variables live in `.env.example` and are validated via `src/core/env.ts`. Include a `DATABASE_URL` (Postgres/Supabase connection string).
+Seeded login credentials:
+- `staff@baihoc.dev` / `Password123!`
+- `student.1@baihoc.dev` / `Password123!`
 
-Database setup (dev):
-- After setting `DATABASE_URL`, run `npm run db:init` once to create tables from `db/schema.sql`.
-- If you hit “type already exists” or similar, run with `DB_RESET=true npm run db:init` to drop and recreate the `public` schema (dev-only; this deletes data).
-- Supabase storage: create a bucket named `avatars` and supply `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Service role is required for server-side avatar uploads; data will be stored in storage and referenced by URL in the database.
+Notes:
+- If you hit “type already exists” or similar during DB init, run `DB_RESET=true npm run db:init` to drop and recreate the `public` schema (dev-only; deletes data).
+- Supabase storage: create a bucket named `avatars` and set it to public if you want avatars to render via public URLs.
+- Auth flows send real emails via Brevo when triggered; use a real/test Brevo key or be prepared for email actions to fail.
 
 Useful scripts:
 
-- `npm run lint` – Biome lint + type-aware checks.
+- `npm run lint` – Biome checks.
 - `npm run format` – Format with Biome.
 - `npm run build` – Next.js production build.
-- `npm run db:init` – Create/update tables in your Supabase/Postgres database from `db/schema.sql`.
-- `npm run test:email` – Sends a real transactional email via Brevo (requires valid Brevo env vars).
-
-### Documentation
-
-Product specs, architecture notes, and design references are available from the maintainers on request. Reach out if you need the latest copies before making major changes.
+- `npm run db:init` – Apply `db/schema.sql`.
+- `npm run db:seed` – Seed dev data.
+- `npm test` – Run unit tests (Vitest).
+- `npm run test:email` – Sends a real transactional email via Brevo.

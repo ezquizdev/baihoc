@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
     const { user } = await controllerRegisterWithEmail(parsed.data);
     return NextResponse.json(
-      { userId: user.id, status: "pending_verification" },
+      { userId: user.id, status: user.status },
       { status: 201 },
     );
   } catch (error) {

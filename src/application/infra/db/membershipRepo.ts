@@ -1,21 +1,22 @@
+import type { PoolClient } from "pg";
+import { pool } from "@/application/infra/db/pool";
+import type { UserTier } from "@/application/infra/db/userRepo";
+
 export type MembershipHistoryRow = {
   id: string;
   user_id: string;
-  from_tier: "free" | "paid";
-  to_tier: "free" | "paid";
+  from_tier: UserTier;
+  to_tier: UserTier;
   reason: string | null;
   changed_by: string | null;
   created_at: string;
 };
 
-import type { PoolClient } from "pg";
-import { pool } from "@/application/infra/db/pool";
-
 export async function insertMembershipHistory(
   input: {
     userId: string;
-    fromTier: "free" | "paid";
-    toTier: "free" | "paid";
+    fromTier: UserTier;
+    toTier: UserTier;
     reason?: string | null;
     changedBy?: string | null;
   },

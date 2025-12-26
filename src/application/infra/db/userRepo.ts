@@ -166,6 +166,18 @@ export async function createUser(input: CreateUserInput) {
   return res.rows[0];
 }
 
+export async function markEmailVerified(userId: string, client?: PoolClient) {
+  const executor = client ?? pool;
+  await executor.query(
+    `UPDATE users
+     SET status = 'active',
+         email_verified_at = now(),
+         updated_at = now()
+     WHERE id = $1`,
+    [userId],
+  );
+}
+
 export async function updatePassword(userId: string, password_hash: string) {
   await query(
     `UPDATE users SET password_hash = $2, updated_at = now() WHERE id = $1`,
@@ -234,18 +246,6 @@ export async function adminUpdateUser(
     [userId, input.role ?? null, input.tier ?? null, input.status ?? null],
   );
   return res.rows[0] ?? null;
-}
-
-export async function markEmailVerified(userId: string, client?: PoolClient) {
-  const executor = client ?? pool;
-  await executor.query(
-    `UPDATE users
-     SET status = 'active',
-         email_verified_at = now(),
-         updated_at = now()
-     WHERE id = $1`,
-    [userId],
-  );
 }
 
 export async function linkUserOAuth(

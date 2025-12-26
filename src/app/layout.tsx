@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ensureSeedAdmin } from "@/application/bootstrap/seedAdmin";
 import { siteConfig } from "@/config/site";
 import "katex/dist/katex.min.css";
 import "./globals.css";
@@ -21,9 +20,6 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
   },
 };
-
-// Fire-and-forget bootstrap tasks (idempotent per server instance)
-void ensureSeedAdmin();
 
 export default function RootLayout({
   children,

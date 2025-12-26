@@ -1,10 +1,11 @@
 # Controllers
 
-Route handlers (server actions/API routes) live here. They:
+Application controllers live here. They:
 
-- Parse and validate requests.
-- Apply authentication/authorization guards.
-- Instantiate and call services.
-- Map service results back to HTTP responses.
+- Orchestrate a request at the application layer.
+- Map between transport DTOs and domain types.
+- Call services (and only services).
 
-Keep controllers thin and focused on translating between transport and application concerns.
+In this repo, **Next.js route handlers** live under `src/app/api/**` and handle HTTP concerns (zod parsing, `requireAuthenticatedApi(...)`, `NextResponse`).
+
+Keep controllers thin and focused on translating between transport and application concerns, without importing Next.js request/response types.

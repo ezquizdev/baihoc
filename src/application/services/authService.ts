@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { isEmailAllowlisted } from "@/application/infra/db/allowlistRepo";
+import { findAllowlistEntryByEmail } from "@/application/infra/db/allowlistRepo";
 import { insertAllowlistUpgrade } from "@/application/infra/db/membershipRepo";
 import {
   consumeEmailVerificationToken,
@@ -77,7 +77,8 @@ export async function registerWithEmail(input: {
     ? await normalizeAvatarUpload(email, input.avatarUrl)
     : null;
   const passwordHash = await bcrypt.hash(input.password, 10);
-  const allowlisted = await isEmailAllowlisted(email);
+  const allowlistEntry = await findAllowlistEntryByEmail(email);
+  const allowlisted = Boolean(allowlistEntry);
   const user = await createUser({
     email,
     password_hash: passwordHash,
@@ -85,13 +86,14 @@ export async function registerWithEmail(input: {
     school: input.school,
     date_of_birth: input.dateOfBirth,
     avatar_url: uploadedAvatar,
+    role: allowlisted ? allowlistEntry?.role : "student",
     status: allowlisted ? "active" : "pending_verification",
-    tier: allowlisted ? "paid" : "free",
+    tier: allowlisted ? allowlistEntry?.tier : "free",
     email_verified_at: allowlisted ? new Date().toISOString() : null,
     profile_completed: true,
   });
 
-  if (allowlisted) {
+  if (allowlisted && allowlistEntry?.tier === "paid") {
     await insertAllowlistUpgrade(user.id);
   }
 

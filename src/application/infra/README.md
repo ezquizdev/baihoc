@@ -2,8 +2,9 @@
 
 All data access and external integrations live inside `src/application/infra`.
 
-- Supabase repositories (users, quizzes, attempts...).
+- Postgres repos (SQL) via `pg` (`infra/db/**`).
 - Email provider wrappers (Brevo).
-- LLM connectors for AI companion features.
+- Auth/session cookie + guards.
+- Storage client (Supabase Storage) for avatar uploads.
 
 Infra files should expose lightweight helpers consumed by services. Do not embed business rules here.
