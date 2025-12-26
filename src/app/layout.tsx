@@ -3,6 +3,7 @@ import { ensureSeedAdmin } from "@/application/bootstrap/seedAdmin";
 import { siteConfig } from "@/config/site";
 import "katex/dist/katex.min.css";
 import "./globals.css";
+import { ClientRuntimeInit } from "./ClientRuntimeInit";
 
 export const metadata: Metadata = {
   title: {
@@ -31,7 +32,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <ClientRuntimeInit />
+        {children}
+      </body>
     </html>
   );
 }

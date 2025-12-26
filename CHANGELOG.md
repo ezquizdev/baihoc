@@ -29,6 +29,9 @@
 ### chore(test): align Vitest typings
 - `tsconfig.json` now includes `vitest/globals`, and unit tests use explicit domain types to satisfy TypeScript.
 
+### chore(dev): silence negative `performance.measure` errors
+- Added a dev-only client runtime init that ignores the noisy `"negative time stamp"` exception thrown by Next/React perf instrumentation during redirects.
+
 ### fix(attempt): redirect completed attempts to results on start
 - `/quizzes/[quizId]/attempt` now routes straight to `/attempts/[attemptId]/results` when the resumed attempt is not `in_progress`.
 - `startOrResumeAttempt` now returns the attempt `status` so the UI can redirect without an extra attempt-state fetch.
