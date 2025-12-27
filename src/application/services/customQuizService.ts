@@ -161,6 +161,17 @@ export async function generateCustomQuiz(
 }
 
 function validateInput(input: GenerateCustomQuizInput) {
+  if (
+    !Number.isInteger(input.difficulty) ||
+    input.difficulty < 1 ||
+    input.difficulty > 5
+  ) {
+    throw new ServiceError(
+      "DIFFICULTY_INVALID",
+      "difficulty must be an integer from 1 to 5",
+      400,
+    );
+  }
   if (!Number.isInteger(input.questionCount) || input.questionCount <= 0) {
     throw new ServiceError(
       "QUESTION_COUNT_INVALID",

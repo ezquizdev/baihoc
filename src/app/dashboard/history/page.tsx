@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
+import { controllerListAttemptHistory } from "@/application/controllers/attemptController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import styles from "../dashboard-stub-page.module.css";
+import { isServiceError } from "@/application/services/errors";
+import { AttemptHistoryScreen } from "@/components/attempt-history/attempt-history-screen";
+
+const PAGE_SIZE = 10;
 
 export default async function DashboardHistoryPage() {
   const session = await requireAuthenticatedPage({
@@ -10,17 +13,31 @@ export default async function DashboardHistoryPage() {
   if (session.role === "staff") {
     redirect("/staff/dashboard");
   }
-  const displayName = session.fullName ?? session.email.split("@")[0];
+
+  let initialError: string | null = null;
+  const initialHistory = await (async () => {
+    try {
+      return await controllerListAttemptHistory(session.sub, {
+        limit: PAGE_SIZE,
+        offset: 0,
+      });
+    } catch (error) {
+      if (isServiceError(error)) {
+        initialError = error.message;
+      } else {
+        initialError =
+          error instanceof Error ? error.message : "Không thể tải lịch sử";
+      }
+      return { items: [], total: 0 };
+    }
+  })();
 
   return (
-    <DashboardShell
-      pageTitle="Lịch sử"
-      activeNav="history"
-      userEmail={session.email}
-      userName={displayName}
-      avatarUrl={session.avatarUrl}
-    >
-      <div className={styles.card}>Sắp ra mắt</div>
-    </DashboardShell>
+    <AttemptHistoryScreen
+      session={session}
+      initialHistory={initialHistory}
+      pageSize={PAGE_SIZE}
+      initialError={initialError}
+    />
   );
 }

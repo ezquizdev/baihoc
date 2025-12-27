@@ -1,7 +1,10 @@
+import type { AttemptHistoryKind } from "@/application/models/attempt";
 import {
   autosaveAttempt,
+  getAttemptReviewState,
   getAttemptState,
   listAttemptHistory,
+  rejudgeAttempt,
   startOrResumeAttempt,
   submitAttempt,
 } from "@/application/services/attemptService";
@@ -17,9 +20,21 @@ export async function controllerGetAttemptState(
   return getAttemptState(userId, attemptId);
 }
 
+export async function controllerGetAttemptReviewState(
+  userId: string,
+  attemptId: string,
+) {
+  return getAttemptReviewState(userId, attemptId);
+}
+
 export async function controllerListAttemptHistory(
   userId: string,
-  params: { limit?: number; offset?: number } = {},
+  params: {
+    limit?: number;
+    offset?: number;
+    search?: string;
+    kind?: AttemptHistoryKind;
+  } = {},
 ) {
   return listAttemptHistory(userId, params);
 }
@@ -52,4 +67,11 @@ export async function controllerSubmitAttempt(
   },
 ) {
   return submitAttempt(userId, attemptId, input);
+}
+
+export async function controllerRejudgeAttempt(
+  userId: string,
+  attemptId: string,
+) {
+  return rejudgeAttempt(userId, attemptId);
 }

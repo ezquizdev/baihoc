@@ -703,10 +703,38 @@ export async function listQuizzesForStaff(params: {
 
 export async function isQuizUsed(quizId: string) {
   const res = await query<{ cnt: string }>(
-    `SELECT COUNT(*)::int AS cnt FROM attempts WHERE quiz_id = $1`,
+    `SELECT COUNT(*)::int AS cnt
+     FROM attempts
+     WHERE quiz_id = $1
+       AND status IN ('submitted', 'auto_submitted')`,
     [quizId],
   );
   return Number(res.rows[0]?.cnt ?? 0) > 0;
+}
+
+export async function hasInProgressAttempts(quizId: string) {
+  const res = await query<{ exists: boolean }>(
+    `SELECT EXISTS(
+      SELECT 1
+      FROM attempts
+      WHERE quiz_id = $1
+        AND status = 'in_progress'
+      LIMIT 1
+    ) AS exists`,
+    [quizId],
+  );
+  return Boolean(res.rows[0]?.exists);
+}
+
+export async function listQuizStatusesByIds(quizIds: string[]) {
+  if (!quizIds.length) return [];
+  const res = await query<{ id: string; status: QuizStatus }>(
+    `SELECT id, status
+     FROM quizzes
+     WHERE id = ANY($1::uuid[])`,
+    [quizIds],
+  );
+  return res.rows;
 }
 
 export async function deleteQuiz(quizId: string) {

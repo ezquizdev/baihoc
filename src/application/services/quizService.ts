@@ -1,8 +1,13 @@
+import {
+  backfillAttemptQuestionSnapshotsForQuiz,
+  backfillAttemptSnapshotsForQuiz,
+} from "@/application/infra/db/attemptRepo";
 import { findCustomQuizByGeneratedQuizId } from "@/application/infra/db/customQuizRepo";
 import { listQuestionIdsByIds } from "@/application/infra/db/questionRepo";
 import {
   deleteQuiz,
   getQuizDetail as getQuizDetailRepo,
+  hasInProgressAttempts,
   insertQuiz,
   isQuizUsed,
   listCatalogPage as listCatalogPageRepo,
@@ -95,13 +100,19 @@ export async function archiveQuiz(quizId: string) {
 }
 
 export async function deleteQuizWithRules(quizId: string) {
-  const used = await isQuizUsed(quizId);
-  if (used) {
+  const inProgress = await hasInProgressAttempts(quizId);
+  if (inProgress) {
     throw new ServiceError(
-      "QUIZ_HAS_ATTEMPTS",
-      "Quiz has attempts; please archive instead of deleting",
+      "QUIZ_DELETE_BLOCKED_IN_PROGRESS",
+      "Không thể xóa quiz vì đang có lượt làm đang diễn ra.",
       409,
     );
+  }
+
+  const used = await isQuizUsed(quizId);
+  if (used) {
+    await backfillAttemptSnapshotsForQuiz(quizId);
+    await backfillAttemptQuestionSnapshotsForQuiz(quizId);
   }
   await deleteQuiz(quizId);
   return { status: "deleted" as const };

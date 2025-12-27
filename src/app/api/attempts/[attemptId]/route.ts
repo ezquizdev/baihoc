@@ -26,6 +26,7 @@ export async function GET(
 ) {
   const auth = await requireAuthenticatedApi(request, {
     allowIncompleteProfile: false,
+    role: "student",
   });
   if (auth instanceof NextResponse) return auth;
   try {
@@ -51,6 +52,7 @@ export async function PATCH(
 ) {
   const auth = await requireAuthenticatedApi(request, {
     allowIncompleteProfile: false,
+    role: "student",
   });
   if (auth instanceof NextResponse) return auth;
   try {

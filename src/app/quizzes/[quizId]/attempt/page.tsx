@@ -16,6 +16,9 @@ export default async function QuizAttemptStartPage({
   const session = await requireAuthenticatedPage({
     next: `/quizzes/${quizId}/attempt`,
   });
+  if (session.role === "staff") {
+    redirect("/staff/dashboard");
+  }
   const displayName = session.fullName ?? session.email.split("@")[0];
 
   let attemptId: string;

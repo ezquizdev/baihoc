@@ -24,6 +24,29 @@
 - Added `GET /api/attempts` for submitted/auto-submitted attempts (includes custom quiz config metadata when available).
 - Starting a generated custom quiz now stores `custom_quiz_id` on the attempt and blocks non-owners from starting it.
 
+### fix(quiz): block delete while attempts in progress
+- Staff hard-delete now returns 409 when any attempt is `in_progress` (archive remains allowed).
+- Deleting a quiz with completed attempts now backfills snapshot metadata and `attempt_question_snapshots` so history/results stay viewable after quiz deletion.
+
+### perf(attempt): snapshot-first history and redo gating
+- Attempt history listing now reads from `attempts.snapshot_*` (avoids quiz joins and heavy per-request subject-score recomputation).
+- History entries now include `canRedo` so students can’t redo archived quizzes (but can still view results/history).
+
+### fix(auth): restrict attempt flow to students
+- Staff can no longer start/autosave/submit attempts via `/api/attempts/**`.
+- Attempt-taking and results pages now redirect staff to `/staff/dashboard`.
+
+### fix(custom-quiz): align duration and validate difficulty
+- `POST /api/custom-quizzes` now accepts `durationSeconds=0` (treated as no time limit).
+- Custom quiz generation now validates `difficulty` defensively in the service layer.
+
+### perf(attempt): speed up attempt meta and history queries
+- Attempt meta lookup now uses a single lateral join for custom quiz ownership (less duplicated SQL work).
+- Added a partial index for completed attempt history listing by user.
+
+### chore: biome format
+- Applied Biome auto-fixes.
+
 ### fix(catalog): hide custom quizzes from catalog APIs
 - Custom quizzes are now excluded from quiz catalog listing and return 404 from the catalog quiz detail endpoint.
 
@@ -76,6 +99,18 @@
 
 ### refactor(profile): reuse study time formatter
 - Deduplicated the profile study time display by moving the formatter into `src/lib/formatters.ts`.
+
+### feat(attempt): include answer keys in review state
+- Attempt review state now returns `correctOptionIds`, `shortAnswerKeys`, and question `explanation` (when available) so results pages can show correct answers.
+- Legacy review mode is enriched by querying question review details by question IDs.
+
+### feat(ui): improve attempt results review
+- Results page now shows each question with all options, your choice(s), correct answer(s), and explanation (with a quick show/hide toggle).
+- Updated layout to match the dashboard theme and added clearer summary/actions.
+
+### fix(ui): simplify attempt results header
+- Results header no longer shows the attempt status.
+- Explanation toggles now use native `<details>/<summary>` (less client JS), and server-rendered icons use inline SVG for RSC compatibility.
 
 ## 2025-12-26
 

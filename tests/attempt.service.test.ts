@@ -12,11 +12,17 @@ vi.mock("@/application/infra/db/attemptRepo", () => ({
   findChallengeAttempt: vi.fn(),
   findInProgressAttempt: vi.fn(),
   getAttemptById: vi.fn(),
+  getAttemptReviewMeta: vi.fn(),
   getAttemptState: vi.fn(),
   getQuizAttemptMeta: vi.fn(),
+  getQuizSnapshotMeta: vi.fn(),
   listAttemptAnswers: vi.fn(),
+  listAttemptReviewQuestions: vi.fn(),
+  listAttemptSnapshotQuestionIds: vi.fn(),
   listQuizGradingData: vi.fn(),
+  listQuizGradingDataByQuestionIds: vi.fn(),
   listQuizQuestionMetaByIds: vi.fn(),
+  rejudgeAttempt: vi.fn(),
   saveAttemptAnswers: vi.fn(),
   submitAttempt: vi.fn(),
 }));
@@ -32,6 +38,15 @@ const baseAttemptRow: AttemptRow = {
   status: "in_progress",
   started_at: new Date().toISOString(),
   submitted_at: null,
+  judged_at: null,
+  judgement_version: 1,
+  quiz_content_hash_snapshot: null,
+  snapshot_quiz_title: null,
+  snapshot_quiz_difficulty_level: null,
+  snapshot_quiz_estimated_time_seconds: null,
+  snapshot_quiz_is_challenge: null,
+  snapshot_subject_scores: null,
+  snapshot_subject_scores_estimated: false,
   time_limit_seconds: 600,
   remaining_seconds: 600,
   score_raw: 0,
@@ -200,13 +215,24 @@ describe("attemptService", () => {
 
   it("grades submit and computes stats", async () => {
     vi.mocked(attemptRepo.getAttemptById).mockResolvedValue(baseAttemptRow);
+    vi.mocked(attemptRepo.getQuizSnapshotMeta).mockResolvedValue({
+      title: "Quiz 1",
+      difficultyLevel: 3,
+      estimatedTimeSeconds: 600,
+      isChallenge: false,
+    });
     vi.mocked(attemptRepo.listQuizGradingData).mockResolvedValue([
       {
         questionId: "q1",
         type: "mcq_single",
         defaultScore: 2,
         score: null,
+        required: true,
         position: 1,
+        subjectId: "subject-1",
+        subjectName: "Math",
+        subjectSlug: "math",
+        questionUpdatedAt: new Date().toISOString(),
         optionIds: ["opt-1", "opt-2"],
         correctOptionIds: ["opt-1"],
         shortAnswerKeys: [],
@@ -216,7 +242,12 @@ describe("attemptService", () => {
         type: "short_answer",
         defaultScore: 3,
         score: null,
+        required: true,
         position: 2,
+        subjectId: "subject-2",
+        subjectName: "Geo",
+        subjectSlug: "geo",
+        questionUpdatedAt: new Date().toISOString(),
         optionIds: [],
         correctOptionIds: [],
         shortAnswerKeys: [{ acceptableAnswer: "Paris", caseSensitive: false }],
@@ -263,13 +294,24 @@ describe("attemptService", () => {
       remaining_seconds: 60,
     };
     vi.mocked(attemptRepo.getAttemptById).mockResolvedValue(expiredAttempt);
+    vi.mocked(attemptRepo.getQuizSnapshotMeta).mockResolvedValue({
+      title: "Quiz 1",
+      difficultyLevel: 3,
+      estimatedTimeSeconds: 600,
+      isChallenge: false,
+    });
     vi.mocked(attemptRepo.listQuizGradingData).mockResolvedValue([
       {
         questionId: "q1",
         type: "mcq_single",
         defaultScore: 2,
         score: null,
+        required: true,
         position: 1,
+        subjectId: "subject-1",
+        subjectName: "Math",
+        subjectSlug: "math",
+        questionUpdatedAt: new Date().toISOString(),
         optionIds: ["opt-1", "opt-2"],
         correctOptionIds: ["opt-1"],
         shortAnswerKeys: [],
@@ -279,7 +321,12 @@ describe("attemptService", () => {
         type: "short_answer",
         defaultScore: 3,
         score: null,
+        required: true,
         position: 2,
+        subjectId: "subject-2",
+        subjectName: "Geo",
+        subjectSlug: "geo",
+        questionUpdatedAt: new Date().toISOString(),
         optionIds: [],
         correctOptionIds: [],
         shortAnswerKeys: [{ acceptableAnswer: "Paris", caseSensitive: false }],
@@ -314,13 +361,24 @@ describe("attemptService", () => {
 
   it("blocks double submit", async () => {
     vi.mocked(attemptRepo.getAttemptById).mockResolvedValue(baseAttemptRow);
+    vi.mocked(attemptRepo.getQuizSnapshotMeta).mockResolvedValue({
+      title: "Quiz 1",
+      difficultyLevel: 3,
+      estimatedTimeSeconds: 600,
+      isChallenge: false,
+    });
     vi.mocked(attemptRepo.listQuizGradingData).mockResolvedValue([
       {
         questionId: "q1",
         type: "mcq_single",
         defaultScore: 1,
         score: null,
+        required: true,
         position: 1,
+        subjectId: "subject-1",
+        subjectName: "Math",
+        subjectSlug: "math",
+        questionUpdatedAt: new Date().toISOString(),
         optionIds: ["opt-1"],
         correctOptionIds: ["opt-1"],
         shortAnswerKeys: [],

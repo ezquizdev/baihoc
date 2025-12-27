@@ -378,6 +378,36 @@ CREATE TABLE IF NOT EXISTS custom_quizzes (
   ready_at timestamptz
 );
 
+-- Allow deleting quizzes while preserving custom quiz records.
+DO $$
+DECLARE
+  fk_name text;
+  fk_deltype char;
+BEGIN
+  SELECT conname INTO fk_name
+  FROM pg_constraint
+  WHERE contype = 'f'
+    AND conrelid = 'custom_quizzes'::regclass
+    AND conkey = ARRAY[
+      (SELECT attnum FROM pg_attribute WHERE attrelid = 'custom_quizzes'::regclass AND attname = 'generated_quiz_id')
+    ];
+
+  SELECT confdeltype INTO fk_deltype
+  FROM pg_constraint
+  WHERE conname = 'custom_quizzes_generated_quiz_id_fkey';
+
+  -- Desired: ON DELETE SET NULL (confdeltype = 'n').
+  IF fk_name IS NULL OR fk_deltype IS NULL OR fk_deltype <> 'n' THEN
+    IF fk_name IS NOT NULL THEN
+      EXECUTE format('ALTER TABLE custom_quizzes DROP CONSTRAINT %I', fk_name);
+    END IF;
+
+    ALTER TABLE custom_quizzes
+    ADD CONSTRAINT custom_quizzes_generated_quiz_id_fkey
+    FOREIGN KEY (generated_quiz_id) REFERENCES quizzes(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
 -- Imports
 CREATE TABLE IF NOT EXISTS quiz_import_jobs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -399,6 +429,15 @@ CREATE TABLE IF NOT EXISTS attempts (
   status attempt_status NOT NULL DEFAULT 'in_progress',
   started_at timestamptz NOT NULL DEFAULT now(),
   submitted_at timestamptz,
+  judged_at timestamptz,
+  judgement_version integer NOT NULL DEFAULT 1,
+  quiz_content_hash_snapshot text,
+  snapshot_quiz_title text,
+  snapshot_quiz_difficulty_level integer CHECK (snapshot_quiz_difficulty_level BETWEEN 1 AND 5),
+  snapshot_quiz_estimated_time_seconds integer,
+  snapshot_quiz_is_challenge boolean,
+  snapshot_subject_scores jsonb,
+  snapshot_subject_scores_estimated boolean NOT NULL DEFAULT false,
   time_limit_seconds integer,
   remaining_seconds integer,
   score_raw numeric(6,2) NOT NULL DEFAULT 0,
@@ -410,7 +449,115 @@ CREATE TABLE IF NOT EXISTS attempts (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Snapshot + rejudge support (idempotent schema evolution).
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempts'
+      AND column_name = 'judged_at'
+  ) THEN
+    ALTER TABLE attempts ADD COLUMN judged_at timestamptz;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempts'
+      AND column_name = 'judgement_version'
+  ) THEN
+    ALTER TABLE attempts ADD COLUMN judgement_version integer NOT NULL DEFAULT 1;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempts'
+      AND column_name = 'quiz_content_hash_snapshot'
+  ) THEN
+    ALTER TABLE attempts ADD COLUMN quiz_content_hash_snapshot text;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempts'
+      AND column_name = 'snapshot_quiz_title'
+  ) THEN
+    ALTER TABLE attempts ADD COLUMN snapshot_quiz_title text;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempts'
+      AND column_name = 'snapshot_quiz_difficulty_level'
+  ) THEN
+    ALTER TABLE attempts
+    ADD COLUMN snapshot_quiz_difficulty_level integer CHECK (snapshot_quiz_difficulty_level BETWEEN 1 AND 5);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempts'
+      AND column_name = 'snapshot_quiz_estimated_time_seconds'
+  ) THEN
+    ALTER TABLE attempts ADD COLUMN snapshot_quiz_estimated_time_seconds integer;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempts'
+      AND column_name = 'snapshot_quiz_is_challenge'
+  ) THEN
+    ALTER TABLE attempts ADD COLUMN snapshot_quiz_is_challenge boolean;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempts'
+      AND column_name = 'snapshot_subject_scores'
+  ) THEN
+    ALTER TABLE attempts ADD COLUMN snapshot_subject_scores jsonb;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempts'
+      AND column_name = 'snapshot_subject_scores_estimated'
+  ) THEN
+    ALTER TABLE attempts ADD COLUMN snapshot_subject_scores_estimated boolean NOT NULL DEFAULT false;
+  END IF;
+END $$;
+
+-- Allow deleting quizzes while preserving attempts (snapshot-backed history/review).
+DO $$
+DECLARE
+  c record;
+BEGIN
+  FOR c IN (
+    SELECT conname
+    FROM pg_constraint
+    WHERE contype = 'f'
+      AND conrelid = 'attempts'::regclass
+      AND conkey && ARRAY[
+        (SELECT attnum FROM pg_attribute WHERE attrelid = 'attempts'::regclass AND attname = 'quiz_id'),
+        (SELECT attnum FROM pg_attribute WHERE attrelid = 'attempts'::regclass AND attname = 'challenge_id')
+      ]
+  ) LOOP
+    EXECUTE format('ALTER TABLE attempts DROP CONSTRAINT %I', c.conname);
+  END LOOP;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_attempts_user_started ON attempts(user_id, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_attempts_user_completed_started
+ON attempts(user_id, started_at DESC)
+WHERE status IN ('submitted', 'auto_submitted');
 CREATE INDEX IF NOT EXISTS idx_attempts_quiz_status ON attempts(quiz_id, status);
 CREATE INDEX IF NOT EXISTS idx_attempts_status_in_progress ON attempts(status) WHERE status = 'in_progress';
 CREATE INDEX IF NOT EXISTS idx_attempts_submitted_recent
@@ -441,6 +588,43 @@ CREATE TABLE IF NOT EXISTS attempt_answer_events (
   event_type text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Allow deleting questions while preserving attempt history snapshots.
+DO $$
+DECLARE
+  c record;
+BEGIN
+  FOR c IN (
+    SELECT conname, conrelid
+    FROM pg_constraint
+    WHERE contype = 'f'
+      AND conrelid IN ('attempt_answers'::regclass, 'attempt_answer_events'::regclass)
+      AND conkey && ARRAY[
+        (SELECT attnum FROM pg_attribute WHERE attrelid = 'attempt_answers'::regclass AND attname = 'question_id')
+      ]
+  ) LOOP
+    EXECUTE format('ALTER TABLE %s DROP CONSTRAINT %I', c.conrelid::regclass, c.conname);
+  END LOOP;
+END $$;
+
+CREATE TABLE IF NOT EXISTS attempt_question_snapshots (
+  attempt_id uuid NOT NULL REFERENCES attempts(id) ON DELETE CASCADE,
+  judgement_version integer NOT NULL DEFAULT 1,
+  position integer NOT NULL CHECK (position > 0),
+  question_id uuid NOT NULL,
+  question_type question_type NOT NULL,
+  max_score numeric(5,2) NOT NULL DEFAULT 1,
+  required boolean NOT NULL DEFAULT true,
+  subject_id uuid NOT NULL,
+  subject_name text NOT NULL,
+  subject_slug text NOT NULL,
+  question_updated_at timestamptz NOT NULL,
+  PRIMARY KEY (attempt_id, judgement_version, position),
+  UNIQUE (attempt_id, judgement_version, question_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attempt_question_snapshots_attempt_version
+ON attempt_question_snapshots(attempt_id, judgement_version);
 
 CREATE INDEX IF NOT EXISTS idx_attempt_answer_events_attempt_created_at
 ON attempt_answer_events(attempt_id, created_at DESC);
@@ -565,7 +749,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $$
 DECLARE
-  quiz_id uuid;
+  v_quiz_id uuid;
   abs_amount integer;
   sign integer;
 BEGIN
@@ -578,7 +762,7 @@ BEGIN
   IF NEW.metadata ? 'quizId'
      AND (NEW.metadata->>'quizId') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
   THEN
-    quiz_id := (NEW.metadata->>'quizId')::uuid;
+    v_quiz_id := (NEW.metadata->>'quizId')::uuid;
     sign := CASE WHEN NEW.amount < 0 THEN -1 ELSE 1 END;
     abs_amount := abs(NEW.amount);
 
@@ -589,7 +773,7 @@ BEGIN
       FROM quiz_questions qq
       JOIN questions q ON q.id = qq.question_id
       JOIN subjects s ON s.id = q.subject_id
-      WHERE qq.quiz_id = quiz_id
+      WHERE qq.quiz_id = v_quiz_id
       GROUP BY q.subject_id, s.slug
     ),
     totals AS (

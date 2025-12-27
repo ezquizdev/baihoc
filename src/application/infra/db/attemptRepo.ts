@@ -8,10 +8,13 @@ import type {
   Attempt,
   AttemptAnswer,
   AttemptHistoryItem,
+  AttemptHistoryKind,
   AttemptQuestion,
   AttemptQuestionOption,
+  AttemptReviewQuestion,
   AttemptStateResponse,
   AttemptStatus,
+  AttemptSubjectScore,
 } from "@/application/models/attempt";
 import type { DifficultyLevel, QuestionType } from "@/application/models/enums";
 
@@ -24,6 +27,15 @@ export type AttemptRow = {
   status: AttemptStatus;
   started_at: string;
   submitted_at: string | null;
+  judged_at: string | null;
+  judgement_version: number;
+  quiz_content_hash_snapshot: string | null;
+  snapshot_quiz_title: string | null;
+  snapshot_quiz_difficulty_level: number | null;
+  snapshot_quiz_estimated_time_seconds: number | null;
+  snapshot_quiz_is_challenge: boolean | null;
+  snapshot_subject_scores: unknown | null;
+  snapshot_subject_scores_estimated: boolean;
   time_limit_seconds: number | null;
   remaining_seconds: number | null;
   score_raw: number;
@@ -57,12 +69,41 @@ type AttemptQuestionRow = {
   passage_position: number | null;
 };
 
+type AttemptReviewMetaRow = AttemptRow & {
+  quiz_title: string | null;
+  quiz_exists: boolean;
+};
+
+type AttemptReviewQuestionRow = {
+  question_id: string;
+  position: number;
+  question_type: QuestionType;
+  question_exists: boolean;
+  stem: string | null;
+  explanation: string | null;
+  passage_id: string | null;
+  passage_content: string | null;
+  passage_media_urls: string[] | null;
+  passage_position: number | null;
+};
+
 type AttemptOptionRow = {
   id: string;
   question_id: string;
   label: string | null;
   text: string;
   position: number;
+};
+
+type AttemptReviewOptionRow = AttemptOptionRow & {
+  is_correct: boolean;
+};
+
+type AttemptReviewShortAnswerKeyRow = {
+  id: string;
+  question_id: string;
+  acceptable_answer: string;
+  case_sensitive: boolean;
 };
 
 type QuizAttemptMetaRow = {
@@ -77,6 +118,13 @@ type QuizAttemptMetaRow = {
   total_questions: number;
 };
 
+type QuizSnapshotMetaRow = {
+  title: string | null;
+  difficulty_level: number;
+  estimated_time_seconds: number | null;
+  is_challenge: boolean;
+};
+
 export type QuizAttemptMeta = {
   quizId: string;
   isChallenge: boolean;
@@ -89,6 +137,13 @@ export type QuizAttemptMeta = {
   totalQuestions: number;
 };
 
+export type QuizSnapshotMeta = {
+  title: string | null;
+  difficultyLevel: DifficultyLevel;
+  estimatedTimeSeconds: number | null;
+  isChallenge: boolean;
+};
+
 type AttemptHistoryRow = {
   id: string;
   quiz_id: string;
@@ -99,13 +154,21 @@ type AttemptHistoryRow = {
   correct_count: number;
   total_questions: number;
   xp_earned: number;
+  is_challenge: boolean;
   quiz_title: string | null;
-  quiz_difficulty_level: number;
+  quiz_difficulty_level: number | null;
   quiz_estimated_time_seconds: number | null;
-  quiz_is_challenge: boolean;
+  subject_scores_estimated: boolean;
+  subject_scores: Array<{
+    subjectId: string;
+    name: string;
+    slug: string;
+    correctCount: number;
+    totalQuestions: number;
+    scorePercent: number;
+  }> | null;
   custom_quiz_id: string | null;
   custom_config: unknown | null;
-  total_count: number;
 };
 
 export type QuizQuestionMeta = {
@@ -118,7 +181,12 @@ export type QuizQuestionGrading = {
   type: QuestionType;
   defaultScore: number;
   score: number | null;
+  required: boolean;
   position: number;
+  subjectId: string;
+  subjectName: string;
+  subjectSlug: string;
+  questionUpdatedAt: string;
   optionIds: string[];
   correctOptionIds: string[];
   shortAnswerKeys: Array<{ acceptableAnswer: string; caseSensitive: boolean }>;
@@ -146,14 +214,57 @@ type SubmitAttemptInput = {
   scoreRaw: number;
   scorePercent: number;
   correctCount: number;
+  totalQuestions: number;
   remainingSeconds: number | null;
   xpEvent: XpEventInput;
+  snapshot: {
+    quizContentHash: string;
+    quizTitle: string | null;
+    quizDifficultyLevel: DifficultyLevel | null;
+    quizEstimatedTimeSeconds: number | null;
+    isChallenge: boolean | null;
+    subjectScores: AttemptSubjectScore[];
+    subjectScoresEstimated: boolean;
+  };
+  questionSnapshots: Array<{
+    questionId: string;
+    questionType: QuestionType;
+    position: number;
+    maxScore: number;
+    required: boolean;
+    subjectId: string;
+    subjectName: string;
+    subjectSlug: string;
+    questionUpdatedAt: string;
+  }>;
 };
 
 export type SubmitAttemptResult =
   | { status: "ok"; attempt: Attempt }
   | { status: "not_found" }
   | { status: "already_submitted"; attempt: Attempt };
+
+type RejudgeAttemptInput = {
+  attemptId: string;
+  expectedJudgementVersion: number;
+  gradedAnswers: Array<
+    Pick<GradedAnswerInput, "questionId" | "isCorrect" | "awardedScore">
+  >;
+  scoreRaw: number;
+  scorePercent: number;
+  correctCount: number;
+  totalQuestions: number;
+  xpEarned: number;
+  xpAdjustmentEvent?: XpEventInput | null;
+  snapshot: SubmitAttemptInput["snapshot"];
+  questionSnapshots: SubmitAttemptInput["questionSnapshots"];
+};
+
+export type RejudgeAttemptResult =
+  | { status: "ok"; attempt: Attempt; judgementVersion: number }
+  | { status: "not_found" }
+  | { status: "not_submitted" }
+  | { status: "conflict" };
 
 function mapAttempt(row: AttemptRow): Attempt {
   return {
@@ -219,25 +330,19 @@ export async function getQuizAttemptMeta(
             cs.time_limit_seconds AS challenge_time_limit_seconds,
             cs.start_at AS challenge_start_at,
             cs.end_at AS challenge_end_at,
-            (
-              SELECT cq.id
-              FROM custom_quizzes cq
-              WHERE cq.generated_quiz_id = q.id
-                AND cq.status = 'ready'::custom_quiz_status
-              ORDER BY cq.created_at DESC
-              LIMIT 1
-            ) AS custom_quiz_id,
-            (
-              SELECT cq.user_id
-              FROM custom_quizzes cq
-              WHERE cq.generated_quiz_id = q.id
-                AND cq.status = 'ready'::custom_quiz_status
-              ORDER BY cq.created_at DESC
-              LIMIT 1
-            ) AS custom_quiz_owner_id,
+            cq.id AS custom_quiz_id,
+            cq.user_id AS custom_quiz_owner_id,
             (SELECT COUNT(*)::int FROM quiz_questions qq WHERE qq.quiz_id = q.id) AS total_questions
      FROM quizzes q
      LEFT JOIN challenge_settings cs ON cs.quiz_id = q.id
+     LEFT JOIN LATERAL (
+       SELECT id, user_id
+       FROM custom_quizzes
+       WHERE generated_quiz_id = q.id
+         AND status = 'ready'::custom_quiz_status
+       ORDER BY created_at DESC
+       LIMIT 1
+     ) cq ON true
      WHERE q.id = $1
        AND q.status = 'published'`,
     [quizId],
@@ -254,6 +359,25 @@ export async function getQuizAttemptMeta(
     customQuizId: row.custom_quiz_id,
     customQuizOwnerId: row.custom_quiz_owner_id,
     totalQuestions: Number(row.total_questions),
+  };
+}
+
+export async function getQuizSnapshotMeta(
+  quizId: string,
+): Promise<QuizSnapshotMeta | null> {
+  const res = await query<QuizSnapshotMetaRow>(
+    `SELECT title, difficulty_level, estimated_time_seconds, is_challenge
+     FROM quizzes
+     WHERE id = $1`,
+    [quizId],
+  );
+  const row = res.rows[0];
+  if (!row) return null;
+  return {
+    title: row.title ?? null,
+    difficultyLevel: row.difficulty_level as DifficultyLevel,
+    estimatedTimeSeconds: row.estimated_time_seconds,
+    isChallenge: row.is_challenge,
   };
 }
 
@@ -390,13 +514,75 @@ export async function getAttemptState(
   };
 }
 
+export async function getAttemptReviewMeta(attemptId: string): Promise<{
+  attemptRow: AttemptRow;
+  quizTitle: string | null;
+  quizExists: boolean;
+} | null> {
+  const res = await query<AttemptReviewMetaRow>(
+    `SELECT a.*,
+            q.title AS quiz_title,
+            (q.id IS NOT NULL) AS quiz_exists
+     FROM attempts a
+     LEFT JOIN quizzes q ON q.id = a.quiz_id
+     WHERE a.id = $1`,
+    [attemptId],
+  );
+  const row = res.rows[0];
+  if (!row) return null;
+  return {
+    attemptRow: row,
+    quizTitle: row.snapshot_quiz_title ?? row.quiz_title ?? null,
+    quizExists: row.quiz_exists,
+  };
+}
+
 export async function listAttemptHistory(params: {
   userId: string;
   limit?: number;
   offset?: number;
-}): Promise<{ items: AttemptHistoryItem[]; total: number }> {
+  search?: string;
+  kind?: AttemptHistoryKind;
+}): Promise<{
+  items: Array<Omit<AttemptHistoryItem, "quizExists" | "canRedo">>;
+  total: number;
+}> {
   const limit = params.limit ?? 20;
   const offset = params.offset ?? 0;
+
+  const where: string[] = [
+    "a.user_id = $1",
+    "a.status IN ('submitted', 'auto_submitted')",
+  ];
+  const values: unknown[] = [params.userId];
+  const add = (sql: string, value: unknown) => {
+    values.push(value);
+    where.push(sql.replaceAll("$idx", `$${values.length}`));
+  };
+
+  const search = params.search?.trim();
+  if (search) {
+    add("COALESCE(a.snapshot_quiz_title, '') ILIKE $idx", `%${search}%`);
+  }
+
+  if (params.kind === "challenge") {
+    where.push("a.challenge_id IS NOT NULL");
+  } else if (params.kind === "custom") {
+    where.push("a.custom_quiz_id IS NOT NULL");
+  } else if (params.kind === "practice") {
+    where.push("a.challenge_id IS NULL");
+    where.push("a.custom_quiz_id IS NULL");
+  }
+
+  const countRes = await query<{ cnt: string }>(
+    `SELECT COUNT(*)::int AS cnt
+     FROM attempts a
+     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}`,
+    values,
+  );
+  const total = Number(countRes.rows[0]?.cnt ?? 0);
+
+  const pageValues = [...values, limit, offset];
 
   const res = await query<AttemptHistoryRow>(
     `SELECT a.id,
@@ -408,26 +594,169 @@ export async function listAttemptHistory(params: {
             a.correct_count,
             a.total_questions,
             a.xp_earned,
-            q.title AS quiz_title,
-            q.difficulty_level AS quiz_difficulty_level,
-            q.estimated_time_seconds AS quiz_estimated_time_seconds,
-            q.is_challenge AS quiz_is_challenge,
+            (a.challenge_id IS NOT NULL) AS is_challenge,
+            a.snapshot_quiz_title AS quiz_title,
+            a.snapshot_quiz_difficulty_level AS quiz_difficulty_level,
+            a.snapshot_quiz_estimated_time_seconds AS quiz_estimated_time_seconds,
+            CASE
+              WHEN a.snapshot_subject_scores IS NOT NULL
+              THEN a.snapshot_subject_scores_estimated
+              ELSE true
+            END AS subject_scores_estimated,
+            COALESCE(a.snapshot_subject_scores, '[]'::jsonb) AS subject_scores,
             a.custom_quiz_id,
-            cq.config AS custom_config,
-            COUNT(*) OVER() AS total_count
+            cq.config AS custom_config
      FROM attempts a
-     JOIN quizzes q ON q.id = a.quiz_id
      LEFT JOIN custom_quizzes cq ON cq.id = a.custom_quiz_id
-     WHERE a.user_id = $1
-       AND a.status IN ('submitted', 'auto_submitted')
+     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
      ORDER BY a.started_at DESC
-     LIMIT $2 OFFSET $3`,
-    [params.userId, limit, offset],
+     LIMIT $${pageValues.length - 1} OFFSET $${pageValues.length}`,
+    pageValues,
   );
 
   const items = res.rows.map(mapAttemptHistoryRow);
-  const total = res.rows.length ? Number(res.rows[0].total_count) : 0;
   return { items, total };
+}
+
+export async function backfillAttemptSnapshotsForQuiz(
+  quizId: string,
+): Promise<void> {
+  await query(
+    `UPDATE attempts a
+     SET snapshot_quiz_title = COALESCE(a.snapshot_quiz_title, q.title),
+         snapshot_quiz_difficulty_level = COALESCE(a.snapshot_quiz_difficulty_level, q.difficulty_level),
+         snapshot_quiz_estimated_time_seconds = COALESCE(a.snapshot_quiz_estimated_time_seconds, q.estimated_time_seconds),
+         snapshot_quiz_is_challenge = COALESCE(a.snapshot_quiz_is_challenge, q.is_challenge),
+         snapshot_subject_scores = CASE
+           WHEN a.snapshot_subject_scores IS NOT NULL THEN a.snapshot_subject_scores
+           ELSE COALESCE(
+             (
+               SELECT jsonb_agg(
+                 jsonb_build_object(
+                   'subjectId', subj.id,
+                   'name', subj.name,
+                   'slug', subj.slug,
+                   'totalQuestions', qb.question_count,
+                   'correctCount', qb.correct_count,
+                   'scorePercent', qb.score_percent
+                 )
+                 ORDER BY qb.score_percent DESC, qb.question_count DESC, subj.name
+               )
+               FROM (
+                 SELECT qn.subject_id,
+                        COUNT(*)::int AS question_count,
+                        CASE
+                          WHEN MAX(CASE WHEN aa.attempt_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+                          THEN COALESCE(
+                            SUM(CASE WHEN aa.is_correct IS TRUE THEN 1 ELSE 0 END),
+                            0
+                          )::int
+                          WHEN COALESCE(a.total_questions, 0) <= 0
+                          THEN 0
+                          ELSE ROUND(
+                            COUNT(*)::numeric
+                            * COALESCE(a.correct_count, 0)::numeric
+                            / NULLIF(a.total_questions, 0)::numeric
+                          )::int
+                        END AS correct_count,
+                        CASE
+                          WHEN MAX(CASE WHEN aa.attempt_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+                          THEN CASE
+                            WHEN COALESCE(
+                              SUM(COALESCE(qq.score, qn.default_score)),
+                              0
+                            )::numeric <= 0
+                            THEN 0
+                            ELSE ROUND(
+                              COALESCE(SUM(aa.awarded_score), 0)::numeric
+                              / COALESCE(
+                                SUM(COALESCE(qq.score, qn.default_score)),
+                                0
+                              )::numeric
+                              * 100,
+                              2
+                            )
+                          END
+                          ELSE CASE
+                            WHEN COUNT(*) <= 0 OR COALESCE(a.total_questions, 0) <= 0
+                            THEN 0
+                            ELSE ROUND(
+                              ROUND(
+                                COUNT(*)::numeric
+                                * COALESCE(a.correct_count, 0)::numeric
+                                / NULLIF(a.total_questions, 0)::numeric
+                              )::numeric
+                              / COUNT(*)::numeric
+                              * 100,
+                              2
+                            )
+                          END
+                        END AS score_percent
+                 FROM quiz_questions qq
+                 JOIN questions qn ON qn.id = qq.question_id
+                 LEFT JOIN attempt_answers aa
+                   ON aa.attempt_id = a.id
+                  AND aa.question_id = qq.question_id
+                 WHERE qq.quiz_id = a.quiz_id
+                 GROUP BY qn.subject_id
+               ) qb
+               JOIN subjects subj ON subj.id = qb.subject_id
+             ),
+             '[]'::jsonb
+           )
+         END,
+         snapshot_subject_scores_estimated = CASE
+           WHEN a.snapshot_subject_scores IS NOT NULL
+           THEN a.snapshot_subject_scores_estimated
+           ELSE NOT EXISTS (
+             SELECT 1 FROM attempt_answers aa0 WHERE aa0.attempt_id = a.id
+           )
+         END
+     FROM quizzes q
+     WHERE a.quiz_id = q.id
+       AND a.quiz_id = $1
+       AND a.status IN ('submitted', 'auto_submitted')`,
+    [quizId],
+  );
+}
+
+export async function backfillAttemptQuestionSnapshotsForQuiz(
+  quizId: string,
+): Promise<void> {
+  await query(
+    `INSERT INTO attempt_question_snapshots (
+       attempt_id,
+       judgement_version,
+       position,
+       question_id,
+       question_type,
+       max_score,
+       required,
+       subject_id,
+       subject_name,
+       subject_slug,
+       question_updated_at
+     )
+     SELECT a.id AS attempt_id,
+            a.judgement_version,
+            qq.position,
+            qq.question_id,
+            q.type AS question_type,
+            COALESCE(qq.score, q.default_score) AS max_score,
+            qq.required,
+            subj.id AS subject_id,
+            subj.name AS subject_name,
+            subj.slug AS subject_slug,
+            q.updated_at AS question_updated_at
+     FROM attempts a
+     JOIN quiz_questions qq ON qq.quiz_id = a.quiz_id
+     JOIN questions q ON q.id = qq.question_id
+     JOIN subjects subj ON subj.id = q.subject_id
+     WHERE a.quiz_id = $1
+       AND a.status IN ('submitted', 'auto_submitted')
+     ON CONFLICT (attempt_id, judgement_version, question_id) DO NOTHING`,
+    [quizId],
+  );
 }
 
 export async function listAttemptAnswers(
@@ -445,6 +774,190 @@ export async function listAttemptAnswers(
     [attemptId],
   );
   return res.rows.map(mapAttemptAnswer);
+}
+
+export async function listAttemptSnapshotQuestionIds(
+  attemptId: string,
+  judgementVersion: number,
+): Promise<string[]> {
+  const res = await query<{ question_id: string }>(
+    `SELECT question_id
+     FROM attempt_question_snapshots
+     WHERE attempt_id = $1
+       AND judgement_version = $2
+     ORDER BY position ASC`,
+    [attemptId, judgementVersion],
+  );
+  return res.rows.map((row) => row.question_id);
+}
+
+export async function listAttemptReviewQuestions(
+  attemptId: string,
+  judgementVersion: number,
+): Promise<AttemptReviewQuestion[]> {
+  const questionRes = await query<AttemptReviewQuestionRow>(
+    `SELECT qs.question_id,
+            qs.position,
+            qs.question_type,
+            (q.id IS NOT NULL) AS question_exists,
+            q.stem,
+            q.explanation,
+            qp.passage_id,
+            qp.position AS passage_position,
+            p.content AS passage_content,
+            p.media_urls AS passage_media_urls
+     FROM attempt_question_snapshots qs
+     LEFT JOIN questions q ON q.id = qs.question_id
+     LEFT JOIN question_passages qp ON qp.question_id = q.id
+     LEFT JOIN passages p ON p.id = qp.passage_id
+     WHERE qs.attempt_id = $1
+       AND qs.judgement_version = $2
+     ORDER BY qs.position ASC`,
+    [attemptId, judgementVersion],
+  );
+
+  const questionIds = questionRes.rows.map((row) => row.question_id);
+  const optionRes = questionIds.length
+    ? await query<AttemptReviewOptionRow>(
+        `SELECT id, question_id, label, text, position, is_correct
+         FROM question_options
+         WHERE question_id = ANY($1)
+         ORDER BY question_id, position`,
+        [questionIds],
+      )
+    : { rows: [] as AttemptReviewOptionRow[] };
+
+  const optionsByQuestion = new Map<string, AttemptQuestionOption[]>();
+  const correctOptionIdsByQuestion = new Map<string, string[]>();
+  optionRes.rows.forEach((row) => {
+    const list = optionsByQuestion.get(row.question_id) ?? [];
+    list.push({
+      id: row.id,
+      label: row.label,
+      text: row.text,
+      position: row.position,
+    });
+    optionsByQuestion.set(row.question_id, list);
+
+    if (row.is_correct) {
+      const correctList = correctOptionIdsByQuestion.get(row.question_id) ?? [];
+      correctList.push(row.id);
+      correctOptionIdsByQuestion.set(row.question_id, correctList);
+    }
+  });
+
+  const shortAnswerRes = questionIds.length
+    ? await query<AttemptReviewShortAnswerKeyRow>(
+        `SELECT id, question_id, acceptable_answer, case_sensitive
+         FROM short_answer_keys
+         WHERE question_id = ANY($1)
+         ORDER BY question_id, id`,
+        [questionIds],
+      )
+    : { rows: [] as AttemptReviewShortAnswerKeyRow[] };
+
+  const shortAnswerKeysByQuestion = new Map<
+    string,
+    Array<{ acceptableAnswer: string; caseSensitive: boolean }>
+  >();
+  shortAnswerRes.rows.forEach((row) => {
+    const list = shortAnswerKeysByQuestion.get(row.question_id) ?? [];
+    list.push({
+      acceptableAnswer: row.acceptable_answer,
+      caseSensitive: row.case_sensitive,
+    });
+    shortAnswerKeysByQuestion.set(row.question_id, list);
+  });
+
+  return questionRes.rows.map((row) => ({
+    id: row.question_id,
+    position: row.position,
+    type: row.question_type,
+    exists: row.question_exists,
+    stem: row.stem,
+    explanation: row.explanation ?? null,
+    correctOptionIds: correctOptionIdsByQuestion.get(row.question_id) ?? [],
+    shortAnswerKeys: shortAnswerKeysByQuestion.get(row.question_id) ?? [],
+    passage: row.passage_id
+      ? {
+          id: row.passage_id,
+          content: row.passage_content ?? "",
+          mediaUrls: row.passage_media_urls ?? [],
+          position: row.passage_position ?? 1,
+        }
+      : null,
+    options: optionsByQuestion.get(row.question_id) ?? [],
+  }));
+}
+
+export async function listQuestionReviewDetails(questionIds: string[]): Promise<
+  Array<{
+    questionId: string;
+    explanation: string | null;
+    correctOptionIds: string[];
+    shortAnswerKeys: Array<{
+      acceptableAnswer: string;
+      caseSensitive: boolean;
+    }>;
+  }>
+> {
+  if (!questionIds.length) return [];
+  const uniqueQuestionIds = Array.from(new Set(questionIds));
+
+  const [explanationRes, optionRes, shortAnswerRes] = await Promise.all([
+    query<{ id: string; explanation: string | null }>(
+      `SELECT id, explanation
+       FROM questions
+       WHERE id = ANY($1)`,
+      [uniqueQuestionIds],
+    ),
+    query<{ id: string; question_id: string; is_correct: boolean }>(
+      `SELECT id, question_id, is_correct
+       FROM question_options
+       WHERE question_id = ANY($1)
+       ORDER BY question_id, position`,
+      [uniqueQuestionIds],
+    ),
+    query<AttemptReviewShortAnswerKeyRow>(
+      `SELECT id, question_id, acceptable_answer, case_sensitive
+       FROM short_answer_keys
+       WHERE question_id = ANY($1)
+       ORDER BY question_id, id`,
+      [uniqueQuestionIds],
+    ),
+  ]);
+
+  const explanationById = new Map(
+    explanationRes.rows.map((row) => [row.id, row.explanation ?? null]),
+  );
+
+  const correctOptionIdsByQuestion = new Map<string, string[]>();
+  optionRes.rows.forEach((row) => {
+    if (!row.is_correct) return;
+    const list = correctOptionIdsByQuestion.get(row.question_id) ?? [];
+    list.push(row.id);
+    correctOptionIdsByQuestion.set(row.question_id, list);
+  });
+
+  const shortAnswerKeysByQuestion = new Map<
+    string,
+    Array<{ acceptableAnswer: string; caseSensitive: boolean }>
+  >();
+  shortAnswerRes.rows.forEach((row) => {
+    const list = shortAnswerKeysByQuestion.get(row.question_id) ?? [];
+    list.push({
+      acceptableAnswer: row.acceptable_answer,
+      caseSensitive: row.case_sensitive,
+    });
+    shortAnswerKeysByQuestion.set(row.question_id, list);
+  });
+
+  return uniqueQuestionIds.map((questionId) => ({
+    questionId,
+    explanation: explanationById.get(questionId) ?? null,
+    correctOptionIds: correctOptionIdsByQuestion.get(questionId) ?? [],
+    shortAnswerKeys: shortAnswerKeysByQuestion.get(questionId) ?? [],
+  }));
 }
 
 export async function listAttemptQuestions(
@@ -498,14 +1011,25 @@ export async function listAttemptQuestions(
   );
 }
 
-function mapAttemptHistoryRow(row: AttemptHistoryRow): AttemptHistoryItem {
+function mapAttemptHistoryRow(
+  row: AttemptHistoryRow,
+): Omit<AttemptHistoryItem, "quizExists" | "canRedo"> {
   return {
     attemptId: row.id,
     quizId: row.quiz_id,
     quizTitle: row.quiz_title ?? null,
-    quizDifficulty: row.quiz_difficulty_level as DifficultyLevel,
+    quizDifficulty: clampDifficulty(row.quiz_difficulty_level),
     quizEstimatedTimeSeconds: row.quiz_estimated_time_seconds,
-    isChallenge: row.quiz_is_challenge,
+    isChallenge: row.is_challenge,
+    subjectScoresEstimated: row.subject_scores_estimated,
+    subjectScores: (row.subject_scores ?? []).map((item) => ({
+      subjectId: item.subjectId,
+      name: item.name,
+      slug: item.slug,
+      correctCount: Number(item.correctCount),
+      totalQuestions: Number(item.totalQuestions),
+      scorePercent: Number(item.scorePercent),
+    })),
     status: row.status,
     startedAt: row.started_at,
     submittedAt: row.submitted_at,
@@ -520,6 +1044,12 @@ function mapAttemptHistoryRow(row: AttemptHistoryRow): AttemptHistoryItem {
         }
       : undefined,
   };
+}
+
+function clampDifficulty(value: number | null): DifficultyLevel {
+  if (!value || !Number.isFinite(value)) return 3;
+  const rounded = Math.round(value);
+  return Math.min(5, Math.max(1, rounded)) as DifficultyLevel;
 }
 
 export async function listQuizQuestionMeta(
@@ -565,15 +1095,26 @@ export async function listQuizGradingData(
     type: QuestionType;
     default_score: number;
     score: number | null;
+    required: boolean;
     position: number;
+    subject_id: string;
+    subject_name: string;
+    subject_slug: string;
+    question_updated_at: string;
   }>(
     `SELECT qq.question_id,
             qq.position,
             qq.score,
+            qq.required,
             q.type,
-            q.default_score
+            q.default_score,
+            q.subject_id,
+            subj.name AS subject_name,
+            subj.slug AS subject_slug,
+            q.updated_at AS question_updated_at
      FROM quiz_questions qq
      JOIN questions q ON q.id = qq.question_id
+     JOIN subjects subj ON subj.id = q.subject_id
      WHERE qq.quiz_id = $1
      ORDER BY qq.position ASC`,
     [quizId],
@@ -644,7 +1185,128 @@ export async function listQuizGradingData(
       type: row.type,
       defaultScore: Number(row.default_score),
       score: row.score !== null ? Number(row.score) : null,
+      required: row.required,
       position: row.position,
+      subjectId: row.subject_id,
+      subjectName: row.subject_name,
+      subjectSlug: row.subject_slug,
+      questionUpdatedAt: row.question_updated_at,
+      optionIds: options.map((opt) => opt.id),
+      correctOptionIds: options
+        .filter((opt) => opt.isCorrect)
+        .map((opt) => opt.id),
+      shortAnswerKeys: shortAnswerGroups.get(row.question_id) ?? [],
+    };
+  });
+}
+
+export async function listQuizGradingDataByQuestionIds(
+  quizId: string,
+  questionIds: string[],
+): Promise<QuizQuestionGrading[]> {
+  if (!questionIds.length) return [];
+  const baseRes = await query<{
+    question_id: string;
+    type: QuestionType;
+    default_score: number;
+    score: number | null;
+    required: boolean;
+    position: number;
+    subject_id: string;
+    subject_name: string;
+    subject_slug: string;
+    question_updated_at: string;
+  }>(
+    `SELECT qq.question_id,
+            qq.position,
+            qq.score,
+            qq.required,
+            q.type,
+            q.default_score,
+            q.subject_id,
+            subj.name AS subject_name,
+            subj.slug AS subject_slug,
+            q.updated_at AS question_updated_at
+     FROM quiz_questions qq
+     JOIN questions q ON q.id = qq.question_id
+     JOIN subjects subj ON subj.id = q.subject_id
+     WHERE qq.quiz_id = $1
+       AND qq.question_id = ANY($2::uuid[])
+     ORDER BY qq.position ASC`,
+    [quizId, questionIds],
+  );
+
+  const ids = baseRes.rows.map((row) => row.question_id);
+  const optionRes = ids.length
+    ? await query<{ id: string; question_id: string; is_correct: boolean }>(
+        `SELECT id, question_id, is_correct
+         FROM question_options
+         WHERE question_id = ANY($1)`,
+        [ids],
+      )
+    : {
+        rows: [] as Array<{
+          id: string;
+          question_id: string;
+          is_correct: boolean;
+        }>,
+      };
+
+  const shortAnswerRes = ids.length
+    ? await query<{
+        question_id: string;
+        acceptable_answer: string;
+        case_sensitive: boolean;
+      }>(
+        `SELECT question_id, acceptable_answer, case_sensitive
+         FROM short_answer_keys
+         WHERE question_id = ANY($1)`,
+        [ids],
+      )
+    : {
+        rows: [] as Array<{
+          question_id: string;
+          acceptable_answer: string;
+          case_sensitive: boolean;
+        }>,
+      };
+
+  const optionGroups = new Map<
+    string,
+    Array<{ id: string; isCorrect: boolean }>
+  >();
+  optionRes.rows.forEach((row) => {
+    const list = optionGroups.get(row.question_id) ?? [];
+    list.push({ id: row.id, isCorrect: row.is_correct });
+    optionGroups.set(row.question_id, list);
+  });
+
+  const shortAnswerGroups = new Map<
+    string,
+    Array<{ acceptableAnswer: string; caseSensitive: boolean }>
+  >();
+  shortAnswerRes.rows.forEach((row) => {
+    const list = shortAnswerGroups.get(row.question_id) ?? [];
+    list.push({
+      acceptableAnswer: row.acceptable_answer,
+      caseSensitive: row.case_sensitive,
+    });
+    shortAnswerGroups.set(row.question_id, list);
+  });
+
+  return baseRes.rows.map((row) => {
+    const options = optionGroups.get(row.question_id) ?? [];
+    return {
+      questionId: row.question_id,
+      type: row.type,
+      defaultScore: Number(row.default_score),
+      score: row.score !== null ? Number(row.score) : null,
+      required: row.required,
+      position: row.position,
+      subjectId: row.subject_id,
+      subjectName: row.subject_name,
+      subjectSlug: row.subject_slug,
+      questionUpdatedAt: row.question_updated_at,
       optionIds: options.map((opt) => opt.id),
       correctOptionIds: options
         .filter((opt) => opt.isCorrect)
@@ -720,15 +1382,31 @@ export async function submitAttempt(
       "submit",
     );
 
+    await insertAttemptQuestionSnapshots(
+      client,
+      input.attemptId,
+      attemptRow.judgement_version ?? 1,
+      input.questionSnapshots,
+    );
+
     const updatedRes = await client.query<AttemptRow>(
       `UPDATE attempts
        SET status = 'submitted',
            submitted_at = now(),
+           judged_at = now(),
+           total_questions = $7,
            remaining_seconds = $2,
            score_raw = $3,
            score_percent = $4,
            correct_count = $5,
-           xp_earned = $6
+           xp_earned = $6,
+           quiz_content_hash_snapshot = $8,
+           snapshot_quiz_title = $9,
+           snapshot_quiz_difficulty_level = $10,
+           snapshot_quiz_estimated_time_seconds = $11,
+           snapshot_quiz_is_challenge = $12,
+           snapshot_subject_scores = $13::jsonb,
+           snapshot_subject_scores_estimated = $14
        WHERE id = $1
        RETURNING *`,
       [
@@ -738,6 +1416,14 @@ export async function submitAttempt(
         input.scorePercent,
         input.correctCount,
         input.xpEvent.amount,
+        input.totalQuestions,
+        input.snapshot.quizContentHash,
+        input.snapshot.quizTitle,
+        input.snapshot.quizDifficultyLevel,
+        input.snapshot.quizEstimatedTimeSeconds,
+        input.snapshot.isChallenge,
+        JSON.stringify(input.snapshot.subjectScores ?? []),
+        input.snapshot.subjectScoresEstimated,
       ],
     );
 
@@ -747,6 +1433,203 @@ export async function submitAttempt(
     if (!updated) throw new Error("Failed to submit attempt");
     return { status: "ok", attempt: mapAttempt(updated) };
   });
+}
+
+export async function rejudgeAttempt(
+  input: RejudgeAttemptInput,
+): Promise<RejudgeAttemptResult> {
+  return withTransaction(async (client) => {
+    const attemptRes = await client.query<AttemptRow>(
+      `SELECT * FROM attempts WHERE id = $1 FOR UPDATE`,
+      [input.attemptId],
+    );
+    const attemptRow = attemptRes.rows[0];
+    if (!attemptRow) return { status: "not_found" };
+    if (
+      attemptRow.status !== "submitted" &&
+      attemptRow.status !== "auto_submitted"
+    ) {
+      return { status: "not_submitted" };
+    }
+    if (attemptRow.judgement_version !== input.expectedJudgementVersion) {
+      return { status: "conflict" };
+    }
+
+    const newJudgementVersion = attemptRow.judgement_version + 1;
+
+    await updateAttemptAnswerJudgements(
+      client,
+      input.attemptId,
+      input.gradedAnswers,
+    );
+
+    await insertRejudgeEvents(client, input.attemptId, input.gradedAnswers, {
+      judgementVersion: newJudgementVersion,
+    });
+
+    await insertAttemptQuestionSnapshots(
+      client,
+      input.attemptId,
+      newJudgementVersion,
+      input.questionSnapshots,
+    );
+
+    const updatedRes = await client.query<AttemptRow>(
+      `UPDATE attempts
+       SET judged_at = now(),
+           judgement_version = $2,
+           total_questions = $3,
+           score_raw = $4,
+           score_percent = $5,
+           correct_count = $6,
+           xp_earned = $7,
+           quiz_content_hash_snapshot = $8,
+           snapshot_quiz_title = $9,
+           snapshot_quiz_difficulty_level = $10,
+           snapshot_quiz_estimated_time_seconds = $11,
+           snapshot_quiz_is_challenge = $12,
+           snapshot_subject_scores = $13::jsonb,
+           snapshot_subject_scores_estimated = $14
+       WHERE id = $1
+       RETURNING *`,
+      [
+        input.attemptId,
+        newJudgementVersion,
+        input.totalQuestions,
+        input.scoreRaw,
+        input.scorePercent,
+        input.correctCount,
+        input.xpEarned,
+        input.snapshot.quizContentHash,
+        input.snapshot.quizTitle,
+        input.snapshot.quizDifficultyLevel,
+        input.snapshot.quizEstimatedTimeSeconds,
+        input.snapshot.isChallenge,
+        JSON.stringify(input.snapshot.subjectScores ?? []),
+        input.snapshot.subjectScoresEstimated,
+      ],
+    );
+
+    if (input.xpAdjustmentEvent && input.xpAdjustmentEvent.amount !== 0) {
+      await insertXpEvent(input.xpAdjustmentEvent, client);
+    }
+
+    const updated = updatedRes.rows[0];
+    if (!updated) throw new Error("Failed to rejudge attempt");
+    return {
+      status: "ok",
+      attempt: mapAttempt(updated),
+      judgementVersion: newJudgementVersion,
+    };
+  });
+}
+
+async function insertAttemptQuestionSnapshots(
+  client: PoolClient,
+  attemptId: string,
+  judgementVersion: number,
+  items: SubmitAttemptInput["questionSnapshots"],
+) {
+  if (!items.length) return;
+  const values: string[] = [];
+  const params: unknown[] = [attemptId, judgementVersion];
+  items.forEach((item, index) => {
+    const base = index * 9;
+    values.push(
+      `($1, $2, $${base + 3}, $${base + 4}, $${base + 5}::question_type, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}, $${base + 10}, $${base + 11})`,
+    );
+    params.push(
+      item.position,
+      item.questionId,
+      item.questionType,
+      item.maxScore,
+      item.required,
+      item.subjectId,
+      item.subjectName,
+      item.subjectSlug,
+      item.questionUpdatedAt,
+    );
+  });
+
+  await client.query(
+    `INSERT INTO attempt_question_snapshots (
+       attempt_id,
+       judgement_version,
+       position,
+       question_id,
+       question_type,
+       max_score,
+       required,
+       subject_id,
+       subject_name,
+       subject_slug,
+       question_updated_at
+     ) VALUES ${values.join(", ")}
+     ON CONFLICT (attempt_id, judgement_version, question_id) DO NOTHING`,
+    params,
+  );
+}
+
+async function updateAttemptAnswerJudgements(
+  client: PoolClient,
+  attemptId: string,
+  answers: Array<
+    Pick<GradedAnswerInput, "questionId" | "isCorrect" | "awardedScore">
+  >,
+) {
+  if (!answers.length) return;
+  const values: string[] = [];
+  const params: unknown[] = [attemptId];
+  answers.forEach((answer, index) => {
+    const base = index * 3;
+    values.push(
+      `($${base + 2}::uuid, $${base + 3}::boolean, $${base + 4}::numeric)`,
+    );
+    params.push(answer.questionId, answer.isCorrect, answer.awardedScore);
+  });
+
+  await client.query(
+    `UPDATE attempt_answers aa
+     SET is_correct = v.is_correct,
+         awarded_score = v.awarded_score
+     FROM (VALUES ${values.join(", ")}) AS v(question_id, is_correct, awarded_score)
+     WHERE aa.attempt_id = $1
+       AND aa.question_id = v.question_id`,
+    params,
+  );
+}
+
+async function insertRejudgeEvents(
+  client: PoolClient,
+  attemptId: string,
+  answers: Array<
+    Pick<GradedAnswerInput, "questionId" | "isCorrect" | "awardedScore">
+  >,
+  meta?: Record<string, unknown>,
+) {
+  if (!answers.length) return;
+  const values: string[] = [];
+  const params: unknown[] = [attemptId];
+  answers.forEach((answer, index) => {
+    const base = index * 3;
+    values.push(`($1, $${base + 2}, $${base + 3}::jsonb, $${base + 4})`);
+    const payload = {
+      isCorrect: answer.isCorrect,
+      awardedScore: answer.awardedScore,
+      ...(meta ?? {}),
+    };
+    params.push(answer.questionId, payload, "rejudge");
+  });
+
+  await client.query(
+    `INSERT INTO attempt_answer_events (
+       attempt_id,
+       question_id,
+       payload,
+       event_type
+     ) VALUES ${values.join(", ")}`,
+    params,
+  );
 }
 
 async function upsertAutosaveAnswers(
@@ -832,7 +1715,7 @@ async function insertAnswerEvents(
   client: PoolClient,
   attemptId: string,
   answers: Array<AttemptAnswerInput | GradedAnswerInput>,
-  eventType: "autosave" | "submit",
+  eventType: "autosave" | "submit" | "rejudge",
   meta?: Record<string, unknown>,
 ) {
   if (!answers.length) return;
