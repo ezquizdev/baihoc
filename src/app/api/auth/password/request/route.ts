@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { controllerRequestPasswordReset } from "@/application/controllers/authController";
 
-const requestSchema = z
-  .object({
-    email: z.string().min(1),
-  });
+const requestSchema = z.object({
+  email: z.string().min(1),
+});
 
 export async function POST(request: Request) {
   try {

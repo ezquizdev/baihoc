@@ -3,11 +3,10 @@ import { z } from "zod";
 import { controllerLoginWithEmail } from "@/application/controllers/authController";
 import { setSession, toSessionPayload } from "@/application/infra/auth/session";
 
-const loginSchema = z
-  .object({
-    email: z.string(),
-    password: z.string(),
-  });
+const loginSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+});
 
 export async function POST(request: Request) {
   try {

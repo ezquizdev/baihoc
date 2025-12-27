@@ -4,13 +4,12 @@ import { controllerCompleteProfile } from "@/application/controllers/authControl
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 import { setSession, toSessionPayload } from "@/application/infra/auth/session";
 
-const profileSchema = z
-  .object({
-    fullName: z.string().min(1),
-    school: z.string().nullable().optional(),
-    dateOfBirth: z.string().nullable().optional(),
-    avatarUrl: z.string().nullable().optional(),
-  });
+const profileSchema = z.object({
+  fullName: z.string().min(1),
+  school: z.string().nullable().optional(),
+  dateOfBirth: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+});
 
 export async function POST(request: Request) {
   try {

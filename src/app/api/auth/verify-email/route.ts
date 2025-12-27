@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { controllerVerifyEmail } from "@/application/controllers/authController";
 
-const verifySchema = z
-  .object({
-    token: z.string().min(1),
-  });
+const verifySchema = z.object({
+  token: z.string().min(1),
+});
 
 export async function POST(request: Request) {
   try {

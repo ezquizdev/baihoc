@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { controllerResetPassword } from "@/application/controllers/authController";
 
-const confirmSchema = z
-  .object({
-    token: z.string().min(1),
-    newPassword: z.string().min(1),
-  });
+const confirmSchema = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(1),
+});
 
 export async function POST(request: Request) {
   try {

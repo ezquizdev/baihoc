@@ -4,4 +4,3 @@ export function sanitizeNextPath(value: unknown): string | null {
   if (value.startsWith("//")) return null;
   return value;
 }
-

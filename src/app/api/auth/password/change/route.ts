@@ -3,12 +3,11 @@ import { z } from "zod";
 import { controllerChangePassword } from "@/application/controllers/authController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 
-const changeSchema = z
-  .object({
-    currentPassword: z.string().min(1).optional(),
-    newPassword: z.string().min(1),
-    newPasswordConfirm: z.string().min(1).optional(),
-  });
+const changeSchema = z.object({
+  currentPassword: z.string().min(1).optional(),
+  newPassword: z.string().min(1),
+  newPasswordConfirm: z.string().min(1).optional(),
+});
 
 export async function POST(request: Request) {
   try {

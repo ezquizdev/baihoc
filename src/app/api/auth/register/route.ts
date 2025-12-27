@@ -2,16 +2,15 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { controllerRegisterWithEmail } from "@/application/controllers/authController";
 
-const registerSchema = z
-  .object({
-    email: z.string(),
-    password: z.string(),
-    passwordConfirm: z.string().optional(),
-    fullName: z.string(),
-    school: z.string().nullable().optional(),
-    dateOfBirth: z.string().nullable().optional(),
-    avatarUrl: z.string().nullable().optional(),
-  });
+const registerSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+  passwordConfirm: z.string().optional(),
+  fullName: z.string(),
+  school: z.string().nullable().optional(),
+  dateOfBirth: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+});
 
 export async function POST(request: Request) {
   try {
