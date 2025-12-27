@@ -146,7 +146,6 @@ export async function listRecentAttempts(limit: number): Promise<
 type StudentXpTotalRow = {
   user_id: string;
   full_name: string;
-  email: string;
   avatar_url: string | null;
   xp_total: number;
 };
@@ -162,18 +161,15 @@ export async function listStudentXpTotals(): Promise<
   const res = await query<StudentXpTotalRow>(
     `SELECT u.id AS user_id,
             u.full_name,
-            u.email,
             u.avatar_url,
-            COALESCE(SUM(x.amount), 0)::int AS xp_total
+            u.xp_total::int AS xp_total
      FROM users u
-     LEFT JOIN xp_events x ON x.user_id = u.id
      WHERE u.role = 'student' AND u.status = 'active'
-     GROUP BY u.id, u.full_name, u.email, u.avatar_url
      ORDER BY u.created_at ASC`,
   );
   return res.rows.map((row) => ({
     userId: row.user_id,
-    fullName: row.full_name || row.email,
+    fullName: row.full_name,
     avatarUrl: row.avatar_url,
     xpTotal: Number(row.xp_total),
   }));
@@ -185,50 +181,16 @@ type StudentSubjectXpTotalRow = {
   xp_total: number;
 };
 
-const uuidRegex =
-  "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
-
 export async function listStudentSubjectXpTotals(
   subjectIds: string[],
 ): Promise<Array<{ userId: string; subjectId: string; xpTotal: number }>> {
   const res = await query<StudentSubjectXpTotalRow>(
-    `WITH quiz_xp AS (
-      SELECT x.user_id,
-             x.amount,
-             (x.metadata->>'quizId')::uuid AS quiz_id
-      FROM xp_events x
-      WHERE x.metadata ? 'quizId'
-        AND (x.metadata->>'quizId') ~* $2
-    ),
-    quiz_subject_counts AS (
-      SELECT qq.quiz_id,
-             q.subject_id,
-             COUNT(*)::int AS subject_question_count
-      FROM quiz_questions qq
-      JOIN questions q ON q.id = qq.question_id
-      GROUP BY qq.quiz_id, q.subject_id
-    ),
-    quiz_total_counts AS (
-      SELECT quiz_id,
-             SUM(subject_question_count)::int AS total_question_count
-      FROM quiz_subject_counts
-      GROUP BY quiz_id
-    ),
-    allocations AS (
-      SELECT qx.user_id,
-             qsc.subject_id,
-             (qx.amount::numeric * qsc.subject_question_count / NULLIF(qtc.total_question_count, 0)) AS allocated_xp
-      FROM quiz_xp qx
-      JOIN quiz_subject_counts qsc ON qsc.quiz_id = qx.quiz_id
-      JOIN quiz_total_counts qtc ON qtc.quiz_id = qsc.quiz_id
-      WHERE qsc.subject_id = ANY($1::uuid[])
-    )
-    SELECT user_id,
-           subject_id,
-           ROUND(SUM(allocated_xp))::int AS xp_total
-    FROM allocations
-    GROUP BY user_id, subject_id`,
-    [subjectIds, uuidRegex],
+    `SELECT user_id,
+            subject_id,
+            xp_total
+     FROM user_subject_xp_totals
+     WHERE subject_id = ANY($1::uuid[])`,
+    [subjectIds],
   );
   return res.rows.map((row) => ({
     userId: row.user_id,

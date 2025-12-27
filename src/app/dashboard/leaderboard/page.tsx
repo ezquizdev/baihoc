@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
+import { controllerGetLeaderboardTable } from "@/application/controllers/leaderboardController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import styles from "../dashboard-stub-page.module.css";
+import { DashboardLeaderboardScreen } from "@/components/dashboard/dashboard-leaderboard-screen";
 
 export default async function DashboardLeaderboardPage() {
   const session = await requireAuthenticatedPage({
@@ -10,17 +10,22 @@ export default async function DashboardLeaderboardPage() {
   if (session.role === "staff") {
     redirect("/staff/dashboard");
   }
-  const displayName = session.fullName ?? session.email.split("@")[0];
+
+  const pageSize = 20;
+  const initial = await controllerGetLeaderboardTable({
+    viewerUserId: session.sub,
+    limit: pageSize,
+    offset: 0,
+    sortBy: "overall",
+    sortDir: "desc",
+    includeSelf: true,
+  });
 
   return (
-    <DashboardShell
-      pageTitle="Bảng xếp hạng"
-      activeNav="leaderboard"
-      userEmail={session.email}
-      userName={displayName}
-      avatarUrl={session.avatarUrl}
-    >
-      <div className={styles.card}>Sắp ra mắt</div>
-    </DashboardShell>
+    <DashboardLeaderboardScreen
+      session={session}
+      initial={initial}
+      pageSize={pageSize}
+    />
   );
 }

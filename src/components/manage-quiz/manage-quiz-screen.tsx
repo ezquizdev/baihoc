@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { DifficultyLevel } from "@/application/models/enums";
-import type { LeaderboardEntry } from "@/application/models/leaderboard";
+import type { LeaderboardResult } from "@/application/models/leaderboard";
 import type { QuizListItem } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
 import { QuizLeaderboard } from "@/components/quiz-catalog/quiz-leaderboard";
@@ -25,7 +25,9 @@ type ManageQuizScreenProps = {
   initialQuizzes: QuizListItem[];
   initialLimit: number;
   subjects: Subject[];
-  leaderboard: LeaderboardEntry[];
+  leaderboard: LeaderboardResult;
+  leaderboardMaxRows: number;
+  leaderboardIncludeSelf: boolean;
 };
 
 const PAGE_SIZE = 9;
@@ -38,6 +40,8 @@ export function ManageQuizScreen({
   initialLimit,
   subjects,
   leaderboard,
+  leaderboardMaxRows,
+  leaderboardIncludeSelf,
 }: ManageQuizScreenProps) {
   const displayName = session.fullName ?? session.email.split("@")[0];
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
@@ -390,7 +394,12 @@ export function ManageQuizScreen({
               onPageChange={setPage}
             />
           </div>
-          <QuizLeaderboard items={leaderboard} />
+          <QuizLeaderboard
+            initial={leaderboard}
+            maxRows={leaderboardMaxRows}
+            includeSelf={leaderboardIncludeSelf}
+            showScopeSelect={false}
+          />
         </section>
       </div>
 
