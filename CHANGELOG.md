@@ -31,6 +31,9 @@
 ### fix(auth): prefill register email
 - Register now pre-fills the email from `?email=` and uses `Suspense` for `useSearchParams`.
 
+### fix(auth): prevent login redirect loops
+- Added `/logout` route that clears the session cookie and redirects to login (used when a stale cookie points to a missing/deactivated user).
+
 ### chore(seed): include draft quiz
 - Seed now includes at least one quiz with `status = draft` (useful for testing staff “lưu nháp” flows).
 
