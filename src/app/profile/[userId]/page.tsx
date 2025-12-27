@@ -9,21 +9,13 @@ import { OtherUserProfileCard } from "@/components/profile/OtherUserProfileCard"
 import { ProfileScoreCards } from "@/components/profile/ProfileScoreCards";
 import { PublicProfileCard } from "@/components/profile/PublicProfileCard";
 import { staffNavItems } from "@/components/staff-dashboard/staff-nav";
-import { formatNumberVi } from "@/lib/formatters";
+import { formatNumberVi, formatStudyTimeVi } from "@/lib/formatters";
 import layoutStyles from "../profile-page.module.css";
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Params = { userId: string };
-
-function formatStudyTime(seconds: number) {
-  const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
-  if (hours <= 0) return `${minutes}m`;
-  return `${hours}h${String(minutes).padStart(2, "0")}`;
-}
 
 export default async function OtherProfilePage({
   params,
@@ -97,7 +89,7 @@ export default async function OtherProfilePage({
                 },
                 {
                   label: "Thời gian học",
-                  value: formatStudyTime(stats.studySeconds),
+                  value: formatStudyTimeVi(stats.studySeconds),
                 },
                 { label: "Điểm TB", value: `${stats.averageScorePercent}%` },
               ]}

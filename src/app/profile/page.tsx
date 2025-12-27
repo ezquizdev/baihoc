@@ -7,16 +7,8 @@ import { ProfileScoreCards } from "@/components/profile/ProfileScoreCards";
 import { SelfProfileCard } from "@/components/profile/SelfProfileCard";
 import { StaffProfileCard } from "@/components/profile/StaffProfileCard";
 import { staffNavItems } from "@/components/staff-dashboard/staff-nav";
-import { formatNumberVi } from "@/lib/formatters";
+import { formatNumberVi, formatStudyTimeVi } from "@/lib/formatters";
 import layoutStyles from "./profile-page.module.css";
-
-function formatStudyTime(seconds: number) {
-  const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
-  if (hours <= 0) return `${minutes}m`;
-  return `${hours}h${String(minutes).padStart(2, "0")}`;
-}
 
 export default async function ProfilePage() {
   const session = await requireAuthenticatedPage({
@@ -113,7 +105,7 @@ export default async function ProfilePage() {
                 },
                 {
                   label: "Thời gian học",
-                  value: formatStudyTime(stats.studySeconds),
+                  value: formatStudyTimeVi(stats.studySeconds),
                 },
                 { label: "Điểm TB", value: `${stats.averageScorePercent}%` },
               ]}
