@@ -48,9 +48,7 @@ export function QuizAttemptScreen({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [leaveIntent, setLeaveIntent] = useState<
-    | { kind: "href"; href: string; isExternal: boolean }
-    | { kind: "back" }
-    | null
+    { kind: "href"; href: string } | { kind: "back" } | null
   >(null);
   const ignorePopRef = useRef(false);
 
@@ -94,11 +92,7 @@ export function QuizAttemptScreen({
       event.stopPropagation();
       event.stopImmediatePropagation();
 
-      const isExternal = url.origin !== window.location.origin;
-      const href = isExternal
-        ? url.href
-        : `${url.pathname}${url.search}${url.hash}`;
-      setLeaveIntent({ kind: "href", href, isExternal });
+      setLeaveIntent({ kind: "href", href: url.href });
     };
 
     const handlePopState = () => {
@@ -797,11 +791,7 @@ export function QuizAttemptScreen({
             window.history.back();
             return;
           }
-          if (intent.isExternal) {
-            window.location.assign(intent.href);
-            return;
-          }
-          router.push(intent.href);
+          window.location.assign(intent.href);
         }}
         onSecondary={() => setLeaveIntent(null)}
       />
