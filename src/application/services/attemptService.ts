@@ -226,11 +226,15 @@ export async function startOrResumeAttempt(
 
     const activeAttempt = refreshedInProgress[0] ?? null;
     if (activeAttempt) {
-      return {
-        attemptId: activeAttempt.id,
-        resumed: true,
-        status: activeAttempt.status,
-      };
+      throw new ServiceError(
+        "ATTEMPT_OTHER_IN_PROGRESS",
+        "Bạn đang có một lượt làm quiz đang diễn ra. Vui lòng hoàn thành trước khi bắt đầu quiz khác.",
+        409,
+        {
+          activeAttemptId: activeAttempt.id,
+          activeQuizId: activeAttempt.quiz_id,
+        },
+      );
     }
 
     const quizMeta = await getQuizAttemptMeta(quizId, client);

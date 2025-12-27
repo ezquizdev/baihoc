@@ -55,7 +55,7 @@
 - Starting a generated custom quiz now stores `custom_quiz_id` on the attempt and blocks non-owners from starting it.
 
 ### fix(attempt): enforce single running attempt
-- Users can only have **one** `in_progress` attempt at a time; starting a new quiz will resume the active attempt instead.
+- Users can only have **one** `in_progress` attempt at a time; starting a different quiz now returns 409 and prompts the user to finish the running attempt first.
 - When starting a quiz, any other timed/challenge attempts that should have ended are auto-submitted at their expected end time.
 
 ### fix(quiz): block delete while attempts in progress
