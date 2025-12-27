@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import {
@@ -38,12 +38,46 @@ const initialForm: RegisterForm = {
 };
 
 export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthShell
+          title="Đăng ký tài khoản"
+          subtitle="Tham gia BaiHoc để luyện tập và nhận gợi ý học tập thông minh."
+          footer={
+            <p>
+              Đã có tài khoản?{" "}
+              <Link href="/auth/login" className="font-medium text-slate-900">
+                Đăng nhập
+              </Link>
+            </p>
+          }
+        >
+          <Card>
+            <div className="space-y-4 text-sm text-slate-600">Đang tải...</div>
+          </Card>
+        </AuthShell>
+      }
+    >
+      <RegisterPageInner />
+    </Suspense>
+  );
+}
+
+function RegisterPageInner() {
   const [form, setForm] = useState<RegisterForm>(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const email = searchParams.get("email");
+    if (!email) return;
+    setForm((prev) => (prev.email ? prev : { ...prev, email }));
+  }, [searchParams]);
 
   const handleProfileChange = (updates: Partial<ProfileValues>) => {
     setForm((prev) => ({ ...prev, profile: { ...prev.profile, ...updates } }));

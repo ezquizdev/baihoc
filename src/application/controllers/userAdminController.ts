@@ -15,7 +15,7 @@ import {
   addAllowlistBulk,
   addAllowlistEmail,
   adminSendPasswordReset,
-  getAllowlist,
+  getAllowlistWithTotal,
   getUserById,
   getUserHistory,
   listUsersWithTotal,
@@ -122,9 +122,13 @@ export async function controllerAdminUserHistory(
 export async function controllerAdminAllowlistList(options?: {
   limit?: number;
   offset?: number;
+  search?: string;
 }) {
-  const list = await getAllowlist(options);
-  return list.map(toAllowlistEntry);
+  const result = await getAllowlistWithTotal(options);
+  return {
+    items: result.items.map(toAllowlistEntry),
+    total: result.total,
+  };
 }
 
 export async function controllerAdminAllowlistAdd(input: {

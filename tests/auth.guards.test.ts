@@ -82,6 +82,39 @@ describe("auth guards", () => {
     ).rejects.toThrow(/NEXT_REDIRECT/);
   });
 
+  it("requireAuthenticatedPage routes stale sessions through /logout", async () => {
+    vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(session);
+    vi.spyOn(userRepo, "findUserById").mockResolvedValueOnce({
+      id: "u1",
+      email: "user@example.com",
+      full_name: "User",
+      password_hash: null,
+      role: "student",
+      tier: "free",
+      status: "deactivated",
+      email_verified_at: new Date().toISOString(),
+      oauth_provider: null,
+      oauth_sub: null,
+      profile_completed: true,
+      avatar_url: null,
+      school: null,
+      date_of_birth: null,
+      last_login_at: null,
+      created_at: "",
+      updated_at: "",
+    });
+
+    let thrown: unknown = null;
+    try {
+      await requireAuthenticatedPage({ next: "/dashboard" });
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeTruthy();
+    expect(String(thrown)).toMatch(/NEXT_REDIRECT/);
+    expect((thrown as { digest?: string }).digest ?? "").toContain("/logout");
+  });
+
   it("requireAuthenticatedPage returns session on success", async () => {
     vi.spyOn(sessionModule, "getSession").mockResolvedValueOnce(session);
     vi.spyOn(userRepo, "findUserById").mockResolvedValueOnce({

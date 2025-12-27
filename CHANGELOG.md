@@ -112,6 +112,60 @@
 - Results header no longer shows the attempt status.
 - Explanation toggles now use native `<details>/<summary>` (less client JS), and server-rendered icons use inline SVG for RSC compatibility.
 
+### feat(staff-settings): add allowlist manager
+- Added a staff settings page to surface key environment/config status (URLs, email sender, OAuth, etc).
+- Added an allowlist manager UI with search, pagination, bulk add/update, remove, and “copy register link”.
+- Allowlist API now supports search and returns `{ items, total }` for pagination.
+
+### refactor(staff): simplify quiz builder controls
+- Removed redundant “move up/down” and “required” controls from the quiz builder (drag-to-reorder remains).
+- Quiz info modal now edits quiz `status` (draft/published) instead of `featuredRank`.
+
+### fix(ui): layer manage quiz hero figure
+- Manage quiz hero figure is now decorative (removed from layout flow) so the “Tạo quiz” CTA can sit on top.
+
+### fix(ui): normalize manage quiz card heights
+- Staff quiz cards now stretch to the row height so cards stay aligned when action buttons wrap.
+
+### fix(ui): replace browser alerts with in-app popups
+- Replaced remaining `window.alert` usage with an in-app notice popup (quiz catalog + quiz builder).
+
+### fix(ui): show manage quiz errors in popup
+- Staff manage quiz publish/delete failures now show as a popup instead of rendering inside the quiz card.
+
+### feat(ui): add confirm and textarea modals
+- Added reusable in-app confirm + textarea modals to replace browser dialogs.
+
+### refactor(ui): remove browser confirm/prompt dialogs
+- Replaced remaining `window.confirm` / `window.prompt` usage with in-app modals across staff screens.
+- Quiz builder “Tạo câu hỏi mới” now uses a normal link (avoids `window.open`).
+
+### fix(attempt): replace browser leave prompts with in-app modal
+- In-progress attempt navigation warnings no longer use browser dialogs (`beforeunload`/`confirm`); leaving now uses an in-app modal.
+
+### feat(staff-dashboard): add charts
+- Added staff dashboard line charts for answer frequency + accuracy by subject over a configurable time window.
+- Added repo/service/controller support for daily subject answer aggregates.
+
+### feat(staff): add student management
+- Added a staff “Quản lý học sinh” screen with filters, search, pagination, detail panel, and history.
+- Added actions for verifying email, triggering password resets, and updating tier/status (with optional reason).
+- Improved table accessibility: rows are now keyboard-selectable (Enter/Space).
+
+### feat(audit): add staff audit logs
+- Added staff audit-log API + UI (filters, facets, and detail view).
+- Added a DB index for `audit_logs.created_at` to speed up listing.
+- Audit search now trims whitespace and avoids expensive metadata scans for very short queries; unexpected errors return `500`.
+
+### fix(auth): prefill register email
+- Register now pre-fills the email from `?email=` and uses `Suspense` for `useSearchParams`.
+
+### fix(auth): prevent login redirect loops
+- Added `/logout` route that clears the session cookie and redirects to login (used when a stale cookie points to a missing/deactivated user).
+
+### chore(seed): include draft quiz
+- Seed now includes at least one quiz with `status = draft` (useful for testing staff “lưu nháp” flows).
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors

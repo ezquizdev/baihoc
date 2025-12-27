@@ -1,0 +1,162 @@
+.tableWrap {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 920px;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: #f6f8fb;
+  color: #2b3b55;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  text-align: left;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--line);
+  z-index: 1;
+}
+
+.table tbody td {
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  vertical-align: top;
+  font-size: 13px;
+}
+
+.row {
+  cursor: pointer;
+  outline: none;
+}
+
+.row:hover td {
+  background: rgba(40, 104, 230, 0.04);
+}
+
+.table tbody tr.rowSelected td {
+  background: rgba(40, 104, 230, 0.08);
+}
+
+.row:focus-visible td {
+  outline: 3px solid rgba(40, 104, 230, 0.25);
+  outline-offset: -3px;
+}
+
+.timeCell {
+  white-space: nowrap;
+}
+
+.timePrimary {
+  font-weight: 950;
+}
+
+.timeMeta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.actorCell {
+  max-width: 280px;
+}
+
+.actorPrimary {
+  font-weight: 950;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.actorMeta {
+  margin-top: 4px;
+  color: #334155;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.targetCell {
+  white-space: nowrap;
+}
+
+.metaCell {
+  max-width: 260px;
+  color: #334155;
+  font-size: 12px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.pillBlue {
+  border-color: rgba(40, 104, 230, 0.35);
+  background: rgba(40, 104, 230, 0.08);
+  color: #1f3b86;
+}
+
+.linkBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.linkBtnBlue {
+  border-color: rgba(40, 104, 230, 0.35);
+  background: rgba(40, 104, 230, 0.08);
+  color: #1f3b86;
+}
+
+.subtle {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.stateCard {
+  padding: 14px 16px;
+  border: 1px dashed rgba(148, 163, 184, 0.6);
+  border-radius: 16px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.stateAction {
+  margin-top: 10px;
+  border: none;
+  background: #2868e6;
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+}

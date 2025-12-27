@@ -90,6 +90,7 @@ vi.mock("@/application/infra/db/allowlistRepo", () => {
         created_at: "",
       })),
     ),
+    countAllowlist: vi.fn(async () => records.length),
     insertAllowlistEmail: vi.fn(
       async (input: { email: string; role?: string; tier?: string }) => {
         const existing = records.find((r) => r.email === input.email);

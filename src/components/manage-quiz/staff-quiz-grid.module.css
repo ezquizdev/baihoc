@@ -50,15 +50,34 @@
 
 .quizGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+  grid-template-columns: 1fr;
   gap: 14px;
+  align-items: stretch;
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
+@media (min-width: 720px) {
+  .quizGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .quizGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .quizGridItem {
+  display: flex;
+  min-width: 0;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.quizGridItem > * {
+  flex: 1 1 auto;
 }

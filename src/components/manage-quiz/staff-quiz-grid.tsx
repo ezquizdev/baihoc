@@ -13,6 +13,7 @@ type StaffQuizGridProps = {
   onRetry: () => void;
   onEdit: (quizId: string) => void;
   onMutated: () => void;
+  onCardError: (title: string, message: string) => void;
 };
 
 export function StaffQuizGrid({
@@ -23,6 +24,7 @@ export function StaffQuizGrid({
   onRetry,
   onEdit,
   onMutated,
+  onCardError,
 }: StaffQuizGridProps) {
   if (error) {
     return (
@@ -70,6 +72,7 @@ export function StaffQuizGrid({
               subjects={subjects}
               onEdit={onEdit}
               onMutated={onMutated}
+              onError={onCardError}
             />
           </li>
         ))}

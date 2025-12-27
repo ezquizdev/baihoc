@@ -31,6 +31,8 @@ import type {
   QuizQuestionSummary,
 } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { NoticeModal } from "@/components/ui/notice-modal";
 import styles from "./manage-quiz-modals.module.css";
 import { QuestionBankPickerModal } from "./question-bank-picker-modal";
 
@@ -59,6 +61,13 @@ export function QuizBuilderModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bankOpen, setBankOpen] = useState(false);
+  const [notice, setNotice] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
+  const [removeCandidateId, setRemoveCandidateId] = useState<string | null>(
+    null,
+  );
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,6 +77,8 @@ export function QuizBuilderModal({
     setQuestions([]);
     setError(null);
     setBankOpen(false);
+    setNotice(null);
+    setRemoveCandidateId(null);
     setActiveQuestionId(null);
   }, [quizId]);
 
@@ -363,19 +374,29 @@ export function QuizBuilderModal({
                 >
                   Chọn câu hỏi từ kho
                 </button>
-                <button
-                  className={`${styles.toolBtn} ${styles.toolYellow}`}
-                  type="button"
-                  onClick={() => window.open("/staff/questions/new", "_blank")}
-                  disabled={toolDisabled}
+                <a
+                  className={`${styles.toolBtn} ${styles.toolYellow} ${
+                    toolDisabled ? styles.toolBtnDisabled : ""
+                  }`}
+                  href="/staff/questions/new"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-disabled={toolDisabled}
+                  tabIndex={toolDisabled ? -1 : undefined}
+                  onClick={(event) => {
+                    if (toolDisabled) event.preventDefault();
+                  }}
                 >
                   Tạo câu hỏi mới
-                </button>
+                </a>
                 <button
                   className={`${styles.toolBtn} ${styles.toolDark}`}
                   type="button"
                   onClick={() =>
-                    window.alert("Chưa hỗ trợ: import quiz từ file")
+                    setNotice({
+                      title: "Chưa hỗ trợ",
+                      message: "Chưa hỗ trợ: import quiz từ file",
+                    })
                   }
                   disabled={toolDisabled}
                 >
@@ -384,9 +405,7 @@ export function QuizBuilderModal({
               </div>
 
               <div className={styles.builderSection}>Câu hỏi</div>
-              <div className={styles.builderHint}>
-                Kéo thả để sắp xếp (hoặc dùng ↑↓).
-              </div>
+              <div className={styles.builderHint}>Kéo thả để sắp xếp.</div>
 
               <DndContext
                 sensors={sensors}
@@ -410,40 +429,14 @@ export function QuizBuilderModal({
                         key={q.id}
                         question={q}
                         index={idx}
-                        total={questions.length}
                         disabled={toolDisabled}
                         onEdit={() => onEditQuestion(q.id, idx + 1)}
-                        onRemove={() => {
-                          const ok = window.confirm(
-                            "Xóa câu hỏi này khỏi quiz?",
-                          );
-                          if (!ok) return;
-                          setQuestions((prev) =>
-                            prev.filter((item) => item.id !== q.id),
-                          );
-                        }}
-                        onMoveUp={() => {
-                          if (idx === 0) return;
-                          setQuestions((prev) => arrayMove(prev, idx, idx - 1));
-                        }}
-                        onMoveDown={() => {
-                          if (idx >= questions.length - 1) return;
-                          setQuestions((prev) => arrayMove(prev, idx, idx + 1));
-                        }}
+                        onRemove={() => setRemoveCandidateId(q.id)}
                         onScoreChange={(nextScore) => {
                           setQuestions((prev) =>
                             prev.map((item) =>
                               item.id === q.id
                                 ? { ...item, score: nextScore }
-                                : item,
-                            ),
-                          );
-                        }}
-                        onToggleRequired={() => {
-                          setQuestions((prev) =>
-                            prev.map((item) =>
-                              item.id === q.id
-                                ? { ...item, required: !item.required }
                                 : item,
                             ),
                           );
@@ -527,6 +520,29 @@ export function QuizBuilderModal({
           setBankOpen(false);
         }}
       />
+
+      <NoticeModal
+        open={notice !== null}
+        title={notice?.title ?? ""}
+        message={notice?.message ?? ""}
+        onClose={() => setNotice(null)}
+      />
+
+      <ConfirmModal
+        open={removeCandidateId !== null}
+        title="Xóa câu hỏi khỏi quiz?"
+        message="Bạn có chắc chắn muốn xóa câu hỏi này khỏi quiz?"
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        confirmVariant="danger"
+        onCancel={() => setRemoveCandidateId(null)}
+        onConfirm={() => {
+          const targetId = removeCandidateId;
+          setRemoveCandidateId(null);
+          if (!targetId) return;
+          setQuestions((prev) => prev.filter((q) => q.id !== targetId));
+        }}
+      />
     </div>
   );
 }
@@ -534,25 +550,17 @@ export function QuizBuilderModal({
 function SortableQuestionCard({
   question,
   index,
-  total,
   disabled,
   onEdit,
   onRemove,
-  onMoveUp,
-  onMoveDown,
   onScoreChange,
-  onToggleRequired,
 }: {
   question: QuizQuestionSummary;
   index: number;
-  total: number;
   disabled: boolean;
   onEdit: () => void;
   onRemove: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onScoreChange: (score: number | null) => void;
-  onToggleRequired: () => void;
 }) {
   const {
     attributes,
@@ -617,37 +625,6 @@ function SortableQuestionCard({
             mặc định: {question.defaultScore}
           </span>
         </label>
-
-        <label className={styles.qMetaToggle}>
-          <input
-            type="checkbox"
-            checked={question.required}
-            onChange={onToggleRequired}
-            disabled={disabled}
-          />
-          Bắt buộc
-        </label>
-
-        <div className={styles.qMove}>
-          <button
-            type="button"
-            className={`${styles.smallBtn} ${styles.smallGray}`}
-            onClick={onMoveUp}
-            disabled={disabled || index === 0}
-            aria-label="Đưa lên"
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            className={`${styles.smallBtn} ${styles.smallGray}`}
-            onClick={onMoveDown}
-            disabled={disabled || index >= total - 1}
-            aria-label="Đưa xuống"
-          >
-            ↓
-          </button>
-        </div>
       </div>
 
       <div className={styles.qActions}>

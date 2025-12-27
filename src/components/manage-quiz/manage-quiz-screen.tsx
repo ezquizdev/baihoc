@@ -9,6 +9,7 @@ import type { Subject } from "@/application/models/subject";
 import { QuizLeaderboard } from "@/components/quiz-catalog/quiz-leaderboard";
 import { QuizPagination } from "@/components/quiz-catalog/quiz-pagination";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
+import { NoticeModal } from "@/components/ui/notice-modal";
 import { ManageQuizFilters } from "./manage-quiz-filters";
 import styles from "./manage-quiz-screen.module.css";
 import { CreateQuizModal } from "./modals/create-quiz-modal";
@@ -60,6 +61,10 @@ export function ManageQuizScreen({
   const [allQuizzes, setAllQuizzes] = useState<QuizListItem[]>(initialQuizzes);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
   const [infoQuizId, setInfoQuizId] = useState<string | null>(null);
@@ -126,6 +131,10 @@ export function ManageQuizScreen({
     const handleKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       if (document.body.dataset.dndDragging === "true") return;
+      if (actionError) {
+        setActionError(null);
+        return;
+      }
       if (createOpen) {
         setCreateOpen(false);
         return;
@@ -144,7 +153,7 @@ export function ManageQuizScreen({
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [builderQuizId, createOpen, infoQuizId, questionTarget]);
+  }, [actionError, builderQuizId, createOpen, infoQuizId, questionTarget]);
 
   useEffect(() => {
     const open = Boolean(
@@ -329,7 +338,7 @@ export function ManageQuizScreen({
           className={`cardBase ${styles.hero}`}
           aria-label="Manage quiz hero"
         >
-          <div>
+          <div className={styles.heroContent}>
             <h1 className={styles.heroTitle}>
               <span>Danh sách</span>Quiz
             </h1>
@@ -386,6 +395,9 @@ export function ManageQuizScreen({
               onRetry={handleRetry}
               onEdit={(quizId) => setInfoQuizId(quizId)}
               onMutated={handleMutated}
+              onCardError={(title, message) =>
+                setActionError({ title, message })
+              }
             />
             <QuizPagination
               page={page}
@@ -441,6 +453,14 @@ export function ManageQuizScreen({
           setRefreshKey((prev) => prev + 1);
           setInfoQuizId(quizId);
         }}
+      />
+
+      <NoticeModal
+        open={actionError !== null}
+        title={actionError?.title ?? ""}
+        message={actionError?.message ?? ""}
+        tone="error"
+        onClose={() => setActionError(null)}
       />
     </StaffShell>
   );
