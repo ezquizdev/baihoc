@@ -206,7 +206,11 @@ export async function updateUserProfile(
      SET full_name = COALESCE($2, full_name),
          school = COALESCE($3, school),
          date_of_birth = COALESCE($4, date_of_birth),
-         avatar_url = COALESCE($5, avatar_url),
+         avatar_url = CASE
+           WHEN $5 IS NULL THEN avatar_url
+           WHEN $5 = '' THEN NULL
+           ELSE $5
+         END,
          profile_completed = COALESCE($6, profile_completed),
          updated_at = now()
      WHERE id = $1
