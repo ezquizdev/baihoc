@@ -2,6 +2,20 @@
 
 ## 2025-12-27
 
+### feat(profile): refresh profile UI
+- Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
+- Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
+
+### feat(profile): allow viewing student profiles
+- Students can view other students at `/profile/[userId]` (read-only; no edit controls; no AI card).
+- Leaderboard names now link to profile pages.
+
+### feat(profile): simplify staff profile settings
+- Staff `/profile` is now a compact settings view (change name + password only), without student stats/score panels.
+
+### feat(auth): add password change endpoint
+- Added `POST /api/auth/password/change` with current-password verification (and supports setting a password for accounts without one).
+
 ### feat(custom-quiz): generate private custom quizzes
 - Added `POST /api/custom-quizzes` to generate paid-only custom quizzes from topic + difficulty requirements.
 - Generation is atomic and links `custom_quizzes` → generated `quizzes`.
