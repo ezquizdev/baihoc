@@ -3,10 +3,13 @@ import {
   getUserXpSummary,
   listWeeklyAnswerCounts,
 } from "@/application/infra/db/profileRepo";
+import { findUserById } from "@/application/infra/db/userRepo";
 import type {
   ProfileStatsDto,
+  PublicProfileOverviewDto,
   SelfProfileOverviewDto,
 } from "@/application/models/profile";
+import { ServiceError } from "@/application/services/errors";
 
 function dayLabelFromDow(dow: number) {
   // Postgres DOW: 0=Sunday ... 6=Saturday
@@ -42,5 +45,45 @@ export async function getSelfProfileOverview(
       averageScorePercent: aggregates.averageScorePercent,
       weeklyBars,
     },
+  };
+}
+
+export async function getPublicProfileOverview(input: {
+  viewerRole: string;
+  targetUserId: string;
+}): Promise<PublicProfileOverviewDto> {
+  if (input.viewerRole !== "student" && input.viewerRole !== "staff") {
+    throw new ServiceError("FORBIDDEN", "forbidden", 403);
+  }
+  const user = await findUserById(input.targetUserId);
+  if (!user) {
+    throw new ServiceError("USER_NOT_FOUND", "Không tìm thấy người dùng", 404);
+  }
+
+  if (input.viewerRole === "student") {
+    const allowed = user.role === "student" && user.status === "active";
+    if (!allowed) {
+      throw new ServiceError(
+        "USER_NOT_FOUND",
+        "Không tìm thấy người dùng",
+        404,
+      );
+    }
+  }
+
+  const overview = await getSelfProfileOverview(user.id);
+
+  return {
+    user: {
+      id: user.id,
+      fullName: user.full_name ?? "",
+      avatarUrl: user.avatar_url ?? null,
+      school: user.school ?? "",
+      dateOfBirth: user.date_of_birth ?? "",
+      role: user.role,
+      profileCompleted: user.profile_completed,
+    },
+    stats: overview.stats,
+    xp: overview.xp,
   };
 }

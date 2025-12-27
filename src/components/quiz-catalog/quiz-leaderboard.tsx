@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LeaderboardResult } from "@/application/models/leaderboard";
 import type { Subject } from "@/application/models/subject";
@@ -152,9 +153,12 @@ export function QuizLeaderboard({
                     <td>
                       <div className={styles.nameCell}>
                         <LeaderboardBadge rank={entry.rank} />
-                        <span className={styles.nameText}>
+                        <Link
+                          className={styles.nameText}
+                          href={`/profile/${entry.userId}`}
+                        >
                           {entry.fullName}
-                        </span>
+                        </Link>
                       </div>
                     </td>
                     <td className={styles.xp}>{formatRawNumber(entry.xp)}</td>
@@ -176,9 +180,18 @@ export function QuizLeaderboard({
                             rank={data.self?.rank ?? 0}
                             variant="self"
                           />
-                          <span className={styles.nameText}>
-                            {data.self?.fullName}
-                          </span>
+                          {data.self?.userId ? (
+                            <Link
+                              className={styles.nameText}
+                              href={`/profile/${data.self.userId}`}
+                            >
+                              {data.self.fullName}
+                            </Link>
+                          ) : (
+                            <span className={styles.nameText}>
+                              {data.self?.fullName}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className={styles.xp}>

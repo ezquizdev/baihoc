@@ -4,6 +4,7 @@ import styles from "./profile-score-cards.module.css";
 
 type Props = {
   xp: ProfileXpSummaryDto;
+  showAiSuggestion?: boolean;
 };
 
 function clampBarHeight(value: number, max: number) {
@@ -14,7 +15,7 @@ function clampBarHeight(value: number, max: number) {
   return Math.round(min + (maxPx - min) * Math.min(Math.max(ratio, 0), 1));
 }
 
-export function ProfileScoreCards({ xp }: Props) {
+export function ProfileScoreCards({ xp, showAiSuggestion = true }: Props) {
   const subjectValues = [
     {
       key: "vi",
@@ -93,21 +94,23 @@ export function ProfileScoreCards({ xp }: Props) {
         </div>
       </section>
 
-      <section className={styles.aiCard} aria-label="Chiến lược học tập">
-        <div className={styles.aiTitleRow}>
-          <h3 className={styles.aiTitle}>Chiến lược học tập</h3>
-          <span className={styles.aiTag}>AI (sắp ra mắt)</span>
-        </div>
-        <p className={styles.aiBody}>
-          Gợi ý học tập cá nhân hoá từ trợ giảng AI sẽ xuất hiện tại đây sau khi
-          bạn hoàn thành thêm vài bài quiz.
-        </p>
-        <div className={styles.aiButtonRow}>
-          <button type="button" className={styles.aiButton} disabled>
-            Chat với trợ giảng AI
-          </button>
-        </div>
-      </section>
+      {showAiSuggestion ? (
+        <section className={styles.aiCard} aria-label="Chiến lược học tập">
+          <div className={styles.aiTitleRow}>
+            <h3 className={styles.aiTitle}>Chiến lược học tập</h3>
+            <span className={styles.aiTag}>AI (sắp ra mắt)</span>
+          </div>
+          <p className={styles.aiBody}>
+            Gợi ý học tập cá nhân hoá từ trợ giảng AI sẽ xuất hiện tại đây sau
+            khi bạn hoàn thành thêm vài bài quiz.
+          </p>
+          <div className={styles.aiButtonRow}>
+            <button type="button" className={styles.aiButton} disabled>
+              Chat với trợ giảng AI
+            </button>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

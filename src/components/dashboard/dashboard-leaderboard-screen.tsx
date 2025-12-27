@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CaretDown, CaretUp } from "phosphor-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
@@ -285,7 +286,9 @@ function LeaderboardRow({
       <td className={styles.rank}>{entry.rank}</td>
       <td className={styles.nameCell}>
         <LeaderboardBadge rank={entry.rank} variant={isSelf ? "self" : "top"} />
-        <span className={styles.nameText}>{entry.fullName}</span>
+        <Link className={styles.nameText} href={`/profile/${entry.userId}`}>
+          {entry.fullName}
+        </Link>
       </td>
       <td className={styles.score}>{formatNumberVi(entry.xpVi)}</td>
       <td className={styles.score}>{formatNumberVi(entry.xpEn)}</td>
