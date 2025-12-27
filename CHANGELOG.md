@@ -17,6 +17,9 @@
 ### fix(a11y): set document language to Vietnamese
 - Updated `<html lang>` to `vi` to better match the Vietnamese UI.
 
+### fix(auth): pin session JWT algorithm to HS256
+- JWT verification now explicitly allows only `HS256` when reading the session cookie.
+
 ### feat(profile): refresh profile UI
 - Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
 - Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
