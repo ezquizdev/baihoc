@@ -209,21 +209,3 @@
   cursor: not-allowed;
   box-shadow: none;
 }
-
-.cardError {
-  margin-top: 8px;
-  font-size: 12px;
-  font-weight: 750;
-  color: #2b3b55;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(219, 231, 255, 0.9);
-  padding: 10px 12px;
-  border-radius: 14px;
-}
-
-.cardErrorActions {
-  margin-top: 8px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}

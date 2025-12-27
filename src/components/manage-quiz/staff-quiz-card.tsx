@@ -16,19 +16,18 @@ type StaffQuizCardProps = {
   subjects: Subject[];
   onEdit: (quizId: string) => void;
   onMutated: () => void;
+  onError: (title: string, message: string) => void;
 };
-
-type QuizMutationError = { message: string; code?: string } | null;
 
 export function StaffQuizCard({
   quiz,
   subjects,
   onEdit,
   onMutated,
+  onError,
 }: StaffQuizCardProps) {
   const [publishing, setPublishing] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [mutationError, setMutationError] = useState<QuizMutationError>(null);
 
   const primarySubject = useMemo(() => {
     const ids = quiz.subjectIds ?? [];
@@ -51,7 +50,6 @@ export function StaffQuizCard({
   const busy = publishing || deleting;
 
   const publishQuiz = async () => {
-    setMutationError(null);
     try {
       setPublishing(true);
       const response = await fetch(`/api/staff/quizzes/${quiz.id}/publish`, {
@@ -63,9 +61,10 @@ export function StaffQuizCard({
       }
       onMutated();
     } catch (err) {
-      setMutationError({
-        message: err instanceof Error ? err.message : "Có lỗi xảy ra",
-      });
+      onError(
+        "Không thể xuất bản quiz",
+        err instanceof Error ? err.message : "Có lỗi xảy ra",
+      );
     } finally {
       setPublishing(false);
     }
@@ -75,7 +74,6 @@ export function StaffQuizCard({
     const ok = window.confirm("Xóa quiz này?");
     if (!ok) return;
 
-    setMutationError(null);
     try {
       setDeleting(true);
       const response = await fetch(`/api/staff/quizzes/${quiz.id}`, {
@@ -86,14 +84,18 @@ export function StaffQuizCard({
         return;
       }
       const payload = await response.json().catch(() => ({}));
-      setMutationError({
-        message: payload?.error ?? "Không thể xóa quiz",
-        code: payload?.code,
-      });
+      const code = payload?.code as string | undefined;
+      onError(
+        "Không thể xóa quiz",
+        code === "QUIZ_HAS_ATTEMPTS"
+          ? "Quiz đã có lượt thi. Không thể xóa."
+          : (payload?.error ?? "Không thể xóa quiz"),
+      );
     } catch (err) {
-      setMutationError({
-        message: err instanceof Error ? err.message : "Có lỗi xảy ra",
-      });
+      onError(
+        "Không thể xóa quiz",
+        err instanceof Error ? err.message : "Có lỗi xảy ra",
+      );
     } finally {
       setDeleting(false);
     }
@@ -180,25 +182,6 @@ export function StaffQuizCard({
           {deleting ? "Đang xóa..." : "Xóa"}
         </button>
       </div>
-
-      {mutationError ? (
-        <div className={cardStyles.cardError} role="alert">
-          <div>
-            {mutationError.code === "QUIZ_HAS_ATTEMPTS"
-              ? "Quiz đã có lượt thi. Không thể xóa."
-              : mutationError.message}
-            <div className={cardStyles.cardErrorActions}>
-              <button
-                type="button"
-                className={`${cardStyles.btn} ${cardStyles.btnBlue}`}
-                onClick={() => setMutationError(null)}
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </article>
   );
 }

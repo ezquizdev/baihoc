@@ -20,6 +20,9 @@
 ### fix(ui): replace browser alerts with in-app popups
 - Replaced remaining `window.alert` usage with an in-app notice popup (quiz catalog + quiz builder).
 
+### fix(ui): show manage quiz errors in popup
+- Staff manage quiz publish/delete failures now show as a popup instead of rendering inside the quiz card.
+
 ### feat(staff-dashboard): add charts
 - Added staff dashboard line charts for answer frequency + accuracy by subject over a configurable time window.
 - Added repo/service/controller support for daily subject answer aggregates.
