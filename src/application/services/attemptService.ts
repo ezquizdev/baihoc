@@ -22,6 +22,7 @@ import {
   saveAttemptAnswers,
   submitAttempt as submitAttemptRepo,
 } from "@/application/infra/db/attemptRepo";
+import { listQuizStatusesByIds } from "@/application/infra/db/quizRepo";
 import type {
   Attempt,
   AttemptAnswer,
@@ -236,13 +237,31 @@ export async function listAttemptHistory(
     kind?: AttemptHistoryKind;
   } = {},
 ): Promise<{ items: AttemptHistoryItem[]; total: number }> {
-  return listAttemptHistoryRepo({
+  const result = await listAttemptHistoryRepo({
     userId,
     limit: params.limit,
     offset: params.offset,
     search: params.search,
     kind: params.kind,
   });
+  if (!result.items.length) return { items: [], total: result.total };
+
+  const quizIds = Array.from(new Set(result.items.map((item) => item.quizId)));
+  const statuses = await listQuizStatusesByIds(quizIds);
+  const statusById = new Map(statuses.map((row) => [row.id, row.status]));
+
+  const items: AttemptHistoryItem[] = result.items.map((item) => {
+    const status = statusById.get(item.quizId);
+    const quizExists = status !== undefined;
+    const canRedo = status === "published";
+    return {
+      ...item,
+      quizExists,
+      canRedo,
+    };
+  });
+
+  return { items, total: result.total };
 }
 
 export async function autosaveAttempt(

@@ -142,11 +142,10 @@ type AttemptHistoryRow = {
   correct_count: number;
   total_questions: number;
   xp_earned: number;
+  is_challenge: boolean;
   quiz_title: string | null;
   quiz_difficulty_level: number | null;
   quiz_estimated_time_seconds: number | null;
-  quiz_is_challenge: boolean | null;
-  quiz_exists: boolean;
   subject_scores_estimated: boolean;
   subject_scores: Array<{
     subjectId: string;
@@ -158,7 +157,6 @@ type AttemptHistoryRow = {
   }> | null;
   custom_quiz_id: string | null;
   custom_config: unknown | null;
-  total_count: number;
 };
 
 export type QuizQuestionMeta = {
@@ -539,7 +537,10 @@ export async function listAttemptHistory(params: {
   offset?: number;
   search?: string;
   kind?: AttemptHistoryKind;
-}): Promise<{ items: AttemptHistoryItem[]; total: number }> {
+}): Promise<{
+  items: Array<Omit<AttemptHistoryItem, "quizExists" | "canRedo">>;
+  total: number;
+}> {
   const limit = params.limit ?? 20;
   const offset = params.offset ?? 0;
 
@@ -555,24 +556,27 @@ export async function listAttemptHistory(params: {
 
   const search = params.search?.trim();
   if (search) {
-    add("COALESCE(a.snapshot_quiz_title, q.title) ILIKE $idx", `%${search}%`);
+    add("COALESCE(a.snapshot_quiz_title, '') ILIKE $idx", `%${search}%`);
   }
 
   if (params.kind === "challenge") {
-    where.push(
-      "COALESCE(a.snapshot_quiz_is_challenge, q.is_challenge) IS TRUE",
-    );
+    where.push("a.challenge_id IS NOT NULL");
   } else if (params.kind === "custom") {
     where.push("a.custom_quiz_id IS NOT NULL");
   } else if (params.kind === "practice") {
-    where.push(
-      "COALESCE(a.snapshot_quiz_is_challenge, q.is_challenge) IS NOT TRUE",
-    );
+    where.push("a.challenge_id IS NULL");
     where.push("a.custom_quiz_id IS NULL");
   }
 
-  values.push(limit);
-  values.push(offset);
+  const countRes = await query<{ cnt: string }>(
+    `SELECT COUNT(*)::int AS cnt
+     FROM attempts a
+     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}`,
+    values,
+  );
+  const total = Number(countRes.rows[0]?.cnt ?? 0);
+
+  const pageValues = [...values, limit, offset];
 
   const res = await query<AttemptHistoryRow>(
     `SELECT a.id,
@@ -584,105 +588,27 @@ export async function listAttemptHistory(params: {
             a.correct_count,
             a.total_questions,
             a.xp_earned,
-            COALESCE(a.snapshot_quiz_title, q.title) AS quiz_title,
-            COALESCE(a.snapshot_quiz_difficulty_level, q.difficulty_level) AS quiz_difficulty_level,
-            COALESCE(a.snapshot_quiz_estimated_time_seconds, q.estimated_time_seconds) AS quiz_estimated_time_seconds,
-            COALESCE(a.snapshot_quiz_is_challenge, q.is_challenge) AS quiz_is_challenge,
-            (q.id IS NOT NULL) AS quiz_exists,
+            (a.challenge_id IS NOT NULL) AS is_challenge,
+            a.snapshot_quiz_title AS quiz_title,
+            a.snapshot_quiz_difficulty_level AS quiz_difficulty_level,
+            a.snapshot_quiz_estimated_time_seconds AS quiz_estimated_time_seconds,
             CASE
               WHEN a.snapshot_subject_scores IS NOT NULL
               THEN a.snapshot_subject_scores_estimated
-              ELSE NOT EXISTS (
-                SELECT 1 FROM attempt_answers aa0 WHERE aa0.attempt_id = a.id
-              )
+              ELSE true
             END AS subject_scores_estimated,
-            COALESCE(a.snapshot_subject_scores, ss.subject_scores, '[]'::jsonb) AS subject_scores,
+            COALESCE(a.snapshot_subject_scores, '[]'::jsonb) AS subject_scores,
             a.custom_quiz_id,
-            cq.config AS custom_config,
-            COUNT(*) OVER() AS total_count
+            cq.config AS custom_config
      FROM attempts a
-     LEFT JOIN quizzes q ON q.id = a.quiz_id
      LEFT JOIN custom_quizzes cq ON cq.id = a.custom_quiz_id
-     LEFT JOIN LATERAL (
-       SELECT jsonb_agg(
-         jsonb_build_object(
-           'subjectId', subj.id,
-           'name', subj.name,
-           'slug', subj.slug,
-           'totalQuestions', qb.question_count,
-           'correctCount', qb.correct_count,
-           'scorePercent', qb.score_percent
-         )
-         ORDER BY qb.score_percent DESC, qb.question_count DESC, subj.name
-       ) AS subject_scores
-       FROM (
-         SELECT qn.subject_id,
-                COUNT(*)::int AS question_count,
-                CASE
-                  WHEN MAX(CASE WHEN aa.attempt_id IS NOT NULL THEN 1 ELSE 0 END) = 1
-                  THEN COALESCE(
-                    SUM(CASE WHEN aa.is_correct IS TRUE THEN 1 ELSE 0 END),
-                    0
-                  )::int
-                  WHEN COALESCE(a.total_questions, 0) <= 0
-                  THEN 0
-                  ELSE ROUND(
-                    COUNT(*)::numeric
-                    * COALESCE(a.correct_count, 0)::numeric
-                    / NULLIF(a.total_questions, 0)::numeric
-                  )::int
-                END AS correct_count,
-                CASE
-                  WHEN MAX(CASE WHEN aa.attempt_id IS NOT NULL THEN 1 ELSE 0 END) = 1
-                  THEN CASE
-                    WHEN COALESCE(
-                      SUM(COALESCE(qq.score, qn.default_score)),
-                      0
-                    )::numeric <= 0
-                    THEN 0
-                    ELSE ROUND(
-                      COALESCE(SUM(aa.awarded_score), 0)::numeric
-                      / COALESCE(
-                        SUM(COALESCE(qq.score, qn.default_score)),
-                        0
-                      )::numeric
-                      * 100,
-                      2
-                    )
-                  END
-                  ELSE CASE
-                    WHEN COUNT(*) <= 0 OR COALESCE(a.total_questions, 0) <= 0
-                    THEN 0
-                    ELSE ROUND(
-                      ROUND(
-                        COUNT(*)::numeric
-                        * COALESCE(a.correct_count, 0)::numeric
-                        / NULLIF(a.total_questions, 0)::numeric
-                      )::numeric
-                      / COUNT(*)::numeric
-                      * 100,
-                      2
-                    )
-                  END
-                END AS score_percent
-         FROM quiz_questions qq
-         JOIN questions qn ON qn.id = qq.question_id
-         LEFT JOIN attempt_answers aa
-           ON aa.attempt_id = a.id
-          AND aa.question_id = qq.question_id
-         WHERE qq.quiz_id = a.quiz_id
-         GROUP BY qn.subject_id
-       ) qb
-       JOIN subjects subj ON subj.id = qb.subject_id
-      ) ss ON a.snapshot_subject_scores IS NULL
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
      ORDER BY a.started_at DESC
-     LIMIT $${values.length - 1} OFFSET $${values.length}`,
-    values,
+     LIMIT $${pageValues.length - 1} OFFSET $${pageValues.length}`,
+    pageValues,
   );
 
   const items = res.rows.map(mapAttemptHistoryRow);
-  const total = res.rows.length ? Number(res.rows[0].total_count) : 0;
   return { items, total };
 }
 
@@ -975,15 +901,16 @@ export async function listAttemptQuestions(
   );
 }
 
-function mapAttemptHistoryRow(row: AttemptHistoryRow): AttemptHistoryItem {
+function mapAttemptHistoryRow(
+  row: AttemptHistoryRow,
+): Omit<AttemptHistoryItem, "quizExists" | "canRedo"> {
   return {
     attemptId: row.id,
     quizId: row.quiz_id,
-    quizExists: row.quiz_exists,
     quizTitle: row.quiz_title ?? null,
     quizDifficulty: clampDifficulty(row.quiz_difficulty_level),
     quizEstimatedTimeSeconds: row.quiz_estimated_time_seconds,
-    isChallenge: row.quiz_is_challenge ?? false,
+    isChallenge: row.is_challenge,
     subjectScoresEstimated: row.subject_scores_estimated,
     subjectScores: (row.subject_scores ?? []).map((item) => ({
       subjectId: item.subjectId,

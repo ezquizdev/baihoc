@@ -156,7 +156,7 @@ export function AttemptHistoryCard({ item }: { item: AttemptHistoryItem }) {
           >
             Xem kết quả
           </Link>
-          {item.quizExists ? (
+          {item.canRedo ? (
             <Link
               className={styles.secondaryAction}
               href={`/quizzes/${item.quizId}/attempt`}
@@ -165,7 +165,7 @@ export function AttemptHistoryCard({ item }: { item: AttemptHistoryItem }) {
             </Link>
           ) : (
             <span className={styles.secondaryActionDisabled} aria-disabled>
-              Không thể làm lại
+              {item.quizExists ? "Quiz đã được lưu trữ" : "Không thể làm lại"}
             </span>
           )}
         </div>

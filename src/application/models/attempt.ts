@@ -115,6 +115,7 @@ export type AttemptHistoryItem = {
   attemptId: string;
   quizId: string;
   quizExists: boolean;
+  canRedo: boolean;
   quizTitle: string | null;
   quizDifficulty: DifficultyLevel;
   quizEstimatedTimeSeconds: number | null;

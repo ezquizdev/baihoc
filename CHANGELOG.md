@@ -14,6 +14,10 @@
 - Staff hard-delete now returns 409 when any attempt is `in_progress` (archive remains allowed).
 - Deleting a quiz with completed attempts now backfills snapshot metadata and `attempt_question_snapshots` so history/results stay viewable after quiz deletion.
 
+### perf(attempt): snapshot-first history and redo gating
+- Attempt history listing now reads from `attempts.snapshot_*` (avoids quiz joins and heavy per-request subject-score recomputation).
+- History entries now include `canRedo` so students can’t redo archived quizzes (but can still view results/history).
+
 ### fix(catalog): hide custom quizzes from catalog APIs
 - Custom quizzes are now excluded from quiz catalog listing and return 404 from the catalog quiz detail endpoint.
 

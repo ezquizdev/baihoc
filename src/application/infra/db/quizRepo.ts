@@ -726,6 +726,17 @@ export async function hasInProgressAttempts(quizId: string) {
   return Boolean(res.rows[0]?.exists);
 }
 
+export async function listQuizStatusesByIds(quizIds: string[]) {
+  if (!quizIds.length) return [];
+  const res = await query<{ id: string; status: QuizStatus }>(
+    `SELECT id, status
+     FROM quizzes
+     WHERE id = ANY($1::uuid[])`,
+    [quizIds],
+  );
+  return res.rows;
+}
+
 export async function deleteQuiz(quizId: string) {
   await withTransaction(async (client) => {
     await client.query(`DELETE FROM quiz_questions WHERE quiz_id = $1`, [
