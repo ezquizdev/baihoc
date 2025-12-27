@@ -30,6 +30,9 @@
 - Replaced remaining `window.confirm` / `window.prompt` usage with in-app modals across staff screens.
 - Quiz builder “Tạo câu hỏi mới” now uses a normal link (avoids `window.open`).
 
+### fix(attempt): replace browser leave prompts with in-app modal
+- In-progress attempt navigation warnings no longer use browser dialogs (`beforeunload`/`confirm`); leaving now uses an in-app modal.
+
 ### feat(staff-dashboard): add charts
 - Added staff dashboard line charts for answer frequency + accuracy by subject over a configurable time window.
 - Added repo/service/controller support for daily subject answer aggregates.
