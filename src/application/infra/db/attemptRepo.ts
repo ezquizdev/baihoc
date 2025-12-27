@@ -80,6 +80,7 @@ type AttemptReviewQuestionRow = {
   question_type: QuestionType;
   question_exists: boolean;
   stem: string | null;
+  explanation: string | null;
   passage_id: string | null;
   passage_content: string | null;
   passage_media_urls: string[] | null;
@@ -92,6 +93,17 @@ type AttemptOptionRow = {
   label: string | null;
   text: string;
   position: number;
+};
+
+type AttemptReviewOptionRow = AttemptOptionRow & {
+  is_correct: boolean;
+};
+
+type AttemptReviewShortAnswerKeyRow = {
+  id: string;
+  question_id: string;
+  acceptable_answer: string;
+  case_sensitive: boolean;
 };
 
 type QuizAttemptMetaRow = {
@@ -789,6 +801,7 @@ export async function listAttemptReviewQuestions(
             qs.question_type,
             (q.id IS NOT NULL) AS question_exists,
             q.stem,
+            q.explanation,
             qp.passage_id,
             qp.position AS passage_position,
             p.content AS passage_content,
@@ -805,16 +818,17 @@ export async function listAttemptReviewQuestions(
 
   const questionIds = questionRes.rows.map((row) => row.question_id);
   const optionRes = questionIds.length
-    ? await query<AttemptOptionRow>(
-        `SELECT id, question_id, label, text, position
+    ? await query<AttemptReviewOptionRow>(
+        `SELECT id, question_id, label, text, position, is_correct
          FROM question_options
          WHERE question_id = ANY($1)
          ORDER BY question_id, position`,
         [questionIds],
       )
-    : { rows: [] as AttemptOptionRow[] };
+    : { rows: [] as AttemptReviewOptionRow[] };
 
   const optionsByQuestion = new Map<string, AttemptQuestionOption[]>();
+  const correctOptionIdsByQuestion = new Map<string, string[]>();
   optionRes.rows.forEach((row) => {
     const list = optionsByQuestion.get(row.question_id) ?? [];
     list.push({
@@ -824,6 +838,35 @@ export async function listAttemptReviewQuestions(
       position: row.position,
     });
     optionsByQuestion.set(row.question_id, list);
+
+    if (row.is_correct) {
+      const correctList = correctOptionIdsByQuestion.get(row.question_id) ?? [];
+      correctList.push(row.id);
+      correctOptionIdsByQuestion.set(row.question_id, correctList);
+    }
+  });
+
+  const shortAnswerRes = questionIds.length
+    ? await query<AttemptReviewShortAnswerKeyRow>(
+        `SELECT id, question_id, acceptable_answer, case_sensitive
+         FROM short_answer_keys
+         WHERE question_id = ANY($1)
+         ORDER BY question_id, id`,
+        [questionIds],
+      )
+    : { rows: [] as AttemptReviewShortAnswerKeyRow[] };
+
+  const shortAnswerKeysByQuestion = new Map<
+    string,
+    Array<{ acceptableAnswer: string; caseSensitive: boolean }>
+  >();
+  shortAnswerRes.rows.forEach((row) => {
+    const list = shortAnswerKeysByQuestion.get(row.question_id) ?? [];
+    list.push({
+      acceptableAnswer: row.acceptable_answer,
+      caseSensitive: row.case_sensitive,
+    });
+    shortAnswerKeysByQuestion.set(row.question_id, list);
   });
 
   return questionRes.rows.map((row) => ({
@@ -832,6 +875,9 @@ export async function listAttemptReviewQuestions(
     type: row.question_type,
     exists: row.question_exists,
     stem: row.stem,
+    explanation: row.explanation ?? null,
+    correctOptionIds: correctOptionIdsByQuestion.get(row.question_id) ?? [],
+    shortAnswerKeys: shortAnswerKeysByQuestion.get(row.question_id) ?? [],
     passage: row.passage_id
       ? {
           id: row.passage_id,
@@ -841,6 +887,76 @@ export async function listAttemptReviewQuestions(
         }
       : null,
     options: optionsByQuestion.get(row.question_id) ?? [],
+  }));
+}
+
+export async function listQuestionReviewDetails(questionIds: string[]): Promise<
+  Array<{
+    questionId: string;
+    explanation: string | null;
+    correctOptionIds: string[];
+    shortAnswerKeys: Array<{
+      acceptableAnswer: string;
+      caseSensitive: boolean;
+    }>;
+  }>
+> {
+  if (!questionIds.length) return [];
+  const uniqueQuestionIds = Array.from(new Set(questionIds));
+
+  const [explanationRes, optionRes, shortAnswerRes] = await Promise.all([
+    query<{ id: string; explanation: string | null }>(
+      `SELECT id, explanation
+       FROM questions
+       WHERE id = ANY($1)`,
+      [uniqueQuestionIds],
+    ),
+    query<{ id: string; question_id: string; is_correct: boolean }>(
+      `SELECT id, question_id, is_correct
+       FROM question_options
+       WHERE question_id = ANY($1)
+       ORDER BY question_id, position`,
+      [uniqueQuestionIds],
+    ),
+    query<AttemptReviewShortAnswerKeyRow>(
+      `SELECT id, question_id, acceptable_answer, case_sensitive
+       FROM short_answer_keys
+       WHERE question_id = ANY($1)
+       ORDER BY question_id, id`,
+      [uniqueQuestionIds],
+    ),
+  ]);
+
+  const explanationById = new Map(
+    explanationRes.rows.map((row) => [row.id, row.explanation ?? null]),
+  );
+
+  const correctOptionIdsByQuestion = new Map<string, string[]>();
+  optionRes.rows.forEach((row) => {
+    if (!row.is_correct) return;
+    const list = correctOptionIdsByQuestion.get(row.question_id) ?? [];
+    list.push(row.id);
+    correctOptionIdsByQuestion.set(row.question_id, list);
+  });
+
+  const shortAnswerKeysByQuestion = new Map<
+    string,
+    Array<{ acceptableAnswer: string; caseSensitive: boolean }>
+  >();
+  shortAnswerRes.rows.forEach((row) => {
+    const list = shortAnswerKeysByQuestion.get(row.question_id) ?? [];
+    list.push({
+      acceptableAnswer: row.acceptable_answer,
+      caseSensitive: row.case_sensitive,
+    });
+    shortAnswerKeysByQuestion.set(row.question_id, list);
+  });
+
+  return uniqueQuestionIds.map((questionId) => ({
+    questionId,
+    explanation: explanationById.get(questionId) ?? null,
+    correctOptionIds: correctOptionIdsByQuestion.get(questionId) ?? [],
+    shortAnswerKeys: shortAnswerKeysByQuestion.get(questionId) ?? [],
   }));
 }
 

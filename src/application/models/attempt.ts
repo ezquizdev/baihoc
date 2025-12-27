@@ -74,6 +74,14 @@ export type AttemptReviewQuestion = {
   stem: string | null;
   passage: AttemptPassage | null;
   options: AttemptQuestionOption[];
+  explanation: string | null;
+  correctOptionIds: string[];
+  shortAnswerKeys: AttemptReviewShortAnswerKey[];
+};
+
+export type AttemptReviewShortAnswerKey = {
+  acceptableAnswer: string;
+  caseSensitive: boolean;
 };
 
 export type AttemptReviewStateResponse = {

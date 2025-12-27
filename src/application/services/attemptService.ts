@@ -14,6 +14,7 @@ import {
   listAttemptHistory as listAttemptHistoryRepo,
   listAttemptReviewQuestions,
   listAttemptSnapshotQuestionIds,
+  listQuestionReviewDetails,
   listQuizGradingData,
   listQuizGradingDataByQuestionIds,
   listQuizQuestionMetaByIds,
@@ -165,7 +166,7 @@ export async function getAttemptReviewState(
   ]);
 
   const reviewMode = snapshotQuestions.length ? "snapshot" : "legacy";
-  const questions =
+  let questions =
     reviewMode === "snapshot"
       ? snapshotQuestions
       : await (async () => {
@@ -177,10 +178,28 @@ export async function getAttemptReviewState(
             type: question.type,
             exists: true,
             stem: question.stem,
+            explanation: null,
+            correctOptionIds: [],
+            shortAnswerKeys: [],
             passage: question.passage,
             options: question.options,
           }));
         })();
+
+  if (reviewMode === "legacy" && questions.length) {
+    const details = await listQuestionReviewDetails(questions.map((q) => q.id));
+    const detailsById = new Map(details.map((row) => [row.questionId, row]));
+    questions = questions.map((question) => {
+      const detail = detailsById.get(question.id);
+      if (!detail) return question;
+      return {
+        ...question,
+        explanation: detail.explanation,
+        correctOptionIds: detail.correctOptionIds,
+        shortAnswerKeys: detail.shortAnswerKeys,
+      };
+    });
+  }
 
   const quizContentHashSnapshot =
     meta.attemptRow.quiz_content_hash_snapshot ?? null;
