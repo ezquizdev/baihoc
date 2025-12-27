@@ -410,7 +410,6 @@ export function ManageQuizScreen({
             initial={leaderboard}
             maxRows={leaderboardMaxRows}
             includeSelf={leaderboardIncludeSelf}
-            showScopeSelect={false}
           />
         </section>
       </div>

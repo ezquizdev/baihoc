@@ -3,33 +3,41 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LeaderboardResult } from "@/application/models/leaderboard";
-import type { Subject } from "@/application/models/subject";
 import styles from "./quiz-leaderboard.module.css";
 
 type QuizLeaderboardProps = {
   initial: LeaderboardResult;
   maxRows: number;
   includeSelf: boolean;
-  subjects?: Subject[];
-  showScopeSelect?: boolean;
+  subjectId?: string | null;
+  title?: string;
+  actionLabel?: string;
+  actionHref?: Parameters<typeof Link>[0]["href"];
+  onActionClick?: () => void;
+  sticky?: boolean;
+  className?: string;
 };
 
 export function QuizLeaderboard({
   initial,
   maxRows,
   includeSelf,
-  subjects = [],
-  showScopeSelect = true,
+  subjectId,
+  title,
+  actionLabel,
+  actionHref,
+  onActionClick,
+  sticky = true,
+  className,
 }: QuizLeaderboardProps) {
   const didMountRef = useRef(false);
   const requestIdRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
-  const [subjectId, setSubjectId] = useState<string | null>(null);
   const [data, setData] = useState<LeaderboardResult>(initial);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const hasScopeSelect = showScopeSelect && subjects.length > 0;
+  const normalizedSubjectId = subjectId ?? null;
 
   const fetchLeaderboard = useCallback(
     async (nextSubjectId: string | null) => {
@@ -83,8 +91,8 @@ export function QuizLeaderboard({
       didMountRef.current = true;
       return;
     }
-    fetchLeaderboard(subjectId);
-  }, [fetchLeaderboard, subjectId]);
+    fetchLeaderboard(normalizedSubjectId);
+  }, [fetchLeaderboard, normalizedSubjectId]);
 
   const shouldAppendSelf =
     includeSelf &&
@@ -92,24 +100,26 @@ export function QuizLeaderboard({
     !data.items.some((entry) => entry.userId === data.self?.userId);
 
   return (
-    <aside className={styles.card} aria-label="Leaderboard">
-      {hasScopeSelect ? (
-        <div className={styles.toolbar}>
-          <label className={styles.scopeSelect}>
-            <span className={styles.srOnly}>Phạm vi leaderboard</span>
-            <select
-              value={subjectId ?? ""}
-              onChange={(e) => setSubjectId(e.target.value || null)}
-              disabled={loading}
+    <aside
+      className={`${styles.card} ${sticky ? styles.cardSticky : ""} ${className ?? ""}`}
+      aria-label={title ?? "Leaderboard"}
+    >
+      {title || actionLabel ? (
+        <div className={styles.header}>
+          {title ? <h3 className={styles.title}>{title}</h3> : <div />}
+          {actionLabel && actionHref ? (
+            <Link className={styles.action} href={actionHref}>
+              {actionLabel}
+            </Link>
+          ) : actionLabel && onActionClick ? (
+            <button
+              type="button"
+              className={styles.action}
+              onClick={onActionClick}
             >
-              <option value="">Tổng</option>
-              {subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              {actionLabel}
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -132,7 +142,7 @@ export function QuizLeaderboard({
                   <button
                     type="button"
                     className={styles.retryButton}
-                    onClick={() => fetchLeaderboard(subjectId)}
+                    onClick={() => fetchLeaderboard(normalizedSubjectId)}
                     disabled={loading}
                   >
                     Thử lại

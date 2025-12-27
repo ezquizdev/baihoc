@@ -423,7 +423,7 @@
 
 .catalog {
   display: grid;
-  grid-template-columns: 1fr 260px;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 340px);
   gap: 16px;
   align-items: start;
 }

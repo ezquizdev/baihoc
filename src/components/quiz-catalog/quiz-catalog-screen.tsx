@@ -66,6 +66,8 @@ export function QuizCatalogScreen({
   const initialLoadRef = useRef(true);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const leaderboardSubjectId =
+    selectedSubjectIds.length === 1 ? selectedSubjectIds[0] : null;
 
   useEffect(() => {
     if (page > totalPages) {
@@ -259,7 +261,7 @@ export function QuizCatalogScreen({
             initial={leaderboard}
             maxRows={leaderboardMaxRows}
             includeSelf={leaderboardIncludeSelf}
-            subjects={subjects}
+            subjectId={leaderboardSubjectId}
           />
         </section>
       </div>
