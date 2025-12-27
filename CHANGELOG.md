@@ -30,6 +30,18 @@
 ### chore(test): mock db transactions in user admin unit tests
 - Prevents accidental network DB connections during unit tests by mocking `withTransaction`.
 
+### fix(profile): clear avatar persists null
+- Clearing an avatar now stores `NULL` (instead of an empty string) so the UI falls back to the default placeholder correctly.
+
+### fix(auth): validate session role
+- Session parsing now enforces `student|staff` roles and clears invalid sessions.
+
+### fix(a11y): add username field for password forms
+- Password change forms now include a hidden `username` field so browsers/password managers can associate credentials correctly.
+
+### refactor(profile): reuse study time formatter
+- Deduplicated the profile study time display by moving the formatter into `src/lib/formatters.ts`.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
