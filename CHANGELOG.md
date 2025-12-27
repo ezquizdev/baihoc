@@ -23,6 +23,9 @@
 ### fix(staff): validate challenge schedule timestamps
 - Staff quiz APIs now validate `challenge.startAt/endAt` as ISO datetimes and reject invalid/illogical schedules.
 
+### fix(next): derive server actions allowed origins from app URL
+- `experimental.serverActions.allowedOrigins` now derives from `NEXT_PUBLIC_APP_URL` instead of being hard-coded to localhost.
+
 ### feat(profile): refresh profile UI
 - Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
 - Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
