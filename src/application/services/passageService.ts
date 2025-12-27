@@ -25,10 +25,12 @@ export async function updatePassage(
     throw new Error("Passage content is required");
   }
 
+  const mediaUrls = input.mediaUrls.map((url) => url.trim()).filter(Boolean);
+
   const updated = await updatePassageById({
     passageId,
     content: input.content.trim(),
-    mediaUrls: input.mediaUrls,
+    mediaUrls,
   });
 
   if (!updated) {

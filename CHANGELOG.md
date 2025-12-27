@@ -36,6 +36,10 @@
 - Saving a question with a passage now routes to `/staff/questions/passages/[passageId]` to avoid duplicating passages on repeated saves.
 - Save is now disabled when passage content/position is invalid.
 
+### fix(staff): require mediaUrls for passage updates
+- `PATCH /api/staff/passages/[passageId]` now requires `mediaUrls` (avoids accidental clearing when omitted).
+- Passage `mediaUrls` are trimmed server-side.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors

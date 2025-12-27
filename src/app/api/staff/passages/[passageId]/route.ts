@@ -8,7 +8,7 @@ import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 
 const updateSchema = z.object({
   content: z.string().min(1),
-  mediaUrls: z.array(z.string()).optional(),
+  mediaUrls: z.array(z.string()),
 });
 
 type Params = { passageId: string };
