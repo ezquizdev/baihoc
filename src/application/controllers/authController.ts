@@ -1,6 +1,7 @@
 import type { UserRow } from "@/application/infra/db/userRepo";
 import type { SessionUser, User } from "@/application/models/user";
 import {
+  changePasswordForUser,
   completeProfile,
   googleLogin,
   googleRegister,
@@ -109,6 +110,19 @@ export async function controllerResetPassword(
   newPassword: string,
 ) {
   await resetPasswordWithToken(token, newPassword);
+}
+
+export async function controllerChangePassword(input: {
+  userId: string;
+  currentPassword?: string | null;
+  newPassword: string;
+  newPasswordConfirm?: string;
+}) {
+  await changePasswordForUser(input.userId, {
+    currentPassword: input.currentPassword ?? null,
+    newPassword: input.newPassword,
+    newPasswordConfirm: input.newPasswordConfirm,
+  });
 }
 
 export async function controllerVerifyEmail(token: string) {

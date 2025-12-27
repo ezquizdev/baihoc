@@ -130,6 +130,26 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM users WHERE btrim(full_name) = '') THEN
+    UPDATE users
+    SET full_name = split_part(email::text, '@', 1)
+    WHERE btrim(full_name) = '';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'users_full_name_not_blank'
+      AND conrelid = 'users'::regclass
+  ) THEN
+    ALTER TABLE users
+    ADD CONSTRAINT users_full_name_not_blank
+    CHECK (length(btrim(full_name)) > 0);
+  END IF;
+END $$;
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth_identity
 ON users(oauth_provider, oauth_sub)
 WHERE oauth_provider IS NOT NULL AND oauth_sub IS NOT NULL;
@@ -442,6 +462,312 @@ CREATE INDEX IF NOT EXISTS idx_xp_events_quiz_id
 ON xp_events(((metadata->>'quizId')::uuid))
 WHERE metadata ? 'quizId'
   AND (metadata->>'quizId') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
+
+-- Denormalized XP totals (for fast leaderboards)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'users'
+      AND column_name = 'xp_total'
+  ) THEN
+    ALTER TABLE users
+    ADD COLUMN xp_total integer NOT NULL DEFAULT 0;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_users_role_status_xp_total
+ON users(role, status, xp_total DESC, id ASC);
+
+-- Denormalized main-subject totals (for sortable leaderboard tables)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'users'
+      AND column_name = 'xp_vi'
+  ) THEN
+    ALTER TABLE users ADD COLUMN xp_vi integer NOT NULL DEFAULT 0;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'users'
+      AND column_name = 'xp_en'
+  ) THEN
+    ALTER TABLE users ADD COLUMN xp_en integer NOT NULL DEFAULT 0;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'users'
+      AND column_name = 'xp_math'
+  ) THEN
+    ALTER TABLE users ADD COLUMN xp_math integer NOT NULL DEFAULT 0;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'users'
+      AND column_name = 'xp_sci'
+  ) THEN
+    ALTER TABLE users ADD COLUMN xp_sci integer NOT NULL DEFAULT 0;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'users'
+      AND column_name = 'xp_main_total'
+  ) THEN
+    ALTER TABLE users ADD COLUMN xp_main_total integer NOT NULL DEFAULT 0;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_users_role_status_xp_main_total
+ON users(role, status, xp_main_total DESC, id ASC);
+
+CREATE INDEX IF NOT EXISTS idx_users_role_status_xp_vi
+ON users(role, status, xp_vi DESC, id ASC);
+
+CREATE INDEX IF NOT EXISTS idx_users_role_status_xp_en
+ON users(role, status, xp_en DESC, id ASC);
+
+CREATE INDEX IF NOT EXISTS idx_users_role_status_xp_math
+ON users(role, status, xp_math DESC, id ASC);
+
+CREATE INDEX IF NOT EXISTS idx_users_role_status_xp_sci
+ON users(role, status, xp_sci DESC, id ASC);
+
+CREATE TABLE IF NOT EXISTS user_subject_xp_totals (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  subject_id uuid NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  xp_total integer NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, subject_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_subject_xp_totals_subject_xp
+ON user_subject_xp_totals(subject_id, xp_total DESC, user_id ASC);
+
+CREATE OR REPLACE FUNCTION apply_xp_event_totals()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  quiz_id uuid;
+  abs_amount integer;
+  sign integer;
+BEGIN
+  -- Always keep the overall total exact.
+  UPDATE users
+  SET xp_total = xp_total + NEW.amount
+  WHERE id = NEW.user_id;
+
+  -- Only allocate to subjects when a valid quizId is present.
+  IF NEW.metadata ? 'quizId'
+     AND (NEW.metadata->>'quizId') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+  THEN
+    quiz_id := (NEW.metadata->>'quizId')::uuid;
+    sign := CASE WHEN NEW.amount < 0 THEN -1 ELSE 1 END;
+    abs_amount := abs(NEW.amount);
+
+    WITH subject_counts AS (
+      SELECT q.subject_id,
+             s.slug,
+             COUNT(*)::int AS cnt
+      FROM quiz_questions qq
+      JOIN questions q ON q.id = qq.question_id
+      JOIN subjects s ON s.id = q.subject_id
+      WHERE qq.quiz_id = quiz_id
+      GROUP BY q.subject_id, s.slug
+    ),
+    totals AS (
+      SELECT COALESCE(SUM(cnt), 0)::int AS total_cnt
+      FROM subject_counts
+    ),
+    raw AS (
+      SELECT sc.subject_id,
+             sc.slug,
+             (abs_amount::numeric * sc.cnt / NULLIF(t.total_cnt, 0)) AS raw_xp,
+             FLOOR(abs_amount::numeric * sc.cnt / NULLIF(t.total_cnt, 0))::int AS base_xp
+      FROM subject_counts sc
+      CROSS JOIN totals t
+    ),
+    base_sum AS (
+      SELECT COALESCE(SUM(base_xp), 0)::int AS base_sum
+      FROM raw
+    ),
+    ranked AS (
+      SELECT r.subject_id,
+             r.slug,
+             r.base_xp,
+             (r.raw_xp - r.base_xp)::numeric AS frac,
+             ROW_NUMBER() OVER (
+               ORDER BY (r.raw_xp - r.base_xp) DESC, r.subject_id ASC
+             ) AS frac_rank,
+             (SELECT base_sum FROM base_sum) AS base_sum
+      FROM raw r
+    ),
+	    allocated AS (
+	      SELECT ranked.subject_id,
+	             ranked.slug,
+	             ((ranked.base_xp +
+	               CASE
+	                 WHEN ranked.frac_rank <= (abs_amount - ranked.base_sum) THEN 1
+	                 ELSE 0
+	               END) * sign)::int AS allocated_xp
+	      FROM ranked
+	      WHERE (ranked.base_xp > 0)
+	         OR (ranked.frac_rank <= (abs_amount - ranked.base_sum))
+	    )
+	    , upserted AS (
+	      INSERT INTO user_subject_xp_totals (user_id, subject_id, xp_total)
+	      SELECT NEW.user_id,
+	             allocated.subject_id,
+	             allocated.allocated_xp
+	      FROM allocated
+	      ON CONFLICT (user_id, subject_id)
+	      DO UPDATE SET xp_total = user_subject_xp_totals.xp_total + EXCLUDED.xp_total
+	      RETURNING 1
+	    ),
+	    sums AS (
+	      SELECT COALESCE(SUM(CASE WHEN allocated.slug = 'vi' THEN allocated.allocated_xp END), 0)::int AS add_vi,
+	             COALESCE(SUM(CASE WHEN allocated.slug = 'en' THEN allocated.allocated_xp END), 0)::int AS add_en,
+	             COALESCE(SUM(CASE WHEN allocated.slug = 'math' THEN allocated.allocated_xp END), 0)::int AS add_math,
+	             COALESCE(SUM(CASE WHEN allocated.slug = 'sci' THEN allocated.allocated_xp END), 0)::int AS add_sci,
+	             COALESCE(SUM(CASE WHEN allocated.slug IN ('vi', 'en', 'math', 'sci') THEN allocated.allocated_xp END), 0)::int AS add_main_total
+	      FROM allocated
+	    ),
+	    gate AS (
+	      SELECT 1 AS ok FROM upserted LIMIT 1
+	    )
+	    UPDATE users
+	    SET xp_vi = xp_vi + sums.add_vi,
+	        xp_en = xp_en + sums.add_en,
+	        xp_math = xp_math + sums.add_math,
+	        xp_sci = xp_sci + sums.add_sci,
+	        xp_main_total = xp_main_total + sums.add_main_total
+	    FROM sums, gate
+	    WHERE users.id = NEW.user_id;
+	  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'trg_xp_events_apply_totals'
+  ) THEN
+    CREATE TRIGGER trg_xp_events_apply_totals
+    AFTER INSERT ON xp_events
+    FOR EACH ROW
+    EXECUTE FUNCTION apply_xp_event_totals();
+  END IF;
+END $$;
+
+-- One-time backfill when totals are newly introduced (best-effort, idempotent)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM xp_events LIMIT 1)
+     AND COALESCE((SELECT MAX(xp_total) FROM users), 0) = 0
+  THEN
+    UPDATE users u
+    SET xp_total = COALESCE(t.xp_total, 0)
+    FROM (
+      SELECT user_id, SUM(amount)::int AS xp_total
+      FROM xp_events
+      GROUP BY user_id
+    ) t
+    WHERE u.id = t.user_id;
+
+    UPDATE users u
+    SET xp_total = 0
+    WHERE NOT EXISTS (
+      SELECT 1 FROM xp_events x WHERE x.user_id = u.id
+    );
+
+    -- Rebuild subject totals using the same proportional allocation approach.
+    -- Note: this is approximate for historical events; new events are allocated exactly via trigger.
+    TRUNCATE TABLE user_subject_xp_totals;
+    WITH quiz_xp AS (
+      SELECT x.user_id,
+             x.amount,
+             (x.metadata->>'quizId')::uuid AS quiz_id
+      FROM xp_events x
+      WHERE x.metadata ? 'quizId'
+        AND (x.metadata->>'quizId') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    ),
+    quiz_subject_counts AS (
+      SELECT qq.quiz_id,
+             q.subject_id,
+             COUNT(*)::int AS subject_question_count
+      FROM quiz_questions qq
+      JOIN questions q ON q.id = qq.question_id
+      GROUP BY qq.quiz_id, q.subject_id
+    ),
+    quiz_total_counts AS (
+      SELECT quiz_id,
+             SUM(subject_question_count)::int AS total_question_count
+      FROM quiz_subject_counts
+      GROUP BY quiz_id
+    ),
+    allocations AS (
+      SELECT qx.user_id,
+             qsc.subject_id,
+             (qx.amount::numeric * qsc.subject_question_count / NULLIF(qtc.total_question_count, 0)) AS allocated_xp
+      FROM quiz_xp qx
+      JOIN quiz_subject_counts qsc ON qsc.quiz_id = qx.quiz_id
+      JOIN quiz_total_counts qtc ON qtc.quiz_id = qsc.quiz_id
+    )
+    INSERT INTO user_subject_xp_totals (user_id, subject_id, xp_total)
+    SELECT user_id,
+           subject_id,
+           ROUND(SUM(allocated_xp))::int AS xp_total
+    FROM allocations
+    GROUP BY user_id, subject_id;
+  END IF;
+END $$;
+
+-- Backfill main-subject totals when introduced (idempotent; uses existing subject totals when present).
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM xp_events LIMIT 1)
+     AND COALESCE((SELECT MAX(xp_main_total) FROM users), 0) = 0
+  THEN
+    WITH totals AS (
+      SELECT u.id AS user_id,
+             COALESCE(MAX(CASE WHEN s.slug = 'vi' THEN ust.xp_total END), 0)::int AS xp_vi,
+             COALESCE(MAX(CASE WHEN s.slug = 'en' THEN ust.xp_total END), 0)::int AS xp_en,
+             COALESCE(MAX(CASE WHEN s.slug = 'math' THEN ust.xp_total END), 0)::int AS xp_math,
+             COALESCE(MAX(CASE WHEN s.slug = 'sci' THEN ust.xp_total END), 0)::int AS xp_sci
+      FROM users u
+      LEFT JOIN user_subject_xp_totals ust ON ust.user_id = u.id
+      LEFT JOIN subjects s ON s.id = ust.subject_id
+      GROUP BY u.id
+    )
+    UPDATE users u
+    SET xp_vi = t.xp_vi,
+        xp_en = t.xp_en,
+        xp_math = t.xp_math,
+        xp_sci = t.xp_sci,
+        xp_main_total = (t.xp_vi + t.xp_en + t.xp_math + t.xp_sci)
+    FROM totals t
+    WHERE u.id = t.user_id;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS leaderboard_snapshots (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -2,6 +2,20 @@
 
 ## 2025-12-27
 
+### feat(profile): refresh profile UI
+- Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
+- Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
+
+### feat(profile): allow viewing student profiles
+- Students can view other students at `/profile/[userId]` (read-only; no edit controls; no AI card).
+- Leaderboard names now link to profile pages.
+
+### feat(profile): simplify staff profile settings
+- Staff `/profile` is now a compact settings view (change name + password only), without student stats/score panels.
+
+### feat(auth): add password change endpoint
+- Added `POST /api/auth/password/change` with current-password verification (and supports setting a password for accounts without one).
+
 ### feat(custom-quiz): generate private custom quizzes
 - Added `POST /api/custom-quizzes` to generate paid-only custom quizzes from topic + difficulty requirements.
 - Generation is atomic and links `custom_quizzes` → generated `quizzes`.
@@ -50,6 +64,18 @@
 
 ### chore(db): narrow passage selects
 - Passage read/update queries now select explicit columns instead of `SELECT *` / `RETURNING *`.
+
+### fix(profile): clear avatar persists null
+- Clearing an avatar now stores `NULL` (instead of an empty string) so the UI falls back to the default placeholder correctly.
+
+### fix(auth): validate session role
+- Session parsing now enforces `student|staff` roles and clears invalid sessions.
+
+### fix(a11y): add username field for password forms
+- Password change forms now include a hidden `username` field so browsers/password managers can associate credentials correctly.
+
+### refactor(profile): reuse study time formatter
+- Deduplicated the profile study time display by moving the formatter into `src/lib/formatters.ts`.
 
 ## 2025-12-26
 

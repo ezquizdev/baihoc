@@ -9,6 +9,14 @@ export function formatDateVi(value?: string | null) {
   return parsed.toLocaleDateString("vi-VN");
 }
 
+export function formatStudyTimeVi(seconds: number) {
+  const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  if (hours <= 0) return `${minutes}m`;
+  return `${hours}h${String(minutes).padStart(2, "0")}`;
+}
+
 export function formatRelativeTimeVi(value?: string | null) {
   if (!value) return "—";
   const parsed = new Date(value);
