@@ -218,8 +218,13 @@ function validateQuizInput(input: CreateQuizInput, partial = false) {
     if (!startAt || !endAt || !timeLimitSeconds) {
       throw new Error("Challenge requires start, end, and time limit");
     }
-    if (new Date(startAt) >= new Date(endAt)) {
-      throw new Error("Challenge end time must be after start time");
+    const startMs = new Date(startAt).getTime();
+    const endMs = new Date(endAt).getTime();
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+      throw new Error("Thời gian challenge không hợp lệ.");
+    }
+    if (startMs >= endMs) {
+      throw new Error("Thời gian kết thúc phải sau thời gian bắt đầu.");
     }
   }
 }

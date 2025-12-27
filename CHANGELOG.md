@@ -20,6 +20,9 @@
 ### fix(auth): pin session JWT algorithm to HS256
 - JWT verification now explicitly allows only `HS256` when reading the session cookie.
 
+### fix(staff): validate challenge schedule timestamps
+- Staff quiz APIs now validate `challenge.startAt/endAt` as ISO datetimes and reject invalid/illogical schedules.
+
 ### feat(profile): refresh profile UI
 - Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
 - Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
