@@ -48,6 +48,16 @@
 }
 
 .rightMeta {
+  position: relative;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.rightMetaInner {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -55,6 +65,7 @@
   color: #2b3b55;
   font-size: 13px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .savingPill {

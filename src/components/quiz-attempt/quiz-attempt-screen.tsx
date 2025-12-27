@@ -626,15 +626,17 @@ export function QuizAttemptScreen({
         <div className={styles.title}>{quizTitle}</div>
 
         <div className={styles.rightMeta}>
-          {savingCount > 0 ? (
-            <span className={styles.savingPill}>Đang lưu...</span>
-          ) : null}
-          {saveError ? (
-            <span className={styles.errorPill}>{saveError}</span>
-          ) : null}
-          {submitError ? (
-            <span className={styles.errorPill}>{submitError}</span>
-          ) : null}
+          <div className={styles.rightMetaInner}>
+            {savingCount > 0 ? (
+              <span className={styles.savingPill}>Đang lưu...</span>
+            ) : null}
+            {saveError ? (
+              <span className={styles.errorPill}>{saveError}</span>
+            ) : null}
+            {submitError ? (
+              <span className={styles.errorPill}>{submitError}</span>
+            ) : null}
+          </div>
         </div>
       </div>
 
