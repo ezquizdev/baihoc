@@ -47,6 +47,10 @@
 - Results page now shows each question with all options, your choice(s), correct answer(s), and explanation (with a quick show/hide toggle).
 - Updated layout to match the dashboard theme and added clearer summary/actions.
 
+### fix(ui): simplify attempt results header
+- Results header no longer shows the attempt status.
+- Explanation toggles now use native `<details>/<summary>` (less client JS), and server-rendered icons use inline SVG for RSC compatibility.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors

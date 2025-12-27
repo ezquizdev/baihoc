@@ -320,6 +320,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.explanationHeader::-webkit-details-marker {
+  display: none;
+}
+
+.explanationHeader::marker {
+  content: "";
+}
+
+.explanationHeader:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+  border-radius: 14px;
 }
 
 .explanationToggle {
@@ -332,7 +349,6 @@
   text-transform: uppercase;
   padding: 6px 10px;
   border-radius: 999px;
-  cursor: pointer;
   transition:
     transform 120ms ease,
     background 120ms ease,
@@ -340,16 +356,23 @@
     box-shadow 120ms ease;
 }
 
-.explanationToggle:hover {
+.explanationHeader:hover .explanationToggle {
   transform: translateY(-1px);
   background: rgba(40, 104, 230, 0.12);
   border-color: rgba(40, 104, 230, 0.35);
   box-shadow: 0 10px 20px rgba(26, 46, 93, 0.08);
 }
 
-.explanationToggle:focus-visible {
-  outline: 3px solid rgba(40, 104, 230, 0.28);
-  outline-offset: 2px;
+.explanationToggleLabelOpen {
+  display: none;
+}
+
+.explanation[open] .explanationToggleLabelOpen {
+  display: inline;
+}
+
+.explanation[open] .explanationToggleLabelClosed {
+  display: none;
 }
 
 .explanationBody {

@@ -1,14 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import {
-  CheckCircle,
-  Circle,
-  MinusCircle,
-  WarningCircle,
-  XCircle,
-} from "phosphor-react";
-import { useState } from "react";
+import type { ReactNode } from "react";
 import type {
   AttemptAnswer,
   AttemptReviewQuestion,
@@ -57,9 +48,8 @@ export function AttemptResultsScreen({
         <div className={styles.headerTop}>
           <h1 className={styles.title}>Kết quả: {quizTitle}</h1>
           <p className={styles.subtitle}>
-            Trạng thái: {state.attempt.status} • Đã trả lời {answeredCount}/
-            {state.questions.length} câu • Phiên bản chấm: v
-            {state.judgementVersion}
+            Đã trả lời {answeredCount}/{state.questions.length} câu • Phiên bản
+            chấm: v{state.judgementVersion}
           </p>
         </div>
 
@@ -158,8 +148,6 @@ function QuestionReviewCard({
     question.type === "short_answer"
       ? Boolean(answer?.textAnswer)
       : Boolean(answer?.selectedOptionIds?.length);
-  const [explanationOpen, setExplanationOpen] = useState(true);
-  const explanationId = `explanation-${question.id}`;
 
   return (
     <article className={styles.questionCard}>
@@ -196,25 +184,18 @@ function QuestionReviewCard({
       )}
 
       {question.exists && question.explanation ? (
-        <section className={styles.explanation} aria-label="Giải thích">
-          <div className={styles.explanationHeader}>
-            <div className={styles.explanationTitle}>Giải thích</div>
-            <button
-              type="button"
-              className={styles.explanationToggle}
-              onClick={() => setExplanationOpen((prev) => !prev)}
-              aria-expanded={explanationOpen}
-              aria-controls={explanationId}
-            >
-              {explanationOpen ? "Ẩn" : "Hiện"}
-            </button>
+        <details className={styles.explanation} open>
+          <summary className={styles.explanationHeader}>
+            <span className={styles.explanationTitle}>Giải thích</span>
+            <span className={styles.explanationToggle} aria-hidden="true">
+              <span className={styles.explanationToggleLabelOpen}>Ẩn</span>
+              <span className={styles.explanationToggleLabelClosed}>Hiện</span>
+            </span>
+          </summary>
+          <div className={styles.explanationBody}>
+            <RichText content={question.explanation} allowLinks />
           </div>
-          {explanationOpen ? (
-            <div id={explanationId} className={styles.explanationBody}>
-              <RichText content={question.explanation} allowLinks />
-            </div>
-          ) : null}
-        </section>
+        </details>
       ) : null}
     </article>
   );
@@ -297,33 +278,13 @@ function McqReview({
             .join(" ");
 
           const icon = isCorrect ? (
-            <CheckCircle
-              size={18}
-              weight="fill"
-              aria-hidden="true"
-              style={{ color: "#047857" }}
-            />
+            <CheckCircleIcon size={18} color="#047857" />
           ) : isWrongSelected ? (
-            <XCircle
-              size={18}
-              weight="fill"
-              aria-hidden="true"
-              style={{ color: "#be123c" }}
-            />
+            <XCircleIcon size={18} color="#be123c" />
           ) : isSelectedUnkeyed ? (
-            <WarningCircle
-              size={18}
-              weight="fill"
-              aria-hidden="true"
-              style={{ color: "#8a6a00" }}
-            />
+            <WarningCircleIcon size={18} color="#8a6a00" />
           ) : (
-            <Circle
-              size={18}
-              weight="bold"
-              aria-hidden="true"
-              style={{ color: "#94a3b8" }}
-            />
+            <CircleIcon size={18} color="#94a3b8" />
           );
 
           return (
@@ -400,7 +361,7 @@ function buildBadge(isCorrect: AttemptAnswer["isCorrect"]) {
   if (isCorrect === undefined) {
     return (
       <span className={`${styles.badge} ${styles.badgeNeutral}`}>
-        <MinusCircle size={16} weight="bold" aria-hidden="true" />
+        <MinusCircleIcon size={16} color="#33445f" />
         Chưa chấm
       </span>
     );
@@ -409,7 +370,7 @@ function buildBadge(isCorrect: AttemptAnswer["isCorrect"]) {
   if (isCorrect) {
     return (
       <span className={`${styles.badge} ${styles.badgeCorrect}`}>
-        <CheckCircle size={16} weight="bold" aria-hidden="true" />
+        <CheckCircleIcon size={16} color="#047857" />
         Đúng
       </span>
     );
@@ -417,9 +378,85 @@ function buildBadge(isCorrect: AttemptAnswer["isCorrect"]) {
 
   return (
     <span className={`${styles.badge} ${styles.badgeWrong}`}>
-      <XCircle size={16} weight="bold" aria-hidden="true" />
+      <XCircleIcon size={16} color="#be123c" />
       Sai
     </span>
+  );
+}
+
+type IconProps = {
+  size: number;
+  color: string;
+};
+
+function IconBase({
+  size,
+  color,
+  children,
+}: IconProps & {
+  children: ReactNode;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {children}
+    </svg>
+  );
+}
+
+function CircleIcon({ size, color }: IconProps) {
+  return (
+    <IconBase size={size} color={color}>
+      <circle cx="12" cy="12" r="9" />
+    </IconBase>
+  );
+}
+
+function CheckCircleIcon({ size, color }: IconProps) {
+  return (
+    <IconBase size={size} color={color}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12l2.5 2.5L16 9" />
+    </IconBase>
+  );
+}
+
+function XCircleIcon({ size, color }: IconProps) {
+  return (
+    <IconBase size={size} color={color}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9 9l6 6" />
+      <path d="M15 9l-6 6" />
+    </IconBase>
+  );
+}
+
+function MinusCircleIcon({ size, color }: IconProps) {
+  return (
+    <IconBase size={size} color={color}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8.5 12h7" />
+    </IconBase>
+  );
+}
+
+function WarningCircleIcon({ size, color }: IconProps) {
+  return (
+    <IconBase size={size} color={color}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v6" />
+      <path d="M12 16h.01" />
+    </IconBase>
   );
 }
 
