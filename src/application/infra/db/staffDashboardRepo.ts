@@ -236,3 +236,70 @@ export async function listStudentSubjectXpTotals(
     xpTotal: Number(row.xp_total),
   }));
 }
+
+type DailySubjectAnswerStatsRow = {
+  day: string;
+  subject_slug: string;
+  total_count: number;
+  correct_count: number;
+};
+
+export async function listDailySubjectAnswerStats(
+  windowDays: number,
+  subjectSlugs: string[],
+): Promise<
+  Array<{
+    day: string;
+    subjectSlug: string;
+    totalCount: number;
+    correctCount: number;
+  }>
+> {
+  const res = await query<DailySubjectAnswerStatsRow>(
+    `WITH days AS (
+      SELECT generate_series(
+        date_trunc('day', now())::date - ($1::int - 1),
+        date_trunc('day', now())::date,
+        interval '1 day'
+      )::date AS day
+    ),
+    subject_slugs AS (
+      SELECT unnest($2::text[]) AS subject_slug
+    ),
+    aggregates AS (
+      SELECT date_trunc('day', a.submitted_at)::date AS day,
+             s.slug AS subject_slug,
+             COUNT(*)::int AS total_count,
+             COUNT(*) FILTER (WHERE aa.is_correct = true)::int AS correct_count
+      FROM attempt_answers aa
+      JOIN attempts a ON a.id = aa.attempt_id
+      JOIN questions q ON q.id = aa.question_id
+      JOIN subjects s ON s.id = q.subject_id
+      WHERE a.status IN ('submitted', 'auto_submitted')
+        AND a.submitted_at IS NOT NULL
+        AND a.submitted_at >= date_trunc('day', now()) - (($1::int - 1) * interval '1 day')
+        AND a.submitted_at < date_trunc('day', now()) + interval '1 day'
+        AND aa.auto_saved = false
+        AND aa.is_correct IS NOT NULL
+        AND s.slug = ANY($2::text[])
+      GROUP BY 1, 2
+    )
+    SELECT d.day::text AS day,
+           sl.subject_slug,
+           COALESCE(a.total_count, 0)::int AS total_count,
+           COALESCE(a.correct_count, 0)::int AS correct_count
+    FROM days d
+    CROSS JOIN subject_slugs sl
+    LEFT JOIN aggregates a
+      ON a.day = d.day AND a.subject_slug = sl.subject_slug
+    ORDER BY d.day ASC, sl.subject_slug ASC`,
+    [windowDays, subjectSlugs],
+  );
+
+  return res.rows.map((row) => ({
+    day: row.day,
+    subjectSlug: row.subject_slug,
+    totalCount: row.total_count,
+    correctCount: row.correct_count,
+  }));
+}
