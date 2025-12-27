@@ -31,6 +31,7 @@ import type {
   QuizQuestionSummary,
 } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { NoticeModal } from "@/components/ui/notice-modal";
 import styles from "./manage-quiz-modals.module.css";
 import { QuestionBankPickerModal } from "./question-bank-picker-modal";
@@ -64,6 +65,9 @@ export function QuizBuilderModal({
     title: string;
     message: string;
   } | null>(null);
+  const [removeCandidateId, setRemoveCandidateId] = useState<string | null>(
+    null,
+  );
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,6 +78,7 @@ export function QuizBuilderModal({
     setError(null);
     setBankOpen(false);
     setNotice(null);
+    setRemoveCandidateId(null);
     setActiveQuestionId(null);
   }, [quizId]);
 
@@ -369,14 +374,21 @@ export function QuizBuilderModal({
                 >
                   Chọn câu hỏi từ kho
                 </button>
-                <button
-                  className={`${styles.toolBtn} ${styles.toolYellow}`}
-                  type="button"
-                  onClick={() => window.open("/staff/questions/new", "_blank")}
-                  disabled={toolDisabled}
+                <a
+                  className={`${styles.toolBtn} ${styles.toolYellow} ${
+                    toolDisabled ? styles.toolBtnDisabled : ""
+                  }`}
+                  href="/staff/questions/new"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-disabled={toolDisabled}
+                  tabIndex={toolDisabled ? -1 : undefined}
+                  onClick={(event) => {
+                    if (toolDisabled) event.preventDefault();
+                  }}
                 >
                   Tạo câu hỏi mới
-                </button>
+                </a>
                 <button
                   className={`${styles.toolBtn} ${styles.toolDark}`}
                   type="button"
@@ -419,15 +431,7 @@ export function QuizBuilderModal({
                         index={idx}
                         disabled={toolDisabled}
                         onEdit={() => onEditQuestion(q.id, idx + 1)}
-                        onRemove={() => {
-                          const ok = window.confirm(
-                            "Xóa câu hỏi này khỏi quiz?",
-                          );
-                          if (!ok) return;
-                          setQuestions((prev) =>
-                            prev.filter((item) => item.id !== q.id),
-                          );
-                        }}
+                        onRemove={() => setRemoveCandidateId(q.id)}
                         onScoreChange={(nextScore) => {
                           setQuestions((prev) =>
                             prev.map((item) =>
@@ -522,6 +526,22 @@ export function QuizBuilderModal({
         title={notice?.title ?? ""}
         message={notice?.message ?? ""}
         onClose={() => setNotice(null)}
+      />
+
+      <ConfirmModal
+        open={removeCandidateId !== null}
+        title="Xóa câu hỏi khỏi quiz?"
+        message="Bạn có chắc chắn muốn xóa câu hỏi này khỏi quiz?"
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        confirmVariant="danger"
+        onCancel={() => setRemoveCandidateId(null)}
+        onConfirm={() => {
+          const targetId = removeCandidateId;
+          setRemoveCandidateId(null);
+          if (!targetId) return;
+          setQuestions((prev) => prev.filter((q) => q.id !== targetId));
+        }}
       />
     </div>
   );

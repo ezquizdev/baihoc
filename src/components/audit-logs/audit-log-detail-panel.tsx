@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { AuditLogDetail } from "@/application/models/auditLog";
+import { TextAreaModal } from "@/components/ui/text-area-modal";
 import { formatDateVi, formatRelativeTimeVi } from "@/lib/formatters";
 import styles from "./audit-log-detail-panel.module.css";
 
@@ -18,11 +19,17 @@ export function AuditLogDetailPanel({ logId }: AuditLogDetailPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [copyFallback, setCopyFallback] = useState<{
+    title: string;
+    message: string;
+    value: string;
+  } | null>(null);
 
   useEffect(() => {
     setLog(null);
     setError(null);
     setNotice(null);
+    setCopyFallback(null);
     setLoading(false);
     if (!logId) return;
   }, [logId]);
@@ -95,7 +102,11 @@ export function AuditLogDetailPanel({ logId }: AuditLogDetailPanelProps) {
       await navigator.clipboard.writeText(value);
       setNotice({ tone: "success", message: successMessage });
     } catch {
-      window.prompt("Copy", value);
+      setCopyFallback({
+        title: "Copy thủ công",
+        message: "Không thể copy tự động. Hãy copy nội dung bên dưới.",
+        value,
+      });
     }
   };
 
@@ -163,6 +174,17 @@ export function AuditLogDetailPanel({ logId }: AuditLogDetailPanelProps) {
           Copy metadata
         </button>
       </div>
+
+      <TextAreaModal
+        open={copyFallback !== null}
+        title={copyFallback?.title ?? ""}
+        message={copyFallback?.message}
+        value={copyFallback?.value ?? ""}
+        primaryLabel="Đóng"
+        autoSelect
+        onClose={() => setCopyFallback(null)}
+        onPrimary={() => setCopyFallback(null)}
+      />
 
       <div className={styles.section}>
         <h4 className={styles.sectionTitle}>Tóm tắt</h4>

@@ -12,6 +12,7 @@ import type {
 } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import styles from "./question-editor-screen.module.css";
 
 type QuestionEditorScreenProps =
@@ -73,6 +74,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
   const [status, setStatus] = useState<"active" | "archived">(
     initialQuestion?.status ?? "active",
   );
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const [options, setOptions] = useState<OptionDraft[]>(
     initial ? normalizeOptionDrafts(initial.options) : buildDefaultMcqOptions(),
@@ -269,10 +271,6 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
 
   const doDelete = async () => {
     if (props.mode !== "edit") return;
-    const ok = window.confirm(
-      "Xóa câu hỏi này? Nếu câu hỏi đang được dùng, hệ thống sẽ lưu trữ thay vì xóa.",
-    );
-    if (!ok) return;
     setError(null);
     setNotice(null);
     try {
@@ -353,7 +351,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                   disabled ? styles.btnDisabled : ""
                 }`}
                 disabled={disabled}
-                onClick={doDelete}
+                onClick={() => setDeleteConfirmOpen(true)}
               >
                 Xóa
               </button>
@@ -370,6 +368,21 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
             </button>
           </div>
         </section>
+
+        <ConfirmModal
+          open={deleteConfirmOpen}
+          title="Xóa câu hỏi?"
+          message="Xóa câu hỏi này? Nếu câu hỏi đang được dùng, hệ thống sẽ lưu trữ thay vì xóa."
+          confirmLabel="Xóa"
+          cancelLabel="Hủy"
+          confirmVariant="danger"
+          disableConfirm={disabled}
+          onCancel={() => setDeleteConfirmOpen(false)}
+          onConfirm={() => {
+            setDeleteConfirmOpen(false);
+            void doDelete();
+          }}
+        />
 
         <section className={`cardBase ${styles.card}`} aria-label="Editor">
           <div className={styles.grid}>

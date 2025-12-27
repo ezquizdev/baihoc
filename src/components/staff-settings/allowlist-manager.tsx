@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AllowlistEntry } from "@/application/models/userAdmin";
 import { QuizPagination } from "@/components/quiz-catalog/quiz-pagination";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { TextAreaModal } from "@/components/ui/text-area-modal";
 import { formatDateVi } from "@/lib/formatters";
 import styles from "./allowlist-manager.module.css";
 
@@ -34,6 +36,14 @@ export function AllowlistManager({
   const [role, setRole] = useState<"student" | "staff">("student");
   const [tier, setTier] = useState<"paid" | "free">("paid");
   const [mutating, setMutating] = useState(false);
+  const [removeCandidateEmail, setRemoveCandidateEmail] = useState<
+    string | null
+  >(null);
+  const [copyFallback, setCopyFallback] = useState<{
+    title: string;
+    message: string;
+    value: string;
+  } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -141,9 +151,20 @@ export function AllowlistManager({
     }
   };
 
-  const remove = async (email: string) => {
-    const ok = window.confirm(`Gỡ khỏi allowlist: ${email}?`);
-    if (!ok) return;
+  const copyText = async (value: string, successMessage: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setNotice({ tone: "success", message: successMessage });
+    } catch {
+      setCopyFallback({
+        title: "Copy thủ công",
+        message: "Không thể copy tự động. Hãy copy nội dung bên dưới.",
+        value,
+      });
+    }
+  };
+
+  const removeConfirmed = async (email: string) => {
     setNotice(null);
     setMutating(true);
     try {
@@ -362,11 +383,7 @@ export function AllowlistManager({
                           const link = `${window.location.origin}/auth/register?email=${encodeURIComponent(
                             item.email,
                           )}`;
-                          void copyText(
-                            link,
-                            setNotice,
-                            "Đã copy link đăng ký.",
-                          );
+                          void copyText(link, "Đã copy link đăng ký.");
                         }}
                       >
                         Copy link
@@ -375,7 +392,7 @@ export function AllowlistManager({
                         type="button"
                         className={`${styles.linkBtn} ${styles.linkBtnRed}`}
                         disabled={mutating}
-                        onClick={() => remove(item.email)}
+                        onClick={() => setRemoveCandidateEmail(item.email)}
                       >
                         Gỡ
                       </button>
@@ -398,6 +415,38 @@ export function AllowlistManager({
           />
         </div>
       ) : null}
+
+      <ConfirmModal
+        open={removeCandidateEmail !== null}
+        title="Gỡ khỏi allowlist?"
+        message={
+          removeCandidateEmail
+            ? `Gỡ khỏi allowlist: ${removeCandidateEmail}?`
+            : "Gỡ khỏi allowlist?"
+        }
+        confirmLabel="Gỡ"
+        cancelLabel="Hủy"
+        confirmVariant="danger"
+        disableConfirm={mutating}
+        onCancel={() => setRemoveCandidateEmail(null)}
+        onConfirm={() => {
+          const email = removeCandidateEmail;
+          setRemoveCandidateEmail(null);
+          if (!email) return;
+          void removeConfirmed(email);
+        }}
+      />
+
+      <TextAreaModal
+        open={copyFallback !== null}
+        title={copyFallback?.title ?? ""}
+        message={copyFallback?.message}
+        value={copyFallback?.value ?? ""}
+        primaryLabel="Đóng"
+        autoSelect
+        onClose={() => setCopyFallback(null)}
+        onPrimary={() => setCopyFallback(null)}
+      />
     </div>
   );
 }
@@ -444,17 +493,4 @@ function useDebouncedValue<T>(value: T, delay: number) {
     return () => clearTimeout(id);
   }, [value, delay]);
   return debounced;
-}
-
-async function copyText(
-  value: string,
-  setNotice: (notice: Notice | null) => void,
-  successMessage: string,
-) {
-  try {
-    await navigator.clipboard.writeText(value);
-    setNotice({ tone: "success", message: successMessage });
-  } catch {
-    window.prompt("Copy", value);
-  }
 }

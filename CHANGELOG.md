@@ -26,6 +26,10 @@
 ### feat(ui): add confirm and textarea modals
 - Added reusable in-app confirm + textarea modals to replace browser dialogs.
 
+### refactor(ui): remove browser confirm/prompt dialogs
+- Replaced remaining `window.confirm` / `window.prompt` usage with in-app modals across staff screens.
+- Quiz builder “Tạo câu hỏi mới” now uses a normal link (avoids `window.open`).
+
 ### feat(staff-dashboard): add charts
 - Added staff dashboard line charts for answer frequency + accuracy by subject over a configurable time window.
 - Added repo/service/controller support for daily subject answer aggregates.

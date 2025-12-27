@@ -8,6 +8,7 @@ import {
   DifficultyBadge,
   SubjectBadge,
 } from "@/components/quiz-catalog/quiz-badges";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { formatDateVi } from "@/lib/formatters";
 import cardStyles from "./staff-quiz-card.module.css";
 
@@ -28,6 +29,7 @@ export function StaffQuizCard({
 }: StaffQuizCardProps) {
   const [publishing, setPublishing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const primarySubject = useMemo(() => {
     const ids = quiz.subjectIds ?? [];
@@ -71,9 +73,6 @@ export function StaffQuizCard({
   };
 
   const deleteQuiz = async () => {
-    const ok = window.confirm("Xóa quiz này?");
-    if (!ok) return;
-
     try {
       setDeleting(true);
       const response = await fetch(`/api/staff/quizzes/${quiz.id}`, {
@@ -177,11 +176,26 @@ export function StaffQuizCard({
             busy ? cardStyles.btnDisabled : ""
           }`}
           disabled={busy}
-          onClick={deleteQuiz}
+          onClick={() => setConfirmDeleteOpen(true)}
         >
           {deleting ? "Đang xóa..." : "Xóa"}
         </button>
       </div>
+
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        title="Xóa quiz này?"
+        message="Bạn có chắc chắn muốn xóa quiz này?"
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        confirmVariant="danger"
+        disableConfirm={busy}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        onConfirm={() => {
+          setConfirmDeleteOpen(false);
+          void deleteQuiz();
+        }}
+      />
     </article>
   );
 }

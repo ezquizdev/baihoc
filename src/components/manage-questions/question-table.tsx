@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { Question, QuestionType } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { formatDateVi } from "@/lib/formatters";
 import styles from "./question-table.module.css";
 
@@ -39,6 +40,9 @@ export function QuestionTable({
     action: "archive" | "restore" | "delete";
   } | null>(null);
   const [rowError, setRowError] = useState<RowError>(null);
+  const [deleteCandidateId, setDeleteCandidateId] = useState<string | null>(
+    null,
+  );
 
   const patchStatus = async (
     questionId: string,
@@ -71,11 +75,7 @@ export function QuestionTable({
     }
   };
 
-  const deleteQuestion = async (questionId: string) => {
-    const ok = window.confirm(
-      "Xóa câu hỏi này? Nếu câu hỏi đang được dùng, hệ thống sẽ lưu trữ thay vì xóa.",
-    );
-    if (!ok) return;
+  const deleteQuestionConfirmed = async (questionId: string) => {
     setRowError(null);
     setMutating({ questionId, action: "delete" });
     try {
@@ -95,6 +95,10 @@ export function QuestionTable({
     } finally {
       setMutating(null);
     }
+  };
+
+  const requestDeleteQuestion = (questionId: string) => {
+    setDeleteCandidateId(questionId);
   };
 
   if (error) {
@@ -205,7 +209,7 @@ export function QuestionTable({
                         rowBusy ? styles.linkBtnDisabled : ""
                       }`}
                       disabled={rowBusy}
-                      onClick={() => deleteQuestion(q.id)}
+                      onClick={() => requestDeleteQuestion(q.id)}
                     >
                       {busy === "delete" ? "Đang xóa..." : "Xóa"}
                     </button>
@@ -221,6 +225,23 @@ export function QuestionTable({
           })}
         </tbody>
       </table>
+
+      <ConfirmModal
+        open={deleteCandidateId !== null}
+        title="Xóa câu hỏi?"
+        message="Xóa câu hỏi này? Nếu câu hỏi đang được dùng, hệ thống sẽ lưu trữ thay vì xóa."
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        confirmVariant="danger"
+        disableConfirm={mutating !== null}
+        onCancel={() => setDeleteCandidateId(null)}
+        onConfirm={() => {
+          const targetId = deleteCandidateId;
+          setDeleteCandidateId(null);
+          if (!targetId) return;
+          void deleteQuestionConfirmed(targetId);
+        }}
+      />
     </div>
   );
 }

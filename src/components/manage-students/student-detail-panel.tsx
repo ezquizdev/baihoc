@@ -6,6 +6,8 @@ import type {
   UserAdminDetail,
   UserHistory,
 } from "@/application/models/userAdmin";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { TextAreaModal } from "@/components/ui/text-area-modal";
 import { formatDateVi, formatRelativeTimeVi } from "@/lib/formatters";
 import styles from "./student-detail-panel.module.css";
 import { StudentEditModal } from "./student-edit-modal";
@@ -29,6 +31,9 @@ export function StudentDetailPanel({
   const [editOpen, setEditOpen] = useState(false);
   const [busyAction, setBusyAction] = useState<"verify" | "reset" | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyReason, setVerifyReason] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
 
   useEffect(() => {
     setEditOpen(false);
@@ -37,6 +42,9 @@ export function StudentDetailPanel({
     setError(null);
     setUser(null);
     setHistory(null);
+    setVerifyOpen(false);
+    setVerifyReason("");
+    setResetOpen(false);
     if (!userId) {
       setLoading(false);
     }
@@ -100,15 +108,8 @@ export function StudentDetailPanel({
     setRefreshKey((prev) => prev + 1);
   };
 
-  const verifyEmail = async () => {
+  const verifyEmailConfirmed = async (reason: string | null) => {
     if (!userId || !user) return;
-    const ok = window.confirm(
-      "Xác minh email cho học sinh này? Tài khoản sẽ được chuyển sang trạng thái Hoạt động.",
-    );
-    if (!ok) return;
-    const reasonInput = window.prompt("Lý do (tuỳ chọn)", "");
-    const reason = reasonInput?.trim() ? reasonInput.trim() : null;
-
     setNotice(null);
     setBusyAction("verify");
     try {
@@ -137,12 +138,8 @@ export function StudentDetailPanel({
     }
   };
 
-  const resetPassword = async () => {
+  const resetPasswordConfirmed = async () => {
     if (!userId || !user) return;
-    const ok = window.confirm(
-      "Gửi email đặt lại mật khẩu cho học sinh này? (Email sẽ được gửi qua Brevo nếu đã cấu hình.)",
-    );
-    if (!ok) return;
     setNotice(null);
     setBusyAction("reset");
     try {
@@ -275,7 +272,10 @@ export function StudentDetailPanel({
           disabled={
             !user || Boolean(busyAction) || Boolean(user?.emailVerifiedAt)
           }
-          onClick={verifyEmail}
+          onClick={() => {
+            setVerifyReason("");
+            setVerifyOpen(true);
+          }}
         >
           {busyAction === "verify" ? "Đang xác minh..." : "Xác minh email"}
         </button>
@@ -283,11 +283,46 @@ export function StudentDetailPanel({
           type="button"
           className={`${styles.linkBtn} ${styles.linkBtnRed}`}
           disabled={!user || Boolean(busyAction)}
-          onClick={resetPassword}
+          onClick={() => setResetOpen(true)}
         >
           {busyAction === "reset" ? "Đang gửi..." : "Reset mật khẩu"}
         </button>
       </div>
+
+      <TextAreaModal
+        open={verifyOpen}
+        title="Xác minh email?"
+        message="Xác minh email cho học sinh này? Tài khoản sẽ được chuyển sang trạng thái Hoạt động."
+        value={verifyReason}
+        onChange={setVerifyReason}
+        placeholder="Lý do (tuỳ chọn)"
+        helpText="Có thể để trống."
+        primaryLabel="Xác minh"
+        secondaryLabel="Hủy"
+        disablePrimary={Boolean(busyAction)}
+        onClose={() => setVerifyOpen(false)}
+        onSecondary={() => setVerifyOpen(false)}
+        onPrimary={() => {
+          const reason = verifyReason.trim() ? verifyReason.trim() : null;
+          setVerifyOpen(false);
+          setVerifyReason("");
+          void verifyEmailConfirmed(reason);
+        }}
+      />
+
+      <ConfirmModal
+        open={resetOpen}
+        title="Reset mật khẩu?"
+        message="Gửi email đặt lại mật khẩu cho học sinh này? (Email sẽ được gửi qua Brevo nếu đã cấu hình.)"
+        confirmLabel="Gửi"
+        cancelLabel="Hủy"
+        disableConfirm={Boolean(busyAction)}
+        onCancel={() => setResetOpen(false)}
+        onConfirm={() => {
+          setResetOpen(false);
+          void resetPasswordConfirmed();
+        }}
+      />
 
       <div className={styles.section}>
         <h4 className={styles.sectionTitle}>Tóm tắt</h4>
