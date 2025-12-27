@@ -533,6 +533,37 @@ export async function isQuestionUsed(questionId: string) {
   return Number(res.rows[0]?.cnt ?? 0) > 0;
 }
 
+export async function hasInProgressAttemptsForQuestion(questionId: string) {
+  const res = await query<{ exists: boolean }>(
+    `SELECT EXISTS(
+      SELECT 1
+      FROM quiz_questions qq
+      JOIN attempts a ON a.quiz_id = qq.quiz_id
+      WHERE qq.question_id = $1
+        AND a.status = 'in_progress'
+      LIMIT 1
+    ) AS exists`,
+    [questionId],
+  );
+  return Boolean(res.rows[0]?.exists);
+}
+
+export async function hasInProgressAttemptsForPassage(passageId: string) {
+  const res = await query<{ exists: boolean }>(
+    `SELECT EXISTS(
+      SELECT 1
+      FROM question_passages qp
+      JOIN quiz_questions qq ON qq.question_id = qp.question_id
+      JOIN attempts a ON a.quiz_id = qq.quiz_id
+      WHERE qp.passage_id = $1
+        AND a.status = 'in_progress'
+      LIMIT 1
+    ) AS exists`,
+    [passageId],
+  );
+  return Boolean(res.rows[0]?.exists);
+}
+
 export async function listQuestionIdsByIds(questionIds: string[]) {
   if (!questionIds.length) return [];
   const res = await query<{ id: string }>(

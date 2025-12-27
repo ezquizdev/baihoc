@@ -58,6 +58,9 @@
 - Staff hard-delete now returns 409 when any attempt is `in_progress` (archive remains allowed).
 - Deleting a quiz with completed attempts now backfills snapshot metadata and `attempt_question_snapshots` so history/results stay viewable after quiz deletion.
 
+### fix(quiz): block content edits while attempts in progress
+- Staff can no longer edit quiz meta/questions (or edit questions/passages used by those quizzes) while any attempt is `in_progress` (returns 409).
+
 ### perf(attempt): snapshot-first history and redo gating
 - Attempt history listing now reads from `attempts.snapshot_*` (avoids quiz joins and heavy per-request subject-score recomputation).
 - History entries now include `canRedo` so students can’t redo archived quizzes (but can still view results/history).

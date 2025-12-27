@@ -11,6 +11,7 @@ import {
   QuestionStatusValues,
   QuestionTypeValues,
 } from "@/application/models/enums";
+import { isServiceError } from "@/application/services/errors";
 
 const updateSchema = z.object({
   subjectId: z.string().uuid().optional(),
@@ -90,6 +91,12 @@ export async function PATCH(
     });
     return NextResponse.json({ question });
   } catch (error) {
+    if (isServiceError(error)) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     const message =
       error instanceof Error ? error.message : "Không thể cập nhật câu hỏi";
     return NextResponse.json({ error: message }, { status: 400 });

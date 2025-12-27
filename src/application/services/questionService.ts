@@ -3,6 +3,7 @@ import {
   countQuestions,
   deleteQuestion,
   getQuestionDetail as getQuestionDetailRepo,
+  hasInProgressAttemptsForQuestion,
   insertQuestion,
   isQuestionUsed,
   listQuestions as listQuestionsRepo,
@@ -15,6 +16,7 @@ import type {
   QuestionType,
   ShortAnswerKey,
 } from "@/application/models/question";
+import { ServiceError } from "@/application/services/errors";
 
 type CreateQuestionInput = {
   subjectId: string;
@@ -65,6 +67,20 @@ export async function updateQuestion(
   questionId: string,
   input: UpdateQuestionInput,
 ) {
+  const hasContentChanges = Object.entries(input).some(
+    ([key, value]) => key !== "status" && value !== undefined,
+  );
+  if (hasContentChanges) {
+    const inProgress = await hasInProgressAttemptsForQuestion(questionId);
+    if (inProgress) {
+      throw new ServiceError(
+        "QUESTION_UPDATE_BLOCKED_IN_PROGRESS",
+        "Câu hỏi đang nằm trong quiz có lượt làm đang diễn ra. Không thể chỉnh sửa nội dung.",
+        409,
+      );
+    }
+  }
+
   const needsStructuralValidation =
     input.type !== undefined ||
     input.options !== undefined ||

@@ -5,6 +5,7 @@ import {
   controllerUpdatePassage,
 } from "@/application/controllers/passageController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
+import { isServiceError } from "@/application/services/errors";
 
 const updateSchema = z.object({
   content: z.string().min(1),
@@ -43,6 +44,12 @@ export async function PATCH(
     const result = await controllerUpdatePassage(passageId, parsed);
     return NextResponse.json(result);
   } catch (error) {
+    if (isServiceError(error)) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     const message =
       error instanceof Error ? error.message : "Không thể cập nhật đoạn văn";
     const status = message.toLowerCase().includes("not found") ? 404 : 400;
