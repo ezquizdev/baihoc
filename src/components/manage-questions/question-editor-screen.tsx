@@ -115,6 +115,12 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
     if (!stem.trim()) return false;
     if (!Number.isFinite(defaultDifficulty)) return false;
     if (!Number.isFinite(defaultScore) || defaultScore <= 0) return false;
+    if (passageEnabled) {
+      if (!passageContent.trim()) return false;
+      if (!Number.isFinite(passagePosition) || passagePosition <= 0) {
+        return false;
+      }
+    }
     if (isMcq) {
       const trimmed = options.map((o) => o.text.trim());
       if (trimmed.length < 2) return false;
@@ -141,6 +147,9 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
     stem,
     subjectId,
     type,
+    passageContent,
+    passageEnabled,
+    passagePosition,
   ]);
 
   const title = props.mode === "create" ? "Tạo câu hỏi" : "Chỉnh sửa câu hỏi";
@@ -233,6 +242,16 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
 
       if (props.mode === "create") {
         router.push(`/staff/questions/${next.question.id}`);
+        router.refresh();
+        return;
+      }
+
+      setStatus(next.question.status);
+
+      if (next.question.passageId) {
+        router.push(
+          `/staff/questions/passages/${next.question.passageId}?questionId=${props.questionId}`,
+        );
         router.refresh();
         return;
       }

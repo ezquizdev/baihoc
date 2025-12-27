@@ -32,6 +32,10 @@
 - Passage questions in `/staff/questions` now link to the passage editor instead of the single-question editor.
 - Visiting `/staff/questions/[questionId]` for a passage question now redirects to `/staff/questions/passages/[passageId]`.
 
+### fix(staff): redirect passage question saves to passage editor
+- Saving a question with a passage now routes to `/staff/questions/passages/[passageId]` to avoid duplicating passages on repeated saves.
+- Save is now disabled when passage content/position is invalid.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
