@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { controllerGetAttemptReviewState } from "@/application/controllers/attemptController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import type {
@@ -21,6 +22,9 @@ export default async function AttemptResultsPage({
   const session = await requireAuthenticatedPage({
     next: `/attempts/${attemptId}/results`,
   });
+  if (session.role === "staff") {
+    redirect("/staff/dashboard");
+  }
   const displayName = session.fullName ?? session.email.split("@")[0];
 
   let state: Awaited<

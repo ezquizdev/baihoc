@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await requireAuthenticatedApi(request, {
     allowIncompleteProfile: false,
+    role: "student",
   });
   if (auth instanceof NextResponse) return auth;
   try {

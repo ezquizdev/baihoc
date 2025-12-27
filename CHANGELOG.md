@@ -18,6 +18,10 @@
 - Attempt history listing now reads from `attempts.snapshot_*` (avoids quiz joins and heavy per-request subject-score recomputation).
 - History entries now include `canRedo` so students can’t redo archived quizzes (but can still view results/history).
 
+### fix(auth): restrict attempt flow to students
+- Staff can no longer start/autosave/submit attempts via `/api/attempts/**`.
+- Attempt-taking and results pages now redirect staff to `/staff/dashboard`.
+
 ### fix(catalog): hide custom quizzes from catalog APIs
 - Custom quizzes are now excluded from quiz catalog listing and return 404 from the catalog quiz detail endpoint.
 
