@@ -48,6 +48,9 @@
 - View-mode toggles now use semantic toggle groups (`<fieldset>` + `aria-pressed`) instead of ARIA tab roles.
 - Passage delete modal now includes `aria-labelledby`/`aria-describedby`.
 
+### chore(db): narrow passage selects
+- Passage read/update queries now select explicit columns instead of `SELECT *` / `RETURNING *`.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors

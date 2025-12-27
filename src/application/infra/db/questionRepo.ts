@@ -469,9 +469,12 @@ export async function getQuestionDetail(
 export async function getPassageById(
   passageId: string,
 ): Promise<Passage | null> {
-  const res = await query<PassageRow>(`SELECT * FROM passages WHERE id = $1`, [
-    passageId,
-  ]);
+  const res = await query<PassageRow>(
+    `SELECT id, content, media_urls
+     FROM passages
+     WHERE id = $1`,
+    [passageId],
+  );
   return mapPassage(res.rows[0]);
 }
 
@@ -485,7 +488,7 @@ export async function updatePassageById(input: {
      SET content = $2,
          media_urls = $3
      WHERE id = $1
-     RETURNING *`,
+     RETURNING id, content, media_urls`,
     [input.passageId, input.content, input.mediaUrls],
   );
   return mapPassage(res.rows[0]);
