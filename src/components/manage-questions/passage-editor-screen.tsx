@@ -74,6 +74,24 @@ export function PassageEditorScreen({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const refreshDetail = async (): Promise<{ found: boolean }> => {
+    const response = await fetch(`/api/staff/passages/${passageId}`);
+    if (response.status === 404) {
+      return { found: false };
+    }
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      throw new Error(payload?.error ?? "Không thể tải passage");
+    }
+    const payload = (await response.json()) as Partial<PassageDetail> | null;
+    if (!payload?.passage) {
+      throw new Error("Không thể tải passage");
+    }
+    setPassage(payload.passage);
+    setQuestions(payload.questions ?? []);
+    return { found: true };
+  };
+
   const subjectMap = useMemo(() => {
     const map = new Map<string, Subject>();
     subjects.forEach((s) => {
@@ -197,16 +215,15 @@ export function PassageEditorScreen({
         return;
       }
 
+      setDeleteTarget(null);
       setExpanded((prev) => {
         const next = new Set(prev);
         next.delete(deleteTarget.id);
         return next;
       });
-      setQuestions((prev) => prev.filter((q) => q.id !== deleteTarget.id));
-      setDeleteTarget(null);
 
-      const remaining = questions.filter((q) => q.id !== deleteTarget.id);
-      if (remaining.length === 0) {
+      const refreshed = await refreshDetail();
+      if (!refreshed.found) {
         router.push("/staff/questions");
         router.refresh();
         return;

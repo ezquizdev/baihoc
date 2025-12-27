@@ -40,6 +40,10 @@
 - `PATCH /api/staff/passages/[passageId]` now requires `mediaUrls` (avoids accidental clearing when omitted).
 - Passage `mediaUrls` are trimmed server-side.
 
+### fix(staff): refresh passage editor after question delete
+- After deleting a question inside the passage editor, the page now refreshes passage/question data from the server.
+- If the passage disappears (last question deleted), the UI routes back to `/staff/questions`.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
