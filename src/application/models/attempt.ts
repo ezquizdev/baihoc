@@ -142,3 +142,16 @@ export type AttemptHistoryItem = {
     config: unknown;
   };
 };
+
+export type ActiveAttemptSummary = {
+  attemptId: string;
+  quizId: string;
+  quizTitle: string | null;
+  quizDifficulty: DifficultyLevel;
+  quizEstimatedTimeSeconds: number | null;
+  isChallenge: boolean;
+  customQuizId: string | null;
+  startedAt: string;
+  timeLimitSeconds: number | null;
+  remainingSeconds: number | null;
+};

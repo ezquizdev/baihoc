@@ -5,6 +5,7 @@ import {
   createAttemptWithClient,
   findChallengeAttempt,
   type GradedAnswerInput,
+  getActiveAttemptSummary,
   getAttemptById,
   getAttemptReviewMeta,
   getAttemptState as getAttemptStateRepo,
@@ -30,6 +31,7 @@ import {
 import { withTransaction } from "@/application/infra/db/pool";
 import { listQuizStatusesByIds } from "@/application/infra/db/quizRepo";
 import type {
+  ActiveAttemptSummary,
   Attempt,
   AttemptAnswer,
   AttemptHistoryItem,
@@ -435,15 +437,24 @@ export async function listAttemptHistory(
     search?: string;
     kind?: AttemptHistoryKind;
   } = {},
-): Promise<{ items: AttemptHistoryItem[]; total: number }> {
-  const result = await listAttemptHistoryRepo({
-    userId,
-    limit: params.limit,
-    offset: params.offset,
-    search: params.search,
-    kind: params.kind,
-  });
-  if (!result.items.length) return { items: [], total: result.total };
+): Promise<{
+  items: AttemptHistoryItem[];
+  total: number;
+  activeAttempt: ActiveAttemptSummary | null;
+}> {
+  const [result, activeAttempt] = await Promise.all([
+    listAttemptHistoryRepo({
+      userId,
+      limit: params.limit,
+      offset: params.offset,
+      search: params.search,
+      kind: params.kind,
+    }),
+    getActiveAttemptSummary(userId),
+  ]);
+  if (!result.items.length) {
+    return { items: [], total: result.total, activeAttempt };
+  }
 
   const quizIds = Array.from(new Set(result.items.map((item) => item.quizId)));
   const statuses = await listQuizStatusesByIds(quizIds);
@@ -460,7 +471,7 @@ export async function listAttemptHistory(
     };
   });
 
-  return { items, total: result.total };
+  return { items, total: result.total, activeAttempt };
 }
 
 export async function autosaveAttempt(

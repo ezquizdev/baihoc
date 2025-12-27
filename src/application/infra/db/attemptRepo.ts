@@ -5,6 +5,7 @@ import {
   type XpEventInput,
 } from "@/application/infra/db/xpRepo";
 import type {
+  ActiveAttemptSummary,
   Attempt,
   AttemptAnswer,
   AttemptHistoryItem,
@@ -188,6 +189,20 @@ type AttemptHistoryRow = {
   }> | null;
   custom_quiz_id: string | null;
   custom_config: unknown | null;
+};
+
+type ActiveAttemptSummaryRow = {
+  id: string;
+  quiz_id: string;
+  challenge_id: string | null;
+  custom_quiz_id: string | null;
+  started_at: string;
+  time_limit_seconds: number | null;
+  remaining_seconds: number | null;
+  quiz_title: string | null;
+  quiz_difficulty_level: number | null;
+  quiz_estimated_time_seconds: number | null;
+  quiz_is_challenge: boolean | null;
 };
 
 export type QuizQuestionMeta = {
@@ -588,6 +603,47 @@ export async function getAttemptState(
     quizTitle: attemptRow.quiz_title ?? null,
     questions,
     answers,
+  };
+}
+
+export async function getActiveAttemptSummary(
+  userId: string,
+  client?: PoolClient,
+): Promise<ActiveAttemptSummary | null> {
+  const res = await runQuery<ActiveAttemptSummaryRow>(
+    client,
+    `SELECT a.id,
+            a.quiz_id,
+            a.challenge_id,
+            a.custom_quiz_id,
+            a.started_at,
+            a.time_limit_seconds,
+            a.remaining_seconds,
+            q.title AS quiz_title,
+            q.difficulty_level AS quiz_difficulty_level,
+            q.estimated_time_seconds AS quiz_estimated_time_seconds,
+            q.is_challenge AS quiz_is_challenge
+     FROM attempts a
+     LEFT JOIN quizzes q ON q.id = a.quiz_id
+     WHERE a.user_id = $1
+       AND a.status = 'in_progress'
+     ORDER BY a.started_at DESC, a.id DESC
+     LIMIT 1`,
+    [userId],
+  );
+  const row = res.rows[0];
+  if (!row) return null;
+  return {
+    attemptId: row.id,
+    quizId: row.quiz_id,
+    quizTitle: row.quiz_title ?? null,
+    quizDifficulty: clampDifficulty(row.quiz_difficulty_level),
+    quizEstimatedTimeSeconds: row.quiz_estimated_time_seconds ?? null,
+    isChallenge: Boolean(row.challenge_id ?? row.quiz_is_challenge),
+    customQuizId: row.custom_quiz_id,
+    startedAt: row.started_at,
+    timeLimitSeconds: row.time_limit_seconds,
+    remainingSeconds: row.remaining_seconds,
   };
 }
 

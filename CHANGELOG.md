@@ -54,6 +54,10 @@
 - Added `GET /api/attempts` for submitted/auto-submitted attempts (includes custom quiz config metadata when available).
 - Starting a generated custom quiz now stores `custom_quiz_id` on the attempt and blocks non-owners from starting it.
 
+### feat(history): show in-progress attempt
+- `/dashboard/history` now shows the current `in_progress` attempt (if any) with a “Tiếp tục” action.
+- `GET /api/attempts` now includes `activeAttempt` so the client can surface the running quiz.
+
 ### fix(attempt): enforce single running attempt
 - Users can only have **one** `in_progress` attempt at a time; starting a different quiz now returns 409 and prompts the user to finish the running attempt first.
 - When starting a quiz, any other timed/challenge attempts that should have ended are auto-submitted at their expected end time.
