@@ -14,6 +14,9 @@
 ### feat(ui): add global error and not-found pages
 - Added `src/app/error.tsx` and `src/app/not-found.tsx` for a clearer production UX on failures/404s.
 
+### fix(a11y): set document language to Vietnamese
+- Updated `<html lang>` to `vi` to better match the Vietnamese UI.
+
 ### feat(profile): refresh profile UI
 - Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
 - Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
