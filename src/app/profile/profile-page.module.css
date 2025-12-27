@@ -1,0 +1,27 @@
+.pageGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.inlineError {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(229, 57, 53, 0.9);
+}
+
+@media (max-width: 1100px) {
+  .pageGrid {
+    grid-template-columns: 1fr;
+  }
+}
