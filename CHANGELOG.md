@@ -16,6 +16,10 @@
 ### chore(test): mock db transactions in user admin unit tests
 - Prevents accidental network DB connections during unit tests by mocking `withTransaction`.
 
+### feat(staff): add preview mode to question editor
+- Added `Soạn thảo / Chia đôi / Xem trước` modes for staff question editing (Markdown + LaTeX via `RichText`).
+- Replaced `window.confirm` delete prompt with a themed modal and clearer busy/error states.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
