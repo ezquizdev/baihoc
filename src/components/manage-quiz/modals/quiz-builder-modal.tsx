@@ -384,9 +384,7 @@ export function QuizBuilderModal({
               </div>
 
               <div className={styles.builderSection}>Câu hỏi</div>
-              <div className={styles.builderHint}>
-                Kéo thả để sắp xếp (hoặc dùng ↑↓).
-              </div>
+              <div className={styles.builderHint}>Kéo thả để sắp xếp.</div>
 
               <DndContext
                 sensors={sensors}
@@ -410,7 +408,6 @@ export function QuizBuilderModal({
                         key={q.id}
                         question={q}
                         index={idx}
-                        total={questions.length}
                         disabled={toolDisabled}
                         onEdit={() => onEditQuestion(q.id, idx + 1)}
                         onRemove={() => {
@@ -422,28 +419,11 @@ export function QuizBuilderModal({
                             prev.filter((item) => item.id !== q.id),
                           );
                         }}
-                        onMoveUp={() => {
-                          if (idx === 0) return;
-                          setQuestions((prev) => arrayMove(prev, idx, idx - 1));
-                        }}
-                        onMoveDown={() => {
-                          if (idx >= questions.length - 1) return;
-                          setQuestions((prev) => arrayMove(prev, idx, idx + 1));
-                        }}
                         onScoreChange={(nextScore) => {
                           setQuestions((prev) =>
                             prev.map((item) =>
                               item.id === q.id
                                 ? { ...item, score: nextScore }
-                                : item,
-                            ),
-                          );
-                        }}
-                        onToggleRequired={() => {
-                          setQuestions((prev) =>
-                            prev.map((item) =>
-                              item.id === q.id
-                                ? { ...item, required: !item.required }
                                 : item,
                             ),
                           );
@@ -534,25 +514,17 @@ export function QuizBuilderModal({
 function SortableQuestionCard({
   question,
   index,
-  total,
   disabled,
   onEdit,
   onRemove,
-  onMoveUp,
-  onMoveDown,
   onScoreChange,
-  onToggleRequired,
 }: {
   question: QuizQuestionSummary;
   index: number;
-  total: number;
   disabled: boolean;
   onEdit: () => void;
   onRemove: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onScoreChange: (score: number | null) => void;
-  onToggleRequired: () => void;
 }) {
   const {
     attributes,
@@ -617,37 +589,6 @@ function SortableQuestionCard({
             mặc định: {question.defaultScore}
           </span>
         </label>
-
-        <label className={styles.qMetaToggle}>
-          <input
-            type="checkbox"
-            checked={question.required}
-            onChange={onToggleRequired}
-            disabled={disabled}
-          />
-          Bắt buộc
-        </label>
-
-        <div className={styles.qMove}>
-          <button
-            type="button"
-            className={`${styles.smallBtn} ${styles.smallGray}`}
-            onClick={onMoveUp}
-            disabled={disabled || index === 0}
-            aria-label="Đưa lên"
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            className={`${styles.smallBtn} ${styles.smallGray}`}
-            onClick={onMoveDown}
-            disabled={disabled || index >= total - 1}
-            aria-label="Đưa xuống"
-          >
-            ↓
-          </button>
-        </div>
       </div>
 
       <div className={styles.qActions}>
