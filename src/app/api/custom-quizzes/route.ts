@@ -8,7 +8,7 @@ import { isServiceError } from "@/application/services/errors";
 const generateSchema = z.object({
   difficulty: z.number().int().min(1).max(5),
   questionCount: z.number().int().min(1).max(100),
-  durationSeconds: z.number().int().positive().nullable().optional(),
+  durationSeconds: z.number().int().nonnegative().nullable().optional(),
   topicsBySubject: z
     .array(
       z.object({

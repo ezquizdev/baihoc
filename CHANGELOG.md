@@ -22,6 +22,10 @@
 - Staff can no longer start/autosave/submit attempts via `/api/attempts/**`.
 - Attempt-taking and results pages now redirect staff to `/staff/dashboard`.
 
+### fix(custom-quiz): align duration and validate difficulty
+- `POST /api/custom-quizzes` now accepts `durationSeconds=0` (treated as no time limit).
+- Custom quiz generation now validates `difficulty` defensively in the service layer.
+
 ### fix(catalog): hide custom quizzes from catalog APIs
 - Custom quizzes are now excluded from quiz catalog listing and return 404 from the catalog quiz detail endpoint.
 
