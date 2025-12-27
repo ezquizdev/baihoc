@@ -26,6 +26,10 @@
 - `POST /api/custom-quizzes` now accepts `durationSeconds=0` (treated as no time limit).
 - Custom quiz generation now validates `difficulty` defensively in the service layer.
 
+### perf(attempt): speed up attempt meta and history queries
+- Attempt meta lookup now uses a single lateral join for custom quiz ownership (less duplicated SQL work).
+- Added a partial index for completed attempt history listing by user.
+
 ### fix(catalog): hide custom quizzes from catalog APIs
 - Custom quizzes are now excluded from quiz catalog listing and return 404 from the catalog quiz detail endpoint.
 

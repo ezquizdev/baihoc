@@ -535,6 +535,9 @@ BEGIN
 END $$;
 
 CREATE INDEX IF NOT EXISTS idx_attempts_user_started ON attempts(user_id, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_attempts_user_completed_started
+ON attempts(user_id, started_at DESC)
+WHERE status IN ('submitted', 'auto_submitted');
 CREATE INDEX IF NOT EXISTS idx_attempts_quiz_status ON attempts(quiz_id, status);
 CREATE INDEX IF NOT EXISTS idx_attempts_status_in_progress ON attempts(status) WHERE status = 'in_progress';
 CREATE INDEX IF NOT EXISTS idx_attempts_submitted_recent

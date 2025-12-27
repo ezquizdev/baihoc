@@ -318,25 +318,19 @@ export async function getQuizAttemptMeta(
             cs.time_limit_seconds AS challenge_time_limit_seconds,
             cs.start_at AS challenge_start_at,
             cs.end_at AS challenge_end_at,
-            (
-              SELECT cq.id
-              FROM custom_quizzes cq
-              WHERE cq.generated_quiz_id = q.id
-                AND cq.status = 'ready'::custom_quiz_status
-              ORDER BY cq.created_at DESC
-              LIMIT 1
-            ) AS custom_quiz_id,
-            (
-              SELECT cq.user_id
-              FROM custom_quizzes cq
-              WHERE cq.generated_quiz_id = q.id
-                AND cq.status = 'ready'::custom_quiz_status
-              ORDER BY cq.created_at DESC
-              LIMIT 1
-            ) AS custom_quiz_owner_id,
+            cq.id AS custom_quiz_id,
+            cq.user_id AS custom_quiz_owner_id,
             (SELECT COUNT(*)::int FROM quiz_questions qq WHERE qq.quiz_id = q.id) AS total_questions
      FROM quizzes q
      LEFT JOIN challenge_settings cs ON cs.quiz_id = q.id
+     LEFT JOIN LATERAL (
+       SELECT id, user_id
+       FROM custom_quizzes
+       WHERE generated_quiz_id = q.id
+         AND status = 'ready'::custom_quiz_status
+       ORDER BY created_at DESC
+       LIMIT 1
+     ) cq ON true
      WHERE q.id = $1
        AND q.status = 'published'`,
     [quizId],
