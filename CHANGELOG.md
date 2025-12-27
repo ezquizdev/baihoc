@@ -14,6 +14,9 @@
 ### fix(ui): layer manage quiz hero figure
 - Manage quiz hero figure is now decorative (removed from layout flow) so the “Tạo quiz” CTA can sit on top.
 
+### fix(ui): normalize manage quiz card heights
+- Staff quiz cards now stretch to the row height so cards stay aligned when action buttons wrap.
+
 ### feat(staff-dashboard): add charts
 - Added staff dashboard line charts for answer frequency + accuracy by subject over a configurable time window.
 - Added repo/service/controller support for daily subject answer aggregates.
