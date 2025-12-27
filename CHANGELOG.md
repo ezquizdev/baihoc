@@ -17,6 +17,9 @@
 ### fix(ui): normalize manage quiz card heights
 - Staff quiz cards now stretch to the row height so cards stay aligned when action buttons wrap.
 
+### fix(ui): replace browser alerts with in-app popups
+- Replaced remaining `window.alert` usage with an in-app notice popup (quiz catalog + quiz builder).
+
 ### feat(staff-dashboard): add charts
 - Added staff dashboard line charts for answer frequency + accuracy by subject over a configurable time window.
 - Added repo/service/controller support for daily subject answer aggregates.

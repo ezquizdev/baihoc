@@ -31,6 +31,7 @@ import type {
   QuizQuestionSummary,
 } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
+import { NoticeModal } from "@/components/ui/notice-modal";
 import styles from "./manage-quiz-modals.module.css";
 import { QuestionBankPickerModal } from "./question-bank-picker-modal";
 
@@ -59,6 +60,10 @@ export function QuizBuilderModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bankOpen, setBankOpen] = useState(false);
+  const [notice, setNotice] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,6 +73,7 @@ export function QuizBuilderModal({
     setQuestions([]);
     setError(null);
     setBankOpen(false);
+    setNotice(null);
     setActiveQuestionId(null);
   }, [quizId]);
 
@@ -375,7 +381,10 @@ export function QuizBuilderModal({
                   className={`${styles.toolBtn} ${styles.toolDark}`}
                   type="button"
                   onClick={() =>
-                    window.alert("Chưa hỗ trợ: import quiz từ file")
+                    setNotice({
+                      title: "Chưa hỗ trợ",
+                      message: "Chưa hỗ trợ: import quiz từ file",
+                    })
                   }
                   disabled={toolDisabled}
                 >
@@ -506,6 +515,13 @@ export function QuizBuilderModal({
           });
           setBankOpen(false);
         }}
+      />
+
+      <NoticeModal
+        open={notice !== null}
+        title={notice?.title ?? ""}
+        message={notice?.message ?? ""}
+        onClose={() => setNotice(null)}
       />
     </div>
   );
