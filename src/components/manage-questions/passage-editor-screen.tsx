@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { DifficultyLevel, QuestionType } from "@/application/models/enums";
 import type {
@@ -299,15 +299,13 @@ export function PassageEditorScreen({
             <div className={editorStyles.muted}>
               Xem trước hỗ trợ Markdown + LaTeX.
             </div>
-            <div
-              className={editorStyles.row}
-              role="tablist"
+            <fieldset
+              className={`${editorStyles.row} ${editorStyles.toggleGroup}`}
               aria-label="Chế độ"
             >
               <button
                 type="button"
-                role="tab"
-                aria-selected={passageViewMode === "edit"}
+                aria-pressed={passageViewMode === "edit"}
                 className={`${editorStyles.smallBtn} ${
                   passageViewMode === "edit" ? editorStyles.smallBtnBlue : ""
                 }`}
@@ -317,8 +315,7 @@ export function PassageEditorScreen({
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={passageViewMode === "split"}
+                aria-pressed={passageViewMode === "split"}
                 className={`${editorStyles.smallBtn} ${
                   passageViewMode === "split" ? editorStyles.smallBtnBlue : ""
                 }`}
@@ -328,8 +325,7 @@ export function PassageEditorScreen({
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={passageViewMode === "preview"}
+                aria-pressed={passageViewMode === "preview"}
                 className={`${editorStyles.smallBtn} ${
                   passageViewMode === "preview" ? editorStyles.smallBtnBlue : ""
                 }`}
@@ -337,7 +333,7 @@ export function PassageEditorScreen({
               >
                 Xem trước
               </button>
-            </div>
+            </fieldset>
           </div>
 
           {passageViewMode === "preview" ? (
@@ -854,11 +850,13 @@ function InlineQuestionEditor({
         <div className={editorStyles.muted}>
           Xem trước hỗ trợ Markdown + LaTeX.
         </div>
-        <div className={editorStyles.row} role="tablist" aria-label="Chế độ">
+        <fieldset
+          className={`${editorStyles.row} ${editorStyles.toggleGroup}`}
+          aria-label="Chế độ"
+        >
           <button
             type="button"
-            role="tab"
-            aria-selected={viewMode === "edit"}
+            aria-pressed={viewMode === "edit"}
             className={`${editorStyles.smallBtn} ${
               viewMode === "edit" ? editorStyles.smallBtnBlue : ""
             }`}
@@ -868,8 +866,7 @@ function InlineQuestionEditor({
           </button>
           <button
             type="button"
-            role="tab"
-            aria-selected={viewMode === "split"}
+            aria-pressed={viewMode === "split"}
             className={`${editorStyles.smallBtn} ${
               viewMode === "split" ? editorStyles.smallBtnBlue : ""
             }`}
@@ -879,8 +876,7 @@ function InlineQuestionEditor({
           </button>
           <button
             type="button"
-            role="tab"
-            aria-selected={viewMode === "preview"}
+            aria-pressed={viewMode === "preview"}
             className={`${editorStyles.smallBtn} ${
               viewMode === "preview" ? editorStyles.smallBtnBlue : ""
             }`}
@@ -888,7 +884,7 @@ function InlineQuestionEditor({
           >
             Xem trước
           </button>
-        </div>
+        </fieldset>
       </div>
 
       {viewMode === "preview" ? (
@@ -1239,6 +1235,8 @@ function ConfirmDeleteModal({
 }) {
   const confirmRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
+  const titleId = useId();
+  const descId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -1311,9 +1309,13 @@ function ConfirmDeleteModal({
         className={styles.dialog}
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
       >
-        <h2 className={styles.modalTitle}>{title}</h2>
-        <div className={styles.modalBody}>
+        <h2 id={titleId} className={styles.modalTitle}>
+          {title}
+        </h2>
+        <div id={descId} className={styles.modalBody}>
           <div>
             <strong>Nội dung:</strong> {subtitle || "—"}
           </div>

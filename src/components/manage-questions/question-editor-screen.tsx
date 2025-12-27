@@ -414,11 +414,13 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
             <div className={styles.muted}>
               Xem trước hỗ trợ Markdown + LaTeX.
             </div>
-            <div className={styles.row} role="tablist" aria-label="Chế độ">
+            <fieldset
+              className={`${styles.row} ${styles.toggleGroup}`}
+              aria-label="Chế độ"
+            >
               <button
                 type="button"
-                role="tab"
-                aria-selected={viewMode === "edit"}
+                aria-pressed={viewMode === "edit"}
                 className={`${styles.smallBtn} ${
                   viewMode === "edit" ? styles.smallBtnBlue : ""
                 }`}
@@ -428,8 +430,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={viewMode === "split"}
+                aria-pressed={viewMode === "split"}
                 className={`${styles.smallBtn} ${
                   viewMode === "split" ? styles.smallBtnBlue : ""
                 }`}
@@ -439,8 +440,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={viewMode === "preview"}
+                aria-pressed={viewMode === "preview"}
                 className={`${styles.smallBtn} ${
                   viewMode === "preview" ? styles.smallBtnBlue : ""
                 }`}
@@ -448,7 +448,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
               >
                 Xem trước
               </button>
-            </div>
+            </fieldset>
           </div>
 
           {viewMode === "preview" ? (

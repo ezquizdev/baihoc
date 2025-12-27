@@ -44,6 +44,10 @@
 - After deleting a question inside the passage editor, the page now refreshes passage/question data from the server.
 - If the passage disappears (last question deleted), the UI routes back to `/staff/questions`.
 
+### fix(a11y): improve staff editor controls
+- View-mode toggles now use semantic toggle groups (`<fieldset>` + `aria-pressed`) instead of ARIA tab roles.
+- Passage delete modal now includes `aria-labelledby`/`aria-describedby`.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
