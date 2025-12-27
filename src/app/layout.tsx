@@ -3,6 +3,7 @@ import { siteConfig } from "@/config/site";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 import { ClientRuntimeInit } from "./ClientRuntimeInit";
+import ChatBubble from "@/components/chat/ChatBubble";
 
 export const metadata: Metadata = {
   title: {
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ClientRuntimeInit />
         {children}
+        <ChatBubble />
       </body>
     </html>
   );
