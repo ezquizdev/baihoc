@@ -325,7 +325,7 @@ export function ManageQuizScreen({
           className={`cardBase ${styles.hero}`}
           aria-label="Manage quiz hero"
         >
-          <div>
+          <div className={styles.heroContent}>
             <h1 className={styles.heroTitle}>
               <span>Danh sách</span>Quiz
             </h1>

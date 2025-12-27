@@ -11,6 +11,9 @@
 - Removed redundant “move up/down” and “required” controls from the quiz builder (drag-to-reorder remains).
 - Quiz info modal now edits quiz `status` (draft/published) instead of `featuredRank`.
 
+### fix(ui): layer manage quiz hero figure
+- Manage quiz hero figure is now decorative (removed from layout flow) so the “Tạo quiz” CTA can sit on top.
+
 ### feat(staff-dashboard): add charts
 - Added staff dashboard line charts for answer frequency + accuracy by subject over a configurable time window.
 - Added repo/service/controller support for daily subject answer aggregates.
