@@ -1,10 +1,14 @@
-import { backfillAttemptSnapshotsForQuiz } from "@/application/infra/db/attemptRepo";
+import {
+  backfillAttemptQuestionSnapshotsForQuiz,
+  backfillAttemptSnapshotsForQuiz,
+} from "@/application/infra/db/attemptRepo";
 import { findCustomQuizByGeneratedQuizId } from "@/application/infra/db/customQuizRepo";
 import { listQuestionIdsByIds } from "@/application/infra/db/questionRepo";
 import {
   deleteQuiz,
   getQuizDetail as getQuizDetailRepo,
   insertQuiz,
+  hasInProgressAttempts,
   isQuizUsed,
   listCatalogPage as listCatalogPageRepo,
   listQuizzesForCatalog,
@@ -26,6 +30,7 @@ import type {
   QuizVisibility,
 } from "@/application/models/quiz";
 import { mapDifficultyLabelsToLevels } from "@/lib/difficulty";
+import { ServiceError } from "@/application/services/errors";
 
 type CreateQuizInput = {
   title: string;
@@ -95,9 +100,19 @@ export async function archiveQuiz(quizId: string) {
 }
 
 export async function deleteQuizWithRules(quizId: string) {
+  const inProgress = await hasInProgressAttempts(quizId);
+  if (inProgress) {
+    throw new ServiceError(
+      "QUIZ_DELETE_BLOCKED_IN_PROGRESS",
+      "Không thể xóa quiz vì đang có lượt làm đang diễn ra.",
+      409,
+    );
+  }
+
   const used = await isQuizUsed(quizId);
   if (used) {
     await backfillAttemptSnapshotsForQuiz(quizId);
+    await backfillAttemptQuestionSnapshotsForQuiz(quizId);
   }
   await deleteQuiz(quizId);
   return { status: "deleted" as const };

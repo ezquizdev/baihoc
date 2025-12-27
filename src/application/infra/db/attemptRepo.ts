@@ -788,6 +788,45 @@ export async function backfillAttemptSnapshotsForQuiz(
   );
 }
 
+export async function backfillAttemptQuestionSnapshotsForQuiz(
+  quizId: string,
+): Promise<void> {
+  await query(
+    `INSERT INTO attempt_question_snapshots (
+       attempt_id,
+       judgement_version,
+       position,
+       question_id,
+       question_type,
+       max_score,
+       required,
+       subject_id,
+       subject_name,
+       subject_slug,
+       question_updated_at
+     )
+     SELECT a.id AS attempt_id,
+            a.judgement_version,
+            qq.position,
+            qq.question_id,
+            q.type AS question_type,
+            COALESCE(qq.score, q.default_score) AS max_score,
+            qq.required,
+            subj.id AS subject_id,
+            subj.name AS subject_name,
+            subj.slug AS subject_slug,
+            q.updated_at AS question_updated_at
+     FROM attempts a
+     JOIN quiz_questions qq ON qq.quiz_id = a.quiz_id
+     JOIN questions q ON q.id = qq.question_id
+     JOIN subjects subj ON subj.id = q.subject_id
+     WHERE a.quiz_id = $1
+       AND a.status IN ('submitted', 'auto_submitted')
+     ON CONFLICT (attempt_id, judgement_version, question_id) DO NOTHING`,
+    [quizId],
+  );
+}
+
 export async function listAttemptAnswers(
   attemptId: string,
 ): Promise<AttemptAnswer[]> {
