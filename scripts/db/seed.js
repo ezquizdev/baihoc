@@ -324,6 +324,7 @@ async function main() {
       const quizId = crypto.randomUUID();
       const isDemoQuiz = i === 0;
       const isDemoChallenge = i === 1;
+      const isDemoDraft = i === 2;
       const chosenSubjects =
         isDemoQuiz || isDemoChallenge
           ? subjects
@@ -333,21 +334,29 @@ async function main() {
         isDemoQuiz || isDemoChallenge ? 2 : pick(difficultyLevels);
       const visibility =
         isDemoQuiz || isDemoChallenge ? "free" : pick(quizVisibility);
-      const isChallenge = isDemoChallenge
-        ? true
-        : isDemoQuiz
-          ? false
-          : Math.random() < 0.2;
+      const isDraft = isDemoDraft;
+      const isChallenge = isDraft
+        ? false
+        : isDemoChallenge
+          ? true
+          : isDemoQuiz
+            ? false
+            : Math.random() < 0.2;
+      const status = isDraft ? "draft" : "published";
       const title = isDemoQuiz
         ? "Demo: Tất cả dạng câu hỏi"
         : isDemoChallenge
           ? "Demo Challenge: Làm thử thách"
-          : `${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`;
+          : isDemoDraft
+            ? `Draft: ${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`
+            : `${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`;
       const description = isDemoQuiz
         ? "Quiz mẫu để kiểm tra đủ dạng câu hỏi (MCQ 1 đáp án, nhiều đáp án, và tự luận ngắn) + đoạn văn."
         : isDemoChallenge
           ? "Thử thách mẫu (đang diễn ra) để kiểm tra flow bắt đầu challenge, làm bài, và nộp bài."
-          : `Bộ câu hỏi ${title.toLowerCase()} dành cho luyện tập.`;
+          : isDemoDraft
+            ? `Quiz nháp (draft) để kiểm tra flow quản trị: chỉnh sửa, lưu nháp và thêm câu hỏi.`
+            : `Bộ câu hỏi ${title.toLowerCase()} dành cho luyện tập.`;
       const minutes = isDemoQuiz
         ? 20
         : isDemoChallenge
@@ -358,6 +367,7 @@ async function main() {
         isDemoQuiz || isDemoChallenge
           ? { createdAt: nowIso, updatedAt: nowIso }
           : randomTimestamps(120);
+      const publishedAt = status === "published" ? timestamps.updatedAt : null;
 
       quizRows.push([
         quizId,
@@ -365,14 +375,14 @@ async function main() {
         description,
         difficulty,
         visibility,
-        "published",
+        status,
         isChallenge,
         minutes * 60,
         null,
         staff.id,
         timestamps.createdAt,
         timestamps.updatedAt,
-        timestamps.updatedAt,
+        publishedAt,
       ]);
 
       if (isChallenge) {
@@ -417,7 +427,9 @@ async function main() {
       const questionCount = Math.max(position - 1, 0);
       const attemptCount = isDemoChallenge
         ? 0
-        : randomInt(0, config.maxAttemptsPerQuiz);
+        : isDraft
+          ? 0
+          : randomInt(0, config.maxAttemptsPerQuiz);
       const attemptUsers = sample(students, attemptCount);
       attemptUsers.forEach((user) => {
         const startedAt = shiftDate(timestamps.updatedAt, -randomInt(1, 14));

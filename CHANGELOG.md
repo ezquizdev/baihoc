@@ -31,6 +31,9 @@
 ### fix(auth): prefill register email
 - Register now pre-fills the email from `?email=` and uses `Suspense` for `useSearchParams`.
 
+### chore(seed): include draft quiz
+- Seed now includes at least one quiz with `status = draft` (useful for testing staff “lưu nháp” flows).
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
