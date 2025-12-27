@@ -542,6 +542,22 @@ export function SelfProfileCard({
                 handlePasswordSave();
               }}
             >
+              <label
+                className={styles.visuallyHidden}
+                htmlFor="profile-username"
+              >
+                Email
+              </label>
+              <input
+                id="profile-username"
+                name="username"
+                type="email"
+                autoComplete="username"
+                value={email}
+                readOnly
+                tabIndex={-1}
+                className={styles.visuallyHidden}
+              />
               {passwordEnabled ? (
                 <label className={styles.label}>
                   <span>Mật khẩu hiện tại</span>

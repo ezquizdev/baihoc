@@ -323,6 +323,22 @@ export function StaffProfileCard({
                 handlePasswordSave();
               }}
             >
+              <label
+                className={styles.visuallyHidden}
+                htmlFor="staff-profile-username"
+              >
+                Email
+              </label>
+              <input
+                id="staff-profile-username"
+                name="username"
+                type="email"
+                autoComplete="username"
+                value={email}
+                readOnly
+                tabIndex={-1}
+                className={styles.visuallyHidden}
+              />
               {passwordEnabled ? (
                 <label className={styles.label}>
                   <span>Mật khẩu hiện tại</span>
