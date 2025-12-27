@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { ProfileScoreCards } from "@/components/profile/ProfileScoreCards";
 import { SelfProfileCard } from "@/components/profile/SelfProfileCard";
+import { StaffProfileCard } from "@/components/profile/StaffProfileCard";
 import { staffNavItems } from "@/components/staff-dashboard/staff-nav";
 import { formatNumberVi } from "@/lib/formatters";
 import layoutStyles from "./profile-page.module.css";
@@ -25,6 +26,28 @@ export default async function ProfilePage() {
   const profile = await getProfilePrefill(session.sub);
   const navItems = session.role === "staff" ? staffNavItems : undefined;
   const activeNav = session.role === "staff" ? "profile" : "settings";
+
+  if (session.role === "staff") {
+    return (
+      <DashboardShell
+        pageTitle="Hồ sơ"
+        activeNav={activeNav}
+        navItems={navItems}
+        userEmail={session.email}
+        userName={displayName}
+        avatarUrl={session.avatarUrl}
+      >
+        <section className={layoutStyles.singleColumn} aria-label="Hồ sơ">
+          <StaffProfileCard
+            email={session.email}
+            initialFullName={profile.fullName}
+            initialAvatarUrl={profile.avatarUrl || null}
+            hasPassword={profile.hasPassword}
+          />
+        </section>
+      </DashboardShell>
+    );
+  }
 
   let overviewError: string | null = null;
   const overview = await getSelfProfileOverview(session.sub).catch((error) => {

@@ -5,6 +5,14 @@
   align-items: start;
 }
 
+.singleColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
 .leftColumn,
 .rightColumn {
   display: flex;
@@ -23,5 +31,10 @@
 @media (max-width: 1100px) {
   .pageGrid {
     grid-template-columns: 1fr;
+  }
+
+  .singleColumn {
+    max-width: 100%;
+    margin: 0;
   }
 }
