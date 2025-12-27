@@ -48,7 +48,7 @@ export function GoogleButton({
         <span className="text-lg">G</span>
         <span>{loading ? "Connecting..." : label}</span>
       </Button>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-[var(--danger-text)]">{error}</p>}
     </div>
   );
 }

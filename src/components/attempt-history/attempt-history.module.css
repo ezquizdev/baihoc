@@ -58,8 +58,8 @@
 
 .filterPill {
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.7);
-  color: #2b3b55;
+  background: rgb(var(--card-rgb) / 0.7);
+  color: var(--text-secondary);
   padding: 10px 12px;
   border-radius: 999px;
   font-weight: 800;
@@ -82,7 +82,7 @@
 .filterPillActive {
   background: rgba(40, 104, 230, 0.12);
   border-color: rgba(40, 104, 230, 0.3);
-  color: #1f54d6;
+  color: var(--primary-2);
 }
 
 .statusPill {
@@ -102,7 +102,7 @@
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #c1cde5;
+  background: var(--line-strong);
 }
 
 .dotLoading {
@@ -163,7 +163,7 @@
   line-height: 1.3;
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: #15243d;
+  color: var(--text-strong);
   margin: 0;
 }
 
@@ -185,32 +185,32 @@
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.7);
-  color: #2b3b55;
+  background: rgb(var(--card-rgb) / 0.7);
+  color: var(--text-secondary);
 }
 
 .tagChallenge {
   background: rgba(255, 196, 0, 0.16);
   border-color: rgba(255, 196, 0, 0.35);
-  color: #8a6a00;
+  color: var(--warning);
 }
 
 .tagCustom {
   background: rgba(40, 104, 230, 0.12);
   border-color: rgba(40, 104, 230, 0.3);
-  color: #1f54d6;
+  color: var(--primary-2);
 }
 
 .tagEstimated {
   background: rgba(193, 205, 229, 0.4);
   border-color: rgba(193, 205, 229, 0.8);
-  color: #33445f;
+  color: var(--text-tertiary);
 }
 
 .tagDeleted {
   background: rgba(244, 63, 94, 0.12);
   border-color: rgba(244, 63, 94, 0.25);
-  color: #be123c;
+  color: var(--danger-ink);
 }
 
 .metaRow {
@@ -230,7 +230,7 @@
 
 .metaKey {
   font-weight: 700;
-  color: #33445f;
+  color: var(--text-tertiary);
 }
 
 .subjectRow {
@@ -259,7 +259,7 @@
 
 .subjectPercent {
   font-weight: 900;
-  color: #15243d;
+  color: var(--text-strong);
   letter-spacing: -0.02em;
 }
 
@@ -320,7 +320,7 @@
 .scoreValue {
   font-weight: 950;
   letter-spacing: -0.03em;
-  color: #15243d;
+  color: var(--text-strong);
 }
 
 .asideMeta {
@@ -345,7 +345,7 @@
   padding: 12px 14px;
   border-radius: 14px;
   background: linear-gradient(135deg, var(--primary), var(--primary-2));
-  color: #fff;
+  color: var(--text-inverse);
   font-weight: 900;
   border: none;
   cursor: pointer;
@@ -360,8 +360,8 @@
   padding: 12px 14px;
   border-radius: 14px;
   border: 1px solid var(--line);
-  background: #fff;
-  color: #15243d;
+  background: var(--card);
+  color: var(--text-strong);
   font-weight: 800;
 }
 
@@ -404,7 +404,7 @@
   font-weight: 900;
   cursor: pointer;
   background: linear-gradient(135deg, var(--primary), var(--primary-2));
-  color: #fff;
+  color: var(--text-inverse);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -416,7 +416,7 @@
   padding: 12px 14px;
   font-weight: 800;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--card);
   cursor: pointer;
   text-decoration: none;
   display: inline-flex;

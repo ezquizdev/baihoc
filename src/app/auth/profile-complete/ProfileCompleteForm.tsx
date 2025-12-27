@@ -79,7 +79,7 @@ export function ProfileCompleteForm({
       footer={
         <button
           type="button"
-          className="font-medium text-slate-900"
+          className="font-medium text-[var(--text)]"
           onClick={async () => {
             await fetch("/api/auth/logout", { method: "POST" });
             router.push("/auth/login");
@@ -100,9 +100,13 @@ export function ProfileCompleteForm({
             showTerms={false}
             fileInputRef={fileInputRef}
           />
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && (
+            <p className="text-sm text-[var(--danger-text)]">{error}</p>
+          )}
           {done && (
-            <p className="text-sm text-green-600">Đã lưu, chuyển hướng...</p>
+            <p className="text-sm text-[var(--success-text)]">
+              Đã lưu, chuyển hướng...
+            </p>
           )}
           <Button type="submit" block disabled={loading}>
             {loading ? "Đang lưu..." : "Hoàn tất hồ sơ"}

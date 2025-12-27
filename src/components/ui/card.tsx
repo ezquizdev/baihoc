@@ -16,15 +16,17 @@ export function Card({
 }: CardProps) {
   return (
     <div
-      className={`w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-sm ${className ?? ""}`}
+      className={`w-full rounded-[var(--radius-lg)] border border-[color:var(--line)] bg-[var(--card)] p-8 text-[var(--text)] shadow-[var(--shadow)] ${className ?? ""}`}
     >
       {(title || description) && (
         <div className="mb-6 space-y-2">
           {title && (
-            <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
+            <h1 className="text-2xl font-semibold text-[var(--text)]">
+              {title}
+            </h1>
           )}
           {description && (
-            <p className="text-sm text-slate-600">{description}</p>
+            <p className="text-sm text-[var(--muted)]">{description}</p>
           )}
         </div>
       )}

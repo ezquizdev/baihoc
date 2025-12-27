@@ -96,7 +96,10 @@ export default function LoginClient() {
       footer={
         <p>
           Chưa có tài khoản?{" "}
-          <Link href="/auth/register" className="font-medium text-slate-900">
+          <Link
+            href="/auth/register"
+            className="font-medium text-[var(--text)]"
+          >
             Đăng ký
           </Link>
         </p>
@@ -121,20 +124,25 @@ export default function LoginClient() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <div className="flex items-center justify-end text-sm text-slate-600">
-              <Link href="/auth/forgot" className="font-medium text-slate-900">
+            <div className="flex items-center justify-end text-sm text-[var(--muted)]">
+              <Link
+                href="/auth/forgot"
+                className="font-medium text-[var(--text)]"
+              >
                 Quên mật khẩu?
               </Link>
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && (
+              <p className="text-sm text-[var(--danger-text)]">{error}</p>
+            )}
             <Button type="submit" block disabled={loading}>
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </Button>
           </form>
           <div className="flex items-center gap-2">
-            <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-xs uppercase text-slate-500">Hoặc</span>
-            <div className="h-px flex-1 bg-slate-200" />
+            <div className="h-px flex-1 bg-[var(--line)]" />
+            <span className="text-xs uppercase text-[var(--muted)]">Hoặc</span>
+            <div className="h-px flex-1 bg-[var(--line)]" />
           </div>
           <GoogleButton onSuccess={handleGoogle} />
         </div>

@@ -77,7 +77,7 @@ export function QuizCard({
             <BookmarkSimple
               size={18}
               weight={bookmarked ? "fill" : "bold"}
-              color={bookmarked ? "#ffd400" : "#2b3b55"}
+              color={bookmarked ? "var(--accent)" : "var(--text-secondary)"}
             />
           </button>
         </div>

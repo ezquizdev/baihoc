@@ -39,7 +39,7 @@ export function RejudgeAttemptButton({ attemptId }: { attemptId: string }) {
     <div className="flex flex-col items-start gap-2">
       <button
         type="button"
-        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2868e6] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1f54b8] disabled:cursor-not-allowed disabled:opacity-70"
+        className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:rgba(40,104,230,0.28)] disabled:cursor-not-allowed disabled:opacity-70"
         disabled={loading}
         onClick={handleClick}
       >

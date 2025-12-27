@@ -19,7 +19,7 @@
   margin: 0;
   font-size: 28px;
   font-weight: 950;
-  color: #1f3b86;
+  color: var(--primary-ink);
   line-height: 1.05;
   letter-spacing: 0.2px;
 }
@@ -85,7 +85,7 @@
 
 .tabs {
   display: flex;
-  background: #f7faff;
+  background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 4px;
@@ -102,12 +102,12 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 750;
-  color: #2b3b55;
+  color: var(--text-secondary);
 }
 
 .tabActive {
-  background: #fff;
-  border: 1px solid #d5e3ff;
+  background: var(--card);
+  border: 1px solid var(--line-strong);
   color: var(--primary-2);
   box-shadow: 0 10px 18px rgba(26, 46, 93, 0.07);
 }
@@ -132,7 +132,7 @@
   position: relative;
   flex: 0 0 auto;
   width: min(100%, var(--filter-width));
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: 0 10px 20px rgba(26, 46, 93, 0.06);
@@ -152,16 +152,16 @@
 }
 
 .ddActive {
-  background: rgba(30, 108, 255, 0.12);
-  border-color: rgba(30, 108, 255, 0.3);
+  background: rgb(var(--primary-rgb) / 0.12);
+  border-color: rgb(var(--primary-rgb) / 0.3);
 }
 
 .ddButtonActive {
-  color: var(--brand-primary);
+  color: var(--primary);
 }
 
 .filterIcon {
-  color: var(--brand-primary);
+  color: var(--primary);
 }
 
 .ddButton {
@@ -174,7 +174,7 @@
   min-height: 48px;
   font-size: 15px;
   font-weight: 900;
-  color: #0e1b2b;
+  color: var(--text-strong);
   cursor: pointer;
   width: 100%;
   justify-content: space-between;
@@ -191,8 +191,8 @@
 .ddChevron {
   width: 10px;
   height: 10px;
-  border-right: 2px solid #2b3b55;
-  border-bottom: 2px solid #2b3b55;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
   transform: rotate(45deg);
   margin-top: 4px;
   opacity: 0.85;
@@ -204,7 +204,7 @@
   top: calc(100% + 8px);
   left: 0;
   min-width: 100%;
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 10px 12px 12px;
@@ -235,7 +235,7 @@
   gap: 10px;
   cursor: pointer;
   font-weight: 800;
-  color: #2b3b55;
+  color: var(--text-secondary);
   user-select: none;
   min-width: 0;
 }
@@ -246,8 +246,8 @@
   width: 18px;
   height: 18px;
   border-radius: 3px;
-  border: 2px solid #2b3b55;
-  background: #fff;
+  border: 2px solid var(--text-secondary);
+  background: var(--card);
   display: grid;
   place-items: center;
   margin: 0;
@@ -256,7 +256,7 @@
 
 .ck input:checked {
   background: var(--primary);
-  border-color: #173fae;
+  border-color: var(--primary-2);
 }
 
 .subjectOption {
@@ -270,22 +270,22 @@
 }
 
 .subjectUnderlineRed {
-  border-bottom: 2px solid #e53935;
+  border-bottom: 2px solid var(--danger);
   padding-bottom: 2px;
 }
 
 .subjectUnderlineYellow {
-  border-bottom: 2px solid var(--brand-accent);
+  border-bottom: 2px solid var(--accent);
   padding-bottom: 2px;
 }
 
 .subjectUnderlineSky {
-  border-bottom: 2px solid #b6d7ff;
+  border-bottom: 2px solid var(--primary-soft-2);
   padding-bottom: 2px;
 }
 
 .subjectUnderlineBlue {
-  border-bottom: 2px solid var(--brand-primary);
+  border-bottom: 2px solid var(--primary);
   padding-bottom: 2px;
 }
 
@@ -325,23 +325,23 @@
 }
 
 .rateEasy {
-  background: var(--brand-primary);
-  color: var(--brand-accent);
+  background: var(--primary);
+  color: var(--accent);
 }
 
 .rateMedium {
-  background: var(--brand-accent);
-  color: var(--brand-primary);
+  background: var(--accent);
+  color: var(--primary);
 }
 
 .rateHard {
-  background: #e53935;
-  color: var(--brand-accent);
+  background: var(--danger);
+  color: var(--accent);
 }
 
 .rateMixed {
-  background: #1f2a3a;
-  color: var(--brand-accent);
+  background: var(--ink);
+  color: var(--accent);
 }
 
 .sliderBlock {
@@ -356,7 +356,7 @@
   justify-content: space-between;
   font-size: 12px;
   font-weight: 750;
-  color: #2b3b55;
+  color: var(--text-secondary);
 }
 
 .rangeWrap {
@@ -371,7 +371,7 @@
   top: 50%;
   height: 6px;
   transform: translateY(-50%);
-  background: #f2e69a;
+  background: rgb(var(--accent-rgb) / 0.35);
   border-radius: 999px;
   z-index: 1;
 }
@@ -447,9 +447,9 @@
   text-align: center;
   border-radius: 16px;
   border: 1px dashed var(--line);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgb(var(--card-rgb) / 0.8);
   padding: 24px;
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 700;
   pointer-events: none;
 }
@@ -474,7 +474,7 @@
   border: 1px solid var(--line);
   box-shadow: 0 10px 26px rgba(26, 46, 93, 0.06);
   overflow: hidden;
-  background: #eef4ff;
+  background: var(--primary-soft);
   position: relative;
   min-height: 196px;
   display: flex;
@@ -512,7 +512,7 @@
 }
 
 .quizCardChallenge {
-  background: #fff4c8;
+  background: var(--warning-surface);
 }
 
 .quizCard::before {
@@ -572,7 +572,7 @@
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.4px;
-  background: #0e1b2b;
+  background: var(--ink);
   color: var(--accent);
   padding: 5px 9px;
   border-radius: 999px;
@@ -591,7 +591,7 @@
   cursor: pointer;
   display: grid;
   place-items: center;
-  color: #2b3b55;
+  color: var(--text-secondary);
   pointer-events: auto;
 }
 
@@ -616,7 +616,7 @@
   font-size: 14px;
   line-height: 1.25;
   font-weight: 850;
-  color: #0e1b2b;
+  color: var(--text-strong);
   min-height: 36px;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -650,7 +650,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 650;
 }
 
@@ -658,17 +658,17 @@
   width: 18px;
   height: 18px;
   border-radius: 6px;
-  background: rgba(47, 102, 255, 0.15);
-  border: 1px solid rgba(47, 102, 255, 0.15);
+  background: rgb(var(--primary-rgb) / 0.15);
+  border: 1px solid rgb(var(--primary-rgb) / 0.15);
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  color: #2b3b55;
+  color: var(--text-secondary);
 }
 
 .metaIconClock {
-  background: rgba(255, 196, 0, 0.25);
-  border-color: rgba(255, 196, 0, 0.25);
+  background: rgb(var(--accent-rgb) / 0.25);
+  border-color: rgb(var(--accent-rgb) / 0.25);
 }
 
 .quizBadgeStack {
@@ -689,7 +689,7 @@
   justify-content: center;
   line-height: 1.05;
   font-weight: 900;
-  color: #fff;
+  color: var(--text-inverse);
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);
   text-align: center;
 }
@@ -704,22 +704,22 @@
 }
 
 .difficultyEasy {
-  background: var(--brand-primary);
-  color: var(--brand-accent);
+  background: var(--primary);
+  color: var(--accent);
 }
 
 .difficultyMedium {
-  background: var(--brand-accent);
-  color: var(--brand-primary);
+  background: var(--accent);
+  color: var(--primary);
 }
 
 .difficultyHard {
-  background: #e53935;
-  color: var(--brand-accent);
+  background: var(--danger);
+  color: var(--accent);
 }
 
 .difficultyMixed {
-  background: #1f2a3a;
+  background: var(--ink);
 }
 
 .subjectBadge {
@@ -731,8 +731,8 @@
   font-size: 12px;
   font-weight: 800;
   border: 1px solid transparent;
-  background: #ffffff;
-  color: #0e1b2b;
+  background: var(--card);
+  color: var(--text-strong);
   max-width: 110px;
   white-space: normal;
   line-height: 1.15;
@@ -755,52 +755,52 @@
 }
 
 .subjectMixed {
-  background: #0e1b2b;
-  border-color: #0e1b2b;
-  color: var(--brand-accent);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--accent);
 }
 
 .subjectMixed .subjectChip {
-  background: var(--brand-accent);
+  background: var(--accent);
   border-radius: 999px;
 }
 
 .subjectEn {
-  background: var(--brand-accent);
-  border-color: rgba(255, 212, 0, 0.7);
-  color: var(--brand-primary);
+  background: var(--accent);
+  border-color: rgb(var(--accent-rgb) / 0.7);
+  color: var(--primary);
 }
 
 .subjectEn .subjectChip {
-  background: var(--brand-primary);
+  background: var(--primary);
   border-radius: 999px;
 }
 
 .subjectMath .subjectChip {
-  background: #e53935;
+  background: var(--danger);
   border-radius: 3px;
 }
 
 .subjectSci {
-  background: var(--brand-primary);
-  border-color: rgba(47, 102, 255, 0.65);
-  color: var(--brand-accent);
+  background: var(--primary);
+  border-color: rgb(var(--primary-rgb) / 0.65);
+  color: var(--accent);
 }
 
 .subjectSci .subjectChip {
-  background: var(--brand-accent);
+  background: var(--accent);
   clip-path: polygon(50% 0, 0 100%, 100% 100%);
   border-radius: 0;
 }
 
 .subjectVi {
-  background: #e53935;
-  border-color: rgba(229, 57, 53, 0.7);
-  color: var(--brand-accent);
+  background: var(--danger);
+  border-color: rgb(var(--danger-rgb) / 0.7);
+  color: var(--accent);
 }
 
 .subjectVi .subjectChip {
-  background: var(--brand-accent);
+  background: var(--accent);
   clip-path: polygon(
     50% 0%,
     61% 35%,
@@ -817,16 +817,16 @@
 }
 
 .subjectMath {
-  background: #ffffff;
-  border-color: rgba(229, 57, 53, 0.35);
-  color: #e53935;
+  background: var(--card);
+  border-color: rgb(var(--danger-rgb) / 0.35);
+  color: var(--danger);
 }
 
 .quizCta {
   margin-top: auto;
   border: 0;
   background: var(--primary);
-  color: #fff;
+  color: var(--text-inverse);
   font-weight: 850;
   height: 40px;
   border-radius: 12px;
@@ -846,7 +846,7 @@
 }
 
 .quizCtaChallenge {
-  background: var(--brand-primary);
+  background: var(--primary);
 }
 
 .leaderboard {
@@ -870,7 +870,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: 950;
-  color: #1f3b86;
+  color: var(--primary-ink);
 }
 
 .sectionHead a,
@@ -891,7 +891,7 @@
   overflow: hidden;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--card);
   font-size: 13px;
 }
 
@@ -901,14 +901,14 @@
   color: var(--muted);
   font-weight: 800;
   padding: 10px;
-  background: #f7faff;
+  background: var(--surface-2);
   border-bottom: 1px solid var(--line);
 }
 
 .leaderboardTable tbody td {
   padding: 10px;
   border-bottom: 1px solid var(--line);
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 750;
 }
 
@@ -919,7 +919,7 @@
 .rank {
   width: 34px;
   font-weight: 950;
-  color: #1f3b86;
+  color: var(--primary-ink);
 }
 
 .xp {
@@ -939,7 +939,7 @@
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  background: #d7e3ff;
+  background: var(--primary-soft-2);
   position: relative;
   overflow: hidden;
   flex: 0 0 auto;
@@ -965,8 +965,8 @@
 
 .pagerButton {
   border: 1px solid var(--line);
-  background: #fff;
-  color: #2b3b55;
+  background: var(--card);
+  color: var(--text-secondary);
   padding: 8px 10px;
   min-width: 40px;
   font-size: 13px;
@@ -978,7 +978,7 @@
 
 .pagerButtonActive {
   background: var(--primary);
-  color: #fff;
+  color: var(--text-inverse);
   border-color: var(--primary);
 }
 
@@ -997,10 +997,10 @@
 .stateCard {
   border-radius: 16px;
   border: 1px dashed var(--line);
-  background: #fff;
+  background: var(--card);
   padding: 24px;
   text-align: center;
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 700;
   display: block;
   width: min(520px, 100%);
@@ -1011,7 +1011,7 @@
   margin-top: 10px;
   border: 0;
   background: var(--primary);
-  color: #fff;
+  color: var(--text-inverse);
   font-weight: 800;
   border-radius: 999px;
   padding: 8px 14px;

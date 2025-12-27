@@ -17,9 +17,9 @@
   text-align: center;
   border-radius: 16px;
   border: 1px dashed var(--line);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgb(var(--card-rgb) / 0.8);
   padding: 24px;
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 700;
   pointer-events: none;
 }
@@ -27,10 +27,10 @@
 .stateCard {
   border-radius: 16px;
   border: 1px dashed var(--line);
-  background: #fff;
+  background: var(--card);
   padding: 24px;
   text-align: center;
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 700;
   display: block;
   width: min(520px, 100%);
@@ -40,8 +40,8 @@
 .stateAction {
   margin-top: 10px;
   border: 0;
-  background: var(--brand-primary);
-  color: #fff;
+  background: var(--primary);
+  color: var(--text-inverse);
   font-weight: 800;
   border-radius: 999px;
   padding: 8px 14px;

@@ -47,14 +47,19 @@ export default function RegisterPage() {
           footer={
             <p>
               Đã có tài khoản?{" "}
-              <Link href="/auth/login" className="font-medium text-slate-900">
+              <Link
+                href="/auth/login"
+                className="font-medium text-[var(--text)]"
+              >
                 Đăng nhập
               </Link>
             </p>
           }
         >
           <Card>
-            <div className="space-y-4 text-sm text-slate-600">Đang tải...</div>
+            <div className="space-y-4 text-sm text-[var(--muted)]">
+              Đang tải...
+            </div>
           </Card>
         </AuthShell>
       }
@@ -183,7 +188,7 @@ function RegisterPageInner() {
       footer={
         <p>
           Đã có tài khoản?{" "}
-          <Link href="/auth/login" className="font-medium text-slate-900">
+          <Link href="/auth/login" className="font-medium text-[var(--text)]">
             Đăng nhập
           </Link>
         </p>
@@ -198,17 +203,19 @@ function RegisterPageInner() {
                 onSuccess={handleGoogle}
               />
               <div className="flex items-center gap-2">
-                <div className="h-px flex-1 bg-slate-200" />
-                <span className="text-xs uppercase text-slate-500">Hoặc</span>
-                <div className="h-px flex-1 bg-slate-200" />
+                <div className="h-px flex-1 bg-[var(--line)]" />
+                <span className="text-xs uppercase text-[var(--muted)]">
+                  Hoặc
+                </span>
+                <div className="h-px flex-1 bg-[var(--line)]" />
               </div>
               <div className="space-y-3">
                 <div className="space-y-2">
                   <label
                     htmlFor="reg-email"
-                    className="text-sm font-medium text-slate-700"
+                    className="text-sm font-medium text-[var(--text)]"
                   >
-                    Email <span className="text-red-500">*</span>
+                    Email <span className="text-[var(--danger-text)]">*</span>
                   </label>
                   <Input
                     id="reg-email"
@@ -224,9 +231,10 @@ function RegisterPageInner() {
                 <div className="space-y-2">
                   <label
                     htmlFor="reg-password"
-                    className="text-sm font-medium text-slate-700"
+                    className="text-sm font-medium text-[var(--text)]"
                   >
-                    Mật khẩu <span className="text-red-500">*</span>
+                    Mật khẩu{" "}
+                    <span className="text-[var(--danger-text)]">*</span>
                   </label>
                   <Input
                     id="reg-password"
@@ -243,9 +251,10 @@ function RegisterPageInner() {
                 <div className="space-y-2">
                   <label
                     htmlFor="reg-password-confirm"
-                    className="text-sm font-medium text-slate-700"
+                    className="text-sm font-medium text-[var(--text)]"
                   >
-                    Nhập lại mật khẩu <span className="text-red-500">*</span>
+                    Nhập lại mật khẩu{" "}
+                    <span className="text-[var(--danger-text)]">*</span>
                   </label>
                   <Input
                     id="reg-password-confirm"
@@ -261,7 +270,9 @@ function RegisterPageInner() {
                     required
                   />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
+                {error && (
+                  <p className="text-sm text-[var(--danger-text)]">{error}</p>
+                )}
                 <Button type="button" block onClick={proceedToProfile}>
                   Tiếp tục
                 </Button>
@@ -277,8 +288,12 @@ function RegisterPageInner() {
                 showTerms
                 fileInputRef={fileInputRef}
               />
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              {success && <p className="text-sm text-green-600">{success}</p>}
+              {error && (
+                <p className="text-sm text-[var(--danger-text)]">{error}</p>
+              )}
+              {success && (
+                <p className="text-sm text-[var(--success-text)]">{success}</p>
+              )}
               <div className="flex gap-3">
                 <Button
                   type="button"
