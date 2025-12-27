@@ -2,10 +2,12 @@ import type {
   LeaderboardResult,
   LeaderboardSortBy,
   LeaderboardSortDir,
+  LeaderboardTableEntry,
   LeaderboardTableResult,
 } from "@/application/models/leaderboard";
 import {
   getLeaderboardForViewer,
+  getLeaderboardTableEntryForSearch,
   getLeaderboardTableForViewer,
 } from "@/application/services/leaderboardService";
 
@@ -27,4 +29,12 @@ export async function controllerGetLeaderboardTable(params: {
   includeSelf: boolean;
 }): Promise<LeaderboardTableResult> {
   return getLeaderboardTableForViewer(params);
+}
+
+export async function controllerSearchLeaderboardTableEntry(params: {
+  query: string;
+  sortBy: LeaderboardSortBy;
+  sortDir: LeaderboardSortDir;
+}): Promise<LeaderboardTableEntry | null> {
+  return getLeaderboardTableEntryForSearch(params);
 }

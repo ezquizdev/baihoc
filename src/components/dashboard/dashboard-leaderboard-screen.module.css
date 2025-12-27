@@ -50,6 +50,138 @@
   margin-bottom: 12px;
 }
 
+.searchResult {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  padding: 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.searchResultHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.searchResultTitle {
+  font-weight: 900;
+  color: var(--text-strong);
+  min-width: 0;
+}
+
+.searchQuery {
+  color: var(--primary-ink);
+}
+
+.searchResultActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.searchClearButton {
+  color: var(--text-secondary);
+}
+
+.searchClearButton:hover {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.searchState {
+  font-weight: 750;
+  color: rgb(var(--ink-rgb) / 0.62);
+}
+
+.searchStateError {
+  color: var(--danger-text);
+  font-weight: 850;
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.searchIdentity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.searchRank {
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-strong);
+}
+
+.searchName {
+  display: inline-block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 850;
+  color: inherit;
+  text-decoration: none;
+}
+
+.searchName:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.searchName:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.searchScores {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.scorePill {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.02);
+  font-variant-numeric: tabular-nums;
+}
+
+.scorePillOverall {
+  border-color: rgb(var(--primary-rgb) / 0.22);
+  background: rgb(var(--primary-rgb) / 0.08);
+}
+
+.scorePillLabel {
+  font-size: 12px;
+  font-weight: 950;
+  color: rgb(var(--ink-rgb) / 0.62);
+}
+
+.scorePillValue {
+  font-size: 13px;
+  font-weight: 950;
+  color: var(--text-strong);
+}
+
 .cardTitle {
   font-size: 18px;
   font-weight: 900;
@@ -337,6 +469,15 @@
 @media (max-width: 860px) {
   .table {
     min-width: 720px;
+  }
+
+  .searchRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .searchScores {
+    justify-content: flex-start;
   }
 
   .sortLabelFull {
