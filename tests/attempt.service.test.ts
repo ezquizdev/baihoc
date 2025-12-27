@@ -77,6 +77,8 @@ describe("attemptService", () => {
       challengeTimeLimitSeconds: null,
       challengeStartAt: null,
       challengeEndAt: null,
+      customQuizId: null,
+      customQuizOwnerId: null,
       totalQuestions: 2,
     });
     vi.mocked(attemptRepo.findInProgressAttempt).mockResolvedValue(null);
@@ -98,6 +100,8 @@ describe("attemptService", () => {
       challengeTimeLimitSeconds: null,
       challengeStartAt: null,
       challengeEndAt: null,
+      customQuizId: null,
+      customQuizOwnerId: null,
       totalQuestions: 2,
     });
     vi.mocked(attemptRepo.findInProgressAttempt).mockResolvedValue({
@@ -118,6 +122,8 @@ describe("attemptService", () => {
       challengeTimeLimitSeconds: 600,
       challengeStartAt: new Date(Date.now() - 60_000).toISOString(),
       challengeEndAt: new Date(Date.now() + 60_000).toISOString(),
+      customQuizId: null,
+      customQuizOwnerId: null,
       totalQuestions: 2,
     });
     vi.mocked(attemptRepo.findChallengeAttempt).mockResolvedValue({
@@ -158,6 +164,8 @@ describe("attemptService", () => {
       challengeTimeLimitSeconds: 600,
       challengeStartAt: new Date(Date.now() + 60_000).toISOString(),
       challengeEndAt: new Date(Date.now() + 120_000).toISOString(),
+      customQuizId: null,
+      customQuizOwnerId: null,
       totalQuestions: 2,
     });
     vi.mocked(attemptRepo.findChallengeAttempt).mockResolvedValue(null);
@@ -166,6 +174,27 @@ describe("attemptService", () => {
       startOrResumeAttempt("user-1", "quiz-1"),
     ).rejects.toMatchObject({
       code: "CHALLENGE_NOT_ACTIVE",
+    });
+  });
+
+  it("blocks starting another user's custom quiz", async () => {
+    vi.mocked(attemptRepo.getQuizAttemptMeta).mockResolvedValue({
+      quizId: "quiz-1",
+      isChallenge: false,
+      estimatedTimeSeconds: 600,
+      challengeTimeLimitSeconds: null,
+      challengeStartAt: null,
+      challengeEndAt: null,
+      customQuizId: "custom-1",
+      customQuizOwnerId: "user-2",
+      totalQuestions: 2,
+    });
+
+    await expect(
+      startOrResumeAttempt("user-1", "quiz-1"),
+    ).rejects.toMatchObject({
+      code: "CUSTOM_QUIZ_FORBIDDEN",
+      status: 403,
     });
   });
 

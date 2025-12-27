@@ -1,6 +1,7 @@
 import {
   autosaveAttempt,
   getAttemptState,
+  listAttemptHistory,
   startOrResumeAttempt,
   submitAttempt,
 } from "@/application/services/attemptService";
@@ -14,6 +15,13 @@ export async function controllerGetAttemptState(
   attemptId: string,
 ) {
   return getAttemptState(userId, attemptId);
+}
+
+export async function controllerListAttemptHistory(
+  userId: string,
+  params: { limit?: number; offset?: number } = {},
+) {
+  return listAttemptHistory(userId, params);
 }
 
 export async function controllerAutosaveAttempt(

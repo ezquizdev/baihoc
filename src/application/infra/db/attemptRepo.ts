@@ -7,12 +7,13 @@ import {
 import type {
   Attempt,
   AttemptAnswer,
+  AttemptHistoryItem,
   AttemptQuestion,
   AttemptQuestionOption,
   AttemptStateResponse,
   AttemptStatus,
 } from "@/application/models/attempt";
-import type { QuestionType } from "@/application/models/enums";
+import type { DifficultyLevel, QuestionType } from "@/application/models/enums";
 
 export type AttemptRow = {
   id: string;
@@ -71,6 +72,8 @@ type QuizAttemptMetaRow = {
   challenge_time_limit_seconds: number | null;
   challenge_start_at: string | null;
   challenge_end_at: string | null;
+  custom_quiz_id: string | null;
+  custom_quiz_owner_id: string | null;
   total_questions: number;
 };
 
@@ -81,7 +84,28 @@ export type QuizAttemptMeta = {
   challengeTimeLimitSeconds: number | null;
   challengeStartAt: string | null;
   challengeEndAt: string | null;
+  customQuizId: string | null;
+  customQuizOwnerId: string | null;
   totalQuestions: number;
+};
+
+type AttemptHistoryRow = {
+  id: string;
+  quiz_id: string;
+  status: AttemptStatus;
+  started_at: string;
+  submitted_at: string | null;
+  score_percent: number;
+  correct_count: number;
+  total_questions: number;
+  xp_earned: number;
+  quiz_title: string | null;
+  quiz_difficulty_level: number;
+  quiz_estimated_time_seconds: number | null;
+  quiz_is_challenge: boolean;
+  custom_quiz_id: string | null;
+  custom_config: unknown | null;
+  total_count: number;
 };
 
 export type QuizQuestionMeta = {
@@ -195,6 +219,22 @@ export async function getQuizAttemptMeta(
             cs.time_limit_seconds AS challenge_time_limit_seconds,
             cs.start_at AS challenge_start_at,
             cs.end_at AS challenge_end_at,
+            (
+              SELECT cq.id
+              FROM custom_quizzes cq
+              WHERE cq.generated_quiz_id = q.id
+                AND cq.status = 'ready'::custom_quiz_status
+              ORDER BY cq.created_at DESC
+              LIMIT 1
+            ) AS custom_quiz_id,
+            (
+              SELECT cq.user_id
+              FROM custom_quizzes cq
+              WHERE cq.generated_quiz_id = q.id
+                AND cq.status = 'ready'::custom_quiz_status
+              ORDER BY cq.created_at DESC
+              LIMIT 1
+            ) AS custom_quiz_owner_id,
             (SELECT COUNT(*)::int FROM quiz_questions qq WHERE qq.quiz_id = q.id) AS total_questions
      FROM quizzes q
      LEFT JOIN challenge_settings cs ON cs.quiz_id = q.id
@@ -211,6 +251,8 @@ export async function getQuizAttemptMeta(
     challengeTimeLimitSeconds: row.challenge_time_limit_seconds,
     challengeStartAt: row.challenge_start_at,
     challengeEndAt: row.challenge_end_at,
+    customQuizId: row.custom_quiz_id,
+    customQuizOwnerId: row.custom_quiz_owner_id,
     totalQuestions: Number(row.total_questions),
   };
 }
@@ -247,6 +289,7 @@ export async function createAttempt(input: {
   userId: string;
   quizId: string;
   challengeId: string | null;
+  customQuizId: string | null;
   timeLimitSeconds: number | null;
   remainingSeconds: number | null;
   totalQuestions: number;
@@ -255,6 +298,7 @@ export async function createAttempt(input: {
     input.userId,
     input.quizId,
     input.challengeId,
+    input.customQuizId,
     input.timeLimitSeconds,
     input.remainingSeconds,
     input.totalQuestions,
@@ -264,10 +308,11 @@ export async function createAttempt(input: {
        user_id,
        quiz_id,
        challenge_id,
+       custom_quiz_id,
        time_limit_seconds,
        remaining_seconds,
        total_questions
-     ) VALUES ($1, $2, $3, $4, $5, $6)
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`;
 
   if (!input.challengeId) {
@@ -345,6 +390,46 @@ export async function getAttemptState(
   };
 }
 
+export async function listAttemptHistory(params: {
+  userId: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{ items: AttemptHistoryItem[]; total: number }> {
+  const limit = params.limit ?? 20;
+  const offset = params.offset ?? 0;
+
+  const res = await query<AttemptHistoryRow>(
+    `SELECT a.id,
+            a.quiz_id,
+            a.status,
+            a.started_at,
+            a.submitted_at,
+            a.score_percent,
+            a.correct_count,
+            a.total_questions,
+            a.xp_earned,
+            q.title AS quiz_title,
+            q.difficulty_level AS quiz_difficulty_level,
+            q.estimated_time_seconds AS quiz_estimated_time_seconds,
+            q.is_challenge AS quiz_is_challenge,
+            a.custom_quiz_id,
+            cq.config AS custom_config,
+            COUNT(*) OVER() AS total_count
+     FROM attempts a
+     JOIN quizzes q ON q.id = a.quiz_id
+     LEFT JOIN custom_quizzes cq ON cq.id = a.custom_quiz_id
+     WHERE a.user_id = $1
+       AND a.status IN ('submitted', 'auto_submitted')
+     ORDER BY a.started_at DESC
+     LIMIT $2 OFFSET $3`,
+    [params.userId, limit, offset],
+  );
+
+  const items = res.rows.map(mapAttemptHistoryRow);
+  const total = res.rows.length ? Number(res.rows[0].total_count) : 0;
+  return { items, total };
+}
+
 export async function listAttemptAnswers(
   attemptId: string,
 ): Promise<AttemptAnswer[]> {
@@ -411,6 +496,30 @@ export async function listAttemptQuestions(
   return questionRes.rows.map((row) =>
     mapAttemptQuestion(row, optionsByQuestion.get(row.question_id) ?? []),
   );
+}
+
+function mapAttemptHistoryRow(row: AttemptHistoryRow): AttemptHistoryItem {
+  return {
+    attemptId: row.id,
+    quizId: row.quiz_id,
+    quizTitle: row.quiz_title ?? null,
+    quizDifficulty: row.quiz_difficulty_level as DifficultyLevel,
+    quizEstimatedTimeSeconds: row.quiz_estimated_time_seconds,
+    isChallenge: row.quiz_is_challenge,
+    status: row.status,
+    startedAt: row.started_at,
+    submittedAt: row.submitted_at,
+    scorePercent: Number(row.score_percent),
+    correctCount: Number(row.correct_count),
+    totalQuestions: Number(row.total_questions),
+    xpEarned: Number(row.xp_earned),
+    customQuiz: row.custom_quiz_id
+      ? {
+          id: row.custom_quiz_id,
+          config: row.custom_config ?? {},
+        }
+      : undefined,
+  };
 }
 
 export async function listQuizQuestionMeta(

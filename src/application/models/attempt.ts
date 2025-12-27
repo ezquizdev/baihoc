@@ -1,4 +1,4 @@
-import type { QuestionType } from "@/application/models/enums";
+import type { DifficultyLevel, QuestionType } from "@/application/models/enums";
 
 export const AttemptStatusValues = [
   "in_progress",
@@ -64,4 +64,24 @@ export type AttemptStateResponse = {
   quizTitle: string | null;
   questions: AttemptQuestion[];
   answers: AttemptAnswer[];
+};
+
+export type AttemptHistoryItem = {
+  attemptId: string;
+  quizId: string;
+  quizTitle: string | null;
+  quizDifficulty: DifficultyLevel;
+  quizEstimatedTimeSeconds: number | null;
+  isChallenge: boolean;
+  status: AttemptStatus;
+  startedAt: string;
+  submittedAt: string | null;
+  scorePercent: number;
+  correctCount: number;
+  totalQuestions: number;
+  xpEarned: number;
+  customQuiz?: {
+    id: string;
+    config: unknown;
+  };
 };

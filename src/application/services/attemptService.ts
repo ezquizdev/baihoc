@@ -8,6 +8,7 @@ import {
   getAttemptState as getAttemptStateRepo,
   getQuizAttemptMeta,
   listAttemptAnswers,
+  listAttemptHistory as listAttemptHistoryRepo,
   listQuizGradingData,
   listQuizQuestionMetaByIds,
   type QuizQuestionGrading,
@@ -17,6 +18,7 @@ import {
 import type {
   Attempt,
   AttemptAnswer,
+  AttemptHistoryItem,
   AttemptStateResponse,
   AttemptStatus,
 } from "@/application/models/attempt";
@@ -45,6 +47,9 @@ export async function startOrResumeAttempt(
   const quizMeta = await getQuizAttemptMeta(quizId);
   if (!quizMeta) {
     throw new ServiceError("QUIZ_NOT_FOUND", "Quiz not found", 404);
+  }
+  if (quizMeta.customQuizOwnerId && quizMeta.customQuizOwnerId !== userId) {
+    throw new ServiceError("CUSTOM_QUIZ_FORBIDDEN", "Forbidden", 403);
   }
   if (quizMeta.totalQuestions <= 0) {
     throw new ServiceError("QUIZ_NO_QUESTIONS", "Quiz has no questions", 400);
@@ -105,6 +110,7 @@ export async function startOrResumeAttempt(
     userId,
     quizId,
     challengeId: quizMeta.isChallenge ? quizId : null,
+    customQuizId: quizMeta.customQuizId ?? null,
     timeLimitSeconds: timeLimitSeconds ?? null,
     remainingSeconds: timeLimitSeconds ?? null,
     totalQuestions: quizMeta.totalQuestions,
@@ -125,6 +131,17 @@ export async function getAttemptState(
     throw new ServiceError("ATTEMPT_FORBIDDEN", "Forbidden", 403);
   }
   return applyRemainingClamp(state.attempt, state);
+}
+
+export async function listAttemptHistory(
+  userId: string,
+  params: { limit?: number; offset?: number } = {},
+): Promise<{ items: AttemptHistoryItem[]; total: number }> {
+  return listAttemptHistoryRepo({
+    userId,
+    limit: params.limit,
+    offset: params.offset,
+  });
 }
 
 export async function autosaveAttempt(
