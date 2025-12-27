@@ -20,6 +20,10 @@
 - Added `Soạn thảo / Chia đôi / Xem trước` modes for staff question editing (Markdown + LaTeX via `RichText`).
 - Replaced `window.confirm` delete prompt with a themed modal and clearer busy/error states.
 
+### feat(staff): add passage detail API
+- Added `GET /api/staff/passages/[passageId]` (returns `{ passage, questions }`) and `PATCH /api/staff/passages/[passageId]` (updates `content` + `mediaUrls`).
+- Added `passageService` + repo helpers to load and update passages from Postgres.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors

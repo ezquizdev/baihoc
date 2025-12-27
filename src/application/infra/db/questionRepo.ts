@@ -466,6 +466,53 @@ export async function getQuestionDetail(
   };
 }
 
+export async function getPassageById(
+  passageId: string,
+): Promise<Passage | null> {
+  const res = await query<PassageRow>(`SELECT * FROM passages WHERE id = $1`, [
+    passageId,
+  ]);
+  return mapPassage(res.rows[0]);
+}
+
+export async function updatePassageById(input: {
+  passageId: string;
+  content: string;
+  mediaUrls: string[];
+}): Promise<Passage | null> {
+  const res = await query<PassageRow>(
+    `UPDATE passages
+     SET content = $2,
+         media_urls = $3
+     WHERE id = $1
+     RETURNING *`,
+    [input.passageId, input.content, input.mediaUrls],
+  );
+  return mapPassage(res.rows[0]);
+}
+
+export async function listQuestionsForPassage(
+  passageId: string,
+): Promise<Question[]> {
+  const res = await query<QuestionRow>(
+    `SELECT q.*,
+            COALESCE(qt.topic_ids, '{}') AS topic_ids,
+            qp.passage_id,
+            qp.position AS passage_position
+     FROM question_passages qp
+     JOIN questions q ON q.id = qp.question_id
+     LEFT JOIN (
+       SELECT question_id, array_agg(topic_id) AS topic_ids
+       FROM question_topics
+       GROUP BY question_id
+     ) qt ON qt.question_id = q.id
+     WHERE qp.passage_id = $1
+     ORDER BY qp.position ASC, q.id ASC`,
+    [passageId],
+  );
+  return res.rows.map(mapQuestion);
+}
+
 export async function archiveQuestion(questionId: string) {
   await query(
     `UPDATE questions
