@@ -2,6 +2,9 @@
 
 ## 2025-12-27
 
+### chore(logging): remove unused logger
+- Removed unused `src/lib/logger.ts`.
+
 ### feat(profile): refresh profile UI
 - Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
 - Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
