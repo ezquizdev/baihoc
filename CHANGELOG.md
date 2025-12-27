@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-12-27
+
+### feat(custom-quiz): generate private custom quizzes
+- Added `POST /api/custom-quizzes` to generate paid-only custom quizzes from topic + difficulty requirements.
+- Generation is atomic and links `custom_quizzes` → generated `quizzes`.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
