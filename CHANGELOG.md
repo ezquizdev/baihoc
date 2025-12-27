@@ -24,6 +24,10 @@
 - Added `GET /api/staff/passages/[passageId]` (returns `{ passage, questions }`) and `PATCH /api/staff/passages/[passageId]` (updates `content` + `mediaUrls`).
 - Added `passageService` + repo helpers to load and update passages from Postgres.
 
+### feat(staff): add passage editor page
+- Added `/staff/questions/passages/[passageId]` to edit a shared passage and all linked questions on one screen.
+- Includes inline question editing, Markdown/LaTeX previews, and a themed delete confirmation modal.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
