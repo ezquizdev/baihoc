@@ -74,7 +74,44 @@
   box-shadow: 0 14px 36px rgba(30, 108, 255, 0.22);
 }
 
+.btnDanger {
+  background: #d84a3f;
+  box-shadow: 0 14px 36px rgba(216, 74, 63, 0.22);
+}
+
+.btnSecondary {
+  background: rgba(255, 255, 255, 0.9);
+  color: #2b3b55;
+  border: 1px solid rgba(43, 59, 85, 0.18);
+  box-shadow: none;
+}
+
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(43, 59, 85, 0.18);
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 750;
+  color: #0e1b2b;
+  resize: vertical;
+  outline: none;
+}
+
+.textarea:focus {
+  border-color: rgba(30, 108, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(30, 108, 255, 0.16);
+}
+
+.help {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
 }
