@@ -54,6 +54,10 @@
 - Added `GET /api/attempts` for submitted/auto-submitted attempts (includes custom quiz config metadata when available).
 - Starting a generated custom quiz now stores `custom_quiz_id` on the attempt and blocks non-owners from starting it.
 
+### fix(attempt): enforce single running attempt
+- Users can only have **one** `in_progress` attempt at a time; starting a new quiz will resume the active attempt instead.
+- When starting a quiz, any other timed/challenge attempts that should have ended are auto-submitted at their expected end time.
+
 ### fix(quiz): block delete while attempts in progress
 - Staff hard-delete now returns 409 when any attempt is `in_progress` (archive remains allowed).
 - Deleting a quiz with completed attempts now backfills snapshot metadata and `attempt_question_snapshots` so history/results stay viewable after quiz deletion.

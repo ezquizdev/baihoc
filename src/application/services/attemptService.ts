@@ -1,28 +1,33 @@
 import { createHash } from "node:crypto";
+import type { PoolClient } from "pg";
 import {
   type AttemptAnswerInput,
-  createAttempt,
+  createAttemptWithClient,
   findChallengeAttempt,
-  findInProgressAttempt,
   type GradedAnswerInput,
   getAttemptById,
   getAttemptReviewMeta,
   getAttemptState as getAttemptStateRepo,
   getQuizAttemptMeta,
   getQuizSnapshotMeta,
+  type InProgressAttemptRow,
   listAttemptAnswers,
   listAttemptHistory as listAttemptHistoryRepo,
   listAttemptReviewQuestions,
   listAttemptSnapshotQuestionIds,
+  listInProgressAttemptsForUser,
   listQuestionReviewDetails,
   listQuizGradingData,
   listQuizGradingDataByQuestionIds,
   listQuizQuestionMetaByIds,
+  lockAttemptStartForUser,
   type QuizQuestionGrading,
   rejudgeAttempt as rejudgeAttemptRepo,
   saveAttemptAnswers,
   submitAttempt as submitAttemptRepo,
+  submitAttemptWithClient,
 } from "@/application/infra/db/attemptRepo";
+import { withTransaction } from "@/application/infra/db/pool";
 import { listQuizStatusesByIds } from "@/application/infra/db/quizRepo";
 import type {
   Attempt,
@@ -52,83 +57,254 @@ type AutosaveInput = {
   remainingSeconds?: number | null;
 };
 
+function firstMatchingAttemptId(
+  attempts: InProgressAttemptRow[],
+  quizId: string,
+): string | null {
+  for (const attempt of attempts) {
+    if (attempt.quiz_id === quizId) return attempt.id;
+  }
+  return null;
+}
+
+function firstMatchingAttempt(
+  attempts: InProgressAttemptRow[],
+  quizId: string,
+): InProgressAttemptRow | null {
+  for (const attempt of attempts) {
+    if (attempt.quiz_id === quizId) return attempt;
+  }
+  return null;
+}
+
+function computeAttemptSupposedEndMs(
+  startedAt: string,
+  timeLimitSeconds: number | null,
+  challengeEndAt: string | null,
+): number | null {
+  const startedMs = new Date(startedAt).getTime();
+  if (Number.isNaN(startedMs)) return null;
+
+  const ends: number[] = [];
+  if (timeLimitSeconds !== null) {
+    ends.push(startedMs + Math.max(0, timeLimitSeconds) * 1000);
+  }
+  if (challengeEndAt) {
+    const endMs = new Date(challengeEndAt).getTime();
+    if (!Number.isNaN(endMs)) ends.push(endMs);
+  }
+
+  if (!ends.length) return null;
+  return Math.min(...ends);
+}
+
+async function autoSubmitAttemptAsEnded(
+  client: PoolClient,
+  userId: string,
+  attemptId: string,
+  endedAtMs: number,
+) {
+  if (!Number.isFinite(endedAtMs)) return;
+  const endedAtIso = new Date(endedAtMs).toISOString();
+
+  const attempt = await getAttemptById(attemptId, client);
+  if (!attempt) return;
+  if (attempt.user_id !== userId) return;
+  if (attempt.status !== "in_progress") return;
+
+  const gradingData = await listQuizGradingData(attempt.quiz_id, client);
+  const existingAnswers = await listAttemptAnswers(attemptId, client);
+  const answerMap = new Map<string, AttemptAnswerInput>();
+  existingAnswers.forEach((answer) => {
+    answerMap.set(answer.questionId, {
+      questionId: answer.questionId,
+      selectedOptionIds: answer.selectedOptionIds ?? null,
+      textAnswer: answer.textAnswer ?? null,
+    });
+  });
+
+  const { gradedAnswers, correctCount, scoreRaw, scorePercent } = gradeAnswers(
+    gradingData,
+    answerMap,
+  );
+
+  const xpEarned = Math.round(scorePercent);
+  const quizMetaForSnapshot = await getQuizSnapshotMeta(
+    attempt.quiz_id,
+    client,
+  );
+
+  const questionSnapshots = buildQuestionSnapshots(gradingData);
+  const subjectScores = computeSubjectScores(gradingData, gradedAnswers);
+  const quizContentHash = computeQuizContentHashSnapshot(gradingData);
+
+  await submitAttemptWithClient(
+    client,
+    {
+      attemptId,
+      gradedAnswers,
+      scoreRaw,
+      scorePercent,
+      correctCount,
+      totalQuestions: gradingData.length || attempt.total_questions,
+      remainingSeconds: 0,
+      xpEvent: {
+        userId,
+        source: attempt.challenge_id ? "challenge" : "attempt",
+        amount: xpEarned,
+        metadata: { quizId: attempt.quiz_id },
+      },
+      snapshot: {
+        quizContentHash,
+        quizTitle: quizMetaForSnapshot?.title ?? null,
+        quizDifficultyLevel: quizMetaForSnapshot?.difficultyLevel ?? null,
+        quizEstimatedTimeSeconds:
+          quizMetaForSnapshot?.estimatedTimeSeconds ?? null,
+        isChallenge:
+          quizMetaForSnapshot?.isChallenge ?? attempt.challenge_id !== null,
+        subjectScores,
+        subjectScoresEstimated: false,
+      },
+      questionSnapshots,
+    },
+    {
+      status: "auto_submitted",
+      submittedAt: endedAtIso,
+      judgedAt: endedAtIso,
+      xpEventCreatedAt: endedAtIso,
+    },
+  );
+}
+
 export async function startOrResumeAttempt(
   userId: string,
   quizId: string,
 ): Promise<StartAttemptResult> {
-  const quizMeta = await getQuizAttemptMeta(quizId);
-  if (!quizMeta) {
-    throw new ServiceError("QUIZ_NOT_FOUND", "Quiz not found", 404);
-  }
-  if (quizMeta.customQuizOwnerId && quizMeta.customQuizOwnerId !== userId) {
-    throw new ServiceError("CUSTOM_QUIZ_FORBIDDEN", "Forbidden", 403);
-  }
-  if (quizMeta.totalQuestions <= 0) {
-    throw new ServiceError("QUIZ_NO_QUESTIONS", "Quiz has no questions", 400);
-  }
+  return withTransaction(async (client) => {
+    await lockAttemptStartForUser(client, userId);
 
-  if (quizMeta.isChallenge) {
-    const existing = await findChallengeAttempt(userId, quizId);
-    if (existing) {
-      return { attemptId: existing.id, resumed: true, status: existing.status };
-    }
-  } else {
-    const existing = await findInProgressAttempt(userId, quizId);
-    if (existing) {
-      return { attemptId: existing.id, resumed: true, status: existing.status };
-    }
-  }
+    const nowMs = Date.now();
 
-  const timeLimitSeconds = quizMeta.isChallenge
-    ? quizMeta.challengeTimeLimitSeconds
-    : quizMeta.estimatedTimeSeconds;
-  if (quizMeta.isChallenge && timeLimitSeconds === null) {
-    throw new ServiceError(
-      "CHALLENGE_TIME_LIMIT_MISSING",
-      "Challenge time limit missing",
-      400,
+    // Enforce: a user can have only one `in_progress` attempt at a time.
+    // When starting a quiz, auto-submit any *other* timed attempts that have already expired.
+    const initialInProgress = await listInProgressAttemptsForUser(
+      userId,
+      client,
     );
-  }
-  if (quizMeta.isChallenge) {
-    const startAt = quizMeta.challengeStartAt;
-    const endAt = quizMeta.challengeEndAt;
-    if (!startAt || !endAt) {
-      throw new ServiceError(
-        "CHALLENGE_SCHEDULE_MISSING",
-        "Challenge schedule missing",
-        400,
-      );
-    }
-    const now = Date.now();
-    const startMs = new Date(startAt).getTime();
-    const endMs = new Date(endAt).getTime();
-    if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
-      throw new ServiceError(
-        "CHALLENGE_SCHEDULE_INVALID",
-        "Challenge schedule invalid",
-        400,
-      );
-    }
-    if (now < startMs || now > endMs) {
-      throw new ServiceError(
-        "CHALLENGE_NOT_ACTIVE",
-        "Thử thách chưa bắt đầu hoặc đã kết thúc.",
-        409,
-      );
-    }
-  }
+    const requestedInProgressId = firstMatchingAttemptId(
+      initialInProgress,
+      quizId,
+    );
 
-  const created = await createAttempt({
-    userId,
-    quizId,
-    challengeId: quizMeta.isChallenge ? quizId : null,
-    customQuizId: quizMeta.customQuizId ?? null,
-    timeLimitSeconds: timeLimitSeconds ?? null,
-    remainingSeconds: timeLimitSeconds ?? null,
-    totalQuestions: quizMeta.totalQuestions,
+    for (const attempt of initialInProgress) {
+      if (attempt.id === requestedInProgressId) continue;
+      const endAtMs = computeAttemptSupposedEndMs(
+        attempt.started_at,
+        attempt.time_limit_seconds,
+        attempt.challenge_end_at,
+      );
+      if (endAtMs === null || nowMs < endAtMs) continue;
+      await autoSubmitAttemptAsEnded(client, userId, attempt.id, endAtMs);
+    }
+
+    const refreshedInProgress = await listInProgressAttemptsForUser(
+      userId,
+      client,
+    );
+
+    const requestedInProgress = firstMatchingAttempt(
+      refreshedInProgress,
+      quizId,
+    );
+    if (requestedInProgress) {
+      return {
+        attemptId: requestedInProgress.id,
+        resumed: true,
+        status: requestedInProgress.status,
+      };
+    }
+
+    const activeAttempt = refreshedInProgress[0] ?? null;
+    if (activeAttempt) {
+      return {
+        attemptId: activeAttempt.id,
+        resumed: true,
+        status: activeAttempt.status,
+      };
+    }
+
+    const quizMeta = await getQuizAttemptMeta(quizId, client);
+    if (!quizMeta) {
+      throw new ServiceError("QUIZ_NOT_FOUND", "Quiz not found", 404);
+    }
+    if (quizMeta.customQuizOwnerId && quizMeta.customQuizOwnerId !== userId) {
+      throw new ServiceError("CUSTOM_QUIZ_FORBIDDEN", "Forbidden", 403);
+    }
+    if (quizMeta.totalQuestions <= 0) {
+      throw new ServiceError("QUIZ_NO_QUESTIONS", "Quiz has no questions", 400);
+    }
+
+    if (quizMeta.isChallenge) {
+      const existing = await findChallengeAttempt(userId, quizId, client);
+      if (existing) {
+        return {
+          attemptId: existing.id,
+          resumed: true,
+          status: existing.status,
+        };
+      }
+    }
+
+    const timeLimitSeconds = quizMeta.isChallenge
+      ? quizMeta.challengeTimeLimitSeconds
+      : quizMeta.estimatedTimeSeconds;
+    if (quizMeta.isChallenge && timeLimitSeconds === null) {
+      throw new ServiceError(
+        "CHALLENGE_TIME_LIMIT_MISSING",
+        "Challenge time limit missing",
+        400,
+      );
+    }
+    if (quizMeta.isChallenge) {
+      const startAt = quizMeta.challengeStartAt;
+      const endAt = quizMeta.challengeEndAt;
+      if (!startAt || !endAt) {
+        throw new ServiceError(
+          "CHALLENGE_SCHEDULE_MISSING",
+          "Challenge schedule missing",
+          400,
+        );
+      }
+      const startMs = new Date(startAt).getTime();
+      const endMs = new Date(endAt).getTime();
+      if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
+        throw new ServiceError(
+          "CHALLENGE_SCHEDULE_INVALID",
+          "Challenge schedule invalid",
+          400,
+        );
+      }
+      if (nowMs < startMs || nowMs > endMs) {
+        throw new ServiceError(
+          "CHALLENGE_NOT_ACTIVE",
+          "Thử thách chưa bắt đầu hoặc đã kết thúc.",
+          409,
+        );
+      }
+    }
+
+    const created = await createAttemptWithClient(client, {
+      userId,
+      quizId,
+      challengeId: quizMeta.isChallenge ? quizId : null,
+      customQuizId: quizMeta.customQuizId ?? null,
+      timeLimitSeconds: timeLimitSeconds ?? null,
+      remainingSeconds: timeLimitSeconds ?? null,
+      totalQuestions: quizMeta.totalQuestions,
+    });
+
+    return { attemptId: created.id, resumed: false, status: created.status };
   });
-
-  return { attemptId: created.id, resumed: false, status: created.status };
 }
 
 export async function getAttemptState(

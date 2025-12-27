@@ -8,17 +8,25 @@ export type XpEventInput = {
   source: XpSource;
   amount: number;
   metadata?: Record<string, unknown> | null;
+  createdAt?: string | null;
 };
 
 export async function insertXpEvent(input: XpEventInput, client?: PoolClient) {
-  const sql = `INSERT INTO xp_events (user_id, source, amount, metadata)
+  const hasCreatedAt = input.createdAt !== undefined;
+  const sql = hasCreatedAt
+    ? `INSERT INTO xp_events (user_id, source, amount, metadata, created_at)
+               VALUES ($1, $2::xp_source, $3, $4, $5::timestamptz)`
+    : `INSERT INTO xp_events (user_id, source, amount, metadata)
                VALUES ($1, $2::xp_source, $3, $4)`;
-  const params = [
-    input.userId,
-    input.source,
-    input.amount,
-    input.metadata ?? null,
-  ];
+  const params = hasCreatedAt
+    ? [
+        input.userId,
+        input.source,
+        input.amount,
+        input.metadata ?? null,
+        input.createdAt,
+      ]
+    : [input.userId, input.source, input.amount, input.metadata ?? null];
   if (client) {
     await client.query(sql, params);
     return;

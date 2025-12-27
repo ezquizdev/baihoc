@@ -1,4 +1,4 @@
-import type { PoolClient } from "pg";
+import type { PoolClient, QueryResultRow } from "pg";
 import { query, withTransaction } from "@/application/infra/db/pool";
 import {
   insertXpEvent,
@@ -17,6 +17,14 @@ import type {
   AttemptSubjectScore,
 } from "@/application/models/attempt";
 import type { DifficultyLevel, QuestionType } from "@/application/models/enums";
+
+function runQuery<T extends QueryResultRow>(
+  client: PoolClient | undefined,
+  text: string,
+  params?: unknown[],
+) {
+  return client ? client.query<T>(text, params) : query<T>(text, params);
+}
 
 export type AttemptRow = {
   id: string;
@@ -46,6 +54,17 @@ export type AttemptRow = {
   xp_earned: number;
   created_at: string;
 };
+
+export type InProgressAttemptRow = Pick<
+  AttemptRow,
+  | "id"
+  | "quiz_id"
+  | "challenge_id"
+  | "status"
+  | "started_at"
+  | "time_limit_seconds"
+  | "remaining_seconds"
+> & { challenge_end_at: string | null };
 
 type AttemptAnswerRow = {
   question_id: string;
@@ -322,8 +341,10 @@ function mapAttemptQuestion(
 
 export async function getQuizAttemptMeta(
   quizId: string,
+  client?: PoolClient,
 ): Promise<QuizAttemptMeta | null> {
-  const res = await query<QuizAttemptMetaRow>(
+  const res = await runQuery<QuizAttemptMetaRow>(
+    client,
     `SELECT q.id,
             q.is_challenge,
             q.estimated_time_seconds,
@@ -362,10 +383,43 @@ export async function getQuizAttemptMeta(
   };
 }
 
+export async function lockAttemptStartForUser(
+  client: PoolClient,
+  userId: string,
+) {
+  await client.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [userId]);
+}
+
+export async function listInProgressAttemptsForUser(
+  userId: string,
+  client?: PoolClient,
+): Promise<InProgressAttemptRow[]> {
+  const res = await runQuery<InProgressAttemptRow>(
+    client,
+    `SELECT id,
+            quiz_id,
+            challenge_id,
+            status,
+            started_at,
+            time_limit_seconds,
+            remaining_seconds,
+            cs.end_at AS challenge_end_at
+     FROM attempts
+     LEFT JOIN challenge_settings cs ON cs.quiz_id = attempts.challenge_id
+     WHERE user_id = $1
+       AND status = 'in_progress'
+     ORDER BY started_at DESC, id DESC`,
+    [userId],
+  );
+  return res.rows;
+}
+
 export async function getQuizSnapshotMeta(
   quizId: string,
+  client?: PoolClient,
 ): Promise<QuizSnapshotMeta | null> {
-  const res = await query<QuizSnapshotMetaRow>(
+  const res = await runQuery<QuizSnapshotMetaRow>(
+    client,
     `SELECT title, difficulty_level, estimated_time_seconds, is_challenge
      FROM quizzes
      WHERE id = $1`,
@@ -384,8 +438,10 @@ export async function getQuizSnapshotMeta(
 export async function findInProgressAttempt(
   userId: string,
   quizId: string,
+  client?: PoolClient,
 ): Promise<AttemptRow | null> {
-  const res = await query<AttemptRow>(
+  const res = await runQuery<AttemptRow>(
+    client,
     `SELECT * FROM attempts
      WHERE user_id = $1 AND quiz_id = $2 AND status = 'in_progress'
      ORDER BY started_at DESC
@@ -398,8 +454,10 @@ export async function findInProgressAttempt(
 export async function findChallengeAttempt(
   userId: string,
   challengeQuizId: string,
+  client?: PoolClient,
 ): Promise<AttemptRow | null> {
-  const res = await query<AttemptRow>(
+  const res = await runQuery<AttemptRow>(
+    client,
     `SELECT * FROM attempts
      WHERE user_id = $1 AND challenge_id = $2
      ORDER BY started_at DESC
@@ -418,6 +476,21 @@ export async function createAttempt(input: {
   remainingSeconds: number | null;
   totalQuestions: number;
 }): Promise<AttemptRow> {
+  return createAttemptWithClient(undefined, input);
+}
+
+export async function createAttemptWithClient(
+  client: PoolClient | undefined,
+  input: {
+    userId: string;
+    quizId: string;
+    challengeId: string | null;
+    customQuizId: string | null;
+    timeLimitSeconds: number | null;
+    remainingSeconds: number | null;
+    totalQuestions: number;
+  },
+): Promise<AttemptRow> {
   const params = [
     input.userId,
     input.quizId,
@@ -440,19 +513,20 @@ export async function createAttempt(input: {
      RETURNING *`;
 
   if (!input.challengeId) {
-    const res = await query<AttemptRow>(insertSql, params);
+    const res = await runQuery<AttemptRow>(client, insertSql, params);
     const row = res.rows[0];
     if (!row) throw new Error("Failed to create attempt");
     return row;
   }
 
   try {
-    const res = await query<AttemptRow>(insertSql, params);
+    const res = await runQuery<AttemptRow>(client, insertSql, params);
     const row = res.rows[0];
     if (row) return row;
   } catch (error) {
     if (isUniqueViolation(error)) {
-      const res = await query<AttemptRow>(
+      const res = await runQuery<AttemptRow>(
+        client,
         `SELECT * FROM attempts
          WHERE user_id = $1 AND challenge_id = $2
          ORDER BY started_at DESC
@@ -479,10 +553,13 @@ function isUniqueViolation(error: unknown): boolean {
 
 export async function getAttemptById(
   attemptId: string,
+  client?: PoolClient,
 ): Promise<AttemptRow | null> {
-  const res = await query<AttemptRow>(`SELECT * FROM attempts WHERE id = $1`, [
-    attemptId,
-  ]);
+  const res = await runQuery<AttemptRow>(
+    client,
+    `SELECT * FROM attempts WHERE id = $1`,
+    [attemptId],
+  );
   return res.rows[0] ?? null;
 }
 
@@ -761,8 +838,10 @@ export async function backfillAttemptQuestionSnapshotsForQuiz(
 
 export async function listAttemptAnswers(
   attemptId: string,
+  client?: PoolClient,
 ): Promise<AttemptAnswer[]> {
-  const res = await query<AttemptAnswerRow>(
+  const res = await runQuery<AttemptAnswerRow>(
+    client,
     `SELECT question_id,
             selected_option_ids,
             text_answer,
@@ -1089,8 +1168,9 @@ export async function listQuizQuestionMetaByIds(
 
 export async function listQuizGradingData(
   quizId: string,
+  client?: PoolClient,
 ): Promise<QuizQuestionGrading[]> {
-  const baseRes = await query<{
+  const baseRes = await runQuery<{
     question_id: string;
     type: QuestionType;
     default_score: number;
@@ -1102,6 +1182,7 @@ export async function listQuizGradingData(
     subject_slug: string;
     question_updated_at: string;
   }>(
+    client,
     `SELECT qq.question_id,
             qq.position,
             qq.score,
@@ -1122,7 +1203,8 @@ export async function listQuizGradingData(
 
   const questionIds = baseRes.rows.map((row) => row.question_id);
   const optionRes = questionIds.length
-    ? await query<{ id: string; question_id: string; is_correct: boolean }>(
+    ? await runQuery<{ id: string; question_id: string; is_correct: boolean }>(
+        client,
         `SELECT id, question_id, is_correct
          FROM question_options
          WHERE question_id = ANY($1)`,
@@ -1137,11 +1219,12 @@ export async function listQuizGradingData(
       };
 
   const shortAnswerRes = questionIds.length
-    ? await query<{
+    ? await runQuery<{
         question_id: string;
         acceptable_answer: string;
         case_sensitive: boolean;
       }>(
+        client,
         `SELECT question_id, acceptable_answer, case_sensitive
          FROM short_answer_keys
          WHERE question_id = ANY($1)`,
@@ -1203,9 +1286,10 @@ export async function listQuizGradingData(
 export async function listQuizGradingDataByQuestionIds(
   quizId: string,
   questionIds: string[],
+  client?: PoolClient,
 ): Promise<QuizQuestionGrading[]> {
   if (!questionIds.length) return [];
-  const baseRes = await query<{
+  const baseRes = await runQuery<{
     question_id: string;
     type: QuestionType;
     default_score: number;
@@ -1217,6 +1301,7 @@ export async function listQuizGradingDataByQuestionIds(
     subject_slug: string;
     question_updated_at: string;
   }>(
+    client,
     `SELECT qq.question_id,
             qq.position,
             qq.score,
@@ -1238,7 +1323,8 @@ export async function listQuizGradingDataByQuestionIds(
 
   const ids = baseRes.rows.map((row) => row.question_id);
   const optionRes = ids.length
-    ? await query<{ id: string; question_id: string; is_correct: boolean }>(
+    ? await runQuery<{ id: string; question_id: string; is_correct: boolean }>(
+        client,
         `SELECT id, question_id, is_correct
          FROM question_options
          WHERE question_id = ANY($1)`,
@@ -1253,11 +1339,12 @@ export async function listQuizGradingDataByQuestionIds(
       };
 
   const shortAnswerRes = ids.length
-    ? await query<{
+    ? await runQuery<{
         question_id: string;
         acceptable_answer: string;
         case_sensitive: boolean;
       }>(
+        client,
         `SELECT question_id, acceptable_answer, case_sensitive
          FROM short_answer_keys
          WHERE question_id = ANY($1)`,
@@ -1363,76 +1450,102 @@ export async function saveAttemptAnswers(input: {
 export async function submitAttempt(
   input: SubmitAttemptInput,
 ): Promise<SubmitAttemptResult> {
-  return withTransaction(async (client) => {
-    const attemptRes = await client.query<AttemptRow>(
-      `SELECT * FROM attempts WHERE id = $1 FOR UPDATE`,
-      [input.attemptId],
-    );
-    const attemptRow = attemptRes.rows[0];
-    if (!attemptRow) return { status: "not_found" };
-    if (attemptRow.status !== "in_progress") {
-      return { status: "already_submitted", attempt: mapAttempt(attemptRow) };
-    }
+  return withTransaction(async (client) =>
+    submitAttemptWithClient(client, input),
+  );
+}
 
-    await upsertGradedAnswers(client, input.attemptId, input.gradedAnswers);
-    await insertAnswerEvents(
-      client,
+export async function submitAttemptWithClient(
+  client: PoolClient,
+  input: SubmitAttemptInput,
+  options?: {
+    status?: "submitted" | "auto_submitted";
+    submittedAt?: string | null;
+    judgedAt?: string | null;
+    xpEventCreatedAt?: string | null;
+  },
+): Promise<SubmitAttemptResult> {
+  const attemptRes = await client.query<AttemptRow>(
+    `SELECT * FROM attempts WHERE id = $1 FOR UPDATE`,
+    [input.attemptId],
+  );
+  const attemptRow = attemptRes.rows[0];
+  if (!attemptRow) return { status: "not_found" };
+  if (attemptRow.status !== "in_progress") {
+    return { status: "already_submitted", attempt: mapAttempt(attemptRow) };
+  }
+
+  await upsertGradedAnswers(client, input.attemptId, input.gradedAnswers);
+  await insertAnswerEvents(
+    client,
+    input.attemptId,
+    input.gradedAnswers,
+    "submit",
+  );
+
+  await insertAttemptQuestionSnapshots(
+    client,
+    input.attemptId,
+    attemptRow.judgement_version ?? 1,
+    input.questionSnapshots,
+  );
+
+  const status = options?.status ?? "submitted";
+  const submittedAt = options?.submittedAt ?? null;
+  const judgedAt = options?.judgedAt ?? submittedAt ?? null;
+
+  const updatedRes = await client.query<AttemptRow>(
+    `UPDATE attempts
+     SET status = $15::attempt_status,
+         submitted_at = COALESCE($16::timestamptz, now()),
+         judged_at = COALESCE($17::timestamptz, now()),
+         total_questions = $7,
+         remaining_seconds = $2,
+         score_raw = $3,
+         score_percent = $4,
+         correct_count = $5,
+         xp_earned = $6,
+         quiz_content_hash_snapshot = $8,
+         snapshot_quiz_title = $9,
+         snapshot_quiz_difficulty_level = $10,
+         snapshot_quiz_estimated_time_seconds = $11,
+         snapshot_quiz_is_challenge = $12,
+         snapshot_subject_scores = $13::jsonb,
+         snapshot_subject_scores_estimated = $14
+     WHERE id = $1
+     RETURNING *`,
+    [
       input.attemptId,
-      input.gradedAnswers,
-      "submit",
-    );
+      input.remainingSeconds,
+      input.scoreRaw,
+      input.scorePercent,
+      input.correctCount,
+      input.xpEvent.amount,
+      input.totalQuestions,
+      input.snapshot.quizContentHash,
+      input.snapshot.quizTitle,
+      input.snapshot.quizDifficultyLevel,
+      input.snapshot.quizEstimatedTimeSeconds,
+      input.snapshot.isChallenge,
+      JSON.stringify(input.snapshot.subjectScores ?? []),
+      input.snapshot.subjectScoresEstimated,
+      status,
+      submittedAt,
+      judgedAt,
+    ],
+  );
 
-    await insertAttemptQuestionSnapshots(
-      client,
-      input.attemptId,
-      attemptRow.judgement_version ?? 1,
-      input.questionSnapshots,
-    );
+  const xpEventCreatedAt = options?.xpEventCreatedAt ?? null;
+  await insertXpEvent(
+    xpEventCreatedAt
+      ? { ...input.xpEvent, createdAt: xpEventCreatedAt }
+      : input.xpEvent,
+    client,
+  );
 
-    const updatedRes = await client.query<AttemptRow>(
-      `UPDATE attempts
-       SET status = 'submitted',
-           submitted_at = now(),
-           judged_at = now(),
-           total_questions = $7,
-           remaining_seconds = $2,
-           score_raw = $3,
-           score_percent = $4,
-           correct_count = $5,
-           xp_earned = $6,
-           quiz_content_hash_snapshot = $8,
-           snapshot_quiz_title = $9,
-           snapshot_quiz_difficulty_level = $10,
-           snapshot_quiz_estimated_time_seconds = $11,
-           snapshot_quiz_is_challenge = $12,
-           snapshot_subject_scores = $13::jsonb,
-           snapshot_subject_scores_estimated = $14
-       WHERE id = $1
-       RETURNING *`,
-      [
-        input.attemptId,
-        input.remainingSeconds,
-        input.scoreRaw,
-        input.scorePercent,
-        input.correctCount,
-        input.xpEvent.amount,
-        input.totalQuestions,
-        input.snapshot.quizContentHash,
-        input.snapshot.quizTitle,
-        input.snapshot.quizDifficultyLevel,
-        input.snapshot.quizEstimatedTimeSeconds,
-        input.snapshot.isChallenge,
-        JSON.stringify(input.snapshot.subjectScores ?? []),
-        input.snapshot.subjectScoresEstimated,
-      ],
-    );
-
-    await insertXpEvent(input.xpEvent, client);
-
-    const updated = updatedRes.rows[0];
-    if (!updated) throw new Error("Failed to submit attempt");
-    return { status: "ok", attempt: mapAttempt(updated) };
-  });
+  const updated = updatedRes.rows[0];
+  if (!updated) throw new Error("Failed to submit attempt");
+  return { status: "ok", attempt: mapAttempt(updated) };
 }
 
 export async function rejudgeAttempt(
