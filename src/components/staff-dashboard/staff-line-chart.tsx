@@ -154,7 +154,7 @@ export function StaffLineChart({
               <path
                 className={styles.line}
                 d={d}
-                stroke={line.stroke}
+                style={{ stroke: line.stroke }}
                 vectorEffect="non-scaling-stroke"
               />
               {pointCount <= 16
@@ -168,7 +168,7 @@ export function StaffLineChart({
                         cx={xForIndex(index)}
                         cy={yForValue(numeric)}
                         r={4}
-                        fill={line.stroke}
+                        style={{ fill: line.stroke }}
                       />
                     );
                   })

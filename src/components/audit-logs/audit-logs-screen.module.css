@@ -19,7 +19,7 @@
   margin: 0;
   font-size: 28px;
   font-weight: 950;
-  color: #1f3b86;
+  color: var(--primary-ink);
   line-height: 1.05;
   letter-spacing: 0.2px;
 }
@@ -40,8 +40,8 @@
 
 .refreshBtn {
   border: 1px solid rgba(15, 23, 42, 0.12);
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--card);
+  color: var(--text-strong);
   padding: 10px 14px;
   border-radius: 999px;
   font-weight: 800;

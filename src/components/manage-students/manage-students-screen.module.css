@@ -19,7 +19,7 @@
   margin: 0;
   font-size: 28px;
   font-weight: 950;
-  color: #1f3b86;
+  color: var(--primary-ink);
   line-height: 1.05;
   letter-spacing: 0.2px;
 }

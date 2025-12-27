@@ -527,7 +527,7 @@ export function DashboardShell({
                   className={`${styles.iconButton} ${styles.notificationSummary}`}
                   aria-label="Thông báo"
                 >
-                  <Bell size={20} weight="bold" color="#2b3b55" />
+                  <Bell size={20} weight="bold" color="var(--text-secondary)" />
                 </summary>
                 <div
                   className={styles.notificationMenu}

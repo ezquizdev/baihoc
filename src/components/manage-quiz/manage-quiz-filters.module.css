@@ -25,7 +25,7 @@
   position: relative;
   flex: 0 0 auto;
   width: min(100%, var(--filter-width));
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: 0 10px 20px rgba(26, 46, 93, 0.06);
@@ -45,16 +45,16 @@
 }
 
 .ddActive {
-  background: rgba(30, 108, 255, 0.12);
-  border-color: rgba(30, 108, 255, 0.3);
+  background: rgb(var(--primary-rgb) / 0.12);
+  border-color: rgb(var(--primary-rgb) / 0.3);
 }
 
 .ddButtonActive {
-  color: var(--brand-primary);
+  color: var(--primary);
 }
 
 .filterIcon {
-  color: var(--brand-primary);
+  color: var(--primary);
 }
 
 .ddButton {
@@ -67,7 +67,7 @@
   min-height: 48px;
   font-size: 15px;
   font-weight: 900;
-  color: #0e1b2b;
+  color: var(--text-strong);
   cursor: pointer;
   width: 100%;
   justify-content: space-between;
@@ -84,8 +84,8 @@
 .ddChevron {
   width: 10px;
   height: 10px;
-  border-right: 2px solid #2b3b55;
-  border-bottom: 2px solid #2b3b55;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
   transform: rotate(45deg);
   margin-top: 4px;
   opacity: 0.85;
@@ -97,7 +97,7 @@
   top: calc(100% + 8px);
   left: 0;
   min-width: 100%;
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 10px 12px 12px;
@@ -128,7 +128,7 @@
   gap: 10px;
   cursor: pointer;
   font-weight: 800;
-  color: #2b3b55;
+  color: var(--text-secondary);
   user-select: none;
   min-width: 0;
 }
@@ -139,8 +139,8 @@
   width: 18px;
   height: 18px;
   border-radius: 3px;
-  border: 2px solid #2b3b55;
-  background: #fff;
+  border: 2px solid var(--text-secondary);
+  background: var(--card);
   display: grid;
   place-items: center;
   margin: 0;
@@ -148,8 +148,8 @@
 }
 
 .ck input:checked {
-  background: var(--brand-primary);
-  border-color: #173fae;
+  background: var(--primary);
+  border-color: var(--primary-2);
 }
 
 .ck input:checked::after {
@@ -157,7 +157,7 @@
   width: 10px;
   height: 10px;
   clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
-  background: #fff;
+  background: var(--text-inverse);
 }
 
 .subjectOption {
@@ -171,7 +171,7 @@
 }
 
 .subjectUnderlineRed {
-  border-bottom: 2px solid #e53935;
+  border-bottom: 2px solid var(--danger);
   padding-bottom: 2px;
 }
 
@@ -181,7 +181,7 @@
 }
 
 .subjectUnderlineSky {
-  border-bottom: 2px solid #b6d7ff;
+  border-bottom: 2px solid var(--primary-soft-2);
   padding-bottom: 2px;
 }
 
@@ -236,7 +236,7 @@
 }
 
 .rateRed {
-  background: #e53935;
+  background: var(--danger);
   color: var(--brand-accent);
 }
 
@@ -252,7 +252,7 @@
   justify-content: space-between;
   font-size: 12px;
   font-weight: 750;
-  color: #2b3b55;
+  color: var(--text-secondary);
 }
 
 .rangeWrap {
@@ -267,7 +267,7 @@
   top: 50%;
   height: 6px;
   transform: translateY(-50%);
-  background: #f2e69a;
+  background: rgb(var(--accent-rgb) / 0.35);
   border-radius: 999px;
   z-index: 1;
 }

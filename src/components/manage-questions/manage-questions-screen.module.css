@@ -19,7 +19,7 @@
   margin: 0;
   font-size: 28px;
   font-weight: 950;
-  color: #1f3b86;
+  color: var(--primary-ink);
   line-height: 1.05;
   letter-spacing: 0.2px;
 }
@@ -40,8 +40,8 @@
 
 .cta {
   border: none;
-  background: #2868e6;
-  color: #ffffff;
+  background: var(--primary);
+  color: var(--text-inverse);
   padding: 10px 14px;
   border-radius: 999px;
   font-weight: 800;

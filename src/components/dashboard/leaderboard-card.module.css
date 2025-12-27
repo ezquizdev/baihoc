@@ -21,7 +21,7 @@
   margin: 0;
   font-size: 16px;
   font-weight: 850;
-  color: #1f3b86;
+  color: var(--primary-ink);
 }
 
 .action {
@@ -40,7 +40,7 @@
 }
 
 .action:hover {
-  background: #f1f5ff;
+  background: var(--surface-3);
   transform: translateY(-0.5px);
 }
 
@@ -63,7 +63,7 @@
   -webkit-overflow-scrolling: touch;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--card);
 }
 
 .table {
@@ -79,7 +79,7 @@
   color: var(--muted);
   font-weight: 750;
   padding: 10px 10px;
-  background: #f7faff;
+  background: var(--surface-2);
   border-bottom: 1px solid var(--line);
 }
 
@@ -87,7 +87,7 @@
   padding: 10px 10px;
   border-bottom: 1px solid var(--line);
   font-size: 13px;
-  color: #2b3b55;
+  color: var(--text-secondary);
 }
 
 .table tbody tr:last-child td {
@@ -118,7 +118,7 @@
 .rank {
   width: 38px;
   font-weight: 900;
-  color: #1f3b86;
+  color: var(--primary-ink);
 }
 
 .xp {
@@ -156,7 +156,7 @@
   width: 24px;
   height: 24px;
   border-radius: 999px;
-  background: #d7e3ff;
+  background: var(--primary-soft-2);
   position: relative;
   overflow: hidden;
   flex: 0 0 auto;

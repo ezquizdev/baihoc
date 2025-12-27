@@ -278,13 +278,13 @@ function McqReview({
             .join(" ");
 
           const icon = isCorrect ? (
-            <CheckCircleIcon size={18} color="#047857" />
+            <CheckCircleIcon size={18} color="var(--success)" />
           ) : isWrongSelected ? (
-            <XCircleIcon size={18} color="#be123c" />
+            <XCircleIcon size={18} color="var(--danger-ink)" />
           ) : isSelectedUnkeyed ? (
-            <WarningCircleIcon size={18} color="#8a6a00" />
+            <WarningCircleIcon size={18} color="var(--warning)" />
           ) : (
-            <CircleIcon size={18} color="#94a3b8" />
+            <CircleIcon size={18} color="var(--neutral-400)" />
           );
 
           return (
@@ -361,7 +361,7 @@ function buildBadge(isCorrect: AttemptAnswer["isCorrect"]) {
   if (isCorrect === undefined) {
     return (
       <span className={`${styles.badge} ${styles.badgeNeutral}`}>
-        <MinusCircleIcon size={16} color="#33445f" />
+        <MinusCircleIcon size={16} color="var(--text-tertiary)" />
         Chưa chấm
       </span>
     );
@@ -370,7 +370,7 @@ function buildBadge(isCorrect: AttemptAnswer["isCorrect"]) {
   if (isCorrect) {
     return (
       <span className={`${styles.badge} ${styles.badgeCorrect}`}>
-        <CheckCircleIcon size={16} color="#047857" />
+        <CheckCircleIcon size={16} color="var(--success)" />
         Đúng
       </span>
     );
@@ -378,7 +378,7 @@ function buildBadge(isCorrect: AttemptAnswer["isCorrect"]) {
 
   return (
     <span className={`${styles.badge} ${styles.badgeWrong}`}>
-      <XCircleIcon size={16} color="#be123c" />
+      <XCircleIcon size={16} color="var(--danger-ink)" />
       Sai
     </span>
   );

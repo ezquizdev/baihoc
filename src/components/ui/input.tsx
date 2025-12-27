@@ -27,16 +27,18 @@ export function Input({
     .join(" ");
 
   return (
-    <div className="flex w-full flex-col gap-1 text-sm text-slate-700">
+    <div className="flex w-full flex-col gap-1 text-sm text-[var(--muted)]">
       {label ? (
-        <label htmlFor={inputId} className="font-medium">
+        <label htmlFor={inputId} className="font-medium text-[var(--text)]">
           {label}
         </label>
       ) : null}
       <input
         id={inputId}
-        className={`w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 ${
-          error ? "border-red-400 focus:ring-red-100" : ""
+        className={`w-full rounded-[var(--radius-md)] border border-[color:var(--line)] bg-[var(--card)] px-3 py-3 text-[var(--text)] shadow-[0_10px_20px_rgba(26,46,93,0.06)] outline-none transition focus:border-[var(--primary)] focus:shadow-[0_0_0_3px_rgba(40,104,230,0.16)] ${
+          error
+            ? "border-[color:var(--danger-border)] focus:border-[var(--danger)] focus:shadow-[0_0_0_3px_rgb(var(--danger-rgb)_/_0.16)]"
+            : ""
         } ${className}`}
         {...props}
         aria-invalid={error ? true : props["aria-invalid"]}
@@ -46,7 +48,11 @@ export function Input({
       {message ? (
         <span
           id={messageId}
-          className={error ? "text-xs text-red-500" : "text-xs text-slate-500"}
+          className={
+            error
+              ? "text-xs text-[var(--danger-text)]"
+              : "text-xs text-[var(--muted)]"
+          }
         >
           {message}
         </span>

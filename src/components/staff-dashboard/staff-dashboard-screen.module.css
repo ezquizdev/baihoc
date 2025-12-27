@@ -8,7 +8,7 @@
   background: linear-gradient(135deg, var(--primary), var(--primary-2));
   border-radius: var(--radius-lg);
   padding: 18px 18px;
-  color: white;
+  color: var(--text-inverse);
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
@@ -23,7 +23,7 @@
   width: 160px;
   height: 160px;
   border-radius: 999px;
-  background: rgba(255, 196, 0, 0.95);
+  background: rgb(var(--accent-rgb) / 0.95);
   transform: rotate(12deg);
 }
 
@@ -35,7 +35,7 @@
   width: 92px;
   height: 92px;
   border-radius: 24px;
-  background: rgba(255, 196, 0, 0.92);
+  background: rgb(var(--accent-rgb) / 0.92);
   transform: rotate(-15deg);
 }
 
@@ -88,20 +88,20 @@
 }
 
 .actionPillPrimary {
-  background: white;
+  background: var(--card);
   color: var(--primary-2);
 }
 
 .actionPillAccent {
-  background: rgba(255, 196, 0, 0.95);
-  border-color: rgba(255, 196, 0, 0.95);
-  color: #18305a;
+  background: rgb(var(--accent-rgb) / 0.95);
+  border-color: rgb(var(--accent-rgb) / 0.95);
+  color: var(--text-strong);
 }
 
 .actionPillDark {
-  background: rgba(20, 34, 61, 0.9);
-  border-color: rgba(20, 34, 61, 0.9);
-  color: white;
+  background: rgb(var(--ink-rgb) / 0.9);
+  border-color: rgb(var(--ink-rgb) / 0.9);
+  color: var(--text-inverse);
 }
 
 .mainGrid {
@@ -153,7 +153,7 @@
 }
 
 .sectionAction:hover {
-  background: #f1f5ff;
+  background: var(--surface-3);
   transform: translateY(-0.5px);
   text-decoration: none;
 }
@@ -204,26 +204,26 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  border: 1px solid rgba(230, 238, 255, 0.9);
-  background: #f7faff;
+  border: 1px solid rgb(var(--line-rgb) / 0.9);
+  background: var(--surface-2);
   box-shadow: 0 10px 18px rgba(26, 46, 93, 0.06);
 }
 
 .statIconStudents {
-  background: rgba(255, 196, 0, 0.18);
-  border-color: rgba(255, 196, 0, 0.28);
-  color: #ffc400;
+  background: rgb(var(--accent-rgb) / 0.18);
+  border-color: rgb(var(--accent-rgb) / 0.28);
+  color: var(--accent);
 }
 
 .statIconQuestions {
-  background: rgba(40, 104, 230, 0.12);
-  border-color: rgba(40, 104, 230, 0.22);
+  background: rgb(var(--primary-rgb) / 0.12);
+  border-color: rgb(var(--primary-rgb) / 0.22);
   color: var(--primary-2);
 }
 
 .statIconAttempts {
-  background: rgba(47, 102, 255, 0.14);
-  border-color: rgba(47, 102, 255, 0.24);
+  background: rgb(var(--primary-rgb) / 0.14);
+  border-color: rgb(var(--primary-rgb) / 0.24);
   color: var(--primary);
 }
 
@@ -278,9 +278,9 @@
   border-radius: 999px;
   font-size: 11px;
   font-weight: 800;
-  background: #ffefef;
-  color: #d43b3b;
-  border: 1px solid rgba(212, 59, 59, 0.2);
+  background: rgb(var(--danger-rgb) / 0.08);
+  color: var(--danger);
+  border: 1px solid rgb(var(--danger-rgb) / 0.2);
 }
 
 .topicSubjectBadge {
@@ -299,33 +299,33 @@
 }
 
 .topicSubjectMixed {
-  background: #0e1b2b;
-  border-color: #0e1b2b;
-  color: var(--brand-accent);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--accent);
 }
 
 .topicSubjectEn {
-  background: var(--brand-accent);
-  border-color: rgba(255, 212, 0, 0.7);
-  color: var(--brand-primary);
+  background: var(--accent);
+  border-color: rgb(var(--accent-rgb) / 0.7);
+  color: var(--primary);
 }
 
 .topicSubjectSci {
-  background: var(--brand-primary);
-  border-color: rgba(47, 102, 255, 0.65);
-  color: var(--brand-accent);
+  background: var(--primary);
+  border-color: rgb(var(--primary-rgb) / 0.65);
+  color: var(--accent);
 }
 
 .topicSubjectVi {
-  background: #e53935;
-  border-color: rgba(229, 57, 53, 0.7);
-  color: var(--brand-accent);
+  background: var(--danger);
+  border-color: rgb(var(--danger-rgb) / 0.7);
+  color: var(--accent);
 }
 
 .topicSubjectMath {
-  background: #ffffff;
-  border-color: rgba(229, 57, 53, 0.35);
-  color: #e53935;
+  background: var(--card);
+  border-color: rgb(var(--danger-rgb) / 0.35);
+  color: var(--danger);
 }
 
 .topicName {
@@ -346,7 +346,7 @@
   background: linear-gradient(135deg, var(--primary), var(--primary-2));
   border-radius: var(--radius-lg);
   padding: 14px;
-  color: white;
+  color: var(--text-inverse);
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
@@ -441,19 +441,19 @@
 }
 
 .legendVi {
-  background: #ff4d4d;
+  background: var(--subject-vi);
 }
 
 .legendEn {
-  background: #ffd24d;
+  background: var(--subject-en);
 }
 
 .legendMath {
-  background: #ff8a4d;
+  background: var(--subject-math);
 }
 
 .legendSci {
-  background: #4dd2ff;
+  background: var(--subject-sci);
 }
 
 .card {
@@ -775,23 +775,23 @@
 }
 
 .subjectVi {
-  background: #ce3838;
-  color: white;
+  background: var(--subject-vi-solid);
+  color: var(--text-inverse);
 }
 
 .subjectEn {
-  background: #ffd700;
-  color: #2864d2;
+  background: var(--subject-en-solid);
+  color: var(--subject-en-ink);
 }
 
 .subjectMath {
-  background: #f1f6ff;
-  color: #ce3838;
+  background: var(--subject-math-solid);
+  color: var(--subject-math-ink);
 }
 
 .subjectSci {
-  background: #2864d2;
-  color: #ffd700;
+  background: var(--subject-sci-solid);
+  color: var(--subject-sci-ink);
 }
 
 @media (max-width: 1280px) {

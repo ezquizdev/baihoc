@@ -25,8 +25,8 @@
   padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid var(--line);
-  background: #ffffff;
-  color: #2b3b55;
+  background: var(--card);
+  color: var(--text-secondary);
   cursor: pointer;
   font-weight: 700;
   font-size: 13px;
@@ -40,8 +40,8 @@
 .ddChevron {
   width: 10px;
   height: 10px;
-  border-right: 2px solid #2b3b55;
-  border-bottom: 2px solid #2b3b55;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
   transform: rotate(45deg);
   opacity: 0.7;
 }
@@ -52,7 +52,7 @@
   top: calc(100% + 8px);
   left: 0;
   right: 0;
-  background: #ffffff;
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 10px 10px;
@@ -72,11 +72,11 @@
   gap: 10px;
   align-items: center;
   font-size: 13px;
-  color: #2b3b55;
+  color: var(--text-secondary);
 }
 
 .ck input {
-  accent-color: #2868e6;
+  accent-color: var(--primary);
 }
 
 @media (max-width: 720px) {

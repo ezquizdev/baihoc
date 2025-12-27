@@ -1,18 +1,4 @@
 .shell {
-  --bg: #f4f7ff;
-  --card: #ffffff;
-  --text: #1f2a3a;
-  --muted: #6b7a90;
-  --line: #e6eeff;
-
-  --primary: var(--brand-primary);
-  --primary-2: var(--brand-primary-2);
-  --accent: var(--brand-accent);
-
-  --radius-lg: 18px;
-  --radius-md: 14px;
-  --shadow: 0 10px 30px rgba(26, 46, 93, 0.08);
-
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -116,7 +102,7 @@
 
 .navLink {
   text-decoration: none;
-  color: #22324d;
+  color: var(--text);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -137,7 +123,7 @@
 }
 
 .navLink:hover {
-  background: #f1f5ff;
+  background: var(--surface-3);
 }
 
 .navLink:active {
@@ -159,7 +145,7 @@
 }
 
 .navLinkActive {
-  background: #eaf0ff;
+  background: rgb(var(--primary-rgb) / 0.08);
   color: var(--primary-2);
   font-weight: 850;
   position: relative;
@@ -179,14 +165,14 @@
   width: 10px;
   height: 10px;
   border-radius: 3px;
-  background: #d7e3ff;
+  background: var(--primary-soft-2);
   flex: 0 0 auto;
 }
 
 .support {
   margin-top: auto;
   background: linear-gradient(135deg, var(--primary), var(--primary-2));
-  color: white;
+  color: var(--text-inverse);
   border-radius: var(--radius-lg);
   padding: 16px;
   box-shadow: var(--shadow);
@@ -203,7 +189,7 @@
   width: 120px;
   height: 120px;
   border-radius: 999px;
-  background: rgba(255, 196, 0, 0.95);
+  background: rgb(var(--accent-rgb) / 0.95);
   transform: rotate(15deg);
 }
 
@@ -215,7 +201,7 @@
   width: 90px;
   height: 90px;
   border-radius: 20px;
-  background: rgba(255, 196, 0, 0.9);
+  background: rgb(var(--accent-rgb) / 0.9);
   transform: rotate(-18deg);
 }
 
@@ -239,7 +225,7 @@
 
 .supportButton {
   border: 0;
-  background: white;
+  background: var(--card);
   color: var(--primary-2);
   font-weight: 650;
   border-radius: 999px;
@@ -285,9 +271,9 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(244, 247, 255, 0.75);
+  background: rgb(var(--bg-rgb) / 0.75);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(230, 238, 255, 0.9);
+  border-bottom: 1px solid rgb(var(--line-rgb) / 0.9);
 }
 
 .navButton {
@@ -334,7 +320,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: #2b3b55;
+  background: var(--text-secondary);
   border-radius: 999px;
 }
 
@@ -382,7 +368,7 @@
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
-  color: #2355f4;
+  color: var(--primary);
 }
 
 .searchInput {
@@ -422,7 +408,7 @@
   background: transparent;
   cursor: pointer;
   text-align: left;
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 700;
   font-size: 13px;
   transition:
@@ -431,7 +417,7 @@
 }
 
 .searchSuggestionItem:hover {
-  background: #f1f5ff;
+  background: var(--surface-3);
   transform: translateY(-0.5px);
 }
 
@@ -440,7 +426,7 @@
 }
 
 .searchSuggestionItemActive {
-  background: #eaf0ff;
+  background: rgb(var(--primary-rgb) / 0.08);
   color: var(--primary-2);
 }
 
@@ -457,7 +443,7 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 2px 8px;
-  background: #f7faff;
+  background: var(--surface-2);
   flex: 0 0 auto;
 }
 
@@ -495,7 +481,7 @@
 }
 
 .notifications[open] .notificationSummary {
-  border-color: #d5e3ff;
+  border-color: var(--line-strong);
   box-shadow: 0 14px 26px rgba(26, 46, 93, 0.1);
 }
 
@@ -525,7 +511,7 @@
 .notificationTitle {
   font-weight: 900;
   font-size: 13px;
-  color: #1f3b86;
+  color: var(--primary-ink);
 }
 
 .notificationEmpty {
@@ -558,8 +544,8 @@
 .iconButton:hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 26px rgba(26, 46, 93, 0.1);
-  border-color: rgba(213, 227, 255, 0.95);
-  background: #ffffff;
+  border-color: var(--line-strong);
+  background: var(--card);
 }
 
 .iconButton:active {
@@ -628,7 +614,7 @@
   width: 30px;
   height: 30px;
   border-radius: 999px;
-  background: #d7e3ff;
+  background: var(--primary-soft-2);
   position: relative;
   overflow: hidden;
   flex: 0 0 auto;
@@ -686,14 +672,14 @@
   margin-left: auto;
   width: 10px;
   height: 10px;
-  border-right: 2px solid #2b3b55;
-  border-bottom: 2px solid #2b3b55;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
   transform: rotate(45deg);
   opacity: 0.7;
 }
 
 .profile[open] .profileSummary {
-  border-color: #d5e3ff;
+  border-color: var(--line-strong);
   box-shadow: 0 14px 26px rgba(26, 46, 93, 0.1);
 }
 
@@ -722,7 +708,7 @@
   padding: 10px 12px;
   border-radius: 12px;
   text-decoration: none;
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 650;
   font-size: 13px;
   width: 100%;
@@ -741,15 +727,15 @@
 }
 
 .profileLink:hover {
-  background: #f1f5ff;
+  background: var(--surface-3);
 }
 
 .profileLinkDestructive {
-  color: #d43b3b;
+  color: var(--danger);
 }
 
 .profileLinkDestructive:hover {
-  background: #fff0f0;
+  background: rgb(var(--danger-rgb) / 0.08);
 }
 
 .profileLink:focus-visible {
@@ -777,7 +763,7 @@
   width: 10px;
   height: 10px;
   border-radius: 3px;
-  background: #d7e3ff;
+  background: var(--primary-soft-2);
   flex: 0 0 auto;
 }
 
@@ -795,7 +781,7 @@
   font-size: 22px;
   font-weight: 800;
   margin: 6px 0 0;
-  color: #1f3b86;
+  color: var(--primary-ink);
 }
 
 @media (max-width: 900px) {

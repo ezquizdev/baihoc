@@ -249,10 +249,10 @@ function ChartsCardFallback() {
 }
 
 const subjectStrokeBySlug: Record<string, string> = {
-  vi: "#ff4d4d",
-  en: "#ffd24d",
-  math: "#ff8a4d",
-  sci: "#4dd2ff",
+  vi: "var(--subject-vi)",
+  en: "var(--subject-en)",
+  math: "var(--subject-math)",
+  sci: "var(--subject-sci)",
 };
 
 async function StaffChartsCard({ windowDays }: { windowDays: number }) {

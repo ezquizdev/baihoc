@@ -3,7 +3,7 @@
   border: 1px solid var(--line);
   box-shadow: 0 10px 26px rgba(26, 46, 93, 0.06);
   overflow: hidden;
-  background: #eef4ff;
+  background: var(--primary-soft);
   position: relative;
   min-height: 214px;
   height: 100%;
@@ -13,7 +13,7 @@
 }
 
 .quizCardChallenge {
-  background: #fff4c8;
+  background: var(--warning-surface);
 }
 
 .quizCard::before {
@@ -82,7 +82,7 @@
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.4px;
-  background: #0e1b2b;
+  background: var(--ink);
   color: var(--accent);
   padding: 5px 9px;
   border-radius: 999px;
@@ -97,7 +97,7 @@
   font-weight: 850;
   letter-spacing: 0.3px;
   background: rgba(47, 102, 255, 0.12);
-  color: #1f3b86;
+  color: var(--primary-ink);
   border: 1px solid rgba(47, 102, 255, 0.22);
   padding: 5px 9px;
   border-radius: 999px;
@@ -108,7 +108,7 @@
   font-size: 14px;
   line-height: 1.25;
   font-weight: 850;
-  color: #0e1b2b;
+  color: var(--text-strong);
   min-height: 36px;
 }
 
@@ -131,7 +131,7 @@
 .quizMetaItem {
   font-size: 12px;
   font-weight: 850;
-  color: #2b3b55;
+  color: var(--text-secondary);
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -146,7 +146,7 @@
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  color: #2b3b55;
+  color: var(--text-secondary);
 }
 
 .metaIconClock {
@@ -194,13 +194,13 @@
 
 .btnYellow {
   background: var(--brand-accent);
-  color: #1f3b86;
+  color: var(--primary-ink);
   box-shadow: 0 10px 18px rgba(255, 212, 0, 0.18);
 }
 
 .btnRed {
-  background: #d84a3f;
-  color: #fff;
+  background: var(--danger);
+  color: var(--text-inverse);
   box-shadow: 0 10px 18px rgba(216, 74, 63, 0.18);
 }
 

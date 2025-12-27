@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
       title="Quên mật khẩu"
       subtitle="Nhập email, chúng tôi sẽ gửi liên kết đặt lại mật khẩu."
       footer={
-        <Link href="/auth/login" className="font-medium text-slate-900">
+        <Link href="/auth/login" className="font-medium text-[var(--text)]">
           Quay lại đăng nhập
         </Link>
       }
@@ -60,12 +60,12 @@ export default function ForgotPasswordPage() {
             required
           />
           {status === "sent" && (
-            <p className="text-sm text-green-600">
+            <p className="text-sm text-[var(--success-text)]">
               Đã gửi email đặt lại mật khẩu. Kiểm tra hộp thư của bạn.
             </p>
           )}
           {status === "error" && error && (
-            <p className="text-sm text-red-500">{error}</p>
+            <p className="text-sm text-[var(--danger-text)]">{error}</p>
           )}
           <Button type="submit" block disabled={loading}>
             {loading ? "Đang gửi..." : "Gửi liên kết đặt lại"}

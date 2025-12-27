@@ -27,7 +27,7 @@
 .heroTitle {
   font-size: 24px;
   font-weight: 900;
-  color: #1f3b86;
+  color: var(--primary-ink);
   letter-spacing: -0.02em;
 }
 
@@ -93,7 +93,7 @@
   padding: 12px 12px;
   font-size: 13px;
   font-weight: 900;
-  color: #22324d;
+  color: var(--text-secondary);
   border-bottom: 1px solid var(--line);
 }
 
@@ -174,7 +174,7 @@
 .rank {
   font-weight: 950;
   font-variant-numeric: tabular-nums;
-  color: #101828;
+  color: var(--text-strong);
 }
 
 .rankEllipsis {
@@ -216,7 +216,7 @@
   text-align: right;
   font-weight: 850;
   font-variant-numeric: tabular-nums;
-  color: #101828;
+  color: var(--text-strong);
 }
 
 .scoreOverall {
@@ -305,20 +305,20 @@
   text-align: center;
   font-size: 14px;
   font-weight: 750;
-  color: rgba(16, 24, 40, 0.62);
+  color: rgb(var(--ink-rgb) / 0.62);
   background: var(--card);
 }
 
 .stateError {
-  color: #b42318;
+  color: var(--danger-text);
   font-weight: 850;
   margin-bottom: 10px;
 }
 
 .retryButton {
-  border: 1px solid rgba(16, 24, 40, 0.12);
-  background: #fff;
-  color: #1f3b86;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--primary-ink);
   font-weight: 900;
   padding: 8px 12px;
   border-radius: 999px;
@@ -326,11 +326,11 @@
 }
 
 .retryButton:hover {
-  background: rgba(247, 250, 255, 0.9);
+  background: var(--surface-2);
 }
 
 .retryButton:focus-visible {
-  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline: 3px solid rgb(var(--primary-rgb) / 0.28);
   outline-offset: 2px;
 }
 
