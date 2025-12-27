@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { controllerGetPublishedQuiz } from "@/application/controllers/quizController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
+import { isServiceError } from "@/application/services/errors";
 
 type Params = {
   quizId: string;
@@ -20,6 +21,12 @@ export async function GET(
     const quiz = await controllerGetPublishedQuiz(quizId);
     return NextResponse.json({ quiz });
   } catch (error) {
+    if (isServiceError(error)) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     const message =
       error instanceof Error ? error.message : "Không thể tải quiz";
     return NextResponse.json({ error: message }, { status: 404 });

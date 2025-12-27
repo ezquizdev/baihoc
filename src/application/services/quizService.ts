@@ -1,3 +1,4 @@
+import { findCustomQuizByGeneratedQuizId } from "@/application/infra/db/customQuizRepo";
 import { listQuestionIdsByIds } from "@/application/infra/db/questionRepo";
 import {
   deleteQuiz,
@@ -176,6 +177,10 @@ export async function getPublishedQuizDetail(
 ): Promise<QuizDetail> {
   const quiz = await getQuizDetailRepo(quizId);
   if (!quiz || quiz.status !== "published") {
+    throw new Error("Quiz not found");
+  }
+  const custom = await findCustomQuizByGeneratedQuizId(quizId);
+  if (custom) {
     throw new Error("Quiz not found");
   }
   return quiz;

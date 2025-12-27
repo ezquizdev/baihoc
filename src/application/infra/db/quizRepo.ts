@@ -386,7 +386,15 @@ export async function listQuizzesForCatalog(params: {
   minQuestions?: number;
   maxQuestions?: number;
 }): Promise<QuizListItem[]> {
-  const where: string[] = ["q.status = 'published'"];
+  const where: string[] = [
+    "q.status = 'published'",
+    `NOT EXISTS (
+      SELECT 1
+      FROM custom_quizzes cq
+      WHERE cq.generated_quiz_id = q.id
+        AND cq.status = 'ready'::custom_quiz_status
+    )`,
+  ];
   const values: unknown[] = [];
 
   const add = (sql: string, value: unknown) => {
@@ -494,7 +502,15 @@ export async function listCatalogPage(params: {
   limit?: number;
   offset?: number;
 }): Promise<{ items: QuizCatalogItem[]; total: number }> {
-  const where: string[] = ["q.status = 'published'"];
+  const where: string[] = [
+    "q.status = 'published'",
+    `NOT EXISTS (
+      SELECT 1
+      FROM custom_quizzes cq
+      WHERE cq.generated_quiz_id = q.id
+        AND cq.status = 'ready'::custom_quiz_status
+    )`,
+  ];
   const values: unknown[] = [params.userId];
 
   const add = (sql: string, value: unknown) => {

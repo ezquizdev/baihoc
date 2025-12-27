@@ -10,6 +10,9 @@
 - Added `GET /api/attempts` for submitted/auto-submitted attempts (includes custom quiz config metadata when available).
 - Starting a generated custom quiz now stores `custom_quiz_id` on the attempt and blocks non-owners from starting it.
 
+### fix(catalog): hide custom quizzes from catalog APIs
+- Custom quizzes are now excluded from quiz catalog listing and return 404 from the catalog quiz detail endpoint.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
