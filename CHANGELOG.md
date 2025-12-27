@@ -30,6 +30,9 @@
 - Attempt meta lookup now uses a single lateral join for custom quiz ownership (less duplicated SQL work).
 - Added a partial index for completed attempt history listing by user.
 
+### chore: biome format
+- Applied Biome auto-fixes.
+
 ### fix(catalog): hide custom quizzes from catalog APIs
 - Custom quizzes are now excluded from quiz catalog listing and return 404 from the catalog quiz detail endpoint.
 

@@ -7,8 +7,8 @@ import { listQuestionIdsByIds } from "@/application/infra/db/questionRepo";
 import {
   deleteQuiz,
   getQuizDetail as getQuizDetailRepo,
-  insertQuiz,
   hasInProgressAttempts,
+  insertQuiz,
   isQuizUsed,
   listCatalogPage as listCatalogPageRepo,
   listQuizzesForCatalog,
@@ -29,8 +29,8 @@ import type {
   QuizStatus,
   QuizVisibility,
 } from "@/application/models/quiz";
-import { mapDifficultyLabelsToLevels } from "@/lib/difficulty";
 import { ServiceError } from "@/application/services/errors";
+import { mapDifficultyLabelsToLevels } from "@/lib/difficulty";
 
 type CreateQuizInput = {
   title: string;
