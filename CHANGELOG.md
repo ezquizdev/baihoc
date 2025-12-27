@@ -39,6 +39,14 @@
 ### chore(test): mock db transactions in user admin unit tests
 - Prevents accidental network DB connections during unit tests by mocking `withTransaction`.
 
+### feat(attempt): include answer keys in review state
+- Attempt review state now returns `correctOptionIds`, `shortAnswerKeys`, and question `explanation` (when available) so results pages can show correct answers.
+- Legacy review mode is enriched by querying question review details by question IDs.
+
+### feat(ui): improve attempt results review
+- Results page now shows each question with all options, your choice(s), correct answer(s), and explanation (with a quick show/hide toggle).
+- Updated layout to match the dashboard theme and added clearer summary/actions.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
