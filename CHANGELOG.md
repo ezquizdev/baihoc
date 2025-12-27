@@ -11,6 +11,9 @@
 ### fix(auth): strip unknown fields in auth APIs
 - Auth API payload schemas no longer use `.passthrough()`; unknown fields are stripped by default.
 
+### feat(ui): add global error and not-found pages
+- Added `src/app/error.tsx` and `src/app/not-found.tsx` for a clearer production UX on failures/404s.
+
 ### feat(profile): refresh profile UI
 - Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
 - Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
