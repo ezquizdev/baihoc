@@ -11,6 +11,7 @@ import {
   QuestionStatusValues,
   QuestionTypeValues,
 } from "@/application/models/enums";
+import { isServiceError } from "@/application/services/errors";
 
 const updateSchema = z.object({
   subjectId: z.string().uuid().optional(),
@@ -107,8 +108,14 @@ export async function DELETE(
     const result = await controllerDeleteQuestion(questionId);
     return NextResponse.json(result);
   } catch (error) {
+    if (isServiceError(error)) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     const message =
-      error instanceof Error ? error.message : "Không thể xóa/lưu trữ câu hỏi";
+      error instanceof Error ? error.message : "Không thể xóa câu hỏi";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

@@ -235,7 +235,7 @@ export function QuestionTable({
       <ConfirmModal
         open={deleteCandidateId !== null}
         title="Xóa câu hỏi?"
-        message="Xóa câu hỏi này? Nếu câu hỏi đang được dùng, hệ thống sẽ lưu trữ thay vì xóa."
+        message="Xóa câu hỏi này? Nếu câu hỏi đang được dùng trong quiz, bạn sẽ không thể xóa."
         confirmLabel="Xóa"
         cancelLabel="Hủy"
         confirmVariant="danger"
