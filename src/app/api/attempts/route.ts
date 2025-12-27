@@ -6,6 +6,10 @@ import {
   controllerStartAttempt,
 } from "@/application/controllers/attemptController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
+import {
+  type AttemptHistoryKind,
+  AttemptHistoryKindValues,
+} from "@/application/models/attempt";
 import { isServiceError } from "@/application/services/errors";
 
 const createSchema = z.object({
@@ -24,11 +28,19 @@ export async function GET(request: NextRequest) {
     limit: 20,
     offset: 0,
   });
+  const search = searchParams.get("search")?.trim() || undefined;
+  const kindRaw = searchParams.get("kind");
+  const kind: AttemptHistoryKind | undefined =
+    kindRaw && AttemptHistoryKindValues.includes(kindRaw as AttemptHistoryKind)
+      ? (kindRaw as AttemptHistoryKind)
+      : undefined;
 
   try {
     const result = await controllerListAttemptHistory(auth.sub, {
       limit,
       offset,
+      search,
+      kind,
     });
     return NextResponse.json(result);
   } catch (error) {

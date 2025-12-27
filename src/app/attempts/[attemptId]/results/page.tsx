@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { controllerGetAttemptState } from "@/application/controllers/attemptController";
+import { controllerGetAttemptReviewState } from "@/application/controllers/attemptController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import type {
   AttemptAnswer,
-  AttemptQuestion,
+  AttemptReviewQuestion,
 } from "@/application/models/attempt";
+import { RejudgeAttemptButton } from "@/components/attempt-review/rejudge-attempt-button";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Card } from "@/components/ui/card";
 import { RichText } from "@/components/ui/rich-text";
@@ -22,10 +23,11 @@ export default async function AttemptResultsPage({
   });
   const displayName = session.fullName ?? session.email.split("@")[0];
 
-  let state: Awaited<ReturnType<typeof controllerGetAttemptState>> | null =
-    null;
+  let state: Awaited<
+    ReturnType<typeof controllerGetAttemptReviewState>
+  > | null = null;
   try {
-    state = await controllerGetAttemptState(session.sub, attemptId);
+    state = await controllerGetAttemptReviewState(session.sub, attemptId);
   } catch (error) {
     const message = getAttemptLoadMessage(error);
     return (
@@ -152,6 +154,14 @@ export default async function AttemptResultsPage({
   }, 0);
 
   const passageLabels = buildPassageLabels(state.questions);
+  const showQuizDeletedBanner = !state.quizExists;
+  const showLegacyBanner = state.reviewMode === "legacy";
+  const showRejudgeBanner = state.quizExists && state.quizContentChanged;
+  const showRejudgeUnavailableBanner =
+    state.quizExists &&
+    Boolean(state.quizContentHashSnapshot) &&
+    !state.quizContentHashCurrent &&
+    state.reviewMode === "snapshot";
 
   return (
     <DashboardShell
@@ -165,8 +175,40 @@ export default async function AttemptResultsPage({
     >
       <Card
         title={`Kết quả: ${quizTitle}`}
-        description={`Trạng thái: ${state.attempt.status} • Đã trả lời ${answeredCount}/${state.questions.length} câu`}
+        description={`Trạng thái: ${state.attempt.status} • Đã trả lời ${answeredCount}/${state.questions.length} câu • Phiên bản chấm: v${state.judgementVersion}`}
       >
+        {showQuizDeletedBanner ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
+            Quiz có thể đã bị xoá. Không thể chấm lại, nhưng bạn vẫn có thể xem
+            lại kết quả dựa trên dữ liệu đã lưu.
+          </div>
+        ) : null}
+
+        {showLegacyBanner ? (
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
+            Bài làm này chưa có snapshot đầy đủ. Nội dung hiển thị có thể dựa
+            trên quiz hiện tại và không phản ánh chính xác lịch sử khi bạn làm
+            bài.
+          </div>
+        ) : null}
+
+        {showRejudgeBanner ? (
+          <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800 md:flex-row md:items-center md:justify-between">
+            <div>
+              Quiz đã thay đổi kể từ lúc bạn nộp. Bạn có thể chấm lại để cập
+              nhật điểm theo phiên bản mới nhất.
+            </div>
+            <RejudgeAttemptButton attemptId={attemptId} />
+          </div>
+        ) : null}
+
+        {showRejudgeUnavailableBanner ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+            Quiz đã thay đổi quá nhiều và không còn câu hỏi nào trùng với lượt
+            làm này, nên không thể chấm lại.
+          </div>
+        ) : null}
+
         <div className="grid gap-3 md:grid-cols-3">
           <Stat label="Điểm" value={`${state.attempt.scorePercent}%`} />
           <Stat
@@ -227,7 +269,7 @@ function QuestionResultRow({
   answer,
   passageLabel,
 }: {
-  question: AttemptQuestion;
+  question: AttemptReviewQuestion;
   answer?: AttemptAnswer;
   passageLabel?: string;
 }) {
@@ -256,6 +298,12 @@ function QuestionResultRow({
         {badge}
       </div>
 
+      {!question.exists ? (
+        <div className="mt-3 rounded-xl bg-rose-50 p-4 text-sm font-semibold text-rose-700">
+          Câu hỏi này đã bị xoá nên không thể hiển thị nội dung đầy đủ.
+        </div>
+      ) : null}
+
       {question.passage ? (
         <div className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
           <div className="mb-2 text-sm font-extrabold text-slate-700">
@@ -265,11 +313,15 @@ function QuestionResultRow({
         </div>
       ) : null}
 
-      <RichText
-        content={question.stem}
-        className="mt-3 text-sm text-slate-800"
-        allowLinks
-      />
+      {question.stem ? (
+        <RichText
+          content={question.stem}
+          className="mt-3 text-sm text-slate-800"
+          allowLinks
+        />
+      ) : (
+        <div className="mt-3 text-sm font-semibold text-slate-500">—</div>
+      )}
 
       <div className="mt-4 text-sm">
         <div className="text-xs font-semibold text-slate-500">
@@ -283,7 +335,10 @@ function QuestionResultRow({
   );
 }
 
-function renderUserAnswer(question: AttemptQuestion, answer?: AttemptAnswer) {
+function renderUserAnswer(
+  question: AttemptReviewQuestion,
+  answer?: AttemptAnswer,
+) {
   if (!answer) return <span className="text-slate-500">—</span>;
   if (question.type === "short_answer") {
     return answer.textAnswer ? (
@@ -297,11 +352,29 @@ function renderUserAnswer(question: AttemptQuestion, answer?: AttemptAnswer) {
     );
   }
 
+  if (!question.exists) {
+    return answer.selectedOptionIds?.length ? (
+      <span className="text-slate-500">
+        {answer.selectedOptionIds.length} lựa chọn (không thể hiển thị)
+      </span>
+    ) : (
+      <span className="text-slate-500">—</span>
+    );
+  }
+
   const selected = new Set(answer.selectedOptionIds ?? []);
   const selectedOptions = question.options.filter((opt) =>
     selected.has(opt.id),
   );
-  if (!selectedOptions.length) return <span className="text-slate-500">—</span>;
+  if (!selectedOptions.length) {
+    return answer.selectedOptionIds?.length ? (
+      <span className="text-slate-500">
+        Lựa chọn bạn chọn không còn tồn tại.
+      </span>
+    ) : (
+      <span className="text-slate-500">—</span>
+    );
+  }
 
   return (
     <ul className="list-disc space-y-1 pl-5">
@@ -315,7 +388,7 @@ function renderUserAnswer(question: AttemptQuestion, answer?: AttemptAnswer) {
   );
 }
 
-function buildPassageLabels(questions: AttemptQuestion[]) {
+function buildPassageLabels(questions: AttemptReviewQuestion[]) {
   const ranges = new Map<string, { start: number; end: number }>();
   for (const question of questions) {
     const passage = question.passage;
