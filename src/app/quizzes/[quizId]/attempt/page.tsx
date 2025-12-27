@@ -16,6 +16,9 @@ export default async function QuizAttemptStartPage({
   const session = await requireAuthenticatedPage({
     next: `/quizzes/${quizId}/attempt`,
   });
+  if (session.role === "staff") {
+    redirect("/staff/dashboard");
+  }
   const displayName = session.fullName ?? session.email.split("@")[0];
 
   let attemptId: string;
@@ -43,13 +46,13 @@ export default async function QuizAttemptStartPage({
           actions={
             <div className="flex flex-wrap gap-3">
               <Link
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2868e6] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1f54b8]"
+                className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:rgba(40,104,230,0.28)]"
                 href={`/quizzes/${quizId}/attempt`}
               >
                 Thử lại
               </Link>
               <Link
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-50"
+                className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[color:var(--line)] bg-[var(--card)] px-4 py-3 text-sm font-semibold text-[var(--text)] transition-colors hover:bg-[var(--bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:rgba(40,104,230,0.28)]"
                 href="/quizzes"
               >
                 Về danh sách quiz
@@ -57,7 +60,7 @@ export default async function QuizAttemptStartPage({
             </div>
           }
         >
-          <div className="text-sm text-slate-600">
+          <div className="text-sm text-[var(--muted)]">
             Nếu bạn vừa đăng nhập, hãy thử lại hoặc quay lại danh sách quiz.
           </div>
         </Card>

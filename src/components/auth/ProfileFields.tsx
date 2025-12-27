@@ -67,7 +67,7 @@ export function ProfileFields({
       <Input
         label={
           <>
-            Họ và tên <span className="text-red-500">*</span>
+            Họ và tên <span className="text-[var(--danger-text)]">*</span>
           </>
         }
         placeholder="Nguyễn Văn A"
@@ -90,7 +90,7 @@ export function ProfileFields({
       <div className="space-y-2">
         <label
           htmlFor="avatar-file"
-          className="text-sm font-medium text-slate-700"
+          className="text-sm font-medium text-[var(--text)]"
         >
           Ảnh đại diện
         </label>
@@ -100,7 +100,7 @@ export function ProfileFields({
           type="file"
           accept="image/*"
           onChange={(e) => handleAvatarFile(e.target.files?.[0])}
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+          className="w-full rounded-[var(--radius-md)] border border-[color:var(--line)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--text)] shadow-[0_10px_20px_rgba(26,46,93,0.06)] outline-none transition focus:border-[var(--primary)] focus:shadow-[0_0_0_3px_rgba(40,104,230,0.16)]"
         />
         {values.avatarPreview && (
           <Image
@@ -113,16 +113,16 @@ export function ProfileFields({
         )}
       </div>
       {showTerms && (
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
           <input
             type="checkbox"
             checked={values.acceptTerms}
             onChange={(e) => onChange({ acceptTerms: e.target.checked })}
-            className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
+            className="h-4 w-4 rounded border-[color:var(--line)] accent-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary-rgb)/0.18)]"
           />
           <span>
             Tôi đồng ý với các điều khoản sử dụng và chính sách bảo mật{" "}
-            <span className="text-red-500">*</span>
+            <span className="text-[var(--danger-text)]">*</span>
           </span>
         </label>
       )}

@@ -23,6 +23,7 @@ export async function POST(
 ) {
   const auth = await requireAuthenticatedApi(request, {
     allowIncompleteProfile: false,
+    role: "student",
   });
   if (auth instanceof NextResponse) return auth;
   try {

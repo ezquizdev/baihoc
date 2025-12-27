@@ -20,6 +20,7 @@ async function verifySession(req: NextRequest) {
     const verified = await jwtVerify(
       token,
       new TextEncoder().encode(env.SESSION_SECRET),
+      { algorithms: ["HS256"] },
     );
     return verified.payload as Record<string, unknown>;
   } catch {

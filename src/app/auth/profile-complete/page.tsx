@@ -1,14 +1,8 @@
 import { redirect } from "next/navigation";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import { getProfilePrefill } from "@/application/services/authService";
+import { sanitizeNextPath } from "@/lib/urls";
 import { ProfileCompleteForm } from "./ProfileCompleteForm";
-
-function sanitizeNext(value: unknown) {
-  if (typeof value !== "string") return null;
-  if (!value.startsWith("/")) return null;
-  if (value.startsWith("//")) return null;
-  return value;
-}
 
 function dashboardHrefForRole(role: string) {
   return role === "staff" ? "/staff/dashboard" : "/dashboard";
@@ -23,7 +17,7 @@ export default async function ProfileCompletePage({
     allowIncompleteProfile: true,
     next: "/auth/profile-complete",
   });
-  const next = sanitizeNext(searchParams?.next);
+  const next = sanitizeNextPath(searchParams?.next);
   const fallback = dashboardHrefForRole(session.role);
   const redirectTo = next ?? fallback;
   if (session.profileCompleted) {

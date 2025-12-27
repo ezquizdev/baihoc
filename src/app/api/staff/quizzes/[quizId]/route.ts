@@ -26,8 +26,8 @@ const updateSchema = z.object({
     .union([
       z
         .object({
-          startAt: z.string(),
-          endAt: z.string(),
+          startAt: z.string().datetime(),
+          endAt: z.string().datetime(),
           timeLimitSeconds: z.number().int().positive(),
         })
         .strict(),

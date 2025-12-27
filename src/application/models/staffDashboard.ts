@@ -69,3 +69,20 @@ export type StaffDashboardOverviewDto = {
     subjects: StaffDashboardSubjectCompetencyCardDto[];
   }>;
 };
+
+export type StaffDashboardChartSeriesDto = {
+  subjectSlug: string;
+  values: Array<number | null>;
+};
+
+export type StaffDashboardLineChartDto = {
+  dates: string[];
+  labels: string[];
+  series: StaffDashboardChartSeriesDto[];
+};
+
+export type StaffDashboardChartsDto = {
+  windowDays: number;
+  frequency: StaffDashboardLineChartDto;
+  accuracy: StaffDashboardLineChartDto;
+};

@@ -1,53 +1,251 @@
 "use client";
 
-import type { LeaderboardEntry } from "@/application/models/leaderboard";
-import { formatNumberVi } from "@/lib/formatters";
-import styles from "./quiz-catalog.module.css";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { LeaderboardResult } from "@/application/models/leaderboard";
+import type { Subject } from "@/application/models/subject";
+import styles from "./quiz-leaderboard.module.css";
 
 type QuizLeaderboardProps = {
-  items: LeaderboardEntry[];
+  initial: LeaderboardResult;
+  maxRows: number;
+  includeSelf: boolean;
+  subjects?: Subject[];
+  showScopeSelect?: boolean;
 };
 
-export function QuizLeaderboard({ items }: QuizLeaderboardProps) {
-  return (
-    <aside
-      className={`cardBase ${styles.leaderboard}`}
-      aria-label="Leaderboard"
-    >
-      <div className={styles.sectionHead}>
-        <h3>Bảng xếp hạng</h3>
-        <button type="button">Xem tất cả</button>
-      </div>
+export function QuizLeaderboard({
+  initial,
+  maxRows,
+  includeSelf,
+  subjects = [],
+  showScopeSelect = true,
+}: QuizLeaderboardProps) {
+  const didMountRef = useRef(false);
+  const requestIdRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const [subjectId, setSubjectId] = useState<string | null>(null);
+  const [data, setData] = useState<LeaderboardResult>(initial);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-      <table className={styles.leaderboardTable} aria-label="Leaderboard table">
-        <thead>
-          <tr>
-            <th style={{ width: "44px" }}>#</th>
-            <th>Họ và tên</th>
-            <th style={{ width: "78px", textAlign: "right" }}>XP</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.length ? (
-            items.map((entry, index) => (
-              <tr key={entry.userId}>
-                <td className={styles.rank}>{index + 1}</td>
-                <td>
-                  <div className={styles.nameCell}>
-                    <span className={styles.tinyAvatar} aria-hidden="true" />
-                    {entry.fullName}
-                  </div>
-                </td>
-                <td className={styles.xp}>{formatNumberVi(entry.xp)}</td>
-              </tr>
-            ))
-          ) : (
+  const hasScopeSelect = showScopeSelect && subjects.length > 0;
+
+  const fetchLeaderboard = useCallback(
+    async (nextSubjectId: string | null) => {
+      requestIdRef.current += 1;
+      const requestId = requestIdRef.current;
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      try {
+        setLoading(true);
+        setError(null);
+        const params = new URLSearchParams();
+        params.set("limit", String(maxRows));
+        if (includeSelf) params.set("includeSelf", "1");
+        if (nextSubjectId) params.set("subjectId", nextSubjectId);
+
+        const response = await fetch(`/api/catalog/leaderboard?${params}`, {
+          signal: controller.signal,
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload?.error ?? "Không thể tải leaderboard");
+        }
+
+        if (requestIdRef.current === requestId) {
+          setData({
+            items: Array.isArray(payload?.items) ? payload.items : [],
+            self: payload?.self ?? null,
+          });
+        }
+      } catch (err) {
+        const aborted =
+          controller.signal.aborted || (err as Error).name === "AbortError";
+        if (!aborted && requestIdRef.current === requestId) {
+          setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
+        }
+      } finally {
+        if (requestIdRef.current === requestId) {
+          setLoading(false);
+        }
+      }
+    },
+    [includeSelf, maxRows],
+  );
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    fetchLeaderboard(subjectId);
+  }, [fetchLeaderboard, subjectId]);
+
+  const shouldAppendSelf =
+    includeSelf &&
+    data.self !== null &&
+    !data.items.some((entry) => entry.userId === data.self?.userId);
+
+  return (
+    <aside className={styles.card} aria-label="Leaderboard">
+      {hasScopeSelect ? (
+        <div className={styles.toolbar}>
+          <label className={styles.scopeSelect}>
+            <span className={styles.srOnly}>Phạm vi leaderboard</span>
+            <select
+              value={subjectId ?? ""}
+              onChange={(e) => setSubjectId(e.target.value || null)}
+              disabled={loading}
+            >
+              <option value="">Tổng</option>
+              {subjects.map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
+
+      <div
+        className={`${styles.tableWrap} ${loading ? styles.tableWrapLoading : ""}`}
+      >
+        <table className={styles.table} aria-label="Leaderboard table">
+          <thead>
             <tr>
-              <td colSpan={3}>Chưa có dữ liệu.</td>
+              <th className={styles.colRank}>#</th>
+              <th className={styles.colName}>Họ và tên</th>
+              <th className={styles.colXp}>XP</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {error ? (
+              <tr>
+                <td colSpan={3} className={styles.stateCell}>
+                  <div className={styles.stateError}>{error}</div>
+                  <button
+                    type="button"
+                    className={styles.retryButton}
+                    onClick={() => fetchLeaderboard(subjectId)}
+                    disabled={loading}
+                  >
+                    Thử lại
+                  </button>
+                </td>
+              </tr>
+            ) : data.items.length === 0 && !shouldAppendSelf ? (
+              <tr>
+                <td colSpan={3} className={styles.stateCell}>
+                  Chưa có dữ liệu.
+                </td>
+              </tr>
+            ) : (
+              <>
+                {data.items.map((entry) => (
+                  <tr key={entry.userId}>
+                    <td className={styles.rank}>{entry.rank}</td>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <LeaderboardBadge rank={entry.rank} />
+                        <Link
+                          className={styles.nameText}
+                          href={`/profile/${entry.userId}`}
+                        >
+                          {entry.fullName}
+                        </Link>
+                      </div>
+                    </td>
+                    <td className={styles.xp}>{formatRawNumber(entry.xp)}</td>
+                  </tr>
+                ))}
+
+                {shouldAppendSelf ? (
+                  <>
+                    <tr>
+                      <td className={styles.rankEllipsis}>...</td>
+                      <td />
+                      <td />
+                    </tr>
+                    <tr className={styles.selfRow}>
+                      <td className={styles.rank}>{data.self?.rank}</td>
+                      <td>
+                        <div className={styles.nameCell}>
+                          <LeaderboardBadge
+                            rank={data.self?.rank ?? 0}
+                            variant="self"
+                          />
+                          {data.self?.userId ? (
+                            <Link
+                              className={styles.nameText}
+                              href={`/profile/${data.self.userId}`}
+                            >
+                              {data.self.fullName}
+                            </Link>
+                          ) : (
+                            <span className={styles.nameText}>
+                              {data.self?.fullName}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className={styles.xp}>
+                        {formatRawNumber(data.self?.xp ?? 0)}
+                      </td>
+                    </tr>
+                  </>
+                ) : null}
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
     </aside>
   );
+}
+
+function LeaderboardBadge({
+  rank,
+  variant = "top",
+}: {
+  rank: number;
+  variant?: "top" | "self";
+}) {
+  const isTop = variant === "top";
+  const showCrown = isTop && rank === 1;
+  return (
+    <span
+      className={`${styles.badge} ${variant === "self" ? styles.badgeSelf : ""} ${
+        showCrown ? styles.badgeCrown : ""
+      }`}
+      aria-hidden="true"
+    >
+      <svg
+        className={styles.badgeMark}
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M4 6.5c0-.83.67-1.5 1.5-1.5H10v6H4V6.5ZM14 5h4.5c.83 0 1.5.67 1.5 1.5V11h-6V5Z"
+          fill="currentColor"
+        />
+        <path
+          d="M7.2 11.2h9.6v3.2c0 2.65-2.15 4.8-4.8 4.8s-4.8-2.15-4.8-4.8v-3.2Z"
+          fill="currentColor"
+        />
+      </svg>
+    </span>
+  );
+}
+
+function formatRawNumber(value: number) {
+  return String(value);
 }

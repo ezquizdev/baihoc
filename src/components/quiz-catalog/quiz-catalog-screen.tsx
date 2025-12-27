@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { DifficultyLabel } from "@/application/models/enums";
-import type { LeaderboardEntry } from "@/application/models/leaderboard";
+import type { LeaderboardResult } from "@/application/models/leaderboard";
 import type { QuizCatalogItem } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
@@ -23,7 +23,9 @@ type QuizCatalogScreenProps = {
   session: SessionPayload;
   initialCatalog: { items: QuizCatalogItem[]; total: number };
   subjects: Subject[];
-  leaderboard: LeaderboardEntry[];
+  leaderboard: LeaderboardResult;
+  leaderboardMaxRows: number;
+  leaderboardIncludeSelf: boolean;
 };
 
 const PAGE_SIZE = 12;
@@ -35,6 +37,8 @@ export function QuizCatalogScreen({
   initialCatalog,
   subjects,
   leaderboard,
+  leaderboardMaxRows,
+  leaderboardIncludeSelf,
 }: QuizCatalogScreenProps) {
   const router = useRouter();
   const displayName = session.fullName ?? session.email.split("@")[0];
@@ -251,7 +255,12 @@ export function QuizCatalogScreen({
               onPageChange={setPage}
             />
           </div>
-          <QuizLeaderboard items={leaderboard} />
+          <QuizLeaderboard
+            initial={leaderboard}
+            maxRows={leaderboardMaxRows}
+            includeSelf={leaderboardIncludeSelf}
+            subjects={subjects}
+          />
         </section>
       </div>
       <QuizModal

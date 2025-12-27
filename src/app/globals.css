@@ -1,56 +1,118 @@
 @import "tailwindcss";
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 224 71.4% 4.1%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 224 71.4% 4.1%;
-  --border: 214.3 31.8% 91.4%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
+  color-scheme: light;
+
+  --bg: #f4f7ff;
+  --card: #ffffff;
+  --text: #1f2a3a;
+  --muted: #6b7a90;
+  --line: #e6eeff;
+  --bg-rgb: 244 247 255;
+  --card-rgb: 255 255 255;
+  --line-rgb: 230 238 255;
+
+  --ink: #0e1b2b;
+  --ink-2: #111827;
+  --ink-3: #0b1220;
+  --ink-rgb: 14 27 43;
+
   --brand-primary: #2868e6;
   --brand-primary-2: #1f54d6;
-  --brand-accent: #ffc400;
+  --brand-accent: #ffd400;
+  --primary-rgb: 40 104 230;
+  --primary-2-rgb: 31 84 214;
+  --accent-rgb: 255 212 0;
+
+  --primary: var(--brand-primary);
+  --primary-2: var(--brand-primary-2);
+  --accent: var(--brand-accent);
+  --accent-2: #f4bd00;
+
+  --primary-ink: #1f3b86;
+  --primary-soft: #eef5ff;
+  --primary-soft-2: #d7e3ff;
+  --surface-2: #f7faff;
+  --surface-3: #f1f5ff;
+  --surface-hover: #f8fafc;
+  --surface-table: #f6f8fb;
+  --line-strong: #d5e3ff;
+  --neutral-200: #cbd5e1;
+  --neutral-300: #e2e8f0;
+  --neutral-400: #94a3b8;
+
+  --subject-vi: #ff4d4d;
+  --subject-en: #ffd24d;
+  --subject-math: #ff8a4d;
+  --subject-sci: #4dd2ff;
+
+  --subject-vi-solid: #ce3838;
+  --subject-en-solid: #ffd700;
+  --subject-en-ink: #2864d2;
+  --subject-math-solid: #f1f6ff;
+  --subject-math-ink: #ce3838;
+  --subject-sci-solid: #2864d2;
+  --subject-sci-ink: #ffd700;
+
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --shadow: 0 10px 30px rgba(26, 46, 93, 0.08);
+
+  --background: var(--bg);
+  --foreground: var(--text);
+  --border: var(--line);
+  --card-foreground: var(--text);
+  --primary-foreground: #ffffff;
+
+  --text-strong: var(--ink);
+  --text-secondary: #2b3b55;
+  --text-secondary-rgb: 43 59 85;
+  --text-tertiary: #33445f;
+  --text-subtle: #475569;
+  --text-inverse: #ffffff;
+
+  --danger: #e53935;
+  --danger-2: #b92f2f;
+  --danger-ink: #be123c;
+  --danger-text: #991b1b;
+  --danger-surface: #fff1f2;
+  --danger-border: #fca5a5;
+  --danger-rgb: 229 57 53;
+
+  --success: #047857;
+  --success-text: #14532d;
+  --success-rgb: 4 120 87;
+
+  --warning: #8a6a00;
+  --warning-surface: #fff4c8;
+  --warning-rgb: 138 106 0;
+
   --font-sans-stack:
-    "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
-    "Helvetica Neue", sans-serif;
+    var(--font-inter, "Inter"), "Segoe UI", system-ui, -apple-system,
+    BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   --font-mono-stack:
-    "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, Consolas,
-    "Liberation Mono", monospace;
+    var(--font-jetbrains-mono, "JetBrains Mono"), "SFMono-Regular", Menlo,
+    Monaco, Consolas, "Liberation Mono", monospace;
 }
 
 @theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-card: hsl(var(--card));
-  --color-border: hsl(var(--border));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-2: var(--brand-primary-2);
+  --color-brand-accent: var(--brand-accent);
   --font-sans: var(--font-sans-stack);
   --font-mono: var(--font-mono-stack);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: 222 47% 11%;
-    --foreground: 213 31% 91%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 214 27% 71%;
-    --card: 222 47% 11%;
-    --card-foreground: 213 31% 91%;
-    --border: 217 33% 17%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-  }
-}
-
 body {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans-stack);
 }
 

@@ -1,5 +1,201 @@
 # Changelog
 
+## 2025-12-27
+
+### chore(logging): remove unused logger
+- Removed unused `src/lib/logger.ts`.
+
+### refactor(auth): centralize next redirect sanitization
+- Centralized duplicated `next` query validation into `src/lib/urls.ts` and reused it in login/profile-complete/logout.
+
+### fix(auth): strip unknown fields in auth APIs
+- Auth API payload schemas no longer use `.passthrough()`; unknown fields are stripped by default.
+
+### feat(ui): add global error and not-found pages
+- Added `src/app/error.tsx` and `src/app/not-found.tsx` for a clearer production UX on failures/404s.
+
+### fix(a11y): set document language to Vietnamese
+- Updated `<html lang>` to `vi` to better match the Vietnamese UI.
+
+### fix(auth): pin session JWT algorithm to HS256
+- JWT verification now explicitly allows only `HS256` when reading the session cookie.
+
+### fix(staff): validate challenge schedule timestamps
+- Staff quiz APIs now validate `challenge.startAt/endAt` as ISO datetimes and reject invalid/illogical schedules.
+
+### fix(next): derive server actions allowed origins from app URL
+- `experimental.serverActions.allowedOrigins` now derives from `NEXT_PUBLIC_APP_URL` instead of being hard-coded to localhost.
+
+### fix(security): guard server-only modules from client imports
+- Added runtime checks to prevent importing env/session/db/email/storage modules from Client Components.
+
+### chore: biome format
+- Applied Biome auto-formatting.
+
+### feat(profile): refresh profile UI
+- Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
+- Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
+
+### feat(profile): allow viewing student profiles
+- Students can view other students at `/profile/[userId]` (read-only; no edit controls; no AI card).
+- Leaderboard names now link to profile pages.
+
+### feat(profile): simplify staff profile settings
+- Staff `/profile` is now a compact settings view (change name + password only), without student stats/score panels.
+
+### feat(auth): add password change endpoint
+- Added `POST /api/auth/password/change` with current-password verification (and supports setting a password for accounts without one).
+
+### feat(custom-quiz): generate private custom quizzes
+- Added `POST /api/custom-quizzes` to generate paid-only custom quizzes from topic + difficulty requirements.
+- Generation is atomic and links `custom_quizzes` → generated `quizzes`.
+
+### feat(attempt): add completed attempt history API
+- Added `GET /api/attempts` for submitted/auto-submitted attempts (includes custom quiz config metadata when available).
+- Starting a generated custom quiz now stores `custom_quiz_id` on the attempt and blocks non-owners from starting it.
+
+### fix(quiz): block delete while attempts in progress
+- Staff hard-delete now returns 409 when any attempt is `in_progress` (archive remains allowed).
+- Deleting a quiz with completed attempts now backfills snapshot metadata and `attempt_question_snapshots` so history/results stay viewable after quiz deletion.
+
+### perf(attempt): snapshot-first history and redo gating
+- Attempt history listing now reads from `attempts.snapshot_*` (avoids quiz joins and heavy per-request subject-score recomputation).
+- History entries now include `canRedo` so students can’t redo archived quizzes (but can still view results/history).
+
+### fix(auth): restrict attempt flow to students
+- Staff can no longer start/autosave/submit attempts via `/api/attempts/**`.
+- Attempt-taking and results pages now redirect staff to `/staff/dashboard`.
+
+### fix(custom-quiz): align duration and validate difficulty
+- `POST /api/custom-quizzes` now accepts `durationSeconds=0` (treated as no time limit).
+- Custom quiz generation now validates `difficulty` defensively in the service layer.
+
+### perf(attempt): speed up attempt meta and history queries
+- Attempt meta lookup now uses a single lateral join for custom quiz ownership (less duplicated SQL work).
+- Added a partial index for completed attempt history listing by user.
+
+### chore: biome format
+- Applied Biome auto-fixes.
+
+### fix(catalog): hide custom quizzes from catalog APIs
+- Custom quizzes are now excluded from quiz catalog listing and return 404 from the catalog quiz detail endpoint.
+
+### chore(test): mock db transactions in user admin unit tests
+- Prevents accidental network DB connections during unit tests by mocking `withTransaction`.
+
+### feat(staff): add preview mode to question editor
+- Added `Soạn thảo / Chia đôi / Xem trước` modes for staff question editing (Markdown + LaTeX via `RichText`).
+- Replaced `window.confirm` delete prompt with a themed modal and clearer busy/error states.
+
+### feat(staff): add passage detail API
+- Added `GET /api/staff/passages/[passageId]` (returns `{ passage, questions }`) and `PATCH /api/staff/passages/[passageId]` (updates `content` + `mediaUrls`).
+- Added `passageService` + repo helpers to load and update passages from Postgres.
+
+### feat(staff): add passage editor page
+- Added `/staff/questions/passages/[passageId]` to edit a shared passage and all linked questions on one screen.
+- Includes inline question editing, Markdown/LaTeX previews, and a themed delete confirmation modal.
+
+### fix(staff): route passage questions to passage editor
+- Passage questions in `/staff/questions` now link to the passage editor instead of the single-question editor.
+- Visiting `/staff/questions/[questionId]` for a passage question now redirects to `/staff/questions/passages/[passageId]`.
+
+### fix(staff): redirect passage question saves to passage editor
+- Saving a question with a passage now routes to `/staff/questions/passages/[passageId]` to avoid duplicating passages on repeated saves.
+- Save is now disabled when passage content/position is invalid.
+
+### fix(staff): require mediaUrls for passage updates
+- `PATCH /api/staff/passages/[passageId]` now requires `mediaUrls` (avoids accidental clearing when omitted).
+- Passage `mediaUrls` are trimmed server-side.
+
+### fix(staff): refresh passage editor after question delete
+- After deleting a question inside the passage editor, the page now refreshes passage/question data from the server.
+- If the passage disappears (last question deleted), the UI routes back to `/staff/questions`.
+
+### fix(a11y): improve staff editor controls
+- View-mode toggles now use semantic toggle groups (`<fieldset>` + `aria-pressed`) instead of ARIA tab roles.
+- Passage delete modal now includes `aria-labelledby`/`aria-describedby`.
+
+### chore(db): narrow passage selects
+- Passage read/update queries now select explicit columns instead of `SELECT *` / `RETURNING *`.
+
+### fix(profile): clear avatar persists null
+- Clearing an avatar now stores `NULL` (instead of an empty string) so the UI falls back to the default placeholder correctly.
+
+### fix(auth): validate session role
+- Session parsing now enforces `student|staff` roles and clears invalid sessions.
+
+### fix(a11y): add username field for password forms
+- Password change forms now include a hidden `username` field so browsers/password managers can associate credentials correctly.
+
+### refactor(profile): reuse study time formatter
+- Deduplicated the profile study time display by moving the formatter into `src/lib/formatters.ts`.
+
+### feat(attempt): include answer keys in review state
+- Attempt review state now returns `correctOptionIds`, `shortAnswerKeys`, and question `explanation` (when available) so results pages can show correct answers.
+- Legacy review mode is enriched by querying question review details by question IDs.
+
+### feat(ui): improve attempt results review
+- Results page now shows each question with all options, your choice(s), correct answer(s), and explanation (with a quick show/hide toggle).
+- Updated layout to match the dashboard theme and added clearer summary/actions.
+
+### fix(ui): simplify attempt results header
+- Results header no longer shows the attempt status.
+- Explanation toggles now use native `<details>/<summary>` (less client JS), and server-rendered icons use inline SVG for RSC compatibility.
+
+### feat(staff-settings): add allowlist manager
+- Added a staff settings page to surface key environment/config status (URLs, email sender, OAuth, etc).
+- Added an allowlist manager UI with search, pagination, bulk add/update, remove, and “copy register link”.
+- Allowlist API now supports search and returns `{ items, total }` for pagination.
+
+### refactor(staff): simplify quiz builder controls
+- Removed redundant “move up/down” and “required” controls from the quiz builder (drag-to-reorder remains).
+- Quiz info modal now edits quiz `status` (draft/published) instead of `featuredRank`.
+
+### fix(ui): layer manage quiz hero figure
+- Manage quiz hero figure is now decorative (removed from layout flow) so the “Tạo quiz” CTA can sit on top.
+
+### fix(ui): normalize manage quiz card heights
+- Staff quiz cards now stretch to the row height so cards stay aligned when action buttons wrap.
+
+### fix(ui): replace browser alerts with in-app popups
+- Replaced remaining `window.alert` usage with an in-app notice popup (quiz catalog + quiz builder).
+
+### fix(ui): show manage quiz errors in popup
+- Staff manage quiz publish/delete failures now show as a popup instead of rendering inside the quiz card.
+
+### feat(ui): add confirm and textarea modals
+- Added reusable in-app confirm + textarea modals to replace browser dialogs.
+
+### refactor(ui): remove browser confirm/prompt dialogs
+- Replaced remaining `window.confirm` / `window.prompt` usage with in-app modals across staff screens.
+- Quiz builder “Tạo câu hỏi mới” now uses a normal link (avoids `window.open`).
+
+### fix(attempt): replace browser leave prompts with in-app modal
+- In-progress attempt navigation warnings no longer use browser dialogs (`beforeunload`/`confirm`); leaving now uses an in-app modal.
+
+### feat(staff-dashboard): add charts
+- Added staff dashboard line charts for answer frequency + accuracy by subject over a configurable time window.
+- Added repo/service/controller support for daily subject answer aggregates.
+
+### feat(staff): add student management
+- Added a staff “Quản lý học sinh” screen with filters, search, pagination, detail panel, and history.
+- Added actions for verifying email, triggering password resets, and updating tier/status (with optional reason).
+- Improved table accessibility: rows are now keyboard-selectable (Enter/Space).
+
+### feat(audit): add staff audit logs
+- Added staff audit-log API + UI (filters, facets, and detail view).
+- Added a DB index for `audit_logs.created_at` to speed up listing.
+- Audit search now trims whitespace and avoids expensive metadata scans for very short queries; unexpected errors return `500`.
+
+### fix(auth): prefill register email
+- Register now pre-fills the email from `?email=` and uses `Suspense` for `useSearchParams`.
+
+### fix(auth): prevent login redirect loops
+- Added `/logout` route that clears the session cookie and redirects to login (used when a stale cookie points to a missing/deactivated user).
+
+### chore(seed): include draft quiz
+- Seed now includes at least one quiz with `status = draft` (useful for testing staff “lưu nháp” flows).
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors

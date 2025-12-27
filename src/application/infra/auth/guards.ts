@@ -34,6 +34,12 @@ function loginRedirectUrl(next?: string) {
   return `/auth/login?${qs}`;
 }
 
+function logoutRedirectUrl(next?: string) {
+  if (!next) return "/logout";
+  const qs = new URLSearchParams({ next }).toString();
+  return `/logout?${qs}`;
+}
+
 /**
  * Page/server-component guard: ensures a signed-in user and optional role.
  * Redirects to login (with ?next) or profile completion; non-staff users go to dashboard.
@@ -47,7 +53,7 @@ export async function requireAuthenticatedPage(
   }
   const freshSession = await refreshSessionFromDb(session);
   if (!freshSession) {
-    redirect(loginRedirectUrl(options.next) as Parameters<typeof redirect>[0]);
+    redirect(logoutRedirectUrl(options.next) as Parameters<typeof redirect>[0]);
   }
   if (!options.allowIncompleteProfile && !freshSession.profileCompleted) {
     redirect("/auth/profile-complete");

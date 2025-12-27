@@ -15,7 +15,7 @@ export function AuthShell({
 }: AuthShellProps) {
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
-      <div className="relative hidden max-h-screen overflow-hidden bg-[#2868e6] text-white md:block">
+      <div className="relative hidden max-h-screen overflow-hidden bg-[var(--primary)] text-white md:block">
         <div className="absolute left-1/2 top-4 -translate-x-1/2">
           <Image
             src="/assets/logo.svg"
@@ -44,21 +44,25 @@ export function AuthShell({
           </div>
         </div>
         <div className="absolute inset-0 opacity-20">
-          <div className="absolute -left-12 top-0 h-64 w-64 rounded-full bg-white blur-3xl" />
+          <div className="absolute -left-12 top-0 h-64 w-64 rounded-full bg-[var(--text-inverse)] blur-3xl" />
           <div className="absolute right-4 bottom-10 h-72 w-72 rounded-full bg-black/40 blur-3xl" />
         </div>
       </div>
-      <div className="flex max-h-screen flex-col overflow-y-auto bg-white px-6 py-10 text-slate-900 md:px-12 lg:px-20">
+      <div className="flex max-h-screen flex-col overflow-y-auto bg-[var(--bg)] px-6 py-10 text-[var(--text)] md:px-12 lg:px-20">
         <div className="mx-auto flex w-full max-w-xl flex-col gap-6 md:my-auto">
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+            <h1 className="text-3xl font-semibold tracking-tight text-[var(--text)]">
               {title}
             </h1>
-            {subtitle && <p className="text-sm text-slate-600">{subtitle}</p>}
+            {subtitle && (
+              <p className="text-sm text-[var(--muted)]">{subtitle}</p>
+            )}
           </div>
           <div className="space-y-6">{children}</div>
           {footer && (
-            <div className="text-center text-sm text-slate-600">{footer}</div>
+            <div className="text-center text-sm text-[var(--muted)]">
+              {footer}
+            </div>
           )}
         </div>
       </div>

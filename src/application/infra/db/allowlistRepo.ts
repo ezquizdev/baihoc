@@ -13,17 +13,32 @@ export type AllowlistRow = {
 export async function listAllowlist(
   limit = 200,
   offset = 0,
+  search?: string,
   client?: PoolClient,
 ) {
   const executor = client ?? pool;
+  const querySearch = search?.trim() ? `%${search.trim()}%` : null;
   const res = await executor.query<AllowlistRow>(
     `SELECT email, role, tier, added_by, created_at
      FROM course_student_allowlist
+     WHERE ($3::text IS NULL OR email ILIKE $3)
      ORDER BY created_at DESC
      LIMIT $1 OFFSET $2`,
-    [limit, offset],
+    [limit, offset, querySearch],
   );
   return res.rows;
+}
+
+export async function countAllowlist(search?: string, client?: PoolClient) {
+  const executor = client ?? pool;
+  const querySearch = search?.trim() ? `%${search.trim()}%` : null;
+  const res = await executor.query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count
+     FROM course_student_allowlist
+     WHERE ($1::text IS NULL OR email ILIKE $1)`,
+    [querySearch],
+  );
+  return Number(res.rows[0]?.count ?? 0);
 }
 
 export async function findAllowlistEntryByEmail(

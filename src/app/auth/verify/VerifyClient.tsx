@@ -47,24 +47,26 @@ export default function VerifyClient() {
       title="Xác minh email"
       subtitle="Chúng tôi đang xác thực tài khoản của bạn."
       footer={
-        <Link href="/auth/login" className="font-medium text-slate-900">
+        <Link href="/auth/login" className="font-medium text-[var(--text)]">
           Quay lại đăng nhập
         </Link>
       }
     >
       <Card>
         {!token && (
-          <p className="text-sm text-slate-700">
+          <p className="text-sm text-[var(--text-secondary)]">
             Thiếu mã xác minh. Vui lòng mở liên kết từ email bạn nhận được.
           </p>
         )}
         {token && (
-          <div className="space-y-3 text-sm text-slate-700">
+          <div className="space-y-3 text-sm text-[var(--text-secondary)]">
             {status === "verifying" && <p>Đang xác minh mã của bạn...</p>}
             {status === "success" && (
-              <p className="text-green-600">{message}</p>
+              <p className="text-[var(--success-text)]">{message}</p>
             )}
-            {status === "error" && <p className="text-red-500">{message}</p>}
+            {status === "error" && (
+              <p className="text-[var(--danger-text)]">{message}</p>
+            )}
           </div>
         )}
       </Card>

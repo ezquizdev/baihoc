@@ -47,21 +47,19 @@ export function QuizAttemptScreen({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [leaveIntent, setLeaveIntent] = useState<
+    { kind: "href"; href: string } | { kind: "back" } | null
+  >(null);
   const ignorePopRef = useRef(false);
 
   const leaveWarningEnabled =
-    attempt.status === "in_progress" && !showSuccessModal;
+    attempt.status === "in_progress" &&
+    !showConfirmModal &&
+    !showSuccessModal &&
+    leaveIntent === null;
 
   useEffect(() => {
     if (!leaveWarningEnabled) return;
-    const message =
-      "Bạn đang làm bài. Nếu rời khỏi trang, tiến độ có thể chưa được lưu. Bạn có chắc chắn muốn rời khỏi trang?";
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = message;
-      return message;
-    };
 
     const handleDocumentClick = (event: globalThis.MouseEvent) => {
       if (event.defaultPrevented) return;
@@ -90,10 +88,11 @@ export function QuizAttemptScreen({
         return;
       }
 
-      if (window.confirm(message)) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
+
+      setLeaveIntent({ kind: "href", href: url.href });
     };
 
     const handlePopState = () => {
@@ -101,17 +100,14 @@ export function QuizAttemptScreen({
         ignorePopRef.current = false;
         return;
       }
-      const ok = window.confirm(message);
-      if (ok) return;
       ignorePopRef.current = true;
       window.history.forward();
+      setLeaveIntent({ kind: "back" });
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("popstate", handlePopState);
     document.addEventListener("click", handleDocumentClick, true);
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
       window.removeEventListener("popstate", handlePopState);
       document.removeEventListener("click", handleDocumentClick, true);
     };
@@ -626,15 +622,17 @@ export function QuizAttemptScreen({
         <div className={styles.title}>{quizTitle}</div>
 
         <div className={styles.rightMeta}>
-          {savingCount > 0 ? (
-            <span className={styles.savingPill}>Đang lưu...</span>
-          ) : null}
-          {saveError ? (
-            <span className={styles.errorPill}>{saveError}</span>
-          ) : null}
-          {submitError ? (
-            <span className={styles.errorPill}>{submitError}</span>
-          ) : null}
+          <div className={styles.rightMetaInner}>
+            {savingCount > 0 ? (
+              <span className={styles.savingPill}>Đang lưu...</span>
+            ) : null}
+            {saveError ? (
+              <span className={styles.errorPill}>{saveError}</span>
+            ) : null}
+            {submitError ? (
+              <span className={styles.errorPill}>{submitError}</span>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -775,6 +773,27 @@ export function QuizAttemptScreen({
         }}
         onSecondary={() => setShowConfirmModal(false)}
         disablePrimary={!canSubmit}
+      />
+
+      <AttemptModal
+        open={leaveIntent !== null}
+        title="Rời khỏi trang?"
+        subtitle="Bạn đang làm bài. Nếu rời khỏi trang, tiến độ có thể chưa được lưu."
+        primaryLabel="Rời khỏi trang"
+        primaryVariant="danger"
+        secondaryLabel="Ở lại"
+        onPrimary={() => {
+          const intent = leaveIntent;
+          setLeaveIntent(null);
+          if (!intent) return;
+          if (intent.kind === "back") {
+            ignorePopRef.current = true;
+            window.history.back();
+            return;
+          }
+          window.location.assign(intent.href);
+        }}
+        onSecondary={() => setLeaveIntent(null)}
       />
 
       <AttemptModal

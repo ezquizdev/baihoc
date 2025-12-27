@@ -90,6 +90,7 @@ vi.mock("@/application/infra/db/allowlistRepo", () => {
         created_at: "",
       })),
     ),
+    countAllowlist: vi.fn(async () => records.length),
     insertAllowlistEmail: vi.fn(
       async (input: { email: string; role?: string; tier?: string }) => {
         const existing = records.find((r) => r.email === input.email);
@@ -123,6 +124,12 @@ vi.mock("@/application/infra/db/auditRepo", () => {
     insertAuditLog: vi.fn(async (input: MockAudit) => logs.push(input)),
   };
 });
+
+vi.mock("@/application/infra/db/pool", () => ({
+  pool: { connect: vi.fn() },
+  query: vi.fn(),
+  withTransaction: vi.fn(async (fn: (client: unknown) => unknown) => fn({})),
+}));
 
 const userRepo = await import("@/application/infra/db/userRepo");
 const membershipRepo = await import("@/application/infra/db/membershipRepo");

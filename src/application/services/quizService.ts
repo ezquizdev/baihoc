@@ -1,7 +1,13 @@
+import {
+  backfillAttemptQuestionSnapshotsForQuiz,
+  backfillAttemptSnapshotsForQuiz,
+} from "@/application/infra/db/attemptRepo";
+import { findCustomQuizByGeneratedQuizId } from "@/application/infra/db/customQuizRepo";
 import { listQuestionIdsByIds } from "@/application/infra/db/questionRepo";
 import {
   deleteQuiz,
   getQuizDetail as getQuizDetailRepo,
+  hasInProgressAttempts,
   insertQuiz,
   isQuizUsed,
   listCatalogPage as listCatalogPageRepo,
@@ -94,13 +100,19 @@ export async function archiveQuiz(quizId: string) {
 }
 
 export async function deleteQuizWithRules(quizId: string) {
-  const used = await isQuizUsed(quizId);
-  if (used) {
+  const inProgress = await hasInProgressAttempts(quizId);
+  if (inProgress) {
     throw new ServiceError(
-      "QUIZ_HAS_ATTEMPTS",
-      "Quiz has attempts; please archive instead of deleting",
+      "QUIZ_DELETE_BLOCKED_IN_PROGRESS",
+      "Không thể xóa quiz vì đang có lượt làm đang diễn ra.",
       409,
     );
+  }
+
+  const used = await isQuizUsed(quizId);
+  if (used) {
+    await backfillAttemptSnapshotsForQuiz(quizId);
+    await backfillAttemptQuestionSnapshotsForQuiz(quizId);
   }
   await deleteQuiz(quizId);
   return { status: "deleted" as const };
@@ -178,6 +190,10 @@ export async function getPublishedQuizDetail(
   if (!quiz || quiz.status !== "published") {
     throw new Error("Quiz not found");
   }
+  const custom = await findCustomQuizByGeneratedQuizId(quizId);
+  if (custom) {
+    throw new Error("Quiz not found");
+  }
   return quiz;
 }
 
@@ -202,8 +218,13 @@ function validateQuizInput(input: CreateQuizInput, partial = false) {
     if (!startAt || !endAt || !timeLimitSeconds) {
       throw new Error("Challenge requires start, end, and time limit");
     }
-    if (new Date(startAt) >= new Date(endAt)) {
-      throw new Error("Challenge end time must be after start time");
+    const startMs = new Date(startAt).getTime();
+    const endMs = new Date(endAt).getTime();
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+      throw new Error("Thời gian challenge không hợp lệ.");
+    }
+    if (startMs >= endMs) {
+      throw new Error("Thời gian kết thúc phải sau thời gian bắt đầu.");
     }
   }
 }

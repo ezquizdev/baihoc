@@ -10,12 +10,11 @@ type ButtonProps = PropsWithChildren<
 >;
 
 const variantClasses: Record<Variant, string> = {
-  primary:
-    "bg-[#2868e6] text-white hover:bg-[#1f54b8] disabled:bg-slate-400 disabled:text-white",
+  primary: "bg-[var(--primary)] text-white hover:bg-[var(--primary-2)]",
   secondary:
-    "bg-white text-slate-900 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 disabled:border-slate-200 disabled:text-slate-400",
+    "border border-[color:var(--line)] bg-[var(--card)] text-[var(--text)] hover:bg-[var(--bg)]",
   ghost:
-    "bg-transparent text-slate-700 hover:bg-slate-100 disabled:text-slate-400",
+    "bg-transparent text-[var(--muted)] hover:bg-[color:rgba(15,22,40,0.06)]",
 };
 
 export function Button({
@@ -27,7 +26,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900/10 ${
+      className={`inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] px-4 py-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:rgba(40,104,230,0.28)] disabled:cursor-not-allowed disabled:opacity-70 ${
         variantClasses[variant]
       } ${block ? "w-full" : ""} ${className}`}
       {...props}

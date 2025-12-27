@@ -2,6 +2,7 @@ import type { StaffDashboardOverviewDto } from "@/application/models/staffDashbo
 import type { Subject } from "@/application/models/subject";
 import {
   getStaffDashboardActivitySection,
+  getStaffDashboardChartsSection,
   getStaffDashboardCompetencySection,
   getStaffDashboardLeaderboardSection,
   getStaffDashboardOverview,
@@ -36,4 +37,10 @@ export async function controllerGetStaffDashboardCompetency(input: {
   subjects: Subject[];
 }) {
   return getStaffDashboardCompetencySection(input.subjects);
+}
+
+export async function controllerGetStaffDashboardCharts(input: {
+  windowDays: number;
+}) {
+  return getStaffDashboardChartsSection(input.windowDays);
 }

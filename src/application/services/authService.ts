@@ -176,6 +176,44 @@ export async function verifyResetToken(rawToken: string) {
   return tokenRow.user_id;
 }
 
+export async function changePasswordForUser(
+  userId: string,
+  input: {
+    currentPassword?: string | null;
+    newPassword: string;
+    newPasswordConfirm?: string;
+  },
+) {
+  if (
+    input.newPasswordConfirm !== undefined &&
+    input.newPassword !== input.newPasswordConfirm
+  ) {
+    throw new Error("Mật khẩu nhập lại không khớp");
+  }
+  ensurePasswordStrength(input.newPassword);
+
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new Error("Không tìm thấy người dùng");
+  }
+
+  if (user.password_hash) {
+    if (!input.currentPassword) {
+      throw new Error("Vui lòng nhập mật khẩu hiện tại");
+    }
+    const valid = await bcrypt.compare(
+      input.currentPassword,
+      user.password_hash,
+    );
+    if (!valid) {
+      throw new Error("Mật khẩu hiện tại không đúng");
+    }
+  }
+
+  const passwordHash = await bcrypt.hash(input.newPassword, 10);
+  await updatePassword(user.id, passwordHash);
+}
+
 export async function googleRegister(input: {
   accessToken: string;
   school?: string | null;
@@ -288,6 +326,7 @@ export async function getProfilePrefill(userId: string) {
     school: user.school ?? "",
     dateOfBirth: user.date_of_birth ?? "",
     avatarUrl: user.avatar_url ?? "",
+    hasPassword: Boolean(user.password_hash),
   };
 }
 

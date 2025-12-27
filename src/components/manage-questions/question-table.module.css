@@ -3,7 +3,7 @@
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--card);
 }
 
 .table {
@@ -16,8 +16,8 @@
 .table thead th {
   position: sticky;
   top: 0;
-  background: #f6f8fb;
-  color: #2b3b55;
+  background: var(--surface-table);
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.2px;
@@ -30,7 +30,7 @@
 .table tbody td {
   padding: 12px 12px;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  color: #0f172a;
+  color: var(--text-strong);
   vertical-align: top;
   font-size: 13px;
 }
@@ -45,7 +45,7 @@
 }
 
 .meta {
-  color: #334155;
+  color: var(--text-tertiary);
   font-size: 12px;
   display: flex;
   flex-direction: column;
@@ -61,21 +61,21 @@
   font-weight: 800;
   font-size: 12px;
   border: 1px solid rgba(15, 23, 42, 0.12);
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--card);
+  color: var(--text-strong);
   white-space: nowrap;
 }
 
 .pillBlue {
   border-color: rgba(40, 104, 230, 0.35);
   background: rgba(40, 104, 230, 0.08);
-  color: #1f3b86;
+  color: var(--primary-ink);
 }
 
 .pillGray {
   border-color: rgba(148, 163, 184, 0.45);
   background: rgba(148, 163, 184, 0.12);
-  color: #475569;
+  color: var(--text-subtle);
 }
 
 .actions {
@@ -91,8 +91,8 @@
   padding: 7px 10px;
   border-radius: 999px;
   border: 1px solid rgba(15, 23, 42, 0.12);
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--card);
+  color: var(--text-strong);
   font-weight: 800;
   font-size: 12px;
   text-decoration: none;
@@ -102,13 +102,13 @@
 .linkBtnBlue {
   border-color: rgba(40, 104, 230, 0.35);
   background: rgba(40, 104, 230, 0.08);
-  color: #1f3b86;
+  color: var(--primary-ink);
 }
 
 .linkBtnRed {
   border-color: rgba(239, 68, 68, 0.35);
   background: rgba(239, 68, 68, 0.08);
-  color: #991b1b;
+  color: var(--danger-text);
 }
 
 .linkBtnDisabled {
@@ -121,14 +121,14 @@
   border: 1px dashed rgba(148, 163, 184, 0.6);
   border-radius: 16px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgb(var(--card-rgb) / 0.8);
 }
 
 .stateAction {
   margin-top: 10px;
   border: none;
-  background: #2868e6;
-  color: #ffffff;
+  background: var(--primary);
+  color: var(--text-inverse);
   padding: 10px 14px;
   border-radius: 999px;
   font-weight: 800;

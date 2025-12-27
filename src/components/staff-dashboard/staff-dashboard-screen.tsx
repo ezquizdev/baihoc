@@ -2,6 +2,7 @@ import Link from "next/link";
 import { type CSSProperties, Suspense } from "react";
 import {
   controllerGetStaffDashboardActivity,
+  controllerGetStaffDashboardCharts,
   controllerGetStaffDashboardCompetency,
   controllerGetStaffDashboardLeaderboard,
   controllerGetStaffDashboardStats,
@@ -9,6 +10,7 @@ import {
 import { controllerListSubjects } from "@/application/controllers/subjectController";
 import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
 import leaderboardStyles from "@/components/dashboard/leaderboard-card.module.css";
+import { StaffLineChart } from "@/components/staff-dashboard/staff-line-chart";
 import { formatNumberVi } from "@/lib/formatters";
 import styles from "./staff-dashboard-screen.module.css";
 
@@ -195,6 +197,199 @@ function StatsGridFallback() {
         </div>
       </div>
     </>
+  );
+}
+
+function ChartsCardFallback() {
+  return (
+    <section className={styles.chartsCard} aria-label="Biểu đồ (đang tải)">
+      <ul className={styles.legend} aria-label="Chú giải">
+        <li className={styles.legendItem}>
+          <span
+            className={`${styles.legendDot} ${styles.legendVi}`}
+            aria-hidden="true"
+          />
+          Tiếng Việt
+        </li>
+        <li className={styles.legendItem}>
+          <span
+            className={`${styles.legendDot} ${styles.legendEn}`}
+            aria-hidden="true"
+          />
+          Tiếng Anh
+        </li>
+        <li className={styles.legendItem}>
+          <span
+            className={`${styles.legendDot} ${styles.legendMath}`}
+            aria-hidden="true"
+          />
+          Toán học
+        </li>
+        <li className={styles.legendItem}>
+          <span
+            className={`${styles.legendDot} ${styles.legendSci}`}
+            aria-hidden="true"
+          />
+          Tư duy Khoa học
+        </li>
+      </ul>
+
+      <div className={styles.chartsGrid}>
+        <div className={styles.chartPanel} aria-busy="true">
+          <div className={styles.chartTitle}>Tần suất làm bài</div>
+          <div className={styles.chartPlaceholder} aria-hidden="true" />
+        </div>
+        <div className={styles.chartPanel} aria-busy="true">
+          <div className={styles.chartTitle}>Tỉ lệ đúng</div>
+          <div className={styles.chartPlaceholder} aria-hidden="true" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const subjectStrokeBySlug: Record<string, string> = {
+  vi: "var(--subject-vi)",
+  en: "var(--subject-en)",
+  math: "var(--subject-math)",
+  sci: "var(--subject-sci)",
+};
+
+async function StaffChartsCard({ windowDays }: { windowDays: number }) {
+  const result = await controllerGetStaffDashboardCharts({ windowDays }).catch(
+    () =>
+      ({
+        status: "error",
+        message: "unknown_error",
+      }) as const,
+  );
+
+  if (result.status === "error") {
+    return (
+      <section className={styles.chartsCard} aria-label="Biểu đồ">
+        <ul className={styles.legend} aria-label="Chú giải">
+          <li className={styles.legendItem}>
+            <span
+              className={`${styles.legendDot} ${styles.legendVi}`}
+              aria-hidden="true"
+            />
+            Tiếng Việt
+          </li>
+          <li className={styles.legendItem}>
+            <span
+              className={`${styles.legendDot} ${styles.legendEn}`}
+              aria-hidden="true"
+            />
+            Tiếng Anh
+          </li>
+          <li className={styles.legendItem}>
+            <span
+              className={`${styles.legendDot} ${styles.legendMath}`}
+              aria-hidden="true"
+            />
+            Toán học
+          </li>
+          <li className={styles.legendItem}>
+            <span
+              className={`${styles.legendDot} ${styles.legendSci}`}
+              aria-hidden="true"
+            />
+            Tư duy Khoa học
+          </li>
+        </ul>
+
+        <div className={styles.chartsGrid}>
+          <div className={styles.chartPanel}>
+            <div className={styles.chartTitle}>Tần suất làm bài</div>
+            <div className={styles.chartFrame}>
+              <div className={styles.chartError}>Không tải được biểu đồ</div>
+            </div>
+          </div>
+          <div className={styles.chartPanel}>
+            <div className={styles.chartTitle}>Tỉ lệ đúng</div>
+            <div className={styles.chartFrame}>
+              <div className={styles.chartError}>Không tải được biểu đồ</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const charts = result.data;
+  const frequencySeries = charts.frequency.series.map((line) => ({
+    id: line.subjectSlug,
+    stroke: subjectStrokeBySlug[line.subjectSlug] ?? "rgba(255, 255, 255, 0.7)",
+    values: line.values,
+  }));
+
+  const accuracySeries = charts.accuracy.series.map((line) => ({
+    id: line.subjectSlug,
+    stroke: subjectStrokeBySlug[line.subjectSlug] ?? "rgba(255, 255, 255, 0.7)",
+    values: line.values,
+  }));
+
+  return (
+    <section className={styles.chartsCard} aria-label="Biểu đồ">
+      <ul className={styles.legend} aria-label="Chú giải">
+        <li className={styles.legendItem}>
+          <span
+            className={`${styles.legendDot} ${styles.legendVi}`}
+            aria-hidden="true"
+          />
+          Tiếng Việt
+        </li>
+        <li className={styles.legendItem}>
+          <span
+            className={`${styles.legendDot} ${styles.legendEn}`}
+            aria-hidden="true"
+          />
+          Tiếng Anh
+        </li>
+        <li className={styles.legendItem}>
+          <span
+            className={`${styles.legendDot} ${styles.legendMath}`}
+            aria-hidden="true"
+          />
+          Toán học
+        </li>
+        <li className={styles.legendItem}>
+          <span
+            className={`${styles.legendDot} ${styles.legendSci}`}
+            aria-hidden="true"
+          />
+          Tư duy Khoa học
+        </li>
+      </ul>
+
+      <div className={styles.chartsGrid}>
+        <div className={styles.chartPanel}>
+          <div className={styles.chartTitle}>Tần suất làm bài</div>
+          <div className={styles.chartFrame}>
+            <StaffLineChart
+              ariaLabel={`Tần suất làm bài theo môn (${charts.windowDays} ngày gần nhất)`}
+              labels={charts.frequency.labels}
+              series={frequencySeries}
+              unit="count"
+              emptyLabel="Chưa có lượt làm gần đây"
+            />
+          </div>
+        </div>
+        <div className={styles.chartPanel}>
+          <div className={styles.chartTitle}>Tỉ lệ đúng</div>
+          <div className={styles.chartFrame}>
+            <StaffLineChart
+              ariaLabel={`Tỉ lệ đúng theo môn (${charts.windowDays} ngày gần nhất)`}
+              labels={charts.accuracy.labels}
+              series={accuracySeries}
+              unit="percent"
+              yMax={100}
+              emptyLabel="Chưa có dữ liệu"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -712,52 +907,9 @@ export function StaffDashboardScreen({
             </div>
           </section>
 
-          <section
-            className={styles.chartsCard}
-            aria-label="Biểu đồ (placeholder)"
-          >
-            <ul className={styles.legend} aria-label="Chú giải">
-              <li className={styles.legendItem}>
-                <span
-                  className={`${styles.legendDot} ${styles.legendVi}`}
-                  aria-hidden="true"
-                />
-                Tiếng Việt
-              </li>
-              <li className={styles.legendItem}>
-                <span
-                  className={`${styles.legendDot} ${styles.legendEn}`}
-                  aria-hidden="true"
-                />
-                Tiếng Anh
-              </li>
-              <li className={styles.legendItem}>
-                <span
-                  className={`${styles.legendDot} ${styles.legendMath}`}
-                  aria-hidden="true"
-                />
-                Toán học
-              </li>
-              <li className={styles.legendItem}>
-                <span
-                  className={`${styles.legendDot} ${styles.legendSci}`}
-                  aria-hidden="true"
-                />
-                Tư duy Khoa học
-              </li>
-            </ul>
-
-            <div className={styles.chartsGrid}>
-              <div className={styles.chartPanel}>
-                <div className={styles.chartTitle}>Tần suất làm bài</div>
-                <div className={styles.chartPlaceholder} aria-hidden="true" />
-              </div>
-              <div className={styles.chartPanel}>
-                <div className={styles.chartTitle}>Tỉ lệ đúng</div>
-                <div className={styles.chartPlaceholder} aria-hidden="true" />
-              </div>
-            </div>
-          </section>
+          <Suspense fallback={<ChartsCardFallback />}>
+            <StaffChartsCard windowDays={14} />
+          </Suspense>
 
           <section className={styles.card} aria-label="Hoạt động gần đây">
             <div className={styles.cardTitleRow}>

@@ -3,11 +3,9 @@ import { z } from "zod";
 import { controllerGoogleLogin } from "@/application/controllers/authController";
 import { setSession, toSessionPayload } from "@/application/infra/auth/session";
 
-const googleSchema = z
-  .object({
-    accessToken: z.string().min(1),
-  })
-  .passthrough();
+const googleSchema = z.object({
+  accessToken: z.string().min(1),
+});
 
 export async function POST(request: Request) {
   try {

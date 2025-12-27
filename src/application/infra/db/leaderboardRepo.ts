@@ -1,10 +1,17 @@
 import { query } from "@/application/infra/db/pool";
-import type { LeaderboardEntry } from "@/application/models/leaderboard";
+import type {
+  LeaderboardEntry,
+  LeaderboardRankedEntry,
+  LeaderboardResult,
+  LeaderboardSortBy,
+  LeaderboardSortDir,
+  LeaderboardTableEntry,
+  LeaderboardTableResult,
+} from "@/application/models/leaderboard";
 
 type LeaderboardRow = {
   user_id: string;
   full_name: string;
-  email: string;
   avatar_url: string | null;
   xp_total: number;
 };
@@ -12,26 +19,306 @@ type LeaderboardRow = {
 function mapLeaderboardRow(row: LeaderboardRow): LeaderboardEntry {
   return {
     userId: row.user_id,
-    fullName: row.full_name || row.email,
+    fullName: row.full_name,
     avatarUrl: row.avatar_url,
     xp: Number(row.xp_total),
   };
 }
 
-export async function listTopXp(limit = 7): Promise<LeaderboardEntry[]> {
-  const res = await query<LeaderboardRow>(
+type RankedLeaderboardRow = LeaderboardRow & {
+  rank: number;
+};
+
+function mapRankedLeaderboardRow(
+  row: RankedLeaderboardRow,
+): LeaderboardRankedEntry {
+  return {
+    ...mapLeaderboardRow(row),
+    rank: Number(row.rank),
+  };
+}
+
+export async function getLeaderboard(params: {
+  limit: number;
+  viewerUserId?: string | null;
+  includeSelf: boolean;
+  subjectId?: string | null;
+}): Promise<LeaderboardResult> {
+  const viewerUserId = params.includeSelf
+    ? (params.viewerUserId ?? null)
+    : null;
+
+  // Fast path: use denormalized totals (users.xp_total and user_subject_xp_totals).
+  const topRows = params.subjectId
+    ? await query<RankedLeaderboardRow>(
+        `WITH top AS (
+          SELECT ust.user_id,
+                 u.full_name,
+                 u.avatar_url,
+                 ust.xp_total
+          FROM user_subject_xp_totals ust
+          JOIN users u ON u.id = ust.user_id
+          WHERE ust.subject_id = $1::uuid
+            AND u.role = 'student'
+            AND u.status = 'active'
+          ORDER BY ust.xp_total DESC, ust.user_id ASC
+          LIMIT $2
+        ),
+        ranked AS (
+          SELECT *,
+                 RANK() OVER (ORDER BY xp_total DESC) AS rank
+          FROM top
+        )
+        SELECT user_id,
+               full_name,
+               avatar_url,
+               xp_total,
+               rank
+        FROM ranked
+        ORDER BY xp_total DESC, user_id ASC`,
+        [params.subjectId, params.limit],
+      )
+    : await query<RankedLeaderboardRow>(
+        `WITH top AS (
+          SELECT u.id AS user_id,
+                 u.full_name,
+                 u.avatar_url,
+                 u.xp_total
+          FROM users u
+          WHERE u.role = 'student'
+            AND u.status = 'active'
+          ORDER BY u.xp_total DESC, u.id ASC
+          LIMIT $1
+        ),
+        ranked AS (
+          SELECT *,
+                 RANK() OVER (ORDER BY xp_total DESC) AS rank
+          FROM top
+        )
+        SELECT user_id,
+               full_name,
+               avatar_url,
+               xp_total,
+               rank
+        FROM ranked
+        ORDER BY xp_total DESC, user_id ASC`,
+        [params.limit],
+      );
+
+  const items = topRows.rows.map(mapRankedLeaderboardRow);
+
+  if (!params.includeSelf || !viewerUserId) {
+    return { items, self: null };
+  }
+
+  const isInTop = items.some((entry) => entry.userId === viewerUserId);
+  if (isInTop) {
+    return { items, self: null };
+  }
+
+  if (params.subjectId) {
+    const selfBase = await query<LeaderboardRow>(
+      `SELECT u.id AS user_id,
+              u.full_name,
+              u.avatar_url,
+              COALESCE(ust.xp_total, 0)::int AS xp_total
+       FROM users u
+       LEFT JOIN user_subject_xp_totals ust
+         ON ust.user_id = u.id AND ust.subject_id = $2::uuid
+       WHERE u.id = $1
+         AND u.role = 'student'
+         AND u.status = 'active'`,
+      [viewerUserId, params.subjectId],
+    );
+
+    const baseRow = selfBase.rows[0];
+    if (!baseRow) return { items, self: null };
+
+    const rankRes = await query<{ rank: number }>(
+      `SELECT 1 + COUNT(*)::int AS rank
+       FROM user_subject_xp_totals ust
+       JOIN users u ON u.id = ust.user_id
+       WHERE ust.subject_id = $1::uuid
+         AND u.role = 'student'
+         AND u.status = 'active'
+         AND ust.xp_total > $2::int`,
+      [params.subjectId, baseRow.xp_total],
+    );
+    const rank = Number(rankRes.rows[0]?.rank ?? 1);
+
+    return {
+      items,
+      self: mapRankedLeaderboardRow({ ...baseRow, rank }),
+    };
+  }
+
+  const selfBase = await query<LeaderboardRow>(
     `SELECT u.id AS user_id,
             u.full_name,
-            u.email,
             u.avatar_url,
-            SUM(x.amount)::int AS xp_total
-     FROM xp_events x
-     JOIN users u ON u.id = x.user_id
-     WHERE u.role = 'student'
-     GROUP BY u.id, u.full_name, u.email, u.avatar_url
-     ORDER BY xp_total DESC
-     LIMIT $1`,
-    [limit],
+            u.xp_total
+     FROM users u
+     WHERE u.id = $1
+       AND u.role = 'student'
+       AND u.status = 'active'`,
+    [viewerUserId],
   );
-  return res.rows.map(mapLeaderboardRow);
+
+  const baseRow = selfBase.rows[0];
+  if (!baseRow) return { items, self: null };
+
+  const rankRes = await query<{ rank: number }>(
+    `SELECT 1 + COUNT(*)::int AS rank
+     FROM users u
+     WHERE u.role = 'student'
+       AND u.status = 'active'
+       AND u.xp_total > $1::int`,
+    [baseRow.xp_total],
+  );
+  const rank = Number(rankRes.rows[0]?.rank ?? 1);
+
+  return { items, self: mapRankedLeaderboardRow({ ...baseRow, rank }) };
+}
+
+type LeaderboardTableRow = {
+  user_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  xp_vi: number;
+  xp_en: number;
+  xp_math: number;
+  xp_sci: number;
+  xp_overall: number;
+  rank: number;
+};
+
+function mapLeaderboardTableRow(
+  row: LeaderboardTableRow,
+): LeaderboardTableEntry {
+  return {
+    userId: row.user_id,
+    fullName: row.full_name,
+    avatarUrl: row.avatar_url,
+    rank: Number(row.rank),
+    xpVi: Number(row.xp_vi),
+    xpEn: Number(row.xp_en),
+    xpMath: Number(row.xp_math),
+    xpSci: Number(row.xp_sci),
+    xpOverall: Number(row.xp_overall),
+  };
+}
+
+const sortColumns: Record<LeaderboardSortBy, string> = {
+  vi: "xp_vi",
+  en: "xp_en",
+  math: "xp_math",
+  sci: "xp_sci",
+  overall: "xp_main_total",
+};
+
+export async function getLeaderboardTable(params: {
+  limit: number;
+  offset: number;
+  sortBy: LeaderboardSortBy;
+  sortDir: LeaderboardSortDir;
+  viewerUserId?: string | null;
+  includeSelf: boolean;
+}): Promise<LeaderboardTableResult> {
+  const viewerUserId = params.includeSelf
+    ? (params.viewerUserId ?? null)
+    : null;
+
+  const sortColumn = sortColumns[params.sortBy];
+  const orderDir = params.sortDir === "asc" ? "ASC" : "DESC";
+  const compareOp = params.sortDir === "asc" ? "<" : ">";
+
+  const totalRes = await query<{ total: number }>(
+    `SELECT COUNT(*)::int AS total
+     FROM users u
+     WHERE u.role = 'student'
+       AND u.status = 'active'`,
+  );
+  const total = Number(totalRes.rows[0]?.total ?? 0);
+
+  const pageRes = await query<LeaderboardTableRow>(
+    `WITH page AS (
+        SELECT u.id AS user_id,
+               u.full_name,
+               u.avatar_url,
+               u.xp_vi,
+               u.xp_en,
+               u.xp_math,
+               u.xp_sci,
+               u.xp_main_total AS xp_overall,
+               u.${sortColumn} AS sort_score
+        FROM users u
+        WHERE u.role = 'student'
+          AND u.status = 'active'
+        ORDER BY u.${sortColumn} ${orderDir}, u.id ASC
+        LIMIT $1 OFFSET $2
+      ),
+      ranks AS (
+        SELECT DISTINCT p.sort_score AS sort_score,
+               1 + (
+                 SELECT COUNT(*)::int
+                 FROM users u2
+                 WHERE u2.role = 'student'
+                   AND u2.status = 'active'
+                   AND u2.${sortColumn} ${compareOp} p.sort_score
+               ) AS rank
+        FROM page p
+      )
+      SELECT p.user_id,
+             p.full_name,
+             p.avatar_url,
+             p.xp_vi,
+             p.xp_en,
+             p.xp_math,
+             p.xp_sci,
+             p.xp_overall,
+             r.rank
+      FROM page p
+      JOIN ranks r ON r.sort_score = p.sort_score
+      ORDER BY p.sort_score ${orderDir}, p.user_id ASC`,
+    [params.limit, params.offset],
+  );
+  const items = pageRes.rows.map(mapLeaderboardTableRow);
+
+  if (!params.includeSelf || !viewerUserId) {
+    return { items, total, self: null };
+  }
+
+  const isInPage = items.some((entry) => entry.userId === viewerUserId);
+  if (isInPage) {
+    return { items, total, self: null };
+  }
+
+  const selfRes = await query<LeaderboardTableRow>(
+    `SELECT u.id AS user_id,
+            u.full_name,
+            u.avatar_url,
+            u.xp_vi,
+            u.xp_en,
+            u.xp_math,
+            u.xp_sci,
+            u.xp_main_total AS xp_overall,
+            1 + (
+              SELECT COUNT(*)::int
+              FROM users u2
+              WHERE u2.role = 'student'
+                AND u2.status = 'active'
+                AND u2.${sortColumn} ${compareOp} u.${sortColumn}
+            ) AS rank
+     FROM users u
+     WHERE u.id = $1
+       AND u.role = 'student'
+       AND u.status = 'active'`,
+    [viewerUserId],
+  );
+  const selfRow = selfRes.rows[0];
+  if (!selfRow) {
+    return { items, total, self: null };
+  }
+
+  return { items, total, self: mapLeaderboardTableRow(selfRow) };
 }

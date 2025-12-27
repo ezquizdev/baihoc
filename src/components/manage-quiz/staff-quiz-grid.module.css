@@ -17,9 +17,9 @@
   text-align: center;
   border-radius: 16px;
   border: 1px dashed var(--line);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgb(var(--card-rgb) / 0.8);
   padding: 24px;
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 700;
   pointer-events: none;
 }
@@ -27,10 +27,10 @@
 .stateCard {
   border-radius: 16px;
   border: 1px dashed var(--line);
-  background: #fff;
+  background: var(--card);
   padding: 24px;
   text-align: center;
-  color: #2b3b55;
+  color: var(--text-secondary);
   font-weight: 700;
   display: block;
   width: min(520px, 100%);
@@ -40,8 +40,8 @@
 .stateAction {
   margin-top: 10px;
   border: 0;
-  background: var(--brand-primary);
-  color: #fff;
+  background: var(--primary);
+  color: var(--text-inverse);
   font-weight: 800;
   border-radius: 999px;
   padding: 8px 14px;
@@ -50,15 +50,34 @@
 
 .quizGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+  grid-template-columns: 1fr;
   gap: 14px;
+  align-items: stretch;
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
+@media (min-width: 720px) {
+  .quizGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .quizGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .quizGridItem {
+  display: flex;
+  min-width: 0;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.quizGridItem > * {
+  flex: 1 1 auto;
 }

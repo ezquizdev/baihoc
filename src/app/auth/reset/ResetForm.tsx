@@ -62,14 +62,14 @@ export function ResetForm({ token, tokenValid }: Props) {
       title="Đặt lại mật khẩu"
       subtitle="Đặt lại mật khẩu mới của bạn."
       footer={
-        <Link href="/auth/login" className="font-medium text-slate-900">
+        <Link href="/auth/login" className="font-medium text-[var(--text)]">
           Quay lại đăng nhập
         </Link>
       }
     >
       <Card>
         {isInvalid ? (
-          <p className="text-sm text-red-500">
+          <p className="text-sm text-[var(--danger-text)]">
             Mã đặt lại không hợp lệ hoặc đã hết hạn.
           </p>
         ) : (
@@ -77,7 +77,8 @@ export function ResetForm({ token, tokenValid }: Props) {
             <Input
               label={
                 <>
-                  Mật khẩu mới <span className="text-red-500">*</span>
+                  Mật khẩu mới{" "}
+                  <span className="text-[var(--danger-text)]">*</span>
                 </>
               }
               type="password"
@@ -89,7 +90,8 @@ export function ResetForm({ token, tokenValid }: Props) {
             <Input
               label={
                 <>
-                  Nhập lại mật khẩu <span className="text-red-500">*</span>
+                  Nhập lại mật khẩu{" "}
+                  <span className="text-[var(--danger-text)]">*</span>
                 </>
               }
               type="password"
@@ -98,11 +100,13 @@ export function ResetForm({ token, tokenValid }: Props) {
               required
             />
             {status === "success" && (
-              <p className="text-sm text-green-600">
+              <p className="text-sm text-[var(--success-text)]">
                 Đặt lại mật khẩu thành công. Chuyển hướng tới trang đăng nhập...
               </p>
             )}
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && (
+              <p className="text-sm text-[var(--danger-text)]">{error}</p>
+            )}
             <Button type="submit" block disabled={loading}>
               {loading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
             </Button>

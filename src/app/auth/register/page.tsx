@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import {
@@ -38,12 +38,51 @@ const initialForm: RegisterForm = {
 };
 
 export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthShell
+          title="Đăng ký tài khoản"
+          subtitle="Tham gia BaiHoc để luyện tập và nhận gợi ý học tập thông minh."
+          footer={
+            <p>
+              Đã có tài khoản?{" "}
+              <Link
+                href="/auth/login"
+                className="font-medium text-[var(--text)]"
+              >
+                Đăng nhập
+              </Link>
+            </p>
+          }
+        >
+          <Card>
+            <div className="space-y-4 text-sm text-[var(--muted)]">
+              Đang tải...
+            </div>
+          </Card>
+        </AuthShell>
+      }
+    >
+      <RegisterPageInner />
+    </Suspense>
+  );
+}
+
+function RegisterPageInner() {
   const [form, setForm] = useState<RegisterForm>(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const email = searchParams.get("email");
+    if (!email) return;
+    setForm((prev) => (prev.email ? prev : { ...prev, email }));
+  }, [searchParams]);
 
   const handleProfileChange = (updates: Partial<ProfileValues>) => {
     setForm((prev) => ({ ...prev, profile: { ...prev.profile, ...updates } }));
@@ -149,7 +188,7 @@ export default function RegisterPage() {
       footer={
         <p>
           Đã có tài khoản?{" "}
-          <Link href="/auth/login" className="font-medium text-slate-900">
+          <Link href="/auth/login" className="font-medium text-[var(--text)]">
             Đăng nhập
           </Link>
         </p>
@@ -164,17 +203,19 @@ export default function RegisterPage() {
                 onSuccess={handleGoogle}
               />
               <div className="flex items-center gap-2">
-                <div className="h-px flex-1 bg-slate-200" />
-                <span className="text-xs uppercase text-slate-500">Hoặc</span>
-                <div className="h-px flex-1 bg-slate-200" />
+                <div className="h-px flex-1 bg-[var(--line)]" />
+                <span className="text-xs uppercase text-[var(--muted)]">
+                  Hoặc
+                </span>
+                <div className="h-px flex-1 bg-[var(--line)]" />
               </div>
               <div className="space-y-3">
                 <div className="space-y-2">
                   <label
                     htmlFor="reg-email"
-                    className="text-sm font-medium text-slate-700"
+                    className="text-sm font-medium text-[var(--text)]"
                   >
-                    Email <span className="text-red-500">*</span>
+                    Email <span className="text-[var(--danger-text)]">*</span>
                   </label>
                   <Input
                     id="reg-email"
@@ -190,9 +231,10 @@ export default function RegisterPage() {
                 <div className="space-y-2">
                   <label
                     htmlFor="reg-password"
-                    className="text-sm font-medium text-slate-700"
+                    className="text-sm font-medium text-[var(--text)]"
                   >
-                    Mật khẩu <span className="text-red-500">*</span>
+                    Mật khẩu{" "}
+                    <span className="text-[var(--danger-text)]">*</span>
                   </label>
                   <Input
                     id="reg-password"
@@ -209,9 +251,10 @@ export default function RegisterPage() {
                 <div className="space-y-2">
                   <label
                     htmlFor="reg-password-confirm"
-                    className="text-sm font-medium text-slate-700"
+                    className="text-sm font-medium text-[var(--text)]"
                   >
-                    Nhập lại mật khẩu <span className="text-red-500">*</span>
+                    Nhập lại mật khẩu{" "}
+                    <span className="text-[var(--danger-text)]">*</span>
                   </label>
                   <Input
                     id="reg-password-confirm"
@@ -227,7 +270,9 @@ export default function RegisterPage() {
                     required
                   />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
+                {error && (
+                  <p className="text-sm text-[var(--danger-text)]">{error}</p>
+                )}
                 <Button type="button" block onClick={proceedToProfile}>
                   Tiếp tục
                 </Button>
@@ -243,8 +288,12 @@ export default function RegisterPage() {
                 showTerms
                 fileInputRef={fileInputRef}
               />
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              {success && <p className="text-sm text-green-600">{success}</p>}
+              {error && (
+                <p className="text-sm text-[var(--danger-text)]">{error}</p>
+              )}
+              {success && (
+                <p className="text-sm text-[var(--success-text)]">{success}</p>
+              )}
               <div className="flex gap-3">
                 <Button
                   type="button"

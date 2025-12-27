@@ -8,6 +8,7 @@ import {
   DifficultyBadge,
   SubjectBadge,
 } from "@/components/quiz-catalog/quiz-badges";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { formatDateVi } from "@/lib/formatters";
 import cardStyles from "./staff-quiz-card.module.css";
 
@@ -16,19 +17,19 @@ type StaffQuizCardProps = {
   subjects: Subject[];
   onEdit: (quizId: string) => void;
   onMutated: () => void;
+  onError: (title: string, message: string) => void;
 };
-
-type QuizMutationError = { message: string; code?: string } | null;
 
 export function StaffQuizCard({
   quiz,
   subjects,
   onEdit,
   onMutated,
+  onError,
 }: StaffQuizCardProps) {
   const [publishing, setPublishing] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [mutationError, setMutationError] = useState<QuizMutationError>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const primarySubject = useMemo(() => {
     const ids = quiz.subjectIds ?? [];
@@ -51,7 +52,6 @@ export function StaffQuizCard({
   const busy = publishing || deleting;
 
   const publishQuiz = async () => {
-    setMutationError(null);
     try {
       setPublishing(true);
       const response = await fetch(`/api/staff/quizzes/${quiz.id}/publish`, {
@@ -63,19 +63,16 @@ export function StaffQuizCard({
       }
       onMutated();
     } catch (err) {
-      setMutationError({
-        message: err instanceof Error ? err.message : "Có lỗi xảy ra",
-      });
+      onError(
+        "Không thể xuất bản quiz",
+        err instanceof Error ? err.message : "Có lỗi xảy ra",
+      );
     } finally {
       setPublishing(false);
     }
   };
 
   const deleteQuiz = async () => {
-    const ok = window.confirm("Xóa quiz này?");
-    if (!ok) return;
-
-    setMutationError(null);
     try {
       setDeleting(true);
       const response = await fetch(`/api/staff/quizzes/${quiz.id}`, {
@@ -86,14 +83,20 @@ export function StaffQuizCard({
         return;
       }
       const payload = await response.json().catch(() => ({}));
-      setMutationError({
-        message: payload?.error ?? "Không thể xóa quiz",
-        code: payload?.code,
-      });
+      const code = payload?.code as string | undefined;
+      onError(
+        "Không thể xóa quiz",
+        code === "QUIZ_DELETE_BLOCKED_IN_PROGRESS"
+          ? "Quiz đang có lượt làm đang diễn ra. Hãy thử lưu trữ thay vì xóa."
+          : code === "QUIZ_HAS_ATTEMPTS"
+            ? "Quiz đã có lượt thi. Không thể xóa."
+            : (payload?.error ?? "Không thể xóa quiz"),
+      );
     } catch (err) {
-      setMutationError({
-        message: err instanceof Error ? err.message : "Có lỗi xảy ra",
-      });
+      onError(
+        "Không thể xóa quiz",
+        err instanceof Error ? err.message : "Có lỗi xảy ra",
+      );
     } finally {
       setDeleting(false);
     }
@@ -175,30 +178,26 @@ export function StaffQuizCard({
             busy ? cardStyles.btnDisabled : ""
           }`}
           disabled={busy}
-          onClick={deleteQuiz}
+          onClick={() => setConfirmDeleteOpen(true)}
         >
           {deleting ? "Đang xóa..." : "Xóa"}
         </button>
       </div>
 
-      {mutationError ? (
-        <div className={cardStyles.cardError} role="alert">
-          <div>
-            {mutationError.code === "QUIZ_HAS_ATTEMPTS"
-              ? "Quiz đã có lượt thi. Không thể xóa."
-              : mutationError.message}
-            <div className={cardStyles.cardErrorActions}>
-              <button
-                type="button"
-                className={`${cardStyles.btn} ${cardStyles.btnBlue}`}
-                onClick={() => setMutationError(null)}
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        title="Xóa quiz này?"
+        message="Bạn có chắc chắn muốn xóa quiz này?"
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        confirmVariant="danger"
+        disableConfirm={busy}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        onConfirm={() => {
+          setConfirmDeleteOpen(false);
+          void deleteQuiz();
+        }}
+      />
     </article>
   );
 }

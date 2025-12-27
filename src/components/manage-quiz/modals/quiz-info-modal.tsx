@@ -4,6 +4,7 @@ import { X } from "phosphor-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   DifficultyLevel,
+  QuizStatus,
   QuizVisibility,
 } from "@/application/models/enums";
 import type { QuizDetail } from "@/application/models/quiz";
@@ -35,6 +36,7 @@ export function QuizInfoModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [featuredRank, setFeaturedRank] = useState("");
+  const [status, setStatus] = useState<QuizStatus>("draft");
   const [visibility, setVisibility] = useState<QuizVisibility>("free");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>(5);
   const [minutes, setMinutes] = useState(15);
@@ -71,6 +73,7 @@ export function QuizInfoModal({
             ? String(nextQuiz.featuredRank)
             : "",
         );
+        setStatus((nextQuiz.status ?? "draft") as QuizStatus);
         setVisibility(nextQuiz.visibility ?? "free");
         setDifficulty((nextQuiz.difficulty ?? 5) as DifficultyLevel);
         setMinutes(
@@ -158,6 +161,7 @@ export function QuizInfoModal({
         }
         payload.featuredRank = parsedRank;
       }
+      payload.status = status;
       payload.visibility = visibility;
       payload.difficulty = difficulty;
       const safeMinutes =
@@ -265,6 +269,40 @@ export function QuizInfoModal({
                     onChange={(event) => setDescription(event.target.value)}
                     disabled={disabled}
                   />
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.label}>Trạng thái:</div>
+                  <label className={styles.ck}>
+                    <input
+                      type="radio"
+                      name="status"
+                      checked={status === "draft"}
+                      onChange={() => setStatus("draft")}
+                      disabled={disabled}
+                    />
+                    Nháp
+                  </label>
+                  <label className={styles.ck}>
+                    <input
+                      type="radio"
+                      name="status"
+                      checked={status === "published"}
+                      onChange={() => setStatus("published")}
+                      disabled={disabled}
+                    />
+                    Đã đăng
+                  </label>
+                  <label className={styles.ck}>
+                    <input
+                      type="radio"
+                      name="status"
+                      checked={status === "archived"}
+                      onChange={() => setStatus("archived")}
+                      disabled={disabled}
+                    />
+                    Lưu trữ
+                  </label>
                 </div>
 
                 <div className={styles.formRow}>

@@ -3,6 +3,7 @@
 import { BookmarkSimple, Clock, ListChecks, UsersThree } from "phosphor-react";
 import { useState } from "react";
 import type { QuizCatalogItem } from "@/application/models/quiz";
+import { NoticeModal } from "@/components/ui/notice-modal";
 import { formatDateVi, formatNumberVi } from "@/lib/formatters";
 import { DifficultyBadge, SubjectBadge } from "./quiz-badges";
 import styles from "./quiz-catalog.module.css";
@@ -17,6 +18,7 @@ export function QuizCard({
   onStart?: (quiz: QuizCatalogItem) => void;
 }) {
   const [bookmarked, setBookmarked] = useState(false);
+  const [startNoticeOpen, setStartNoticeOpen] = useState(false);
   const minutes = quiz.estimatedTimeSeconds
     ? Math.round(quiz.estimatedTimeSeconds / 60)
     : null;
@@ -39,95 +41,104 @@ export function QuizCard({
       onStart(quiz);
       return;
     }
-    window.alert("Tính năng làm bài đang được phát triển.");
+    setStartNoticeOpen(true);
   };
 
   return (
-    <article
-      className={`${styles.quizCard} ${
-        quiz.isChallenge ? styles.quizCardChallenge : ""
-      }`}
-    >
-      <button
-        type="button"
-        className={styles.quizCardButton}
-        aria-label={`Xem trước quiz ${quiz.title}`}
-        onClick={handleSelect}
-      />
-      <div className={styles.quizHead}>
-        <span className={styles.quizDate}>{dateLabel}</span>
-        {quiz.visibility === "premium" ? (
-          <span className={styles.vip}>VIP</span>
-        ) : null}
-        <span className={styles.spacer} aria-hidden="true" />
+    <>
+      <article
+        className={`${styles.quizCard} ${
+          quiz.isChallenge ? styles.quizCardChallenge : ""
+        }`}
+      >
         <button
-          className={`${styles.bookmark} ${
-            bookmarked ? styles.bookmarkActive : ""
-          }`}
           type="button"
-          aria-label="Lưu quiz"
-          onClick={(event) => {
-            event.stopPropagation();
-            setBookmarked((prev) => !prev);
-          }}
-        >
-          <BookmarkSimple
-            size={18}
-            weight={bookmarked ? "fill" : "bold"}
-            color={bookmarked ? "#ffd400" : "#2b3b55"}
-          />
-        </button>
-      </div>
-
-      <div className={styles.quizBody}>
-        <div className={styles.quizTitle}>{quiz.title}</div>
-
-        <div className={styles.quizInfo}>
-          <div className={styles.quizMeta}>
-            <div className={styles.quizMetaItem}>
-              <span className={styles.metaIcon} aria-hidden="true">
-                <UsersThree size={12} weight="bold" />
-              </span>
-              {formatNumberVi(quiz.attemptCount)} lượt
-            </div>
-            <div className={styles.quizMetaItem}>
-              <span className={styles.metaIcon} aria-hidden="true">
-                <ListChecks size={12} weight="bold" />
-              </span>
-              {questionCount} câu
-            </div>
-            <div className={styles.quizMetaItem}>
-              <span
-                className={`${styles.metaIcon} ${styles.metaIconClock}`}
-                aria-hidden="true"
-              >
-                <Clock size={12} weight="bold" />
-              </span>
-              {minutes !== null ? `${minutes} phút` : "— phút"}
-            </div>
-          </div>
-
-          <div className={styles.quizBadgeStack}>
-            {showDifficulty ? (
-              <DifficultyBadge difficulty={quiz.difficulty} />
-            ) : null}
-            <SubjectBadge name={subjectBadge.name} slug={subjectBadge.slug} />
-          </div>
+          className={styles.quizCardButton}
+          aria-label={`Xem trước quiz ${quiz.title}`}
+          onClick={handleSelect}
+        />
+        <div className={styles.quizHead}>
+          <span className={styles.quizDate}>{dateLabel}</span>
+          {quiz.visibility === "premium" ? (
+            <span className={styles.vip}>VIP</span>
+          ) : null}
+          <span className={styles.spacer} aria-hidden="true" />
+          <button
+            className={`${styles.bookmark} ${
+              bookmarked ? styles.bookmarkActive : ""
+            }`}
+            type="button"
+            aria-label="Lưu quiz"
+            onClick={(event) => {
+              event.stopPropagation();
+              setBookmarked((prev) => !prev);
+            }}
+          >
+            <BookmarkSimple
+              size={18}
+              weight={bookmarked ? "fill" : "bold"}
+              color={bookmarked ? "var(--accent)" : "var(--text-secondary)"}
+            />
+          </button>
         </div>
 
-        <button
-          type="button"
-          className={`${styles.quizCta} ${
-            quiz.isChallenge ? styles.quizCtaChallenge : ""
-          }`}
-          onClick={(event) => {
-            event.stopPropagation();
-            handleStart();
-          }}
-        >
-          {ctaLabel}
-        </button>
-      </div>
-    </article>
+        <div className={styles.quizBody}>
+          <div className={styles.quizTitle}>{quiz.title}</div>
+
+          <div className={styles.quizInfo}>
+            <div className={styles.quizMeta}>
+              <div className={styles.quizMetaItem}>
+                <span className={styles.metaIcon} aria-hidden="true">
+                  <UsersThree size={12} weight="bold" />
+                </span>
+                {formatNumberVi(quiz.attemptCount)} lượt
+              </div>
+              <div className={styles.quizMetaItem}>
+                <span className={styles.metaIcon} aria-hidden="true">
+                  <ListChecks size={12} weight="bold" />
+                </span>
+                {questionCount} câu
+              </div>
+              <div className={styles.quizMetaItem}>
+                <span
+                  className={`${styles.metaIcon} ${styles.metaIconClock}`}
+                  aria-hidden="true"
+                >
+                  <Clock size={12} weight="bold" />
+                </span>
+                {minutes !== null ? `${minutes} phút` : "— phút"}
+              </div>
+            </div>
+
+            <div className={styles.quizBadgeStack}>
+              {showDifficulty ? (
+                <DifficultyBadge difficulty={quiz.difficulty} />
+              ) : null}
+              <SubjectBadge name={subjectBadge.name} slug={subjectBadge.slug} />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className={`${styles.quizCta} ${
+              quiz.isChallenge ? styles.quizCtaChallenge : ""
+            }`}
+            onClick={(event) => {
+              event.stopPropagation();
+              handleStart();
+            }}
+          >
+            {ctaLabel}
+          </button>
+        </div>
+      </article>
+
+      <NoticeModal
+        open={startNoticeOpen}
+        title="Chưa hỗ trợ"
+        message="Tính năng làm bài đang được phát triển."
+        onClose={() => setStartNoticeOpen(false)}
+      />
+    </>
   );
 }
