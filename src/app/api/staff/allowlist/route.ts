@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
   if (session instanceof NextResponse) return session;
 
   const url = new URL(request.url);
+  const search = url.searchParams.get("search")?.trim() || undefined;
   const { limit, offset } = parsePagination(
     url.searchParams,
     { limit: 200, offset: 0 },
@@ -35,8 +36,12 @@ export async function GET(request: NextRequest) {
   );
 
   try {
-    const list = await controllerAdminAllowlistList({ limit, offset });
-    return NextResponse.json({ items: list }, { status: 200 });
+    const result = await controllerAdminAllowlistList({
+      limit,
+      offset,
+      search,
+    });
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Lỗi không xác định";

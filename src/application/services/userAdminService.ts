@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 
 import {
+  countAllowlist,
   insertAllowlistEmail,
   listAllowlist,
   removeAllowlistEmail,
@@ -128,8 +129,21 @@ export async function getUserHistory(userId: string) {
 export async function getAllowlist(options?: {
   limit?: number;
   offset?: number;
+  search?: string;
 }) {
-  return listAllowlist(options?.limit, options?.offset);
+  return listAllowlist(options?.limit, options?.offset, options?.search);
+}
+
+export async function getAllowlistWithTotal(options?: {
+  limit?: number;
+  offset?: number;
+  search?: string;
+}) {
+  const [items, total] = await Promise.all([
+    listAllowlist(options?.limit, options?.offset, options?.search),
+    countAllowlist(options?.search),
+  ]);
+  return { items, total };
 }
 
 export async function addAllowlistEmail(input: {
