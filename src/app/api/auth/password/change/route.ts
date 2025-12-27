@@ -8,8 +8,7 @@ const changeSchema = z
     currentPassword: z.string().min(1).optional(),
     newPassword: z.string().min(1),
     newPasswordConfirm: z.string().min(1).optional(),
-  })
-  .passthrough();
+  });
 
 export async function POST(request: Request) {
   try {

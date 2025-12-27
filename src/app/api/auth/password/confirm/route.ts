@@ -6,8 +6,7 @@ const confirmSchema = z
   .object({
     token: z.string().min(1),
     newPassword: z.string().min(1),
-  })
-  .passthrough();
+  });
 
 export async function POST(request: Request) {
   try {

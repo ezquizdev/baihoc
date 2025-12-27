@@ -6,8 +6,7 @@ import { setSession, toSessionPayload } from "@/application/infra/auth/session";
 const googleSchema = z
   .object({
     accessToken: z.string().min(1),
-  })
-  .passthrough();
+  });
 
 export async function POST(request: Request) {
   try {

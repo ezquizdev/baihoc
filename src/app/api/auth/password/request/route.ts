@@ -5,8 +5,7 @@ import { controllerRequestPasswordReset } from "@/application/controllers/authCo
 const requestSchema = z
   .object({
     email: z.string().min(1),
-  })
-  .passthrough();
+  });
 
 export async function POST(request: Request) {
   try {

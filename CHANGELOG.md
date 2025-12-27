@@ -8,6 +8,9 @@
 ### refactor(auth): centralize next redirect sanitization
 - Centralized duplicated `next` query validation into `src/lib/urls.ts` and reused it in login/profile-complete/logout.
 
+### fix(auth): strip unknown fields in auth APIs
+- Auth API payload schemas no longer use `.passthrough()`; unknown fields are stripped by default.
+
 ### feat(profile): refresh profile UI
 - Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
 - Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.

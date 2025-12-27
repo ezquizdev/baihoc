@@ -10,8 +10,7 @@ const profileSchema = z
     school: z.string().nullable().optional(),
     dateOfBirth: z.string().nullable().optional(),
     avatarUrl: z.string().nullable().optional(),
-  })
-  .passthrough();
+  });
 
 export async function POST(request: Request) {
   try {

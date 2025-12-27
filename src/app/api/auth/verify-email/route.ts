@@ -5,8 +5,7 @@ import { controllerVerifyEmail } from "@/application/controllers/authController"
 const verifySchema = z
   .object({
     token: z.string().min(1),
-  })
-  .passthrough();
+  });
 
 export async function POST(request: Request) {
   try {
