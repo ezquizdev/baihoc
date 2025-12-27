@@ -1,5 +1,33 @@
 # Changelog
 
+## 2025-12-27
+
+### feat(staff-settings): add allowlist manager
+- Added a staff settings page to surface key environment/config status (URLs, email sender, OAuth, etc).
+- Added an allowlist manager UI with search, pagination, bulk add/update, remove, and “copy register link”.
+- Allowlist API now supports search and returns `{ items, total }` for pagination.
+
+### refactor(staff): simplify quiz builder controls
+- Removed redundant “move up/down” and “required” controls from the quiz builder (drag-to-reorder remains).
+- Quiz info modal now edits quiz `status` (draft/published) instead of `featuredRank`.
+
+### feat(staff-dashboard): add charts
+- Added staff dashboard line charts for answer frequency + accuracy by subject over a configurable time window.
+- Added repo/service/controller support for daily subject answer aggregates.
+
+### feat(staff): add student management
+- Added a staff “Quản lý học sinh” screen with filters, search, pagination, detail panel, and history.
+- Added actions for verifying email, triggering password resets, and updating tier/status (with optional reason).
+- Improved table accessibility: rows are now keyboard-selectable (Enter/Space).
+
+### feat(audit): add staff audit logs
+- Added staff audit-log API + UI (filters, facets, and detail view).
+- Added a DB index for `audit_logs.created_at` to speed up listing.
+- Audit search now trims whitespace and avoids expensive metadata scans for very short queries; unexpected errors return `500`.
+
+### fix(auth): prefill register email
+- Register now pre-fills the email from `?email=` and uses `Suspense` for `useSearchParams`.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors
