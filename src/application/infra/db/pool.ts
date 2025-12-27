@@ -1,6 +1,10 @@
 import { Pool, type PoolClient, type QueryResultRow } from "pg";
 import { env } from "@/core/env";
 
+if (typeof window !== "undefined") {
+  throw new Error("db pool can only be imported on the server.");
+}
+
 export const pool = new Pool({
   connectionString: env.DATABASE_URL,
 });

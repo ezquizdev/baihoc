@@ -26,6 +26,9 @@
 ### fix(next): derive server actions allowed origins from app URL
 - `experimental.serverActions.allowedOrigins` now derives from `NEXT_PUBLIC_APP_URL` instead of being hard-coded to localhost.
 
+### fix(security): guard server-only modules from client imports
+- Added runtime checks to prevent importing env/session/db/email/storage modules from Client Components.
+
 ### feat(profile): refresh profile UI
 - Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
 - Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.

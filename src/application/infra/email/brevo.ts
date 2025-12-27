@@ -1,5 +1,9 @@
 import { env } from "@/core/env";
 
+if (typeof window !== "undefined") {
+  throw new Error("brevo client can only be imported on the server.");
+}
+
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 export type EmailRecipient = {

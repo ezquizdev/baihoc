@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+if (typeof window !== "undefined") {
+  throw new Error("env can only be imported on the server.");
+}
+
 const optionalNonEmptyString = z
   .string()
   .transform((value) => value.trim() || undefined)

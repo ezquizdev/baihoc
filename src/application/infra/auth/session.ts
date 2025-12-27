@@ -3,6 +3,10 @@ import { cookies } from "next/headers";
 import type { UserRole } from "@/application/models/user";
 import { env } from "@/core/env";
 
+if (typeof window !== "undefined") {
+  throw new Error("session utilities can only be imported on the server.");
+}
+
 const SESSION_COOKIE = "baihoc_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
