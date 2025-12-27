@@ -13,6 +13,9 @@
 ### fix(catalog): hide custom quizzes from catalog APIs
 - Custom quizzes are now excluded from quiz catalog listing and return 404 from the catalog quiz detail endpoint.
 
+### chore(test): mock db transactions in user admin unit tests
+- Prevents accidental network DB connections during unit tests by mocking `withTransaction`.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors

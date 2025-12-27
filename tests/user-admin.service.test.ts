@@ -124,6 +124,12 @@ vi.mock("@/application/infra/db/auditRepo", () => {
   };
 });
 
+vi.mock("@/application/infra/db/pool", () => ({
+  pool: { connect: vi.fn() },
+  query: vi.fn(),
+  withTransaction: vi.fn(async (fn: (client: unknown) => unknown) => fn({})),
+}));
+
 const userRepo = await import("@/application/infra/db/userRepo");
 const membershipRepo = await import("@/application/infra/db/membershipRepo");
 const statusRepo = await import("@/application/infra/db/userStatusRepo");
