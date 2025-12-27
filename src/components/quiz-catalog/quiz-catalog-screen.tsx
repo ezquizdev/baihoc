@@ -8,6 +8,7 @@ import type { LeaderboardResult } from "@/application/models/leaderboard";
 import type { QuizCatalogItem } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { GenerateCustomQuizModal } from "./generate-custom-quiz-modal";
 import styles from "./quiz-catalog.module.css";
 import { QuizFilters } from "./quiz-filters";
 import { QuizGrid } from "./quiz-grid";
@@ -63,6 +64,7 @@ export function QuizCatalogScreen({
   const [selectedQuiz, setSelectedQuiz] = useState<QuizCatalogItem | null>(
     null,
   );
+  const [generateOpen, setGenerateOpen] = useState(false);
   const initialLoadRef = useRef(true);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -219,7 +221,16 @@ export function QuizCatalogScreen({
       searchPlaceholder="Tìm quiz"
     >
       <div className={styles.page}>
-        <QuizHero />
+        <QuizHero
+          onGenerateCustomQuiz={
+            session.role === "student" ? () => setGenerateOpen(true) : undefined
+          }
+        />
+        <GenerateCustomQuizModal
+          open={generateOpen}
+          subjects={subjects}
+          onClose={() => setGenerateOpen(false)}
+        />
         <QuizFilters
           status={status}
           onStatusChange={handleStatusChange}

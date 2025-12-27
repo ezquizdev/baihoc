@@ -70,6 +70,11 @@
 - `POST /api/custom-quizzes` now accepts `durationSeconds=0` (treated as no time limit).
 - Custom quiz generation now validates `difficulty` defensively in the service layer.
 
+### feat(catalog): add custom quiz generator modal
+- Added a “Tạo quiz tuỳ chỉnh” modal on `/quizzes` to generate premium custom quizzes by topic.
+- Added `GET /api/catalog/topics` to power topic pickers in the modal.
+- Custom quiz generation now accepts an optional title and uses it for the generated quiz.
+
 ### perf(attempt): speed up attempt meta and history queries
 - Attempt meta lookup now uses a single lateral join for custom quiz ownership (less duplicated SQL work).
 - Added a partial index for completed attempt history listing by user.

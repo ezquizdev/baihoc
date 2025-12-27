@@ -280,7 +280,7 @@ export async function pickQuestionIdsForTopicDifficulty(input: {
 }): Promise<string[]> {
   if (input.limit <= 0) return [];
   const res = await query<{ id: string }>(
-    `SELECT DISTINCT q.id
+    `SELECT q.id
      FROM questions q
      JOIN question_topics qt ON qt.question_id = q.id
      WHERE qt.topic_id = $1
