@@ -1,5 +1,6 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
+import type { UserRole } from "@/application/models/user";
 import { env } from "@/core/env";
 
 const SESSION_COOKIE = "baihoc_session";
@@ -11,7 +12,7 @@ const isProd = process.env.NODE_ENV === "production";
 export type SessionPayload = {
   sub: string;
   email: string;
-  role: string;
+  role: UserRole;
   profileCompleted: boolean;
   fullName?: string;
   avatarUrl?: string;
@@ -20,7 +21,7 @@ export type SessionPayload = {
 export function toSessionPayload(user: {
   id: string;
   email: string;
-  role: string;
+  role: UserRole;
   profileCompleted: boolean;
   fullName?: string | null;
   avatarUrl?: string | null;
@@ -61,10 +62,15 @@ export async function getSession(): Promise<SessionPayload | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secretKey);
+    const role = String(payload.role);
+    if (role !== "student" && role !== "staff") {
+      await clearSession();
+      return null;
+    }
     return {
       sub: String(payload.sub),
       email: String(payload.email),
-      role: String(payload.role),
+      role,
       profileCompleted: Boolean(payload.profileCompleted),
       fullName: payload.fullName ? String(payload.fullName) : undefined,
       avatarUrl: payload.avatarUrl ? String(payload.avatarUrl) : undefined,

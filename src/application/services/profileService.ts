@@ -9,6 +9,7 @@ import type {
   PublicProfileOverviewDto,
   SelfProfileOverviewDto,
 } from "@/application/models/profile";
+import type { UserRole } from "@/application/models/user";
 import { ServiceError } from "@/application/services/errors";
 
 function dayLabelFromDow(dow: number) {
@@ -49,12 +50,9 @@ export async function getSelfProfileOverview(
 }
 
 export async function getPublicProfileOverview(input: {
-  viewerRole: string;
+  viewerRole: UserRole;
   targetUserId: string;
 }): Promise<PublicProfileOverviewDto> {
-  if (input.viewerRole !== "student" && input.viewerRole !== "staff") {
-    throw new ServiceError("FORBIDDEN", "forbidden", 403);
-  }
   const user = await findUserById(input.targetUserId);
   if (!user) {
     throw new ServiceError("USER_NOT_FOUND", "Không tìm thấy người dùng", 404);
