@@ -28,6 +28,10 @@
 - Added `/staff/questions/passages/[passageId]` to edit a shared passage and all linked questions on one screen.
 - Includes inline question editing, Markdown/LaTeX previews, and a themed delete confirmation modal.
 
+### fix(staff): route passage questions to passage editor
+- Passage questions in `/staff/questions` now link to the passage editor instead of the single-question editor.
+- Visiting `/staff/questions/[questionId]` for a passage question now redirects to `/staff/questions/passages/[passageId]`.
+
 ## 2025-12-26
 
 ### fix(a11y): wire input labels and errors

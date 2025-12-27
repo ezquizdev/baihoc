@@ -142,6 +142,12 @@ export function QuestionTable({
             const rowBusy = mutating?.questionId === q.id;
             const busy = rowBusy ? mutating?.action : null;
             const dateLabel = formatDateVi(q.updatedAt ?? q.createdAt);
+            const editHref = q.passageId
+              ? {
+                  pathname: `/staff/questions/passages/${q.passageId}`,
+                  query: { questionId: q.id },
+                }
+              : { pathname: `/staff/questions/${q.id}` };
             return (
               <tr key={q.id}>
                 <td className={styles.stem}>{q.stem}</td>
@@ -172,7 +178,7 @@ export function QuestionTable({
                   <div className={styles.actions}>
                     <Link
                       className={`${styles.linkBtn} ${styles.linkBtnBlue}`}
-                      href={`/staff/questions/${q.id}`}
+                      href={editHref}
                     >
                       Sửa
                     </Link>
