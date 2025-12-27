@@ -8,13 +8,7 @@ import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-function sanitizeNext(value: string | null) {
-  if (!value) return null;
-  if (!value.startsWith("/")) return null;
-  if (value.startsWith("//")) return null;
-  return value;
-}
+import { sanitizeNextPath } from "@/lib/urls";
 
 function dashboardHrefForRole(role: string) {
   return role === "staff" ? "/staff/dashboard" : "/dashboard";
@@ -24,7 +18,7 @@ export default function LoginClient() {
   const router = useRouter();
   type RouterHref = Parameters<typeof router.push>[0];
   const searchParams = useSearchParams();
-  const next = sanitizeNext(searchParams.get("next"));
+  const next = sanitizeNextPath(searchParams.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

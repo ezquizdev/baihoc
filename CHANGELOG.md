@@ -5,6 +5,9 @@
 ### chore(logging): remove unused logger
 - Removed unused `src/lib/logger.ts`.
 
+### refactor(auth): centralize next redirect sanitization
+- Centralized duplicated `next` query validation into `src/lib/urls.ts` and reused it in login/profile-complete/logout.
+
 ### feat(profile): refresh profile UI
 - Redesigned `/profile` to match the dashboard-style layout (profile card + stats + score summary + AI placeholder).
 - Improved edit flow: click avatar to upload/clear; added a “Bảo mật” tab in the profile card.
