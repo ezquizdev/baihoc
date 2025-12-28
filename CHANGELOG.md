@@ -2,6 +2,10 @@
 
 ## 2025-12-28
 
+### feat(results): refresh attempt results review UI
+- `/attempts/[attemptId]/results` now uses a clearer hero summary (score ring + key stats) and collapsible per-question cards for a calmer review flow.
+- Added a sticky “Đi tới câu” navigator on desktop (and a compact version on mobile) to jump between questions quickly.
+
 ### feat(history): refresh attempt history card UI
 - `/dashboard/history` attempt cards now use a quiz-card-like visual language (left icon rail, toned backgrounds, hover/focus) and iconized meta chips for faster scanning.
 - Score summary column now pairs the ring with key stats to reduce dead space and improve balance.
