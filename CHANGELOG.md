@@ -22,6 +22,10 @@
 - Added `GET/POST /api/ai/sessions` and `GET /api/ai/sessions/[sessionId]` for conversation history and loading.
 - Chat bubble dialog now links to the full page via “Mở toàn màn hình”.
 
+### feat(profile): add premium AI study strategy summary
+- Added a premium-only “Chiến lược học tập” card on `/profile` that asynchronously generates and persists an AI study plan when a user has attempt history.
+- Added `ai_profile_summaries` table + `GET/POST /api/profile/ai-summary`.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger

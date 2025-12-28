@@ -198,6 +198,8 @@
 .aiButtonRow {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .aiButton {
@@ -239,6 +241,26 @@
   box-shadow: none;
   background: rgba(40, 104, 230, 0.25);
   border-color: rgba(40, 104, 230, 0.2);
+  color: rgba(31, 42, 58, 0.55);
+}
+
+.aiButtonSecondary {
+  background: var(--card);
+  color: var(--text-strong);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.aiButtonSecondary:hover {
+  background: rgba(15, 22, 40, 0.04);
+  border-color: rgba(40, 104, 230, 0.22);
+  box-shadow: none;
+}
+
+.aiButtonSecondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.25);
   color: rgba(31, 42, 58, 0.55);
 }
 
