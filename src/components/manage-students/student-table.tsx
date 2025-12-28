@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { UserAdminSummary } from "@/application/models/userAdmin";
 import { formatDateVi, formatRelativeTimeVi } from "@/lib/formatters";
 import styles from "./student-table.module.css";
@@ -59,7 +58,6 @@ export function StudentTable({
             <th scope="col">Hồ sơ</th>
             <th scope="col">Đăng nhập</th>
             <th scope="col">Ngày tạo</th>
-            <th scope="col">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -124,17 +122,6 @@ export function StudentTable({
                 </td>
                 <td>{formatRelativeTimeVi(user.lastLoginAt)}</td>
                 <td>{formatDateVi(user.createdAt)}</td>
-                <td>
-                  <div className={styles.actions}>
-                    <Link
-                      className={`${styles.linkBtn} ${styles.linkBtnBlue}`}
-                      href={`/profile/${user.id}`}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      Hồ sơ
-                    </Link>
-                  </div>
-                </td>
               </tr>
             );
           })}

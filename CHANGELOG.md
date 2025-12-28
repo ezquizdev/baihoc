@@ -26,6 +26,10 @@
 - Added a premium-only “Chiến lược học tập” card on `/profile` that asynchronously generates and persists an AI study plan when a user has attempt history.
 - Added `ai_profile_summaries` table + `GET/POST /api/profile/ai-summary`.
 
+### feat(staff): regenerate AI profile summary from student detail panel
+- Added `GET/POST /api/staff/users/[userId]/ai-summary` and surfaced it in `/staff/students` (detail panel).
+- Removed the per-row “Thao tác” column from the student table; actions now live in the detail panel to reduce clutter.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger
