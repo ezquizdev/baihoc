@@ -854,6 +854,7 @@
 - Seed now includes allowlist examples + audit logs, a pending-verification example token (printed), custom quiz samples, and a highlight challenge config + sample submission.
 - Seed now creates clearly-labeled test accounts: `student.X@baihoc.dev` (free) and `paid.X@baihoc.dev` (paid).
 - Fix: custom quiz seeding query no longer uses `SELECT DISTINCT ... ORDER BY random()` directly (Postgres restriction); distinct selection is done in a subquery.
+- Fix: attempt snapshot subject scores are inserted as JSON (not a Postgres array literal).
 
 ## 2025-12-18
 

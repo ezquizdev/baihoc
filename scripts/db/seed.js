@@ -1872,6 +1872,7 @@ async function seedAttempts(client, input) {
         : 0;
 
     const subjectScores = computeSubjectScores(gradingData, gradedAnswers);
+    const subjectScoresJson = JSON.stringify(subjectScores);
     const subjectAllocations = subjectScores.map((subject) => ({
       subjectId: subject.subjectId,
       amount: subject.irtScore,
@@ -1906,7 +1907,7 @@ async function seedAttempts(client, input) {
       snapshotDifficulty,
       snapshotEstimatedTimeSeconds,
       snapshotIsChallenge,
-      subjectScores,
+      subjectScoresJson,
       false,
       plan.startedAt,
     ]);
