@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### feat(custom-quiz): allow custom time limit in modal
+- Custom quiz modal now lets students enter a time limit (minutes) and shows the recommended duration as a hint.
+
 ### fix(staff-quizzes): validate edit modal inputs
 - Added title-required validation, ensured blank descriptions clear to null, and allowed 0 minutes to represent unlimited time in the staff quiz edit modal.
 

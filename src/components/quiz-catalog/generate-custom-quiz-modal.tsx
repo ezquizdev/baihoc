@@ -33,11 +33,18 @@ export function GenerateCustomQuizModal({
   const [quizTitle, setQuizTitle] = useState("");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>(4);
   const [questionCount, setQuestionCount] = useState<number>(20);
-  const durationMinutes = useMemo(
+  const recommendedMinutes = useMemo(
     () => Math.max(1, Math.round(questionCount * 1.5)),
     [questionCount],
   );
-  const durationSeconds = durationMinutes * 60;
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<string>(
+    String(recommendedMinutes),
+  );
+  const [timeTouched, setTimeTouched] = useState(false);
+  const parsedMinutes = Number.parseInt(timeLimitMinutes, 10);
+  const normalizedMinutes =
+    Number.isFinite(parsedMinutes) && parsedMinutes > 0 ? parsedMinutes : null;
+  const durationSeconds = normalizedMinutes ? normalizedMinutes * 60 : null;
 
   const [topics, setTopics] = useState<Topic[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
@@ -105,6 +112,8 @@ export function GenerateCustomQuizModal({
     setQuizTitle("");
     setDifficulty(4);
     setQuestionCount(20);
+    setTimeLimitMinutes(String(Math.max(1, Math.round(20 * 1.5))));
+    setTimeTouched(false);
     setUseWrongHistory(false);
     setUseCustomTopics(true);
     setSelectedBySubject({});
@@ -204,6 +213,12 @@ export function GenerateCustomQuizModal({
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose, open, openSubjectId]);
 
+  useEffect(() => {
+    if (!open) return;
+    if (timeTouched) return;
+    setTimeLimitMinutes(String(recommendedMinutes));
+  }, [open, recommendedMinutes, timeTouched]);
+
   if (!open) return null;
 
   const disabled = submitting;
@@ -226,6 +241,10 @@ export function GenerateCustomQuizModal({
     }
     if (!hasAnyTopicSelected) {
       setSubmitError("Vui lòng chọn ít nhất 1 chủ đề.");
+      return;
+    }
+    if (!normalizedMinutes) {
+      setSubmitError("Vui lòng nhập thời gian hợp lệ (phút).");
       return;
     }
 
@@ -398,7 +417,24 @@ export function GenerateCustomQuizModal({
 
             <div className={styles.formRow}>
               <div className={styles.label}>Thời gian:</div>
-              <div>{durationMinutes} phút</div>
+              <div className={styles.timeField}>
+                <input
+                  type="number"
+                  min={1}
+                  className={styles.timeInput}
+                  aria-label="Thời gian (phút)"
+                  value={timeLimitMinutes}
+                  onChange={(event) => {
+                    setTimeLimitMinutes(event.target.value);
+                    setTimeTouched(true);
+                  }}
+                  disabled={disabled}
+                />
+                <span className={styles.timeUnit}>phút</span>
+                <span className={styles.timeHint}>
+                  Gợi ý: {recommendedMinutes} phút
+                </span>
+              </div>
             </div>
 
             <div className={styles.hint}>
