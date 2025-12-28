@@ -27,6 +27,8 @@ type ViewMode = "edit" | "split" | "preview";
 export function QuestionInlineConvertToPassage({
   subjects,
   questionId,
+  targetPassageId,
+  initialPassagePosition,
   initialDetail,
   passageContent,
   draft,
@@ -36,6 +38,8 @@ export function QuestionInlineConvertToPassage({
 }: {
   subjects: Subject[];
   questionId: string;
+  targetPassageId?: string;
+  initialPassagePosition: number;
   initialDetail: QuestionDetail;
   passageContent: string;
   draft: PassageConversionDraftV1 | null;
@@ -96,6 +100,11 @@ export function QuestionInlineConvertToPassage({
     );
   }, [draft, questionId]);
 
+  useEffect(() => {
+    if (draft) return;
+    setPassagePosition(Math.max(1, initialPassagePosition));
+  }, [draft, initialPassagePosition]);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
@@ -111,7 +120,7 @@ export function QuestionInlineConvertToPassage({
     if (!Number.isFinite(defaultDifficulty)) return false;
     if (!Number.isFinite(defaultScore) || defaultScore <= 0) return false;
     if (!Number.isFinite(passagePosition) || passagePosition <= 0) return false;
-    if (!passageContent.trim()) return false;
+    if (!targetPassageId && !passageContent.trim()) return false;
 
     if (isMcq) {
       const trimmed = options.map((o) => o.text.trim());
@@ -142,6 +151,7 @@ export function QuestionInlineConvertToPassage({
     shortAnswers,
     stem,
     subjectId,
+    targetPassageId,
     type,
   ]);
 
@@ -166,7 +176,6 @@ export function QuestionInlineConvertToPassage({
     try {
       setSaving(true);
       const content = passageContent.trim();
-      if (!content) throw new Error("Đoạn ngữ liệu không được để trống.");
 
       const payload: Record<string, unknown> = {
         subjectId,
@@ -176,7 +185,6 @@ export function QuestionInlineConvertToPassage({
         explanation: explanation.trim() ? explanation.trim() : null,
         topicIds,
         defaultScore,
-        passage: { content },
         passagePosition: Math.max(
           1,
           Number.isFinite(passagePosition) ? Math.round(passagePosition) : 1,
@@ -184,6 +192,27 @@ export function QuestionInlineConvertToPassage({
         options: null,
         shortAnswers: null,
       };
+
+      if (targetPassageId) {
+        payload.passageId = targetPassageId;
+        if (content) {
+          const passageRes = await fetch(
+            `/api/staff/passages/${targetPassageId}`,
+            {
+              method: "PATCH",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ content }),
+            },
+          );
+          if (!passageRes.ok) {
+            const p = await passageRes.json().catch(() => ({}));
+            throw new Error(p?.error ?? "Không thể lưu đoạn ngữ liệu");
+          }
+        }
+      } else {
+        if (!content) throw new Error("Đoạn ngữ liệu không được để trống.");
+        payload.passage = { content };
+      }
 
       if (isMcq) {
         payload.options = normalizeOptionsForPayload(options);

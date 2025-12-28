@@ -2,11 +2,17 @@ import {
   deletePassageCascade,
   getPassageById,
   hasInProgressAttemptsForPassage,
+  insertPassage,
   listQuestionsForPassage,
   listUsedQuestionIdsInQuizzes,
   updatePassageById,
 } from "@/application/infra/db/questionRepo";
 import { ServiceError } from "@/application/services/errors";
+
+export async function createPassage(input?: { content?: string }) {
+  const content = input?.content ?? "";
+  return insertPassage(content);
+}
 
 export async function getPassageDetail(passageId: string) {
   const [passage, questions] = await Promise.all([

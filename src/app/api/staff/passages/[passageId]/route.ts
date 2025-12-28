@@ -51,7 +51,9 @@ export async function PATCH(
       );
     }
     const message =
-      error instanceof Error ? error.message : "Không thể cập nhật đoạn ngữ liệu";
+      error instanceof Error
+        ? error.message
+        : "Không thể cập nhật đoạn ngữ liệu";
     const status = message.toLowerCase().includes("not found") ? 404 : 400;
     return NextResponse.json({ error: message }, { status });
   }

@@ -11,6 +11,12 @@ import type {
   QuestionDetail,
 } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
+import {
+  deletePassageConversionDraft,
+  type PassageConversionDraftV1,
+  readPassageConversionDraft,
+} from "@/components/manage-questions/passage-conversion-draft";
+import { publishQuizBuilderAddQuestion } from "@/components/manage-quiz/quiz-builder-callback";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import { handleMarkdownImagePaste } from "@/components/ui/markdown-image-paste";
 import { RichText } from "@/components/ui/rich-text";
@@ -26,6 +32,7 @@ import {
   type OptionDraft,
 } from "./question-draft";
 import editorStyles from "./question-editor-screen.module.css";
+import { QuestionInlineConvertToPassage } from "./question-inline-convert";
 import { QuestionInlineCreate } from "./question-inline-create";
 import { QuestionPreview } from "./question-preview";
 import tableStyles from "./question-table.module.css";
@@ -38,6 +45,11 @@ type PassageEditorScreenProps = {
   subjects: Subject[];
   passageId: string;
   initialDetail: PassageDetail;
+  convert?: {
+    questionId: string;
+    initialQuestionDetail: QuestionDetail;
+    draftId?: string;
+  } | null;
 };
 
 type ViewMode = "edit" | "split" | "preview";
@@ -47,10 +59,28 @@ export function PassageEditorScreen({
   subjects,
   passageId,
   initialDetail,
+  convert = null,
 }: PassageEditorScreenProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const displayName = session.fullName ?? session.email.split("@")[0];
+  const createMode = searchParams.get("create") === "1";
+  const callbackQuizId =
+    searchParams.get("from") === "quiz-builder"
+      ? searchParams.get("quizId")
+      : null;
+  const isQuizCallback = Boolean(callbackQuizId);
+  const returnHref = callbackQuizId
+    ? `/staff/quizzes/${callbackQuizId}/content`
+    : "/staff/quizzes";
+
+  const closeOrRedirect = () => {
+    if (!isQuizCallback || !callbackQuizId) return;
+    window.close();
+    window.setTimeout(() => {
+      window.location.assign(returnHref);
+    }, 250);
+  };
 
   const [passage, setPassage] = useState<Passage>(initialDetail.passage);
   const [questions, setQuestions] = useState<Question[]>(
@@ -80,6 +110,24 @@ export function PassageEditorScreen({
   );
   const [deletePassageBusy, setDeletePassageBusy] = useState(false);
 
+  const [convertDraft, setConvertDraft] =
+    useState<PassageConversionDraftV1 | null>(null);
+
+  useEffect(() => {
+    if (!convert?.draftId) return;
+    try {
+      const next = readPassageConversionDraft(convert.draftId);
+      if (!next) return;
+      if (next.sourceQuestionId !== convert.questionId) {
+        deletePassageConversionDraft(convert.draftId);
+        return;
+      }
+      setConvertDraft(next);
+    } catch {
+      // ignore (draft is optional)
+    }
+  }, [convert?.draftId, convert?.questionId]);
+
   const refreshDetail = async (): Promise<{ found: boolean }> => {
     const response = await fetch(`/api/staff/passages/${passageId}`);
     if (response.status === 404) {
@@ -97,6 +145,11 @@ export function PassageEditorScreen({
     setQuestions(payload.questions ?? []);
     return { found: true };
   };
+
+  useEffect(() => {
+    if (!createMode) return;
+    setCreateOpen(true);
+  }, [createMode]);
 
   const subjectMap = useMemo(() => {
     const map = new Map<string, Subject>();
@@ -187,8 +240,95 @@ export function PassageEditorScreen({
     return positions.length ? Math.max(...positions) + 1 : 1;
   }, [questions]);
 
+  const convertAlreadyLinked = useMemo(() => {
+    if (!convert) return false;
+    return questions.some((q) => q.id === convert.questionId);
+  }, [convert, questions]);
+
+  const cancelConvert = async () => {
+    if (!convert) return;
+    if (convert.draftId) {
+      try {
+        deletePassageConversionDraft(convert.draftId);
+      } catch {
+        // ignore
+      }
+    }
+
+    try {
+      const detailRes = await fetch(`/api/staff/passages/${passageId}`);
+      if (detailRes.ok) {
+        const payload =
+          (await detailRes.json()) as Partial<PassageDetail> | null;
+        const questionCount = payload?.questions?.length ?? 0;
+        if (questionCount === 0) {
+          await fetch(`/api/staff/passages/${passageId}`, { method: "DELETE" });
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    router.push(`/staff/questions/${convert.questionId}`);
+    router.refresh();
+  };
+
+  const cancelCreate = async () => {
+    try {
+      const detailRes = await fetch(`/api/staff/passages/${passageId}`);
+      if (detailRes.ok) {
+        const payload =
+          (await detailRes.json()) as Partial<PassageDetail> | null;
+        const questionCount = payload?.questions?.length ?? 0;
+        if (questionCount === 0) {
+          await fetch(`/api/staff/passages/${passageId}`, { method: "DELETE" });
+        }
+      }
+    } catch {
+      // ignore
+    }
+    if (isQuizCallback && callbackQuizId) {
+      closeOrRedirect();
+      return;
+    }
+    router.push("/staff/questions/new");
+    router.refresh();
+  };
+
+  const handleConverted = async (detail: QuestionDetail) => {
+    setNotice("Đã chuyển câu hỏi vào passage.");
+    const nextParams = new URLSearchParams({ questionId: detail.question.id });
+    if (isQuizCallback && callbackQuizId) {
+      nextParams.set("from", "quiz-builder");
+      nextParams.set("quizId", callbackQuizId);
+    }
+    router.push(`/staff/questions/passages/${passageId}?${nextParams}`);
+    try {
+      await refreshDetail();
+    } catch {
+      // ignore
+    }
+    router.refresh();
+  };
+
   const handleQuestionCreated = async (detail: QuestionDetail) => {
-    setNotice("Đã tạo câu hỏi.");
+    if (isQuizCallback && callbackQuizId) {
+      publishQuizBuilderAddQuestion({
+        quizId: callbackQuizId,
+        question: {
+          id: detail.question.id,
+          stem: detail.question.stem,
+          type: detail.question.type,
+          defaultScore: detail.question.defaultScore,
+        },
+      });
+      setNotice(
+        "Đã thêm câu hỏi vào quiz. Bạn có thể tiếp tục thêm câu hỏi khác hoặc quay lại quiz.",
+      );
+    } else {
+      setNotice("Đã tạo câu hỏi.");
+    }
+
     setCreateOpen(false);
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -204,6 +344,17 @@ export function PassageEditorScreen({
       }
     } catch {
       router.refresh();
+    }
+
+    if (createMode) {
+      const nextParams = new URLSearchParams({
+        questionId: detail.question.id,
+      });
+      if (isQuizCallback && callbackQuizId) {
+        nextParams.set("from", "quiz-builder");
+        nextParams.set("quizId", callbackQuizId);
+      }
+      router.replace(`/staff/questions/passages/${passageId}?${nextParams}`);
     }
   };
 
@@ -302,16 +453,36 @@ export function PassageEditorScreen({
             <h1 className={styles.heroTitle}>Chỉnh sửa đoạn ngữ liệu</h1>
             <p className={styles.heroSub}>ID: {passageId}</p>
             <p className={styles.heroText}>
-              Chỉnh sửa đoạn ngữ liệu và các câu hỏi liên quan trong cùng nhóm.
+              {isQuizCallback
+                ? "Chỉnh sửa đoạn ngữ liệu và thêm câu hỏi. Mỗi câu hỏi tạo xong sẽ tự được thêm vào quiz."
+                : "Chỉnh sửa đoạn ngữ liệu và các câu hỏi liên quan trong cùng nhóm."}
             </p>
           </div>
           <div className={styles.heroActions}>
+            {isQuizCallback ? (
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGray}`}
+                onClick={closeOrRedirect}
+              >
+                Quay lại quiz
+              </button>
+            ) : null}
             <Link
               className={`${styles.btn} ${styles.btnGray}`}
               href="/staff/questions"
             >
-              Quay lại
+              {isQuizCallback ? "Kho câu hỏi" : "Quay lại"}
             </Link>
+            {createMode ? (
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGray}`}
+                onClick={() => void cancelCreate()}
+              >
+                Hủy tạo passage
+              </button>
+            ) : null}
             <button
               type="button"
               className={`${styles.btn} ${styles.btnRed} ${
@@ -336,7 +507,7 @@ export function PassageEditorScreen({
         </section>
 
         <section className={`cardBase ${styles.card}`} aria-label="Passage">
-          <h2 className={styles.sectionTitle}>Đoạn ngữ liệun</h2>
+          <h2 className={styles.sectionTitle}>Đoạn ngữ liệu</h2>
           <p className={styles.sectionSub}>
             Đoạn ngữ liệu này được dùng chung cho các câu hỏi bên dưới.
           </p>
@@ -506,6 +677,28 @@ export function PassageEditorScreen({
             Tip: bấm vào hàng để mở/đóng chỉnh sửa nhanh từng câu hỏi.
           </div>
 
+          {convert && !convertAlreadyLinked ? (
+            <div style={{ marginTop: 12 }}>
+              <div className={styles.expandedCard}>
+                <div className={styles.subtle} style={{ marginBottom: 10 }}>
+                  Đang chuyển câu hỏi từ kho câu hỏi vào passage này.
+                </div>
+                <QuestionInlineConvertToPassage
+                  subjects={subjects}
+                  questionId={convert.questionId}
+                  targetPassageId={passageId}
+                  initialPassagePosition={nextPassagePosition}
+                  initialDetail={convert.initialQuestionDetail}
+                  passageContent={passageContent}
+                  draft={convertDraft}
+                  draftId={convert.draftId}
+                  onCancel={() => void cancelConvert()}
+                  onConverted={handleConverted}
+                />
+              </div>
+            </div>
+          ) : null}
+
           {createOpen ? (
             <div style={{ marginTop: 12 }}>
               <div className={styles.expandedCard}>
@@ -523,7 +716,7 @@ export function PassageEditorScreen({
             </div>
           ) : null}
 
-          {!questions.length ? (
+          {!questions.length && !(convert && !convertAlreadyLinked) ? (
             <div className={tableStyles.stateCard} aria-live="polite">
               Passage này hiện không có câu hỏi nào.
             </div>
@@ -757,8 +950,8 @@ function ConfirmDeletePassageModal({
         </h2>
         <div id={descId} className={styles.modalBody}>
           <div>
-            Thao tác này sẽ xóa đoạn ngữ liệu và <strong>{countLabel}</strong> trong
-            nhóm. <strong>Không thể hoàn tác</strong>.
+            Thao tác này sẽ xóa đoạn ngữ liệu và <strong>{countLabel}</strong>{" "}
+            trong nhóm. <strong>Không thể hoàn tác</strong>.
           </div>
           <ul>
             <li>

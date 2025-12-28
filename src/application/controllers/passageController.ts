@@ -1,8 +1,14 @@
 import {
+  createPassage,
   deletePassageWithQuestions,
   getPassageDetail,
   updatePassage,
 } from "@/application/services/passageService";
+
+export async function controllerCreatePassage(input?: { content?: string }) {
+  const passage = await createPassage(input);
+  return { passage };
+}
 
 export async function controllerGetPassageDetail(passageId: string) {
   return getPassageDetail(passageId);

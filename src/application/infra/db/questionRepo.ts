@@ -536,6 +536,20 @@ export async function updatePassageById(input: {
   return mapPassage(res.rows[0]);
 }
 
+export async function insertPassage(content: string): Promise<Passage> {
+  const res = await query<PassageRow>(
+    `INSERT INTO passages (content)
+     VALUES ($1)
+     RETURNING id, content`,
+    [content],
+  );
+  const passage = mapPassage(res.rows[0]);
+  if (!passage) {
+    throw new Error("Failed to create passage");
+  }
+  return passage;
+}
+
 export async function listUsedQuestionIdsInQuizzes(questionIds: string[]) {
   if (!questionIds.length) return [];
   const res = await query<{ question_id: string }>(

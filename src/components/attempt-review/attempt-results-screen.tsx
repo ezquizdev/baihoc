@@ -366,11 +366,6 @@ function QuestionReviewCard({
 }) {
   const badge = buildBadge(status);
   const awardedIrtScore = answer?.awardedIrtScore;
-  const answered =
-    question.type === "short_answer"
-      ? Boolean(answer?.textAnswer) || typeof answer?.isCorrect === "boolean"
-      : Boolean(answer?.selectedOptionIds?.length) ||
-        typeof answer?.isCorrect === "boolean";
 
   return (
     <details
@@ -439,7 +434,7 @@ function QuestionReviewCard({
         {question.type === "short_answer" ? (
           <ShortAnswerReview question={question} answer={answer} />
         ) : (
-          <McqReview question={question} answer={answer} answered={answered} />
+          <McqReview question={question} answer={answer} />
         )}
 
         {question.exists && question.explanation ? (
@@ -466,11 +461,9 @@ function QuestionReviewCard({
 function McqReview({
   question,
   answer,
-  answered,
 }: {
   question: AttemptReviewQuestion;
   answer?: AttemptAnswer;
-  answered: boolean;
 }) {
   if (!question.exists) {
     return (

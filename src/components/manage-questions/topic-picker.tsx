@@ -41,9 +41,12 @@ export function TopicPicker({
         setError(null);
         const params = new URLSearchParams();
         params.set("subjectIds", subjectId);
-        const response = await fetch(`/api/catalog/topics?${params.toString()}`, {
-          signal: controller.signal,
-        });
+        const response = await fetch(
+          `/api/catalog/topics?${params.toString()}`,
+          {
+            signal: controller.signal,
+          },
+        );
         if (!response.ok) {
           const payload = await response.json().catch(() => ({}));
           throw new Error(payload?.error ?? "Không thể tải danh sách chủ đề");

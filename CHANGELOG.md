@@ -12,7 +12,8 @@
 - `/staff/quizzes/[quizId]/content` now renders the quiz builder content without the modal dialog-card container while keeping the same question management UI.
 
 ### feat(staff-quizzes): callback new questions into quiz builder
-- From `/staff/quizzes/[quizId]/content`, “Tạo câu hỏi mới” opens the question create flow in a new tab and auto-adds the created question into the builder list before closing the tab.
+- From `/staff/quizzes/[quizId]/content`, “Tạo câu hỏi mới” opens the question create flow in a new tab and auto-adds created questions into the builder list.
+- Single-question types close the tab after saving; the passage editor stays open to allow adding multiple questions, and each created question shows a notice that it was added to the quiz.
 
 ### fix(db): reuse pg pool across hot reloads
 - The server db pool now caches in `globalThis` to avoid creating new connections per module reload.
@@ -84,7 +85,8 @@
 
 ### feat(staff): improve passage editor + type-first question creation
 - `/staff/questions/new` now starts with a question-type picker (MCQ 1, MCQ multi, short-answer, passage).
-- Passage create flow now supports drafting the passage + first question, then continues in the passage editor UI.
+- Passage create flow now creates an empty passage and opens the passage editor with inline question creation opened (`?create=1`).
+- Converting a question into a passage now creates a new passage record first, then routes into the passage editor with a conversion draft.
 - `/staff/questions/passages/[passageId]` now supports adding new questions inline and deleting the whole passage group from one screen.
 - Added `DELETE /api/staff/passages/[passageId]` with guards for in-progress attempts and quiz usage.
 
