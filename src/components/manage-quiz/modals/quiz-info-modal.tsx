@@ -72,7 +72,7 @@ export function QuizInfoModal({
         setMinutes(
           nextQuiz.estimatedTimeSeconds
             ? Math.round(nextQuiz.estimatedTimeSeconds / 60)
-            : 15,
+            : 0,
         );
         setIsChallenge(Boolean(nextQuiz.isChallenge));
         setChallengeStart(toDatetimeLocalValue(nextQuiz.challenge?.startAt));
@@ -117,6 +117,11 @@ export function QuizInfoModal({
 
   const submit = async (mode: "save" | "manageContent") => {
     if (!quizId) return;
+    const titleTrimmed = title.trim();
+    if (!titleTrimmed) {
+      setError("Tên quiz không được để trống.");
+      return;
+    }
     if (!challengeValidation.ok) {
       setError(challengeValidation.message);
       return;
@@ -126,15 +131,16 @@ export function QuizInfoModal({
       setSaving(true);
       const payload: Record<string, unknown> = {};
 
-      const titleTrimmed = title.trim();
-      if (titleTrimmed) payload.title = titleTrimmed;
+      payload.title = titleTrimmed;
       payload.description = description.trim() ? description.trim() : null;
       payload.status = status;
       payload.visibility = visibility;
       payload.difficulty = difficulty;
-      const safeMinutes =
-        Number.isFinite(minutes) && minutes > 0 ? minutes : 15;
-      payload.estimatedTimeSeconds = Math.max(1, Math.round(safeMinutes)) * 60;
+      const normalizedMinutes = Number.isFinite(minutes)
+        ? Math.max(0, Math.round(minutes))
+        : 0;
+      payload.estimatedTimeSeconds =
+        normalizedMinutes > 0 ? normalizedMinutes * 60 : null;
       payload.isChallenge = isChallenge;
 
       if (isChallenge) {
@@ -328,12 +334,12 @@ export function QuizInfoModal({
                   <input
                     className={styles.dashInput}
                     type="number"
-                    min={1}
+                    min={0}
                     max={300}
                     value={minutes}
                     onChange={(event) => {
                       const next = Number(event.target.value);
-                      setMinutes(Number.isFinite(next) ? next : 15);
+                      setMinutes(Number.isFinite(next) ? next : 0);
                     }}
                     disabled={disabled}
                   />

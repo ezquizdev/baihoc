@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(staff-quizzes): validate edit modal inputs
+- Added title-required validation, ensured blank descriptions clear to null, and allowed 0 minutes to represent unlimited time in the staff quiz edit modal.
+
 ### feat(staff-quizzes): move quiz content builder to page
 - Quiz info modal now routes to `/staff/quizzes/[quizId]/content` for managing quiz questions instead of opening a nested builder modal.
 
