@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { controllerSearchLeaderboardTableEntry } from "@/application/controllers/leaderboardController";
+import { controllerSearchLeaderboardTableEntries } from "@/application/controllers/leaderboardController";
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 import {
   type LeaderboardSortBy,
@@ -28,12 +28,12 @@ export async function GET(request: NextRequest) {
   const sortDir = parseSortDir(searchParams.get("sortDir")) ?? "desc";
 
   try {
-    const entry = await controllerSearchLeaderboardTableEntry({
+    const items = await controllerSearchLeaderboardTableEntries({
       query,
       sortBy,
       sortDir,
     });
-    return NextResponse.json({ entry }, { status: 200 });
+    return NextResponse.json({ items }, { status: 200 });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Không thể tìm xếp hạng";

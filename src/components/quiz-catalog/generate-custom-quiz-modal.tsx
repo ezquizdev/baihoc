@@ -345,7 +345,11 @@ export function GenerateCustomQuizModal({
 
             <div className={styles.formRow}>
               <div className={styles.label}>Số câu:</div>
-              <div className={styles.diffPicks} role="radiogroup" aria-label="Số câu">
+              <div
+                className={styles.diffPicks}
+                role="radiogroup"
+                aria-label="Số câu"
+              >
                 {questionCountOptions.map((count) => (
                   <label key={count} className={styles.ck}>
                     <input

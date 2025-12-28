@@ -7,7 +7,7 @@ import type {
 } from "@/application/models/leaderboard";
 import {
   getLeaderboardForViewer,
-  getLeaderboardTableEntryForSearch,
+  getLeaderboardTableEntriesForSearch,
   getLeaderboardTableForViewer,
 } from "@/application/services/leaderboardService";
 
@@ -31,10 +31,10 @@ export async function controllerGetLeaderboardTable(params: {
   return getLeaderboardTableForViewer(params);
 }
 
-export async function controllerSearchLeaderboardTableEntry(params: {
+export async function controllerSearchLeaderboardTableEntries(params: {
   query: string;
   sortBy: LeaderboardSortBy;
   sortDir: LeaderboardSortDir;
-}): Promise<LeaderboardTableEntry | null> {
-  return getLeaderboardTableEntryForSearch(params);
+}): Promise<LeaderboardTableEntry[]> {
+  return getLeaderboardTableEntriesForSearch(params);
 }

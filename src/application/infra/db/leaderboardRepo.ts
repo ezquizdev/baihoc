@@ -415,6 +415,65 @@ export async function getLeaderboardTableEntryByUserId(params: {
   return row ? mapLeaderboardTableRow(row) : null;
 }
 
+export async function searchLeaderboardTableEntriesByFullName(params: {
+  query: string;
+  sortBy: LeaderboardSortBy;
+  sortDir: LeaderboardSortDir;
+}): Promise<LeaderboardTableEntry[]> {
+  const sortColumn = sortColumns[params.sortBy];
+  const orderDir = params.sortDir === "asc" ? "ASC" : "DESC";
+  const normalizedQuery = params.query.toLowerCase();
+
+  const res = await query<LeaderboardTableRow>(
+    `WITH scores AS (
+        SELECT u.id AS user_id,
+               u.full_name,
+               u.avatar_url,
+               LEAST(u.xp_vi, 300)::int AS xp_vi,
+               LEAST(u.xp_en, 300)::int AS xp_en,
+               LEAST(u.xp_math, 300)::int AS xp_math,
+               LEAST(u.xp_sci, 300)::int AS xp_sci,
+               (
+                 LEAST(u.xp_vi, 300)
+                 + LEAST(u.xp_en, 300)
+                 + LEAST(u.xp_math, 300)
+                 + LEAST(u.xp_sci, 300)
+               )::int AS xp_overall
+        FROM users u
+        WHERE u.role = 'student'
+          AND u.status = 'active'
+      ),
+      ranked AS (
+        SELECT s.user_id,
+               s.full_name,
+               s.avatar_url,
+               s.xp_vi,
+               s.xp_en,
+               s.xp_math,
+               s.xp_sci,
+               s.xp_overall,
+               s.${sortColumn} AS sort_score,
+               RANK() OVER (ORDER BY s.${sortColumn} ${orderDir}) AS rank
+        FROM scores s
+      )
+      SELECT user_id,
+             full_name,
+             avatar_url,
+             xp_vi,
+             xp_en,
+             xp_math,
+             xp_sci,
+             xp_overall,
+             rank
+      FROM ranked
+      WHERE lower(full_name) LIKE $1
+      ORDER BY sort_score ${orderDir}, user_id ASC`,
+    [`%${normalizedQuery}%`],
+  );
+
+  return res.rows.map(mapLeaderboardTableRow);
+}
+
 export async function findActiveStudentIdByEmail(email: string) {
   const res = await query<{ id: string }>(
     `SELECT id

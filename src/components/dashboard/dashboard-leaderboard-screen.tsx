@@ -51,8 +51,8 @@ export function DashboardLeaderboardScreen({
   const debouncedSearch = useDebouncedValue(search, 250);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [searchEntry, setSearchEntry] = useState<LeaderboardTableEntry | null>(
-    null,
+  const [searchEntries, setSearchEntries] = useState<LeaderboardTableEntry[]>(
+    [],
   );
   const [searchRefreshKey, setSearchRefreshKey] = useState(0);
   const [page, setPage] = useState(1);
@@ -116,7 +116,7 @@ export function DashboardLeaderboardScreen({
   useEffect(() => {
     const trimmed = debouncedSearch.trim();
     if (!trimmed) {
-      setSearchEntry(null);
+      setSearchEntries([]);
       setSearchError(null);
       setSearchLoading(false);
       return;
@@ -145,10 +145,10 @@ export function DashboardLeaderboardScreen({
           throw new Error(payload?.error ?? "Không thể tìm xếp hạng");
         }
 
-        setSearchEntry(payload.entry ?? null);
+        setSearchEntries(Array.isArray(payload.items) ? payload.items : []);
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
-        setSearchEntry(null);
+        setSearchEntries([]);
         setSearchError(
           err instanceof Error ? err.message : "Không thể tìm xếp hạng",
         );
@@ -177,7 +177,7 @@ export function DashboardLeaderboardScreen({
 
   const handleSearchClear = () => {
     setSearch("");
-    setSearchEntry(null);
+    setSearchEntries([]);
     setSearchError(null);
     setSearchLoading(false);
   };
@@ -205,7 +205,7 @@ export function DashboardLeaderboardScreen({
       userName={displayName}
       avatarUrl={session.avatarUrl}
       searchValue={search}
-      searchPlaceholder="Tìm học sinh (email hoặc ID)"
+      searchPlaceholder="Tìm học sinh theo tên"
       onSearchChange={setSearch}
       onSearchSubmit={setSearch}
     >
@@ -270,39 +270,43 @@ export function DashboardLeaderboardScreen({
                 >
                   {searchError}
                 </div>
-              ) : searchEntry ? (
-                <div className={styles.searchRow}>
-                  <div className={styles.searchIdentity}>
-                    <div className={styles.searchRank}>#{searchEntry.rank}</div>
-                    <LeaderboardBadge
-                      rank={searchEntry.rank}
-                      variant={
-                        searchEntry.userId === session.sub ? "self" : "top"
-                      }
-                    />
-                    <Link
-                      className={styles.searchName}
-                      href={`/profile/${searchEntry.userId}`}
-                    >
-                      {searchEntry.fullName}
-                    </Link>
-                  </div>
+              ) : searchEntries.length > 0 ? (
+                <div className={styles.searchRows}>
+                  {searchEntries.map((entry) => (
+                    <div key={entry.userId} className={styles.searchRow}>
+                      <div className={styles.searchIdentity}>
+                        <div className={styles.searchRank}>#{entry.rank}</div>
+                        <LeaderboardBadge
+                          rank={entry.rank}
+                          variant={
+                            entry.userId === session.sub ? "self" : "top"
+                          }
+                        />
+                        <Link
+                          className={styles.searchName}
+                          href={`/profile/${entry.userId}`}
+                        >
+                          {entry.fullName}
+                        </Link>
+                      </div>
 
-                  <div className={styles.searchScores}>
-                    <ScorePill label="TV" value={searchEntry.xpVi} />
-                    <ScorePill label="TA" value={searchEntry.xpEn} />
-                    <ScorePill label="Toán" value={searchEntry.xpMath} />
-                    <ScorePill label="KH" value={searchEntry.xpSci} />
-                    <ScorePill
-                      label="Tổng"
-                      value={searchEntry.xpOverall}
-                      variant="overall"
-                    />
-                  </div>
+                      <div className={styles.searchScores}>
+                        <ScorePill label="TV" value={entry.xpVi} />
+                        <ScorePill label="TA" value={entry.xpEn} />
+                        <ScorePill label="Toán" value={entry.xpMath} />
+                        <ScorePill label="KH" value={entry.xpSci} />
+                        <ScorePill
+                          label="Tổng"
+                          value={entry.xpOverall}
+                          variant="overall"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className={styles.searchState} aria-live="polite">
-                  Không tìm thấy học sinh này trong bảng xếp hạng.
+                  Không tìm thấy học sinh phù hợp trong bảng xếp hạng.
                 </div>
               )}
             </section>

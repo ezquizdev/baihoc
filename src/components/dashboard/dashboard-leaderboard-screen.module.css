@@ -103,6 +103,12 @@
   font-weight: 850;
 }
 
+.searchRows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .searchRow {
   display: flex;
   align-items: center;

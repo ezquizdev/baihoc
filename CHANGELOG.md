@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(leaderboard): search by name and show all matches
+- Leaderboard table search now matches by student name only and returns all matching rows instead of a single entry.
+
 ### fix(dashboard): keep stats legend above bars
 - Raised the stats card legend stacking order and reduced bar height to avoid overlap.
 
