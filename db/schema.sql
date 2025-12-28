@@ -1097,6 +1097,8 @@ CREATE TABLE IF NOT EXISTS ai_sessions (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE INDEX IF NOT EXISTS idx_ai_sessions_user_created_at ON ai_sessions(user_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS ai_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id uuid NOT NULL REFERENCES ai_sessions(id) ON DELETE CASCADE,
@@ -1105,6 +1107,8 @@ CREATE TABLE IF NOT EXISTS ai_messages (
   token_usage jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS idx_ai_messages_session_created_at ON ai_messages(session_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS ai_failures (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

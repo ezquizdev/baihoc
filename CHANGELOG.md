@@ -17,6 +17,11 @@
 - Added `GET /api/ai/session` + `POST /api/ai/chat` with DB logging (`ai_sessions`, `ai_messages`, `ai_failures`) and UC016-aware context (home vs attempt results).
 - Premium gating: students must be `tier=paid` to send messages; free students see a locked state.
 
+### feat(ai): add full-page AI chat with history sidebar
+- Added `/ai` page with ChatGPT-style layout (session history sidebar + conversation panel) and a back button.
+- Added `GET/POST /api/ai/sessions` and `GET /api/ai/sessions/[sessionId]` for conversation history and loading.
+- Chat bubble dialog now links to the full page via “Mở toàn màn hình”.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger

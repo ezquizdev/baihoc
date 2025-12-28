@@ -29,6 +29,23 @@ export type AiFailureRow = {
   created_at: string;
 };
 
+export type AiSessionDetailRow = AiSessionRow & {
+  quiz_title: string | null;
+};
+
+export type AiSessionListRow = {
+  id: string;
+  entry_point: AiEntryPoint;
+  created_at: string;
+  quiz_id: string | null;
+  attempt_id: string | null;
+  question_id: string | null;
+  quiz_title: string | null;
+  last_message_at: string | null;
+  last_message_role: AiMessageRole | null;
+  last_message_content: string | null;
+};
+
 export async function findAiSessionById(
   input: { userId: string; sessionId: string },
   client?: PoolClient,
@@ -38,6 +55,24 @@ export async function findAiSessionById(
     `SELECT *
      FROM ai_sessions
      WHERE id = $1::uuid AND user_id = $2::uuid
+     LIMIT 1`,
+    [input.sessionId, input.userId],
+  );
+  return res.rows[0] ?? null;
+}
+
+export async function findAiSessionDetailById(
+  input: { userId: string; sessionId: string },
+  client?: PoolClient,
+): Promise<AiSessionDetailRow | null> {
+  const executor = client ?? pool;
+  const res = await executor.query<AiSessionDetailRow>(
+    `SELECT
+        s.*,
+        q.title AS quiz_title
+     FROM ai_sessions s
+     LEFT JOIN quizzes q ON q.id = s.quiz_id
+     WHERE s.id = $1::uuid AND s.user_id = $2::uuid
      LIMIT 1`,
     [input.sessionId, input.userId],
   );
@@ -87,6 +122,43 @@ export async function findLatestAiSessionForContext(
     params,
   );
   return res.rows[0] ?? null;
+}
+
+export async function listAiSessionsForUser(
+  input: { userId: string; limit?: number; offset?: number },
+  client?: PoolClient,
+): Promise<AiSessionListRow[]> {
+  const executor = client ?? pool;
+  const limit = input.limit ?? 50;
+  const offset = input.offset ?? 0;
+
+  const res = await executor.query<AiSessionListRow>(
+    `SELECT
+        s.id,
+        s.entry_point,
+        s.created_at,
+        s.quiz_id,
+        s.attempt_id,
+        s.question_id,
+        q.title AS quiz_title,
+        m.created_at AS last_message_at,
+        m.role AS last_message_role,
+        m.content AS last_message_content
+     FROM ai_sessions s
+     LEFT JOIN quizzes q ON q.id = s.quiz_id
+     LEFT JOIN LATERAL (
+        SELECT role, content, created_at
+        FROM ai_messages
+        WHERE session_id = s.id
+        ORDER BY created_at DESC
+        LIMIT 1
+     ) m ON true
+     WHERE s.user_id = $1::uuid
+     ORDER BY COALESCE(m.created_at, s.created_at) DESC
+     LIMIT $2 OFFSET $3`,
+    [input.userId, limit, offset],
+  );
+  return res.rows;
 }
 
 export async function insertAiSession(

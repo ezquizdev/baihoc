@@ -10,7 +10,8 @@ function shouldHideOnPath(pathname: string) {
   return (
     pathname.startsWith("/auth") ||
     pathname === "/logout" ||
-    pathname.startsWith("/staff")
+    pathname.startsWith("/staff") ||
+    pathname.startsWith("/ai")
   );
 }
 

@@ -1,10 +1,12 @@
 import {
   findAiSessionById,
+  findAiSessionDetailById,
   findLatestAiSessionForContext,
   insertAiFailure,
   insertAiMessage,
   insertAiSession,
   listAiMessagesForSession,
+  listAiSessionsForUser,
 } from "@/application/infra/db/aiRepo";
 import { findUserById } from "@/application/infra/db/userRepo";
 import {
@@ -42,6 +44,24 @@ export type AiChatSessionDto = {
   id: string;
   entryPoint: AiEntryPoint;
   createdAt: string;
+};
+
+export type AiChatSessionDetailDto = AiChatSessionDto & {
+  quizTitle: string | null;
+  attemptId: string | null;
+  questionId: string | null;
+};
+
+export type AiChatSessionListItemDto = {
+  id: string;
+  entryPoint: AiEntryPoint;
+  createdAt: string;
+  quizTitle: string | null;
+  attemptId: string | null;
+  questionId: string | null;
+  lastMessageAt: string | null;
+  lastMessageRole: AiMessageRole | null;
+  lastMessagePreview: string | null;
 };
 
 export async function getAiChatSessionState(input: {
@@ -100,6 +120,150 @@ export async function getAiChatSessionState(input: {
       content: message.content,
       createdAt: message.created_at,
     })),
+  };
+}
+
+export async function listAiChatSessions(
+  userId: string,
+  params: { limit?: number; offset?: number } = {},
+): Promise<{ access: AiChatAccess; items: AiChatSessionListItemDto[] }> {
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new ServiceError("USER_NOT_FOUND", "Không tìm thấy người dùng", 404);
+  }
+
+  const access = resolveAiAccess({ role: user.role, tier: user.tier });
+  if (!access.allowed) {
+    return { access, items: [] };
+  }
+
+  const rows = await listAiSessionsForUser({
+    userId,
+    limit: params.limit,
+    offset: params.offset,
+  });
+
+  return {
+    access,
+    items: rows.map((row) => ({
+      id: row.id,
+      entryPoint: row.entry_point,
+      createdAt: row.created_at,
+      quizTitle: row.quiz_title,
+      attemptId: row.attempt_id,
+      questionId: row.question_id,
+      lastMessageAt: row.last_message_at,
+      lastMessageRole: row.last_message_role,
+      lastMessagePreview: row.last_message_content
+        ? truncate(row.last_message_content, 140)
+        : null,
+    })),
+  };
+}
+
+export async function getAiChatConversation(input: {
+  userId: string;
+  sessionId: string;
+}): Promise<{
+  access: AiChatAccess;
+  session: AiChatSessionDetailDto | null;
+  messages: AiChatMessageDto[];
+}> {
+  const user = await findUserById(input.userId);
+  if (!user) {
+    throw new ServiceError("USER_NOT_FOUND", "Không tìm thấy người dùng", 404);
+  }
+
+  const access = resolveAiAccess({ role: user.role, tier: user.tier });
+  if (!access.allowed) {
+    return { access, session: null, messages: [] };
+  }
+
+  const session = await findAiSessionDetailById({
+    userId: input.userId,
+    sessionId: input.sessionId,
+  });
+  if (!session) {
+    throw new ServiceError(
+      "AI_SESSION_NOT_FOUND",
+      "Không tìm thấy hội thoại",
+      404,
+    );
+  }
+
+  const messages = await listAiMessagesForSession({
+    userId: input.userId,
+    sessionId: session.id,
+    limit: 100,
+  });
+
+  return {
+    access,
+    session: {
+      id: session.id,
+      entryPoint: session.entry_point,
+      createdAt: session.created_at,
+      quizTitle: session.quiz_title,
+      attemptId: session.attempt_id,
+      questionId: session.question_id,
+    },
+    messages: messages.map((message) => ({
+      id: message.id,
+      role: message.role,
+      content: message.content,
+      createdAt: message.created_at,
+    })),
+  };
+}
+
+export async function createAiChatSession(input: {
+  userId: string;
+  entryPoint: AiEntryPoint;
+  attemptId?: string | null;
+  questionId?: string | null;
+}): Promise<{ access: AiChatAccess; session: AiChatSessionDetailDto }> {
+  const user = await findUserById(input.userId);
+  if (!user) {
+    throw new ServiceError("USER_NOT_FOUND", "Không tìm thấy người dùng", 404);
+  }
+
+  const access = resolveAiAccess({ role: user.role, tier: user.tier });
+  if (!access.allowed) {
+    throw new ServiceError(
+      "AI_NOT_ALLOWED",
+      access.reason === "llm_unconfigured"
+        ? "AI hiện chưa được cấu hình."
+        : "Tính năng AI chỉ dành cho tài khoản trả phí.",
+      403,
+      access,
+    );
+  }
+
+  const context = await resolveSessionContext({
+    userId: input.userId,
+    entryPoint: input.entryPoint,
+    attemptId: input.attemptId ?? null,
+    questionId: input.questionId ?? null,
+  });
+
+  const created = await insertAiSession({
+    userId: input.userId,
+    entryPoint: context.entryPoint,
+    quizId: context.quizId,
+    attemptId: context.attemptId,
+    questionId: context.questionId,
+  });
+
+  return {
+    access,
+    session: {
+      id: created.id,
+      entryPoint: created.entry_point,
+      createdAt: created.created_at,
+      quizTitle: context.quizTitle,
+      attemptId: created.attempt_id,
+      questionId: created.question_id,
+    },
   };
 }
 
@@ -215,6 +379,75 @@ function resolveAiAccess(input: {
     return { allowed: false, reason: "not_paid" };
   }
   return { allowed: true, reason: "ok" };
+}
+
+async function resolveSessionContext(input: {
+  userId: string;
+  entryPoint: AiEntryPoint;
+  attemptId: string | null;
+  questionId: string | null;
+}): Promise<{
+  entryPoint: AiEntryPoint;
+  quizId: string | null;
+  quizTitle: string | null;
+  attemptId: string | null;
+  questionId: string | null;
+}> {
+  if (input.entryPoint === "home") {
+    return {
+      entryPoint: "home",
+      quizId: null,
+      quizTitle: null,
+      attemptId: null,
+      questionId: null,
+    };
+  }
+
+  if (input.entryPoint === "result") {
+    if (!input.attemptId) {
+      throw new ServiceError("AI_MISSING_ATTEMPT", "Thiếu attemptId", 400);
+    }
+    const review = await getAttemptReviewState(input.userId, input.attemptId);
+    return {
+      entryPoint: "result",
+      quizId: review.quizId ?? null,
+      quizTitle: review.quizTitle ?? null,
+      attemptId: input.attemptId,
+      questionId: null,
+    };
+  }
+
+  if (!input.attemptId || !input.questionId) {
+    throw new ServiceError(
+      "AI_MISSING_QUESTION",
+      "Thiếu attemptId hoặc questionId",
+      400,
+    );
+  }
+  const review = await getAttemptReviewState(input.userId, input.attemptId);
+  const question = review.questions.find((q) => q.id === input.questionId);
+  if (!question) {
+    throw new ServiceError(
+      "AI_QUESTION_NOT_FOUND",
+      "Không tìm thấy câu hỏi trong bài làm.",
+      404,
+    );
+  }
+  if (!question.exists) {
+    throw new ServiceError(
+      "AI_QUESTION_DELETED",
+      "Câu hỏi đã bị xoá nên không thể cung cấp ngữ cảnh đầy đủ.",
+      409,
+    );
+  }
+
+  return {
+    entryPoint: "question",
+    quizId: review.quizId ?? null,
+    quizTitle: review.quizTitle ?? null,
+    attemptId: input.attemptId,
+    questionId: input.questionId,
+  };
 }
 
 function normalizeUserMessage(value: string) {

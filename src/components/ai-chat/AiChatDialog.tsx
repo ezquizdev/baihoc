@@ -1,7 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { PaperPlaneRight, SpinnerGap, X } from "phosphor-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ArrowSquareOut, PaperPlaneRight, SpinnerGap, X } from "phosphor-react";
 import {
   type FormEvent,
   useCallback,
@@ -68,6 +68,7 @@ function nowIso() {
 }
 
 export function AiChatDialog({ onClose }: Props) {
+  const router = useRouter();
   const pathname = usePathname();
   const context = useMemo(() => deriveContext(pathname), [pathname]);
   const storageKey = useMemo(() => storageKeyForContext(context), [context]);
@@ -254,6 +255,14 @@ export function AiChatDialog({ onClose }: Props) {
     handleSend();
   };
 
+  const handleOpenFullPage = useCallback(() => {
+    const qs = new URLSearchParams();
+    qs.set("from", pathname);
+    if (sessionId) qs.set("sessionId", sessionId);
+    router.push(`/ai?${qs.toString()}`);
+    onClose();
+  }, [onClose, pathname, router, sessionId]);
+
   const body = (
     <>
       {!messages.length ? (
@@ -317,6 +326,14 @@ export function AiChatDialog({ onClose }: Props) {
         </div>
 
         <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={handleOpenFullPage}
+            aria-label="Mở toàn màn hình"
+          >
+            <ArrowSquareOut size={18} />
+          </button>
           <button
             type="button"
             className={styles.iconButton}
