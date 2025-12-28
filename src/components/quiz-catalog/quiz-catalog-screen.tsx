@@ -27,6 +27,8 @@ type QuizCatalogScreenProps = {
   leaderboard: LeaderboardResult;
   leaderboardMaxRows: number;
   leaderboardIncludeSelf: boolean;
+  initialStatus?: StatusFilter;
+  initialOpenCustomQuiz?: boolean;
 };
 
 const PAGE_SIZE = 12;
@@ -40,10 +42,12 @@ export function QuizCatalogScreen({
   leaderboard,
   leaderboardMaxRows,
   leaderboardIncludeSelf,
+  initialStatus = "all",
+  initialOpenCustomQuiz = false,
 }: QuizCatalogScreenProps) {
   const router = useRouter();
   const displayName = session.fullName ?? session.email.split("@")[0];
-  const [status, setStatus] = useState<StatusFilter>("all");
+  const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [sort, setSort] = useState<SortOrder>("newest");
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<
@@ -64,7 +68,7 @@ export function QuizCatalogScreen({
   const [selectedQuiz, setSelectedQuiz] = useState<QuizCatalogItem | null>(
     null,
   );
-  const [generateOpen, setGenerateOpen] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(initialOpenCustomQuiz);
   const initialLoadRef = useRef(true);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));

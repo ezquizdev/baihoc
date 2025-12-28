@@ -654,6 +654,34 @@ export async function listCatalogPage(params: {
   return { items, total };
 }
 
+export async function getRandomUnattemptedQuizId(
+  userId: string,
+): Promise<string | null> {
+  const res = await query<{ id: string }>(
+    `SELECT q.id
+     FROM quizzes q
+     WHERE q.status = 'published'
+       AND q.is_challenge IS FALSE
+       AND NOT EXISTS (
+         SELECT 1
+         FROM custom_quizzes cq
+         WHERE cq.generated_quiz_id = q.id
+           AND cq.status = 'ready'::custom_quiz_status
+       )
+       AND NOT EXISTS (
+         SELECT 1
+         FROM attempts a
+         WHERE a.quiz_id = q.id
+           AND a.user_id = $1
+       )
+     ORDER BY random()
+     LIMIT 1`,
+    [userId],
+  );
+
+  return res.rows[0]?.id ?? null;
+}
+
 export async function listQuizzesForStaff(params: {
   status?: QuizStatus;
   search?: string;

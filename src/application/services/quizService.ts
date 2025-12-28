@@ -8,6 +8,7 @@ import {
   deleteQuiz,
   getQuizDetail as getQuizDetailRepo,
   getQuizQuestionCount,
+  getRandomUnattemptedQuizId,
   hasInProgressAttempts,
   insertQuiz,
   isQuizUsed,
@@ -185,6 +186,10 @@ export async function listCatalogPage(
     limit: params.limit,
     offset: params.offset,
   });
+}
+
+export async function getRandomUnattemptedCatalogQuizId(userId: string) {
+  return getRandomUnattemptedQuizId(userId);
 }
 
 export async function listStaffQuizzes(params: {

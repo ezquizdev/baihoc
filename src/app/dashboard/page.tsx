@@ -57,15 +57,10 @@ export default async function DashboardPage() {
       : "Bắt đầu làm quiz đầu tiên để ghi điểm nhé.";
 
   const quickActions = [
-    { label: "TẤT CẢ", href: "/quizzes" },
-    highlightChallenge.status === "active"
-      ? {
-          label: "CHALLENGE\nHÔM NAY",
-          href: highlightChallenge.actionHref,
-        }
-      : { label: "CHALLENGE\nHÔM NAY", disabled: true },
-    { label: "TỰ LUYỆN QUIZ CÙNG AI", disabled: true },
-    { label: "QUIZ NGẪU NHIÊN", disabled: true },
+    { label: "TẤT CẢ\nQUIZ", href: "/quizzes?status=all" },
+    { label: "TẤT CẢ\nCHALLENGE", href: "/quizzes?status=challenge" },
+    { label: "TẠO QUIZ\nTÙY CHỈNH", href: "/quizzes?custom=1" },
+    { label: "QUIZ\nNGẪU NHIÊN", href: "/quizzes/random" },
   ] satisfies QuickAction[];
 
   return (

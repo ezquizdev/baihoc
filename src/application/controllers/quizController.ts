@@ -15,6 +15,7 @@ import {
   deleteQuizWithRules,
   getPublishedQuizDetail,
   getQuizDetailForStaff,
+  getRandomUnattemptedCatalogQuizId,
   listCatalogPage,
   listCatalogQuizzes,
   listStaffQuizzes,
@@ -117,6 +118,12 @@ export async function controllerListCatalogPage(
   } = {},
 ): Promise<{ items: QuizCatalogItem[]; total: number }> {
   return listCatalogPage(userId, params);
+}
+
+export async function controllerGetRandomUnattemptedCatalogQuizId(
+  userId: string,
+) {
+  return getRandomUnattemptedCatalogQuizId(userId);
 }
 
 export async function controllerListStaffQuizzes(

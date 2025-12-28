@@ -14,6 +14,10 @@
 ### fix(catalog): label completed quizzes as "Làm lại"
 - Quiz catalog cards and quick-view modal now show “Làm lại” when the user has already attempted the quiz.
 
+### feat(dashboard): wire quick actions to catalog + random quiz
+- Dashboard quick actions now deep-link to all quizzes, all challenges, and open the custom quiz modal on the catalog page.
+- Added `/quizzes/random` to pick an unattempted quiz and start the attempt flow.
+
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 
