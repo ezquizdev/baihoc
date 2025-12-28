@@ -8,6 +8,7 @@ import type { Question } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
 import { QuizPagination } from "@/components/quiz-catalog/quiz-pagination";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
+import { NoticeModal } from "@/components/ui/notice-modal";
 import {
   ManageQuestionsFilters,
   type QuestionStatusFilter,
@@ -42,8 +43,20 @@ export function ManageQuestionsScreen({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const pageSize = initialLimit;
+
+  useEffect(() => {
+    if (!loading) {
+      document.body.classList.remove("loading-open");
+      return;
+    }
+    document.body.classList.add("loading-open");
+    return () => {
+      document.body.classList.remove("loading-open");
+    };
+  }, [loading]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -172,6 +185,7 @@ export function ManageQuestionsScreen({
             error={error}
             onRetry={handleRetry}
             onMutated={handleMutated}
+            onSuccess={(message) => setSuccessNotice(message)}
           />
 
           <QuizPagination
@@ -182,6 +196,29 @@ export function ManageQuestionsScreen({
           />
         </section>
       </div>
+
+      {loading ? (
+        <div className={styles.loadingOverlay} role="presentation">
+          <div className={styles.loadingBackdrop} aria-hidden="true" />
+          <output
+            className={styles.loadingDialog}
+            aria-live="polite"
+            aria-label="Đang tải"
+          >
+            <span className={styles.loadingSpinner} aria-hidden="true" />
+            <span className={styles.loadingText}>Đang tải...</span>
+          </output>
+        </div>
+      ) : null}
+
+      <NoticeModal
+        open={successNotice !== null}
+        title="Thành công"
+        message={successNotice ?? ""}
+        tone="success"
+        closeLabel="OK"
+        onClose={() => setSuccessNotice(null)}
+      />
     </StaffShell>
   );
 }
