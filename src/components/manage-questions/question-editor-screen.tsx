@@ -373,7 +373,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                   disabled={disabled}
                   onClick={() => mutateStatus("archived")}
                 >
-                  {busyAction === "archive" ? "Đang lưu trữ..." : "Lưu trữ"}
+                  {busyAction === "archive" ? "Lưu trữ" : "Lưu trữ"}
                 </button>
               )
             ) : null}

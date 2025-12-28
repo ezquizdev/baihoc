@@ -43,6 +43,8 @@ export type ActiveChallenge = {
 type HighlightCardRow = {
   quiz_id: string;
   quiz_title: string | null;
+  quiz_question_count: number;
+  quiz_estimated_time_seconds: number | null;
   start_at: string;
   end_at: string;
   question_id: string;
@@ -60,6 +62,8 @@ type HighlightCardRow = {
 export type HighlightCardSnapshot = {
   quizId: string;
   quizTitle: string | null;
+  quizQuestionCount: number;
+  quizEstimatedTimeSeconds: number | null;
   startAt: string;
   endAt: string;
   question: {
@@ -207,6 +211,13 @@ export async function getActiveHighlightCardSnapshotForUser(
     active AS (
       SELECT q.id AS quiz_id,
              q.title AS quiz_title,
+             q.estimated_time_seconds AS quiz_estimated_time_seconds,
+             (
+               SELECT count(*)::int
+               FROM quiz_questions qq
+               WHERE qq.quiz_id = q.id
+                 AND qq.required IS TRUE
+             ) AS quiz_question_count,
              cs.start_at,
              cs.end_at,
              cfg.question_id
@@ -220,6 +231,8 @@ export async function getActiveHighlightCardSnapshotForUser(
     )
     SELECT a.quiz_id,
            a.quiz_title,
+           a.quiz_question_count,
+           a.quiz_estimated_time_seconds,
            a.start_at,
            a.end_at,
            qn.id AS question_id,
@@ -255,6 +268,8 @@ export async function getActiveHighlightCardSnapshotForUser(
      AND sub.question_id = qn.id
     GROUP BY a.quiz_id,
              a.quiz_title,
+             a.quiz_question_count,
+             a.quiz_estimated_time_seconds,
              a.start_at,
              a.end_at,
              qn.id,
@@ -276,6 +291,13 @@ export async function getActiveHighlightCardSnapshotForUser(
   return {
     quizId: row.quiz_id,
     quizTitle: row.quiz_title,
+    quizQuestionCount: Number.isFinite(row.quiz_question_count)
+      ? row.quiz_question_count
+      : 0,
+    quizEstimatedTimeSeconds:
+      typeof row.quiz_estimated_time_seconds === "number"
+        ? row.quiz_estimated_time_seconds
+        : null,
     startAt: row.start_at,
     endAt: row.end_at,
     question: {

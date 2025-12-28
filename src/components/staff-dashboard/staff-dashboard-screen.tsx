@@ -884,9 +884,9 @@ export function StaffDashboardScreen({
           </Link>
           <Link
             className={`${styles.actionPill} ${styles.actionPillAccent}`}
-            href="/staff/quizzes"
+            href="/staff/students"
           >
-            Tạo Challenge
+            Quản lý học sinh
           </Link>
           <Link
             className={`${styles.actionPill} ${styles.actionPillDark}`}

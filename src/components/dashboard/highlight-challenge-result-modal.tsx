@@ -4,6 +4,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useId, useMemo, useRef } from "react";
 import { RichText } from "@/components/ui/rich-text";
+import { formatNumberVi, formatStudyTimeVi } from "@/lib/formatters";
 import styles from "./highlight-challenge-result-modal.module.css";
 
 type Option = { id: string; text: string; position: number };
@@ -12,6 +13,9 @@ export function HighlightChallengeResultModal({
   open,
   tone,
   title,
+  quizTitle,
+  quizQuestionCount,
+  quizEstimatedTimeSeconds,
   questionStem,
   options,
   selectedOptionIds,
@@ -24,6 +28,9 @@ export function HighlightChallengeResultModal({
   open: boolean;
   tone: "success" | "error";
   title: string;
+  quizTitle: string | null;
+  quizQuestionCount: number;
+  quizEstimatedTimeSeconds: number | null;
   questionStem: string;
   options: Option[];
   selectedOptionIds: string[];
@@ -48,6 +55,30 @@ export function HighlightChallengeResultModal({
     () => new Set(correctOptionIds),
     [correctOptionIds],
   );
+
+  const subtitle = useMemo(() => {
+    const titleLabel = quizTitle?.trim()
+      ? quizTitle.trim()
+      : "Challenge hôm nay";
+    const metaParts: string[] = [];
+
+    const safeCount = Number.isFinite(quizQuestionCount)
+      ? Math.max(0, quizQuestionCount)
+      : 0;
+    if (safeCount > 0) metaParts.push(`${formatNumberVi(safeCount)} câu`);
+
+    if (
+      typeof quizEstimatedTimeSeconds === "number" &&
+      Number.isFinite(quizEstimatedTimeSeconds) &&
+      quizEstimatedTimeSeconds > 0
+    ) {
+      metaParts.push(`${formatStudyTimeVi(quizEstimatedTimeSeconds)}`);
+    }
+
+    if (metaParts.length === 0)
+      return "Hãy bắt đầu challenge của ngày hôm nay thôi!";
+    return `${titleLabel} • ${metaParts.join(" • ")}. ${actionLabel} ngay nhé!`;
+  }, [actionLabel, quizEstimatedTimeSeconds, quizQuestionCount, quizTitle]);
 
   useEffect(() => {
     if (!open) return;
@@ -128,8 +159,7 @@ export function HighlightChallengeResultModal({
           {title}
         </h3>
         <p id={descriptionId} className={styles.subtitle}>
-          Đây là câu hỏi highlight trên dashboard (không tính vào kết quả
-          challenge). Hãy bắt đầu challenge đầy đủ để ghi nhận kết quả nhé.
+          {subtitle}
         </p>
 
         <div className={styles.section}>

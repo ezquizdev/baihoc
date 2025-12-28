@@ -24,13 +24,27 @@ const defaultPaidStudents = Math.max(1, Math.round(totalStudents * 0.25));
 const config = {
   students: totalStudents,
   paidStudents: Number(args.paidStudents ?? args.paid ?? defaultPaidStudents),
-  quizzes: Number(args.quizzes ?? 36),
+  quizzes: Math.max(2, Number(args.quizzes ?? 36)),
   questionsPerSubject: Number(args.questions ?? 48),
   maxAttemptsPerQuiz: Number(args.maxAttempts ?? 18),
   multiSubjectRate: Number(args.multiSubjectRate ?? 0.35),
   allowlistEntries: Number(args.allowlist ?? 8),
   customQuizzes: Number(args.customQuizzes ?? 3),
 };
+
+const DEMO_1_CHALLENGE_QUIZ_ID = "00000000-0000-0000-0000-00000000d001";
+const DEMO_1_QUESTION_IDS = [
+  "00000000-0000-0000-0000-00000000d101",
+  "00000000-0000-0000-0000-00000000d102",
+  "00000000-0000-0000-0000-00000000d103",
+  "00000000-0000-0000-0000-00000000d104",
+  "00000000-0000-0000-0000-00000000d105",
+  "00000000-0000-0000-0000-00000000d106",
+  "00000000-0000-0000-0000-00000000d107",
+  "00000000-0000-0000-0000-00000000d108",
+  "00000000-0000-0000-0000-00000000d109",
+  "00000000-0000-0000-0000-00000000d10a",
+];
 
 const subjectSeeds = [
   { name: "Tiếng Việt", slug: "vi" },
@@ -177,6 +191,7 @@ async function main() {
 
     const subjects = await upsertSubjects(client, subjectSeeds);
     const { topicsBySubject } = await seedTopics(client, subjects);
+    const subjectBySlug = new Map(subjects.map((subject) => [subject.slug, subject]));
 
     const questionRows = [];
     const questionTopicRows = [];
@@ -190,6 +205,13 @@ async function main() {
       mcq_multi: [],
       short_answer: [],
     };
+
+    seedDemo1Questions({
+      questionRows,
+      questionOptionRows,
+      subjectBySlug,
+      staffUserId: staff.id,
+    });
 
     subjects.forEach((subject) => {
       const groups = [];
@@ -327,6 +349,7 @@ async function main() {
         "created_by",
       ],
       questionRows,
+      "ON CONFLICT (id) DO UPDATE SET subject_id = EXCLUDED.subject_id, default_difficulty = EXCLUDED.default_difficulty, type = EXCLUDED.type, stem = EXCLUDED.stem, explanation = EXCLUDED.explanation, status = EXCLUDED.status, tags = EXCLUDED.tags, default_score = EXCLUDED.default_score, created_by = EXCLUDED.created_by, updated_at = now()",
     );
     if (questionOptionRows.length) {
       await insertRows(
@@ -334,6 +357,7 @@ async function main() {
         "question_options",
         ["question_id", "label", "text", "is_correct", "position"],
         questionOptionRows,
+        "ON CONFLICT (question_id, position) DO UPDATE SET label = EXCLUDED.label, text = EXCLUDED.text, is_correct = EXCLUDED.is_correct",
       );
     }
     if (shortAnswerKeyRows.length) {
@@ -377,10 +401,12 @@ async function main() {
     let demoChallengeId = null;
 
     for (let i = 0; i < config.quizzes; i += 1) {
-      const quizId = crypto.randomUUID();
       const isDemoQuiz = i === 0;
       const isDemoChallenge = i === 1;
       const isDemoDraft = i === 2;
+      const quizId = isDemoChallenge
+        ? DEMO_1_CHALLENGE_QUIZ_ID
+        : crypto.randomUUID();
       const chosenSubjects =
         isDemoQuiz || isDemoChallenge
           ? subjects
@@ -402,14 +428,14 @@ async function main() {
       const title = isDemoQuiz
         ? "Demo: Tất cả dạng câu hỏi"
         : isDemoChallenge
-          ? "Demo Challenge: Làm thử thách"
+          ? "Demo #1"
           : isDemoDraft
             ? `Draft: ${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`
             : `${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`;
       const description = isDemoQuiz
         ? "Quiz mẫu để kiểm tra đủ dạng câu hỏi (MCQ 1 đáp án, nhiều đáp án, và tự luận ngắn) + đoạn văn."
         : isDemoChallenge
-          ? "Thử thách mẫu (đang diễn ra) để kiểm tra flow bắt đầu challenge, làm bài, và nộp bài."
+          ? "Challenge demo #1 (đang diễn ra) để luyện tập nhanh theo từng môn."
           : isDemoDraft
             ? `Quiz nháp (draft) để kiểm tra flow quản trị: chỉnh sửa, lưu nháp và thêm câu hỏi.`
             : `Bộ câu hỏi ${title.toLowerCase()} dành cho luyện tập.`;
@@ -461,11 +487,13 @@ async function main() {
 
       let position = 1;
       if (isDemoQuiz || isDemoChallenge) {
-        const demoQuestionIds = buildDemoQuestionList({
-          chosenSubjects,
-          questionGroups,
-          questionIdsByType,
-        });
+        const demoQuestionIds = isDemoChallenge
+          ? DEMO_1_QUESTION_IDS
+          : buildDemoQuestionList({
+              chosenSubjects,
+              questionGroups,
+              questionIdsByType,
+            });
         demoQuestionIds.forEach((questionId) => {
           quizQuestionRows.push([quizId, questionId, position, null, true]);
           position += 1;
@@ -541,6 +569,7 @@ async function main() {
         "published_at",
       ],
       quizRows,
+      "ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, difficulty_level = EXCLUDED.difficulty_level, visibility = EXCLUDED.visibility, status = EXCLUDED.status, is_challenge = EXCLUDED.is_challenge, estimated_time_seconds = EXCLUDED.estimated_time_seconds, featured_rank = EXCLUDED.featured_rank, created_by = EXCLUDED.created_by, updated_at = EXCLUDED.updated_at, published_at = EXCLUDED.published_at",
     );
 
     if (challengeRows.length) {
@@ -549,16 +578,20 @@ async function main() {
         "challenge_settings",
         ["quiz_id", "start_at", "end_at"],
         challengeRows,
-        "ON CONFLICT (quiz_id) DO NOTHING",
+        "ON CONFLICT (quiz_id) DO UPDATE SET start_at = EXCLUDED.start_at, end_at = EXCLUDED.end_at",
       );
     }
+
+    await client.query(`DELETE FROM quiz_questions WHERE quiz_id = $1`, [
+      DEMO_1_CHALLENGE_QUIZ_ID,
+    ]);
 
     await insertRows(
       client,
       "quiz_questions",
       ["quiz_id", "question_id", "position", "score", "required"],
       quizQuestionRows,
-      "ON CONFLICT (quiz_id, question_id) DO NOTHING",
+      "ON CONFLICT (quiz_id, question_id) DO UPDATE SET position = EXCLUDED.position, score = EXCLUDED.score, required = EXCLUDED.required",
     );
 
     await refreshSearchVectors(client, { quizzes: true });
@@ -2364,6 +2397,175 @@ function buildDemoQuestionList({
   ensureType("short_answer");
 
   return ordered;
+}
+
+function seedDemo1Questions({
+  questionRows,
+  questionOptionRows,
+  subjectBySlug,
+  staffUserId,
+}) {
+  const requireSubject = (slug) => {
+    const subject = subjectBySlug.get(slug);
+    if (!subject?.id) {
+      throw new Error(`Seed misconfigured: subject slug "${slug}" not found.`);
+    }
+    return subject;
+  };
+
+  const addMcqSingle = ({
+    questionId,
+    subjectSlug,
+    stem,
+    options,
+    correctIndex,
+    explanation,
+    difficulty = 3,
+  }) => {
+    const subject = requireSubject(subjectSlug);
+    questionRows.push([
+      questionId,
+      subject.id,
+      difficulty,
+      "mcq_single",
+      stem,
+      explanation ?? null,
+      "active",
+      ["demo-1", subjectSlug],
+      1,
+      staffUserId,
+    ]);
+
+    const labels = ["A", "B", "C", "D"];
+    if (!Array.isArray(options) || options.length !== 4) {
+      throw new Error(
+        `Seed misconfigured: demo-1 question ${questionId} must have 4 options.`,
+      );
+    }
+    labels.forEach((label, idx) => {
+      questionOptionRows.push([
+        questionId,
+        label,
+        options[idx],
+        idx === correctIndex,
+        idx + 1,
+      ]);
+    });
+  };
+
+  const specs = [
+    {
+      questionId: DEMO_1_QUESTION_IDS[0],
+      subjectSlug: "vi",
+      stem: "Dòng nào dưới đây có các từ viết đúng chính tả?",
+      options: [
+        "Sai xót, sơ suất, sừng sộ.",
+        "Sai xót, sơ xuất, sừng sộ.",
+        "Sai sót, sơ xuất, sừng xộ.",
+        "Sai sót, sơ suất, sừng sộ.",
+      ],
+      correctIndex: 3,
+      explanation:
+        "Chỉ phương án D viết đúng chính tả: sai sót, sơ suất, sừng sộ.",
+      difficulty: 3,
+    },
+    {
+      questionId: DEMO_1_QUESTION_IDS[1],
+      subjectSlug: "vi",
+      stem: "Trong các từ sau, từ nào là từ láy?",
+      options: ["Bất ngờ", "Lấp lánh", "Chăm chỉ", "Hi vọng"],
+      correctIndex: 1,
+      explanation: "“Lấp lánh” là từ láy (lặp âm đầu và vần).",
+      difficulty: 2,
+    },
+    {
+      questionId: DEMO_1_QUESTION_IDS[2],
+      subjectSlug: "vi",
+      stem: "Dấu câu nào thường dùng để kết thúc câu hỏi?",
+      options: [".", "!", "?", ","],
+      correctIndex: 2,
+      explanation: "Câu hỏi thường kết thúc bằng dấu chấm hỏi “?”.",
+      difficulty: 1,
+    },
+    {
+      questionId: DEMO_1_QUESTION_IDS[3],
+      subjectSlug: "math",
+      stem: "Giá trị của biểu thức 3^2 + 4^2 bằng bao nhiêu?",
+      options: ["7", "12", "25", "49"],
+      correctIndex: 2,
+      explanation: "3^2 + 4^2 = 9 + 16 = 25.",
+      difficulty: 2,
+    },
+    {
+      questionId: DEMO_1_QUESTION_IDS[4],
+      subjectSlug: "math",
+      stem: "Nghiệm lớn hơn của phương trình x^2 - 5x + 6 = 0 là:",
+      options: ["1", "2", "3", "6"],
+      correctIndex: 2,
+      explanation: "x^2 - 5x + 6 = (x-2)(x-3) = 0 ⇒ nghiệm lớn hơn là 3.",
+      difficulty: 3,
+    },
+    {
+      questionId: DEMO_1_QUESTION_IDS[5],
+      subjectSlug: "math",
+      stem: "Một hình chữ nhật có chu vi 24 cm, chiều dài hơn chiều rộng 2 cm. Chiều rộng là:",
+      options: ["4 cm", "5 cm", "6 cm", "7 cm"],
+      correctIndex: 1,
+      explanation:
+        "2(L+W)=24 ⇒ L+W=12; L=W+2 ⇒ 2W+2=12 ⇒ W=5 cm.",
+      difficulty: 4,
+    },
+    {
+      questionId: DEMO_1_QUESTION_IDS[6],
+      subjectSlug: "en",
+      stem: "Choose the correct option: She ____ to school every day.",
+      options: ["go", "goes", "going", "went"],
+      correctIndex: 1,
+      explanation: "With “she” in the present simple, use “goes”.",
+      difficulty: 2,
+    },
+    {
+      questionId: DEMO_1_QUESTION_IDS[7],
+      subjectSlug: "en",
+      stem: "Choose the word closest in meaning to “rapid”.",
+      options: ["fast", "slow", "late", "weak"],
+      correctIndex: 0,
+      explanation: "“Rapid” means “fast”.",
+      difficulty: 2,
+    },
+    {
+      questionId: DEMO_1_QUESTION_IDS[8],
+      subjectSlug: "sci",
+      stem: "Trong một thí nghiệm, “biến độc lập” là gì?",
+      options: [
+        "Yếu tố được thay đổi có chủ đích để quan sát ảnh hưởng",
+        "Yếu tố được đo để ghi nhận kết quả",
+        "Tất cả các yếu tố không đổi trong thí nghiệm",
+        "Kết luận rút ra sau khi thí nghiệm kết thúc",
+      ],
+      correctIndex: 0,
+      explanation:
+        "Biến độc lập là yếu tố người làm thí nghiệm chủ động thay đổi.",
+      difficulty: 3,
+    },
+    {
+      questionId: DEMO_1_QUESTION_IDS[9],
+      subjectSlug: "sci",
+      stem: "Bộ phận nào của tế bào thực vật thực hiện quang hợp?",
+      options: ["Ti thể", "Lục lạp", "Nhân tế bào", "Không bào"],
+      correctIndex: 1,
+      explanation: "Quang hợp diễn ra trong lục lạp.",
+      difficulty: 2,
+    },
+  ];
+
+  if (specs.length !== DEMO_1_QUESTION_IDS.length) {
+    throw new Error(
+      `Seed misconfigured: DEMO_1_QUESTION_IDS must be ${specs.length} items.`,
+    );
+  }
+
+  specs.forEach(addMcqSingle);
 }
 
 main();

@@ -164,7 +164,7 @@ export function AuditLogsScreen({
 
   return (
     <StaffShell
-      pageTitle="Nhật ký hệ thống"
+      pageTitle=""
       activeNav="audit"
       userEmail={session.email}
       userName={displayName}
@@ -183,7 +183,7 @@ export function AuditLogsScreen({
       <div className={styles.page}>
         <section className={`cardBase ${styles.hero}`} aria-label="Hero">
           <div>
-            <h1 className={styles.heroTitle}>Audit log</h1>
+            <h1 className={styles.heroTitle}>Nhật ký hệ thống</h1>
             <p className={styles.heroText}>
               Theo dõi các thao tác quản trị: cập nhật người dùng, allowlist,
               xác minh email, reset mật khẩu…

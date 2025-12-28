@@ -932,7 +932,7 @@ export function QuestionTable({
                           disabled={rowBusy}
                           onClick={() => patchStatus(q.id, "archived")}
                         >
-                          {busy === "archive" ? "Đang lưu trữ..." : "Lưu trữ"}
+                          {busy === "archive" ? "Lưu trữ" : "Lưu trữ"}
                         </button>
                       )}
                       <button

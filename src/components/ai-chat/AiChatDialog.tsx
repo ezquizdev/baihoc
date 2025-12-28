@@ -401,7 +401,7 @@ export function AiChatDialog({ onClose }: Props) {
       </form>
 
       <div className={styles.hint}>
-        Nội dung do AI tạo, có thể sai. Hãy kiểm chứng với tài liệu/chuyên gia.
+        Nội dung do AI chỉ mang tính tham khảo.
       </div>
     </section>
   );

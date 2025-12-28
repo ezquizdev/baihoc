@@ -8,7 +8,7 @@ type Props = {
 };
 
 export function GoogleButton({
-  label = "Continue with Google",
+  label = "Đăng nhập bằng Google",
   onSuccess,
 }: Props) {
   const [loading, setLoading] = useState(false);

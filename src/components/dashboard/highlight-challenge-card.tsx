@@ -138,9 +138,9 @@ export function HighlightChallengeCard({
           </div>
         </div>
         <div className={styles.right}>
-          <div className={styles.question}>Chưa có highlight challenge.</div>
+          <div className={styles.question}>Chưa có challenge của ngày hôm nay.</div>
           <ul className={styles.answers} aria-label="Lựa chọn">
-            <li className={styles.pill}>Theo dõi lại sau</li>
+            <li className={styles.pill}>Quay lại sau bạn nhé!</li>
           </ul>
           <div className={styles.footer} aria-hidden="true">
             <span className={`${styles.cta} ${styles.ctaHidden}`}>
@@ -288,6 +288,9 @@ export function HighlightChallengeCard({
         open={resultOpen}
         tone={submission?.isCorrect ? "success" : "error"}
         title={submission?.isCorrect ? "Bạn trả lời đúng!" : "Chưa đúng rồi"}
+        quizTitle={active.quizTitle}
+        quizQuestionCount={active.quizQuestionCount}
+        quizEstimatedTimeSeconds={active.quizEstimatedTimeSeconds}
         questionStem={active.question.stem}
         options={active.options}
         selectedOptionIds={submission?.selectedOptionIds ?? selectedOptionIds}

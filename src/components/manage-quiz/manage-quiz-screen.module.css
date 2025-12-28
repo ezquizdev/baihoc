@@ -61,6 +61,7 @@
   cursor: pointer;
   box-shadow: 0 14px 30px rgba(40, 104, 230, 0.26);
   white-space: nowrap;
+  z-index: 1;
 }
 
 .heroCta:focus-visible {

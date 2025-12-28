@@ -52,6 +52,8 @@ export async function getStudentDashboardHighlightChallengeCard(
     status: "active",
     quizId: snapshot.quizId,
     quizTitle: snapshot.quizTitle,
+    quizQuestionCount: snapshot.quizQuestionCount,
+    quizEstimatedTimeSeconds: snapshot.quizEstimatedTimeSeconds,
     startAt: snapshot.startAt,
     endAt: snapshot.endAt,
     question: {

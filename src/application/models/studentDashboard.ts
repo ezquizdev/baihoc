@@ -7,6 +7,8 @@ export type StudentDashboardHighlightChallengeCardDto =
       status: "active";
       quizId: string;
       quizTitle: string | null;
+      quizQuestionCount: number;
+      quizEstimatedTimeSeconds: number | null;
       startAt: string;
       endAt: string;
       question: {
