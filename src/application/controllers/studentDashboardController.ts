@@ -1,8 +1,21 @@
-import type { StudentDashboardDailyChallengeCardDto } from "@/application/models/studentDashboard";
-import { getStudentDashboardDailyChallengeCard } from "@/application/services/studentDashboardService";
+import type {
+  HighlightChallengeSubmitResultDto,
+  StudentDashboardHighlightChallengeCardDto,
+} from "@/application/models/studentDashboard";
+import {
+  getStudentDashboardHighlightChallengeCard,
+  submitStudentDashboardHighlightChallengeAnswer,
+} from "@/application/services/studentDashboardService";
 
-export async function controllerGetStudentDashboardDailyChallengeCard(
+export async function controllerGetStudentDashboardHighlightChallengeCard(
   userId: string,
-): Promise<StudentDashboardDailyChallengeCardDto> {
-  return getStudentDashboardDailyChallengeCard(userId);
+): Promise<StudentDashboardHighlightChallengeCardDto> {
+  return getStudentDashboardHighlightChallengeCard(userId);
+}
+
+export async function controllerSubmitStudentDashboardHighlightChallengeAnswer(
+  userId: string,
+  input: { selectedOptionIds: unknown },
+): Promise<HighlightChallengeSubmitResultDto> {
+  return submitStudentDashboardHighlightChallengeAnswer(userId, input);
 }

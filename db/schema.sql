@@ -374,6 +374,39 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
   UNIQUE(quiz_id, position)
 );
 
+-- Dashboard highlight challenge (staff-configured, one active at a time).
+CREATE TABLE IF NOT EXISTS dashboard_highlight_challenge (
+  id integer PRIMARY KEY CHECK (id = 1),
+  quiz_id uuid,
+  question_id uuid,
+  updated_by uuid NOT NULL REFERENCES users(id),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT dashboard_highlight_challenge_quiz_question_fk
+    FOREIGN KEY (quiz_id, question_id)
+    REFERENCES quiz_questions(quiz_id, question_id)
+    ON DELETE SET NULL,
+  CONSTRAINT dashboard_highlight_challenge_quiz_question_both_or_none
+    CHECK (
+      (quiz_id IS NULL AND question_id IS NULL) OR
+      (quiz_id IS NOT NULL AND question_id IS NOT NULL)
+    )
+);
+
+-- Each user can submit once per highlighted question. This does not affect attempts/XP/IRT.
+CREATE TABLE IF NOT EXISTS dashboard_highlight_challenge_submissions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  quiz_id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  selected_option_ids uuid[] NOT NULL DEFAULT '{}',
+  is_correct boolean NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, quiz_id, question_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_dashboard_highlight_challenge_submissions_user
+ON dashboard_highlight_challenge_submissions(user_id, created_at DESC);
+
 -- Custom quizzes
 CREATE TABLE IF NOT EXISTS custom_quizzes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
