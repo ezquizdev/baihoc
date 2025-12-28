@@ -7,7 +7,16 @@ import {
   DotsThreeVertical,
   FunnelSimple,
 } from "phosphor-react";
-import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import type {
   DifficultyLevel,
   QuestionStatus,
@@ -94,6 +103,47 @@ export function QuestionTable({
     "subject" | "type" | "difficulty" | "status" | "passage" | null
   >(null);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [filterMenuStyle, setFilterMenuStyle] = useState<CSSProperties | null>(
+    null,
+  );
+  const [actionMenuStyle, setActionMenuStyle] = useState<CSSProperties | null>(
+    null,
+  );
+  const subjectFilterRef = useRef<HTMLButtonElement | null>(null);
+  const typeFilterRef = useRef<HTMLButtonElement | null>(null);
+  const passageFilterRef = useRef<HTMLButtonElement | null>(null);
+  const difficultyFilterRef = useRef<HTMLButtonElement | null>(null);
+  const statusFilterRef = useRef<HTMLButtonElement | null>(null);
+  const actionMenuRefs = useRef(new Map<string, HTMLButtonElement | null>());
+
+  const setActionMenuRef = useCallback(
+    (questionId: string) => (node: HTMLButtonElement | null) => {
+      if (node) {
+        actionMenuRefs.current.set(questionId, node);
+      } else {
+        actionMenuRefs.current.delete(questionId);
+      }
+    },
+    [],
+  );
+
+  const getDropdownAnchor = useCallback((key: typeof openDropdown) => {
+    switch (key) {
+      case "subject":
+        return subjectFilterRef.current;
+      case "type":
+        return typeFilterRef.current;
+      case "passage":
+        return passageFilterRef.current;
+      case "difficulty":
+        return difficultyFilterRef.current;
+      case "status":
+        return statusFilterRef.current;
+      default:
+        return null;
+    }
+  }, []);
 
   const totalSubjects = subjects.length;
   const totalTypes = QuestionTypeValues.length;
@@ -106,6 +156,10 @@ export function QuestionTable({
     "active",
   ] satisfies QuestionStatus[]);
   const hasPassageFilter = passageFilter !== "all";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -131,6 +185,70 @@ export function QuestionTable({
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [openDropdown, openActionMenuId]);
+
+  useLayoutEffect(() => {
+    if (!openDropdown) {
+      setFilterMenuStyle(null);
+      return;
+    }
+    const updatePosition = () => {
+      const anchor = getDropdownAnchor(openDropdown);
+      if (!anchor) return;
+      const rect = anchor.getBoundingClientRect();
+      const panelWidth = 240;
+      const padding = 12;
+      const left = Math.min(
+        Math.max(rect.right - panelWidth, padding),
+        window.innerWidth - panelWidth - padding,
+      );
+      const top = rect.bottom + 10;
+      setFilterMenuStyle({
+        position: "fixed",
+        top,
+        left,
+        zIndex: 9100,
+      });
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [getDropdownAnchor, openDropdown]);
+
+  useLayoutEffect(() => {
+    if (!openActionMenuId) {
+      setActionMenuStyle(null);
+      return;
+    }
+    const updatePosition = () => {
+      const anchor = actionMenuRefs.current.get(openActionMenuId) ?? null;
+      if (!anchor) return;
+      const rect = anchor.getBoundingClientRect();
+      const panelWidth = 180;
+      const padding = 12;
+      const left = Math.min(
+        Math.max(rect.right - panelWidth, padding),
+        window.innerWidth - panelWidth - padding,
+      );
+      const top = rect.bottom + 8;
+      setActionMenuStyle({
+        position: "fixed",
+        top,
+        left,
+        zIndex: 9100,
+      });
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [openActionMenuId]);
 
   const handleSortToggle = (key: QuestionSortBy) => {
     if (sortBy === key) {
@@ -353,83 +471,94 @@ export function QuestionTable({
                   aria-expanded={openDropdown === "subject"}
                   onClick={() => toggleDropdown("subject")}
                   disabled={isLoading}
+                  ref={subjectFilterRef}
                 >
                   <FunnelSimple
                     size={16}
                     weight={hasSubjectFilter ? "bold" : "regular"}
                   />
                 </button>
-                {openDropdown === "subject" ? (
-                  <div
-                    className={styles.menuPanel}
-                    role="dialog"
-                    aria-label="Bộ lọc môn"
-                  >
-                    <div className={styles.menuSection}>
-                      <div className={styles.menuTitle}>Sắp xếp</div>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        onClick={() => {
-                          onSortChange("subject", "asc");
-                          setOpenDropdown(null);
-                        }}
+                {mounted && openDropdown === "subject" && filterMenuStyle
+                  ? createPortal(
+                      <div
+                        className={styles.menuPanel}
+                        role="dialog"
+                        aria-label="Bộ lọc môn"
+                        style={filterMenuStyle}
+                        data-dropdown-root
                       >
-                        A → Z
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        onClick={() => {
-                          onSortChange("subject", "desc");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Z → A
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={sortBy === "updatedAt" && sortDir === "desc"}
-                        onClick={() => {
-                          onSortChange("updatedAt", "desc");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Mặc định
-                      </button>
-                    </div>
+                        <div className={styles.menuSection}>
+                          <div className={styles.menuTitle}>Sắp xếp</div>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            onClick={() => {
+                              onSortChange("subject", "asc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            A → Z
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            onClick={() => {
+                              onSortChange("subject", "desc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Z → A
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={
+                              sortBy === "updatedAt" && sortDir === "desc"
+                            }
+                            onClick={() => {
+                              onSortChange("updatedAt", "desc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Mặc định
+                          </button>
+                        </div>
 
-                    <div className={styles.menuDivider} role="presentation" />
+                        <div
+                          className={styles.menuDivider}
+                          role="presentation"
+                        />
 
-                    <div className={styles.menuSection}>
-                      <div className={styles.menuTitle}>Lọc</div>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={!hasSubjectFilter}
-                        onClick={() => onSubjectIdsChange(allSubjectIds)}
-                      >
-                        Tất cả
-                      </button>
-                      <fieldset
-                        className={styles.menuList}
-                        aria-label="Môn học"
-                      >
-                        {subjects.map((subject) => (
-                          <label key={subject.id} className={styles.ck}>
-                            <input
-                              type="checkbox"
-                              checked={subjectIds.includes(subject.id)}
-                              onChange={() => toggleSubject(subject.id)}
-                            />
-                            {subject.name}
-                          </label>
-                        ))}
-                      </fieldset>
-                    </div>
-                  </div>
-                ) : null}
+                        <div className={styles.menuSection}>
+                          <div className={styles.menuTitle}>Lọc</div>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={!hasSubjectFilter}
+                            onClick={() => onSubjectIdsChange(allSubjectIds)}
+                          >
+                            Tất cả
+                          </button>
+                          <fieldset
+                            className={styles.menuList}
+                            aria-label="Môn học"
+                          >
+                            {subjects.map((subject) => (
+                              <label key={subject.id} className={styles.ck}>
+                                <input
+                                  type="checkbox"
+                                  checked={subjectIds.includes(subject.id)}
+                                  onChange={() => toggleSubject(subject.id)}
+                                />
+                                {subject.name}
+                              </label>
+                            ))}
+                          </fieldset>
+                        </div>
+                      </div>,
+                      document.body,
+                    )
+                  : null}
               </div>
             </th>
             <th
@@ -463,80 +592,98 @@ export function QuestionTable({
                   aria-expanded={openDropdown === "type"}
                   onClick={() => toggleDropdown("type")}
                   disabled={isLoading}
+                  ref={typeFilterRef}
                 >
                   <FunnelSimple
                     size={16}
                     weight={hasTypeFilter ? "bold" : "regular"}
                   />
                 </button>
-                {openDropdown === "type" ? (
-                  <div
-                    className={styles.menuPanel}
-                    role="dialog"
-                    aria-label="Bộ lọc loại câu hỏi"
-                  >
-                    <div className={styles.menuSection}>
-                      <div className={styles.menuTitle}>Sắp xếp</div>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        onClick={() => {
-                          onSortChange("type", "asc");
-                          setOpenDropdown(null);
-                        }}
+                {mounted && openDropdown === "type" && filterMenuStyle
+                  ? createPortal(
+                      <div
+                        className={styles.menuPanel}
+                        role="dialog"
+                        aria-label="Bộ lọc loại câu hỏi"
+                        style={filterMenuStyle}
+                        data-dropdown-root
                       >
-                        A → Z
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        onClick={() => {
-                          onSortChange("type", "desc");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Z → A
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={sortBy === "updatedAt" && sortDir === "desc"}
-                        onClick={() => {
-                          onSortChange("updatedAt", "desc");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Mặc định
-                      </button>
-                    </div>
+                        <div className={styles.menuSection}>
+                          <div className={styles.menuTitle}>Sắp xếp</div>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            onClick={() => {
+                              onSortChange("type", "asc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            A → Z
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            onClick={() => {
+                              onSortChange("type", "desc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Z → A
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={
+                              sortBy === "updatedAt" && sortDir === "desc"
+                            }
+                            onClick={() => {
+                              onSortChange("updatedAt", "desc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Mặc định
+                          </button>
+                        </div>
 
-                    <div className={styles.menuDivider} role="presentation" />
+                        <div
+                          className={styles.menuDivider}
+                          role="presentation"
+                        />
 
-                    <div className={styles.menuSection}>
-                      <div className={styles.menuTitle}>Lọc</div>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={!hasTypeFilter}
-                        onClick={() => onTypesChange([...QuestionTypeValues])}
-                      >
-                        Tất cả
-                      </button>
-                      <fieldset className={styles.menuList} aria-label="Loại">
-                        {QuestionTypeValues.map((type) => (
-                          <label key={type} className={styles.ck}>
-                            <input
-                              type="checkbox"
-                              checked={types.includes(type as QuestionType)}
-                              onChange={() => toggleType(type as QuestionType)}
-                            />
-                            {questionTypeLabel(type as QuestionType)}
-                          </label>
-                        ))}
-                      </fieldset>
-                    </div>
-                  </div>
-                ) : null}
+                        <div className={styles.menuSection}>
+                          <div className={styles.menuTitle}>Lọc</div>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={!hasTypeFilter}
+                            onClick={() =>
+                              onTypesChange([...QuestionTypeValues])
+                            }
+                          >
+                            Tất cả
+                          </button>
+                          <fieldset
+                            className={styles.menuList}
+                            aria-label="Loại"
+                          >
+                            {QuestionTypeValues.map((type) => (
+                              <label key={type} className={styles.ck}>
+                                <input
+                                  type="checkbox"
+                                  checked={types.includes(type as QuestionType)}
+                                  onChange={() =>
+                                    toggleType(type as QuestionType)
+                                  }
+                                />
+                                {questionTypeLabel(type as QuestionType)}
+                              </label>
+                            ))}
+                          </fieldset>
+                        </div>
+                      </div>,
+                      document.body,
+                    )
+                  : null}
               </div>
             </th>
             <th scope="col">
@@ -551,56 +698,62 @@ export function QuestionTable({
                   aria-expanded={openDropdown === "passage"}
                   onClick={() => toggleDropdown("passage")}
                   disabled={isLoading}
+                  ref={passageFilterRef}
                 >
                   <FunnelSimple
                     size={16}
                     weight={hasPassageFilter ? "bold" : "regular"}
                   />
                 </button>
-                {openDropdown === "passage" ? (
-                  <div
-                    className={styles.menuPanel}
-                    role="dialog"
-                    aria-label="Bộ lọc ngữ liệu"
-                  >
-                    <div className={styles.menuSection}>
-                      <div className={styles.menuTitle}>Lọc</div>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={!hasPassageFilter}
-                        onClick={() => {
-                          onPassageFilterChange("all");
-                          setOpenDropdown(null);
-                        }}
+                {mounted && openDropdown === "passage" && filterMenuStyle
+                  ? createPortal(
+                      <div
+                        className={styles.menuPanel}
+                        role="dialog"
+                        aria-label="Bộ lọc ngữ liệu"
+                        style={filterMenuStyle}
+                        data-dropdown-root
                       >
-                        Tất cả
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={passageFilter === "with"}
-                        onClick={() => {
-                          onPassageFilterChange("with");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Có ngữ liệu
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={passageFilter === "without"}
-                        onClick={() => {
-                          onPassageFilterChange("without");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Không có ngữ liệu
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
+                        <div className={styles.menuSection}>
+                          <div className={styles.menuTitle}>Lọc</div>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={!hasPassageFilter}
+                            onClick={() => {
+                              onPassageFilterChange("all");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Tất cả
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={passageFilter === "with"}
+                            onClick={() => {
+                              onPassageFilterChange("with");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Có ngữ liệu
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={passageFilter === "without"}
+                            onClick={() => {
+                              onPassageFilterChange("without");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Không có ngữ liệu
+                          </button>
+                        </div>
+                      </div>,
+                      document.body,
+                    )
+                  : null}
               </div>
             </th>
             <th
@@ -634,82 +787,96 @@ export function QuestionTable({
                   aria-expanded={openDropdown === "difficulty"}
                   onClick={() => toggleDropdown("difficulty")}
                   disabled={isLoading}
+                  ref={difficultyFilterRef}
                 >
                   <FunnelSimple
                     size={16}
                     weight={hasDifficultyFilter ? "bold" : "regular"}
                   />
                 </button>
-                {openDropdown === "difficulty" ? (
-                  <div
-                    className={styles.menuPanel}
-                    role="dialog"
-                    aria-label="Bộ lọc độ khó"
-                  >
-                    <div className={styles.menuSection}>
-                      <div className={styles.menuTitle}>Sắp xếp</div>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        onClick={() => {
-                          onSortChange("difficulty", "asc");
-                          setOpenDropdown(null);
-                        }}
+                {mounted && openDropdown === "difficulty" && filterMenuStyle
+                  ? createPortal(
+                      <div
+                        className={styles.menuPanel}
+                        role="dialog"
+                        aria-label="Bộ lọc độ khó"
+                        style={filterMenuStyle}
+                        data-dropdown-root
                       >
-                        Tăng dần
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        onClick={() => {
-                          onSortChange("difficulty", "desc");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Giảm dần
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={sortBy === "updatedAt" && sortDir === "desc"}
-                        onClick={() => {
-                          onSortChange("updatedAt", "desc");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Mặc định
-                      </button>
-                    </div>
+                        <div className={styles.menuSection}>
+                          <div className={styles.menuTitle}>Sắp xếp</div>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            onClick={() => {
+                              onSortChange("difficulty", "asc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Tăng dần
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            onClick={() => {
+                              onSortChange("difficulty", "desc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Giảm dần
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={
+                              sortBy === "updatedAt" && sortDir === "desc"
+                            }
+                            onClick={() => {
+                              onSortChange("updatedAt", "desc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Mặc định
+                          </button>
+                        </div>
 
-                    <div className={styles.menuDivider} role="presentation" />
+                        <div
+                          className={styles.menuDivider}
+                          role="presentation"
+                        />
 
-                    <div className={styles.menuSection}>
-                      <div className={styles.menuTitle}>Lọc</div>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={!hasDifficultyFilter}
-                        onClick={() =>
-                          onDifficultyLevelsChange([...difficultyOptions])
-                        }
-                      >
-                        Tất cả
-                      </button>
-                      <fieldset className={styles.menuList} aria-label="Độ khó">
-                        {difficultyOptions.map((level) => (
-                          <label key={level} className={styles.ck}>
-                            <input
-                              type="checkbox"
-                              checked={difficultyLevels.includes(level)}
-                              onChange={() => toggleDifficulty(level)}
-                            />
-                            {level} ★
-                          </label>
-                        ))}
-                      </fieldset>
-                    </div>
-                  </div>
-                ) : null}
+                        <div className={styles.menuSection}>
+                          <div className={styles.menuTitle}>Lọc</div>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={!hasDifficultyFilter}
+                            onClick={() =>
+                              onDifficultyLevelsChange([...difficultyOptions])
+                            }
+                          >
+                            Tất cả
+                          </button>
+                          <fieldset
+                            className={styles.menuList}
+                            aria-label="Độ khó"
+                          >
+                            {difficultyOptions.map((level) => (
+                              <label key={level} className={styles.ck}>
+                                <input
+                                  type="checkbox"
+                                  checked={difficultyLevels.includes(level)}
+                                  onChange={() => toggleDifficulty(level)}
+                                />
+                                {level} ★
+                              </label>
+                            ))}
+                          </fieldset>
+                        </div>
+                      </div>,
+                      document.body,
+                    )
+                  : null}
               </div>
             </th>
             <th
@@ -743,89 +910,100 @@ export function QuestionTable({
                   aria-expanded={openDropdown === "status"}
                   onClick={() => toggleDropdown("status")}
                   disabled={isLoading}
+                  ref={statusFilterRef}
                 >
                   <FunnelSimple
                     size={16}
                     weight={hasStatusFilter ? "bold" : "regular"}
                   />
                 </button>
-                {openDropdown === "status" ? (
-                  <div
-                    className={styles.menuPanel}
-                    role="dialog"
-                    aria-label="Bộ lọc trạng thái"
-                  >
-                    <div className={styles.menuSection}>
-                      <div className={styles.menuTitle}>Sắp xếp</div>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        onClick={() => {
-                          onSortChange("status", "asc");
-                          setOpenDropdown(null);
-                        }}
+                {mounted && openDropdown === "status" && filterMenuStyle
+                  ? createPortal(
+                      <div
+                        className={styles.menuPanel}
+                        role="dialog"
+                        aria-label="Bộ lọc trạng thái"
+                        style={filterMenuStyle}
+                        data-dropdown-root
                       >
-                        Tăng dần
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        onClick={() => {
-                          onSortChange("status", "desc");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Giảm dần
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={sortBy === "updatedAt" && sortDir === "desc"}
-                        onClick={() => {
-                          onSortChange("updatedAt", "desc");
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        Mặc định
-                      </button>
-                    </div>
+                        <div className={styles.menuSection}>
+                          <div className={styles.menuTitle}>Sắp xếp</div>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            onClick={() => {
+                              onSortChange("status", "asc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Tăng dần
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            onClick={() => {
+                              onSortChange("status", "desc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Giảm dần
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={
+                              sortBy === "updatedAt" && sortDir === "desc"
+                            }
+                            onClick={() => {
+                              onSortChange("updatedAt", "desc");
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            Mặc định
+                          </button>
+                        </div>
 
-                    <div className={styles.menuDivider} role="presentation" />
+                        <div
+                          className={styles.menuDivider}
+                          role="presentation"
+                        />
 
-                    <div className={styles.menuSection}>
-                      <div className={styles.menuTitle}>Lọc</div>
-                      <button
-                        type="button"
-                        className={styles.menuButton}
-                        disabled={!hasStatusFilter}
-                        onClick={() => onStatusesChange(["active"])}
-                      >
-                        Mặc định (Hoạt động)
-                      </button>
-                      <fieldset
-                        className={styles.menuList}
-                        aria-label="Trạng thái"
-                      >
-                        <label className={styles.ck}>
-                          <input
-                            type="checkbox"
-                            checked={statuses.includes("active")}
-                            onChange={() => toggleStatus("active")}
-                          />
-                          Đang hoạt động
-                        </label>
-                        <label className={styles.ck}>
-                          <input
-                            type="checkbox"
-                            checked={statuses.includes("archived")}
-                            onChange={() => toggleStatus("archived")}
-                          />
-                          Đã lưu trữ
-                        </label>
-                      </fieldset>
-                    </div>
-                  </div>
-                ) : null}
+                        <div className={styles.menuSection}>
+                          <div className={styles.menuTitle}>Lọc</div>
+                          <button
+                            type="button"
+                            className={styles.menuButton}
+                            disabled={!hasStatusFilter}
+                            onClick={() => onStatusesChange(["active"])}
+                          >
+                            Mặc định (Hoạt động)
+                          </button>
+                          <fieldset
+                            className={styles.menuList}
+                            aria-label="Trạng thái"
+                          >
+                            <label className={styles.ck}>
+                              <input
+                                type="checkbox"
+                                checked={statuses.includes("active")}
+                                onChange={() => toggleStatus("active")}
+                              />
+                              Đang hoạt động
+                            </label>
+                            <label className={styles.ck}>
+                              <input
+                                type="checkbox"
+                                checked={statuses.includes("archived")}
+                                onChange={() => toggleStatus("archived")}
+                              />
+                              Đã lưu trữ
+                            </label>
+                          </fieldset>
+                        </div>
+                      </div>,
+                      document.body,
+                    )
+                  : null}
               </div>
             </th>
             <th
@@ -951,66 +1129,72 @@ export function QuestionTable({
                         aria-expanded={openActionMenuId === q.id}
                         onClick={() => toggleActionMenu(q.id)}
                         disabled={rowBusy}
+                        ref={setActionMenuRef(q.id)}
                       >
                         <DotsThreeVertical size={16} weight="bold" />
                       </button>
-                      {openActionMenuId === q.id ? (
-                        <div
-                          className={styles.actionMenuPanel}
-                          role="dialog"
-                          aria-label="Thao tác câu hỏi"
-                        >
-                          <Link
-                            className={styles.actionMenuItem}
-                            href={editHref}
-                            onClick={() => setOpenActionMenuId(null)}
-                          >
-                            Sửa
-                          </Link>
-                          {q.status === "archived" ? (
-                            <button
-                              type="button"
-                              className={styles.actionMenuItem}
-                              disabled={rowBusy}
-                              onClick={() => {
-                                setOpenActionMenuId(null);
-                                void patchStatus(q.id, "active");
-                              }}
+                      {mounted && openActionMenuId === q.id && actionMenuStyle
+                        ? createPortal(
+                            <div
+                              className={styles.actionMenuPanel}
+                              role="dialog"
+                              aria-label="Thao tác câu hỏi"
+                              style={actionMenuStyle}
+                              data-dropdown-root
                             >
-                              {busy === "restore"
-                                ? "Đang khôi phục..."
-                                : "Khôi phục"}
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className={styles.actionMenuItem}
-                              disabled={rowBusy}
-                              onClick={() => {
-                                setOpenActionMenuId(null);
-                                void patchStatus(q.id, "archived");
-                              }}
-                            >
-                              {busy === "archive" ? "Lưu trữ" : "Lưu trữ"}
-                            </button>
-                          )}
-                          <div
-                            className={styles.actionMenuDivider}
-                            role="presentation"
-                          />
-                          <button
-                            type="button"
-                            className={`${styles.actionMenuItem} ${styles.actionMenuItemDanger}`}
-                            disabled={rowBusy}
-                            onClick={() => {
-                              setOpenActionMenuId(null);
-                              requestDeleteQuestion(q.id);
-                            }}
-                          >
-                            {busy === "delete" ? "Đang xóa..." : "Xóa"}
-                          </button>
-                        </div>
-                      ) : null}
+                              <Link
+                                className={styles.actionMenuItem}
+                                href={editHref}
+                                onClick={() => setOpenActionMenuId(null)}
+                              >
+                                Sửa
+                              </Link>
+                              {q.status === "archived" ? (
+                                <button
+                                  type="button"
+                                  className={styles.actionMenuItem}
+                                  disabled={rowBusy}
+                                  onClick={() => {
+                                    setOpenActionMenuId(null);
+                                    void patchStatus(q.id, "active");
+                                  }}
+                                >
+                                  {busy === "restore"
+                                    ? "Đang khôi phục..."
+                                    : "Khôi phục"}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className={styles.actionMenuItem}
+                                  disabled={rowBusy}
+                                  onClick={() => {
+                                    setOpenActionMenuId(null);
+                                    void patchStatus(q.id, "archived");
+                                  }}
+                                >
+                                  {busy === "archive" ? "Lưu trữ" : "Lưu trữ"}
+                                </button>
+                              )}
+                              <div
+                                className={styles.actionMenuDivider}
+                                role="presentation"
+                              />
+                              <button
+                                type="button"
+                                className={`${styles.actionMenuItem} ${styles.actionMenuItemDanger}`}
+                                disabled={rowBusy}
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  requestDeleteQuestion(q.id);
+                                }}
+                              >
+                                {busy === "delete" ? "Đang xóa..." : "Xóa"}
+                              </button>
+                            </div>,
+                            document.body,
+                          )
+                        : null}
                     </div>
                     {rowError?.questionId === q.id ? (
                       <div className={styles.meta} role="alert">
