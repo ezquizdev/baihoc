@@ -1,6 +1,7 @@
 import { jwtVerify } from "jose";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/core/env";
+import { getPublicOrigin } from "@/lib/urls";
 
 const SESSION_COOKIE = "baihoc_session";
 
@@ -35,15 +36,16 @@ function handleAuthPath(
   session: Record<string, unknown> | NextResponse | null,
 ) {
   if (session instanceof NextResponse) return session;
+  const origin = getPublicOrigin(req.headers, req.nextUrl.origin);
   const profileCompleted = Boolean(session?.profileCompleted);
   if (session && profileCompleted) {
     const role = String(session.role ?? "");
     const destination = role === "staff" ? "/staff/dashboard" : "/dashboard";
-    return NextResponse.redirect(destination);
+    return NextResponse.redirect(new URL(destination, origin));
   }
   if (session && !profileCompleted) {
     if (!req.nextUrl.pathname.startsWith("/auth/profile-complete")) {
-      return NextResponse.redirect("/auth/profile-complete");
+      return NextResponse.redirect(new URL("/auth/profile-complete", origin));
     }
   }
   return NextResponse.next();

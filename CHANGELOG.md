@@ -30,8 +30,8 @@
 ### fix(auth): include user tier in session
 - Session payload now includes `tier` so UI/flows that depend on VIP access can rely on the current session (and it refreshes when tier changes).
 
-### fix(auth): avoid localhost redirects on logout
-- Logout now redirects to `/auth/login` using a relative Location header so deployments behind proxies don’t bounce users to `http://localhost:3000/...` when a session is invalidated/deactivated.
+### fix(auth): proxy-safe absolute redirects
+- Logout and auth middleware redirects now use absolute URLs derived from forwarded headers (instead of relative strings), fixing malformed redirect URL errors and preventing accidental redirects to `localhost` behind proxies.
 
 ### fix(staff-quizzes): hide custom-generated quizzes in manager
 - Staff quiz list (`/staff/quizzes`) no longer shows quizzes generated from custom quiz requests.

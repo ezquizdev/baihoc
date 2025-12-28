@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { clearSession } from "@/application/infra/auth/session";
-import { sanitizeNextPath } from "@/lib/urls";
+import { getPublicOrigin, sanitizeNextPath } from "@/lib/urls";
 
 export async function GET(request: NextRequest) {
   await clearSession();
@@ -8,9 +8,9 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const next = sanitizeNextPath(url.searchParams.get("next"));
 
-  const params = new URLSearchParams();
-  if (next) params.set("next", next);
+  const origin = getPublicOrigin(request.headers, url.origin);
+  const loginUrl = new URL("/auth/login", origin);
+  if (next) loginUrl.searchParams.set("next", next);
 
-  const location = params.size ? `/auth/login?${params.toString()}` : "/auth/login";
-  return NextResponse.redirect(location);
+  return NextResponse.redirect(loginUrl);
 }
