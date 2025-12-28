@@ -99,6 +99,7 @@ export function ProfileCompleteForm({
             setError={setError}
             showTerms={false}
             fileInputRef={fileInputRef}
+            avatarPicker="menu"
           />
           {error && (
             <p className="text-sm text-[var(--danger-text)]">{error}</p>

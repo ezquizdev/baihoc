@@ -1,5 +1,7 @@
 import Image from "next/image";
 import type { RefObject } from "react";
+import { useEffect, useRef } from "react";
+import { AvatarPlaceholderMark } from "@/components/ui/avatar-placeholder-mark";
 import { Input } from "@/components/ui/input";
 
 export type ProfileValues = {
@@ -17,6 +19,7 @@ type Props = {
   setError: (msg: string | null) => void;
   showTerms?: boolean;
   fileInputRef?: RefObject<HTMLInputElement | null>;
+  avatarPicker?: "input" | "menu";
 };
 
 export function ProfileFields({
@@ -25,7 +28,25 @@ export function ProfileFields({
   setError,
   showTerms = true,
   fileInputRef,
+  avatarPicker = "input",
 }: Props) {
+  const internalFileInputRef = useRef<HTMLInputElement | null>(null);
+  const avatarMenuRef = useRef<HTMLDetailsElement | null>(null);
+  const resolvedFileInputRef = fileInputRef ?? internalFileInputRef;
+
+  useEffect(() => {
+    if (avatarPicker !== "menu") return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const root = event.target.closest("[data-avatar-menu-root]");
+      if (!root && avatarMenuRef.current) {
+        avatarMenuRef.current.open = false;
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [avatarPicker]);
+
   const revokeObjectUrl = (url: string) => {
     if (!url) return;
     if (!url.startsWith("blob:")) return;
@@ -40,12 +61,12 @@ export function ProfileFields({
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       setError("Vui lòng chọn file ảnh hợp lệ.");
-      resetAvatar();
+      if (resolvedFileInputRef.current) resolvedFileInputRef.current.value = "";
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
       setError("Ảnh quá lớn, giới hạn 5MB.");
-      resetAvatar();
+      if (resolvedFileInputRef.current) resolvedFileInputRef.current.value = "";
       return;
     }
     setError(null);
@@ -57,9 +78,11 @@ export function ProfileFields({
   };
 
   const resetAvatar = () => {
+    if (avatarMenuRef.current) avatarMenuRef.current.open = false;
+    setError(null);
     revokeObjectUrl(values.avatarPreview);
     onChange({ avatarFile: null, avatarPreview: "" });
-    if (fileInputRef?.current) fileInputRef.current.value = "";
+    if (resolvedFileInputRef.current) resolvedFileInputRef.current.value = "";
   };
 
   return (
@@ -94,22 +117,105 @@ export function ProfileFields({
         >
           Ảnh đại diện
         </label>
-        <input
-          id="avatar-file"
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleAvatarFile(e.target.files?.[0])}
-          className="w-full rounded-[var(--radius-md)] border border-[color:var(--line)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--text)] shadow-[0_10px_20px_rgba(26,46,93,0.06)] outline-none transition focus:border-[var(--primary)] focus:shadow-[0_0_0_3px_rgba(40,104,230,0.16)]"
-        />
-        {values.avatarPreview && (
-          <Image
-            src={values.avatarPreview}
-            alt="Preview"
-            width={64}
-            height={64}
-            className="h-16 w-16 rounded-full object-cover"
-          />
+        {avatarPicker === "menu" ? (
+          <div className="flex items-center gap-4">
+            <details
+              ref={avatarMenuRef}
+              className="relative"
+              data-avatar-menu-root
+            >
+              <summary
+                className="group relative list-none cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--primary-rgb)/0.18)] [&::-webkit-details-marker]:hidden"
+                aria-label="Đổi ảnh đại diện"
+              >
+                <div
+                  className={`relative h-16 w-16 overflow-hidden rounded-full border border-[color:var(--line)] bg-[var(--card)] text-[var(--text-secondary)] shadow-[0_10px_20px_rgba(26,46,93,0.06)] ${
+                    values.avatarPreview ? "border-transparent" : ""
+                  }`}
+                  aria-hidden="true"
+                >
+                  {values.avatarPreview ? (
+                    <Image
+                      src={values.avatarPreview}
+                      alt=""
+                      fill
+                      sizes="64px"
+                      quality={80}
+                      style={{ objectFit: "cover" }}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <AvatarPlaceholderMark className="h-6 w-6" />
+                    </div>
+                  )}
+                </div>
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/45 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100">
+                  Đổi ảnh
+                </span>
+              </summary>
+              <div
+                className="absolute left-0 z-10 mt-2 w-44 overflow-hidden rounded-[var(--radius-md)] border border-[color:var(--line)] bg-[var(--card)] shadow-[0_16px_34px_rgba(26,46,93,0.14)]"
+                role="menu"
+              >
+                <button
+                  type="button"
+                  className="block w-full px-3 py-2 text-left text-sm text-[var(--text)] hover:bg-[rgba(26,46,93,0.06)]"
+                  onClick={() => {
+                    if (avatarMenuRef.current)
+                      avatarMenuRef.current.open = false;
+                    resolvedFileInputRef.current?.click();
+                  }}
+                  role="menuitem"
+                >
+                  Tải ảnh mới
+                </button>
+                <button
+                  type="button"
+                  className="block w-full px-3 py-2 text-left text-sm text-[var(--danger-text)] hover:bg-[rgba(239,68,68,0.08)] disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={resetAvatar}
+                  role="menuitem"
+                  disabled={!values.avatarPreview}
+                >
+                  Xóa ảnh
+                </button>
+              </div>
+            </details>
+
+            <div className="text-sm text-[var(--text-secondary)]">
+              Nhấn vào ảnh để tải lên hoặc xóa.
+            </div>
+
+            <input
+              id="avatar-file"
+              ref={resolvedFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleAvatarFile(e.target.files?.[0])}
+              hidden
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+          </div>
+        ) : (
+          <>
+            <input
+              id="avatar-file"
+              ref={resolvedFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleAvatarFile(e.target.files?.[0])}
+              className="w-full rounded-[var(--radius-md)] border border-[color:var(--line)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--text)] shadow-[0_10px_20px_rgba(26,46,93,0.06)] outline-none transition focus:border-[var(--primary)] focus:shadow-[0_0_0_3px_rgba(40,104,230,0.16)]"
+            />
+            {values.avatarPreview && (
+              <Image
+                src={values.avatarPreview}
+                alt="Preview"
+                width={64}
+                height={64}
+                className="h-16 w-16 rounded-full object-cover"
+              />
+            )}
+          </>
         )}
       </div>
       {showTerms && (

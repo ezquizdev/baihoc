@@ -33,6 +33,9 @@
 ### fix(auth): proxy-safe absolute redirects
 - Logout and auth middleware redirects now use absolute URLs derived from forwarded headers (instead of relative strings), fixing malformed redirect URL errors and preventing accidental redirects to `localhost` behind proxies.
 
+### fix(auth): profile-complete avatar picker
+- Profile completion now uses the same click-to-upload/delete avatar interaction as the profile page (instead of a plain file input).
+
 ### fix(staff-quizzes): hide custom-generated quizzes in manager
 - Staff quiz list (`/staff/quizzes`) no longer shows quizzes generated from custom quiz requests.
 
