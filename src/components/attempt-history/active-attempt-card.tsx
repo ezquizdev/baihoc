@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CalendarBlank, Clock, HourglassLow, PlayCircle } from "phosphor-react";
 import type { ActiveAttemptSummary } from "@/application/models/attempt";
 import { DifficultyBadge } from "@/components/quiz-catalog/quiz-badges";
 import { formatDateVi, formatRelativeTimeVi } from "@/lib/formatters";
@@ -25,9 +26,15 @@ export function ActiveAttemptCard({
 
   return (
     <article
-      className={`${styles.card} ${styles.activeCard}`.trim()}
+      className={`${styles.card} ${styles.activeCard} ${styles.cardToneRunning}`.trim()}
       aria-label={`Lượt làm đang diễn ra: ${quizTitle}`}
     >
+      <div className={styles.cardRail} aria-hidden="true">
+        <div className={styles.cardRailInner}>
+          <PlayCircle size={24} weight="bold" />
+        </div>
+      </div>
+
       <div className={styles.cardMain}>
         <div className={styles.cardHeader}>
           <h2 className={styles.cardTitle}>{quizTitle}</h2>
@@ -51,16 +58,34 @@ export function ActiveAttemptCard({
 
         <div className={styles.metaRow}>
           <span className={styles.metaItem}>
+            <span
+              className={`${styles.metaIcon} ${styles.metaIconPrimary}`}
+              aria-hidden="true"
+            >
+              <CalendarBlank size={12} weight="bold" />
+            </span>
             <span className={styles.metaKey}>Bắt đầu</span> {startedRelative} •{" "}
             {startedDate}
           </span>
           {remainingLabel ? (
             <span className={styles.metaItem}>
+              <span
+                className={`${styles.metaIcon} ${styles.metaIconAccent}`}
+                aria-hidden="true"
+              >
+                <HourglassLow size={12} weight="bold" />
+              </span>
               <span className={styles.metaKey}>Còn lại</span> {remainingLabel}
             </span>
           ) : null}
           {minutesEstimate !== null ? (
             <span className={styles.metaItem}>
+              <span
+                className={`${styles.metaIcon} ${styles.metaIconClock}`}
+                aria-hidden="true"
+              >
+                <Clock size={12} weight="bold" />
+              </span>
               <span className={styles.metaKey}>Dự kiến</span> {minutesEstimate}{" "}
               phút
             </span>

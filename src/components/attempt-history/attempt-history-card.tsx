@@ -1,6 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import {
+  CalendarCheck,
+  CheckCircle,
+  Clock,
+  Lightning,
+  Notebook,
+  Sparkle,
+  Timer,
+  TrashSimple,
+  Trophy,
+} from "phosphor-react";
 import type { CSSProperties } from "react";
 import type { AttemptHistoryItem } from "@/application/models/attempt";
 import {
@@ -30,9 +41,41 @@ export function AttemptHistoryCard({ item }: { item: AttemptHistoryItem }) {
   const subjectScores = item.subjectScores ?? [];
   const shownSubjects = subjectScores.slice(0, 4);
   const hiddenCount = Math.max(subjectScores.length - shownSubjects.length, 0);
+  const tone = !item.quizExists
+    ? "deleted"
+    : item.isChallenge
+      ? "challenge"
+      : item.customQuiz
+        ? "custom"
+        : "practice";
+  const cardToneClass =
+    tone === "deleted"
+      ? styles.cardToneDeleted
+      : tone === "challenge"
+        ? styles.cardToneChallenge
+        : tone === "custom"
+          ? styles.cardToneCustom
+          : styles.cardTonePractice;
+  const RailIcon =
+    tone === "deleted"
+      ? TrashSimple
+      : tone === "challenge"
+        ? Trophy
+        : tone === "custom"
+          ? Sparkle
+          : Notebook;
 
   return (
-    <article className={styles.card} aria-label={`Kết quả ${quizTitle}`}>
+    <article
+      className={`${styles.card} ${cardToneClass}`.trim()}
+      aria-label={`Kết quả ${quizTitle}`}
+    >
+      <div className={styles.cardRail} aria-hidden="true">
+        <div className={styles.cardRailInner}>
+          <RailIcon size={22} weight="bold" />
+        </div>
+      </div>
+
       <div className={styles.cardMain}>
         <div className={styles.cardHeader}>
           <h2 className={styles.cardTitle}>{quizTitle}</h2>
@@ -63,25 +106,55 @@ export function AttemptHistoryCard({ item }: { item: AttemptHistoryItem }) {
 
         <div className={styles.metaRow}>
           <span className={styles.metaItem}>
+            <span
+              className={`${styles.metaIcon} ${styles.metaIconPrimary}`}
+              aria-hidden="true"
+            >
+              <CalendarCheck size={12} weight="bold" />
+            </span>
             <span className={styles.metaKey}>Hoàn thành</span>{" "}
             {completedRelative} • {completedDate}
           </span>
           <span className={styles.metaItem}>
+            <span
+              className={`${styles.metaIcon} ${styles.metaIconSuccess}`}
+              aria-hidden="true"
+            >
+              <CheckCircle size={12} weight="bold" />
+            </span>
             <span className={styles.metaKey}>Đúng</span> {item.correctCount}/
             {item.totalQuestions}
           </span>
           <span className={styles.metaItem}>
+            <span
+              className={`${styles.metaIcon} ${styles.metaIconAccent}`}
+              aria-hidden="true"
+            >
+              <Lightning size={12} weight="bold" />
+            </span>
             <span className={styles.metaKey}>IRT</span>{" "}
             {formatNumberVi(item.xpEarned)}
           </span>
           {minutesEstimate !== null ? (
             <span className={styles.metaItem}>
+              <span
+                className={`${styles.metaIcon} ${styles.metaIconClock}`}
+                aria-hidden="true"
+              >
+                <Clock size={12} weight="bold" />
+              </span>
               <span className={styles.metaKey}>Dự kiến</span> {minutesEstimate}{" "}
               phút
             </span>
           ) : null}
           {durationLabel ? (
             <span className={styles.metaItem}>
+              <span
+                className={`${styles.metaIcon} ${styles.metaIconClock}`}
+                aria-hidden="true"
+              >
+                <Timer size={12} weight="bold" />
+              </span>
               <span className={styles.metaKey}>Thời gian</span> {durationLabel}
             </span>
           ) : null}
@@ -127,25 +200,26 @@ export function AttemptHistoryCard({ item }: { item: AttemptHistoryItem }) {
       </div>
 
       <aside className={styles.cardAside} aria-label="Tóm tắt">
-        <div
-          className={styles.scoreRing}
-          style={scoreStyle}
-          role="img"
-          aria-label={`Điểm ${Math.round(score)} phần trăm`}
-        >
-          <div className={styles.scoreRingInner}>
-            <span className={styles.scoreValue}>{Math.round(score)}%</span>
+        <div className={styles.asideTop}>
+          <div
+            className={styles.scoreRing}
+            style={scoreStyle}
+            role="img"
+            aria-label={`Điểm ${Math.round(score)} phần trăm`}
+          >
+            <div className={styles.scoreRingInner}>
+              <span className={styles.scoreValue}>{Math.round(score)}%</span>
+            </div>
           </div>
-        </div>
 
-        <div className={styles.asideMeta}>
-          <div>
-            <span className={styles.metaKey}>Điểm</span>{" "}
-            {item.scorePercent.toFixed(2)}%
-          </div>
-          <div>
-            <span className={styles.metaKey}>Đúng</span> {item.correctCount}/
-            {item.totalQuestions}
+          <div className={styles.asideTopMeta}>
+            <div className={styles.asideTopLabel}>Điểm</div>
+            <div className={styles.asideTopValue}>
+              {item.scorePercent.toFixed(2)}%
+            </div>
+            <div className={styles.asideTopSub}>
+              {item.correctCount}/{item.totalQuestions} đúng
+            </div>
           </div>
         </div>
 

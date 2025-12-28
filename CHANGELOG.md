@@ -52,6 +52,14 @@
 - Custom quiz generation now includes passage-linked questions as an all-or-none group (no partial passages).
 - Passage question ordering is preserved (by `question_passages.position`) and inserted contiguously in generated quizzes.
 
+### feat(results): refresh attempt results review UI
+- `/attempts/[attemptId]/results` now uses a clearer hero summary (score ring + key stats) and collapsible per-question cards for a calmer review flow.
+- Added a sticky “Đi tới câu” navigator on desktop (and a compact version on mobile) to jump between questions quickly.
+
+### feat(history): refresh attempt history card UI
+- `/dashboard/history` attempt cards now use a quiz-card-like visual language (left icon rail, toned backgrounds, hover/focus) and iconized meta chips for faster scanning.
+- Score summary column now pairs the ring with key stats to reduce dead space and improve balance.
+
 ### feat(staff): add excel-like sort/filter to question bank
 - `/staff/questions` now supports sorting/filtering via table headers (subject/type/difficulty/status) and removes the standalone filter bar.
 - `GET /api/staff/questions` now accepts `subjectIds`, `difficultyLevels`, `types`, `statuses`, `sortBy`, and `sortDir`.

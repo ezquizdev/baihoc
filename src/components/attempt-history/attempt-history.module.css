@@ -132,22 +132,99 @@
 }
 
 .card {
+  --tone-rgb: var(--primary-rgb);
+  --tone-alpha: 0.1;
+  --rail-ink: var(--primary-2);
+
   width: 100%;
   display: flex;
   gap: 16px;
   align-items: stretch;
   padding: 16px 18px;
-  background: var(--card);
+  background:
+    linear-gradient(
+      90deg,
+      rgb(var(--tone-rgb) / var(--tone-alpha)),
+      rgb(var(--card-rgb) / 0) 58%
+    ), var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  transform: translateY(0);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.card:focus-within {
+  outline: 3px solid rgba(40, 104, 230, 0.32);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 34px rgba(26, 46, 93, 0.12);
+    border-color: rgba(47, 102, 255, 0.22);
+  }
+}
+
+.cardTonePractice {
+  --tone-rgb: var(--primary-rgb);
+  --tone-alpha: 0.1;
+  --rail-ink: var(--primary-2);
+}
+
+.cardToneCustom {
+  --tone-rgb: var(--primary-rgb);
+  --tone-alpha: 0.12;
+  --rail-ink: var(--primary);
+}
+
+.cardToneChallenge {
+  --tone-rgb: var(--accent-rgb);
+  --tone-alpha: 0.22;
+  --rail-ink: var(--warning);
+}
+
+.cardToneDeleted {
+  --tone-rgb: var(--danger-rgb);
+  --tone-alpha: 0.1;
+  --rail-ink: var(--danger-ink);
+}
+
+.cardToneRunning {
+  --tone-rgb: var(--success-rgb);
+  --tone-alpha: 0.1;
+  --rail-ink: var(--success);
 }
 
 .activeCard {
-  border-color: rgba(40, 104, 230, 0.35);
+  border-color: rgb(var(--tone-rgb) / 0.35);
   box-shadow:
     var(--shadow),
-    0 14px 30px rgba(40, 104, 230, 0.12);
+    0 14px 30px rgb(var(--tone-rgb) / 0.12);
+}
+
+.cardRail {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+}
+
+.cardRailInner {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgb(var(--tone-rgb) / 0.16);
+  border: 1px solid rgb(var(--tone-rgb) / 0.26);
+  box-shadow: 0 12px 18px rgba(26, 46, 93, 0.08);
+  display: grid;
+  place-items: center;
+  color: var(--rail-ink);
 }
 
 .cardMain {
@@ -230,20 +307,61 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px 14px;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-weight: 650;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .metaItem {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(219, 231, 255, 0.9);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .metaKey {
-  font-weight: 700;
-  color: var(--text-tertiary);
+  font-weight: 900;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.metaIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: rgb(var(--primary-rgb) / 0.15);
+  border: 1px solid rgb(var(--primary-rgb) / 0.15);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--primary-2);
+}
+
+.metaIconPrimary {
+  background: rgb(var(--primary-rgb) / 0.15);
+  border-color: rgb(var(--primary-rgb) / 0.15);
+  color: var(--primary-2);
+}
+
+.metaIconSuccess {
+  background: rgb(var(--success-rgb) / 0.16);
+  border-color: rgb(var(--success-rgb) / 0.2);
+  color: var(--success);
+}
+
+.metaIconAccent {
+  background: rgb(var(--accent-rgb) / 0.26);
+  border-color: rgb(var(--accent-rgb) / 0.3);
+  color: var(--warning);
+}
+
+.metaIconClock {
+  background: rgb(var(--accent-rgb) / 0.22);
+  border-color: rgb(var(--accent-rgb) / 0.26);
+  color: var(--warning);
 }
 
 .subjectRow {
@@ -305,6 +423,13 @@
   border-left: 1px solid var(--line);
 }
 
+.asideTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .scoreRing {
   --score: 0%;
   width: 74px;
@@ -317,7 +442,6 @@
   display: grid;
   place-items: center;
   box-shadow: 0 12px 22px rgba(40, 104, 230, 0.18);
-  align-self: flex-end;
 }
 
 .scoreRingInner {
@@ -334,6 +458,36 @@
   font-weight: 950;
   letter-spacing: -0.03em;
   color: var(--text-strong);
+}
+
+.asideTopMeta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+.asideTopLabel {
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.asideTopValue {
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+}
+
+.asideTopSub {
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--muted);
 }
 
 .asideMeta {
@@ -451,6 +605,12 @@
     flex-direction: column;
   }
 
+  .cardRailInner {
+    width: 100%;
+    height: 46px;
+    border-radius: 14px;
+  }
+
   .cardAside {
     border-left: none;
     padding-left: 0;
@@ -459,7 +619,8 @@
     flex-basis: auto;
   }
 
-  .scoreRing {
-    align-self: flex-start;
+  .asideTopMeta {
+    align-items: flex-start;
+    text-align: left;
   }
 }
