@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { CaretDown, CaretUp, FunnelSimple } from "phosphor-react";
+import {
+  CaretDown,
+  CaretUp,
+  DotsThreeVertical,
+  FunnelSimple,
+} from "phosphor-react";
 import { useEffect, useMemo, useState } from "react";
 import type {
   DifficultyLevel,
@@ -31,6 +36,8 @@ type QuestionTableProps = {
   onDifficultyLevelsChange: (difficultyLevels: DifficultyLevel[]) => void;
   types: QuestionType[];
   onTypesChange: (types: QuestionType[]) => void;
+  passageFilter: "all" | "with" | "without";
+  onPassageFilterChange: (value: "all" | "with" | "without") => void;
   statuses: QuestionStatus[];
   onStatusesChange: (statuses: QuestionStatus[]) => void;
   sortBy: QuestionSortBy;
@@ -54,6 +61,8 @@ export function QuestionTable({
   onDifficultyLevelsChange,
   types,
   onTypesChange,
+  passageFilter,
+  onPassageFilterChange,
   statuses,
   onStatusesChange,
   sortBy,
@@ -82,8 +91,9 @@ export function QuestionTable({
     null,
   );
   const [openDropdown, setOpenDropdown] = useState<
-    "subject" | "type" | "difficulty" | "status" | null
+    "subject" | "type" | "difficulty" | "status" | "passage" | null
   >(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
   const totalSubjects = subjects.length;
   const totalTypes = QuestionTypeValues.length;
@@ -95,25 +105,32 @@ export function QuestionTable({
   const hasStatusFilter = !setsEqual(statuses, [
     "active",
   ] satisfies QuestionStatus[]);
+  const hasPassageFilter = passageFilter !== "all";
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (!(event.target instanceof Element)) return;
       const root = event.target.closest("[data-dropdown-root]");
-      if (!root) setOpenDropdown(null);
+      if (!root) {
+        setOpenDropdown(null);
+        setOpenActionMenuId(null);
+      }
     };
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
   useEffect(() => {
-    if (!openDropdown) return;
+    if (!openDropdown && !openActionMenuId) return;
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpenDropdown(null);
+      if (event.key === "Escape") {
+        setOpenDropdown(null);
+        setOpenActionMenuId(null);
+      }
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [openDropdown]);
+  }, [openDropdown, openActionMenuId]);
 
   const handleSortToggle = (key: QuestionSortBy) => {
     if (sortBy === key) {
@@ -124,7 +141,13 @@ export function QuestionTable({
   };
 
   const toggleDropdown = (key: typeof openDropdown) => {
+    setOpenActionMenuId(null);
     setOpenDropdown((prev) => (prev === key ? null : key));
+  };
+
+  const toggleActionMenu = (questionId: string) => {
+    setOpenDropdown(null);
+    setOpenActionMenuId((prev) => (prev === questionId ? null : questionId));
   };
 
   const patchStatus = async (
@@ -320,20 +343,6 @@ export function QuestionTable({
                   title="Sắp xếp theo môn"
                 >
                   <span>Môn</span>
-                  <span className={styles.sortIcon} aria-hidden="true">
-                    {sortBy === "subject" ? (
-                      sortDir === "asc" ? (
-                        <CaretUp weight="bold" size={16} />
-                      ) : (
-                        <CaretDown weight="bold" size={16} />
-                      )
-                    ) : (
-                      <>
-                        <CaretUp size={12} />
-                        <CaretDown size={12} />
-                      </>
-                    )}
-                  </span>
                 </button>
                 <button
                   type="button"
@@ -444,20 +453,6 @@ export function QuestionTable({
                   title="Sắp xếp theo loại"
                 >
                   <span>Loại</span>
-                  <span className={styles.sortIcon} aria-hidden="true">
-                    {sortBy === "type" ? (
-                      sortDir === "asc" ? (
-                        <CaretUp weight="bold" size={16} />
-                      ) : (
-                        <CaretDown weight="bold" size={16} />
-                      )
-                    ) : (
-                      <>
-                        <CaretUp size={12} />
-                        <CaretDown size={12} />
-                      </>
-                    )}
-                  </span>
                 </button>
                 <button
                   type="button"
@@ -544,6 +539,70 @@ export function QuestionTable({
                 ) : null}
               </div>
             </th>
+            <th scope="col">
+              <div className={styles.th} data-dropdown-root>
+                <span className={styles.thLabel}>Đoạn văn</span>
+                <button
+                  type="button"
+                  className={`${styles.filterButton} ${
+                    hasPassageFilter ? styles.filterButtonActive : ""
+                  }`}
+                  aria-label="Lọc theo đoạn văn"
+                  aria-expanded={openDropdown === "passage"}
+                  onClick={() => toggleDropdown("passage")}
+                  disabled={isLoading}
+                >
+                  <FunnelSimple
+                    size={16}
+                    weight={hasPassageFilter ? "bold" : "regular"}
+                  />
+                </button>
+                {openDropdown === "passage" ? (
+                  <div
+                    className={styles.menuPanel}
+                    role="dialog"
+                    aria-label="Bộ lọc đoạn văn"
+                  >
+                    <div className={styles.menuSection}>
+                      <div className={styles.menuTitle}>Lọc</div>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={!hasPassageFilter}
+                        onClick={() => {
+                          onPassageFilterChange("all");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Tất cả
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={passageFilter === "with"}
+                        onClick={() => {
+                          onPassageFilterChange("with");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Có đoạn văn
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={passageFilter === "without"}
+                        onClick={() => {
+                          onPassageFilterChange("without");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Không có đoạn văn
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </th>
             <th
               scope="col"
               aria-sort={
@@ -565,20 +624,6 @@ export function QuestionTable({
                   title="Sắp xếp theo độ khó"
                 >
                   <span>Độ khó</span>
-                  <span className={styles.sortIcon} aria-hidden="true">
-                    {sortBy === "difficulty" ? (
-                      sortDir === "asc" ? (
-                        <CaretUp weight="bold" size={16} />
-                      ) : (
-                        <CaretDown weight="bold" size={16} />
-                      )
-                    ) : (
-                      <>
-                        <CaretUp size={12} />
-                        <CaretDown size={12} />
-                      </>
-                    )}
-                  </span>
                 </button>
                 <button
                   type="button"
@@ -688,20 +733,6 @@ export function QuestionTable({
                   title="Sắp xếp theo trạng thái"
                 >
                   <span>Trạng thái</span>
-                  <span className={styles.sortIcon} aria-hidden="true">
-                    {sortBy === "status" ? (
-                      sortDir === "asc" ? (
-                        <CaretUp weight="bold" size={16} />
-                      ) : (
-                        <CaretDown weight="bold" size={16} />
-                      )
-                    ) : (
-                      <>
-                        <CaretUp size={12} />
-                        <CaretDown size={12} />
-                      </>
-                    )}
-                  </span>
                 </button>
                 <button
                   type="button"
@@ -839,7 +870,7 @@ export function QuestionTable({
         <tbody>
           {error ? (
             <tr>
-              <td colSpan={7}>
+              <td colSpan={8}>
                 <div className={styles.stateCard} role="alert">
                   {error}
                   <div>
@@ -856,7 +887,7 @@ export function QuestionTable({
             </tr>
           ) : !items.length ? (
             <tr>
-              <td colSpan={7}>
+              <td colSpan={8}>
                 <div className={styles.stateCard} aria-live="polite">
                   {isLoading
                     ? "Đang tải câu hỏi..."
@@ -886,6 +917,15 @@ export function QuestionTable({
                     </span>
                   </td>
                   <td>
+                    <span
+                      className={`${styles.pill} ${
+                        q.passageId ? styles.pillBlue : styles.pillGray
+                      }`}
+                    >
+                      {q.passageId ? "Có" : "Không"}
+                    </span>
+                  </td>
+                  <td>
                     <span className={`${styles.pill} ${styles.pillBlue}`}>
                       {q.defaultDifficulty} ★
                     </span>
@@ -903,48 +943,74 @@ export function QuestionTable({
                   </td>
                   <td>{dateLabel}</td>
                   <td>
-                    <div className={styles.actions}>
-                      <Link
-                        className={`${styles.linkBtn} ${styles.linkBtnBlue}`}
-                        href={editHref}
-                      >
-                        Sửa
-                      </Link>
-                      {q.status === "archived" ? (
-                        <button
-                          type="button"
-                          className={`${styles.linkBtn} ${
-                            rowBusy ? styles.linkBtnDisabled : ""
-                          }`}
-                          disabled={rowBusy}
-                          onClick={() => patchStatus(q.id, "active")}
-                        >
-                          {busy === "restore"
-                            ? "Đang khôi phục..."
-                            : "Khôi phục"}
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className={`${styles.linkBtn} ${
-                            rowBusy ? styles.linkBtnDisabled : ""
-                          }`}
-                          disabled={rowBusy}
-                          onClick={() => patchStatus(q.id, "archived")}
-                        >
-                          {busy === "archive" ? "Lưu trữ" : "Lưu trữ"}
-                        </button>
-                      )}
+                    <div className={styles.actionMenu} data-dropdown-root>
                       <button
                         type="button"
-                        className={`${styles.linkBtn} ${styles.linkBtnRed} ${
-                          rowBusy ? styles.linkBtnDisabled : ""
-                        }`}
+                        className={styles.actionMenuTrigger}
+                        aria-label="Mở menu thao tác"
+                        aria-expanded={openActionMenuId === q.id}
+                        onClick={() => toggleActionMenu(q.id)}
                         disabled={rowBusy}
-                        onClick={() => requestDeleteQuestion(q.id)}
                       >
-                        {busy === "delete" ? "Đang xóa..." : "Xóa"}
+                        <DotsThreeVertical size={16} weight="bold" />
                       </button>
+                      {openActionMenuId === q.id ? (
+                        <div
+                          className={styles.actionMenuPanel}
+                          role="dialog"
+                          aria-label="Thao tác câu hỏi"
+                        >
+                          <Link
+                            className={styles.actionMenuItem}
+                            href={editHref}
+                            onClick={() => setOpenActionMenuId(null)}
+                          >
+                            Sửa
+                          </Link>
+                          {q.status === "archived" ? (
+                            <button
+                              type="button"
+                              className={styles.actionMenuItem}
+                              disabled={rowBusy}
+                              onClick={() => {
+                                setOpenActionMenuId(null);
+                                void patchStatus(q.id, "active");
+                              }}
+                            >
+                              {busy === "restore"
+                                ? "Đang khôi phục..."
+                                : "Khôi phục"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className={styles.actionMenuItem}
+                              disabled={rowBusy}
+                              onClick={() => {
+                                setOpenActionMenuId(null);
+                                void patchStatus(q.id, "archived");
+                              }}
+                            >
+                              {busy === "archive" ? "Lưu trữ" : "Lưu trữ"}
+                            </button>
+                          )}
+                          <div
+                            className={styles.actionMenuDivider}
+                            role="presentation"
+                          />
+                          <button
+                            type="button"
+                            className={`${styles.actionMenuItem} ${styles.actionMenuItemDanger}`}
+                            disabled={rowBusy}
+                            onClick={() => {
+                              setOpenActionMenuId(null);
+                              requestDeleteQuestion(q.id);
+                            }}
+                          >
+                            {busy === "delete" ? "Đang xóa..." : "Xóa"}
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                     {rowError?.questionId === q.id ? (
                       <div className={styles.meta} role="alert">

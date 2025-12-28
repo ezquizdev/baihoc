@@ -11,7 +11,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 780px;
+  min-width: 860px;
 }
 
 .table thead th {
@@ -34,6 +34,11 @@
   gap: 8px;
   width: 100%;
   position: relative;
+}
+
+.thLabel {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .sortButton {
@@ -238,6 +243,86 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.actionMenu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.actionMenuTrigger {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: var(--card);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-strong);
+}
+
+.actionMenuTrigger:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+}
+
+.actionMenuTrigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.actionMenuPanel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 180px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 18px 40px rgba(17, 24, 39, 0.12);
+  display: grid;
+  gap: 6px;
+  z-index: 20;
+}
+
+.actionMenuItem {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: var(--card);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-strong);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.actionMenuItem:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+}
+
+.actionMenuItem:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.actionMenuDivider {
+  height: 1px;
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.actionMenuItemDanger {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--danger-text);
 }
 
 .linkBtn {

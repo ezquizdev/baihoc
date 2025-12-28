@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
   parseCommaIds,
+  parseBoolean,
   parseDifficulty,
   parseEnumArray,
   parseNumberArray,
@@ -106,12 +107,14 @@ export async function GET(request: NextRequest) {
     );
     if (!statuses?.length && legacyStatus) statuses = [legacyStatus];
     if (!statuses?.length) statuses = ["active"];
+    const hasPassage = parseBoolean(searchParams, "hasPassage");
 
     const result = await controllerListQuestions({
       subjectIds,
       difficultyLevels,
       types,
       statuses,
+      hasPassage,
       search: searchParams.get("search") ?? undefined,
       sortBy,
       sortDir,

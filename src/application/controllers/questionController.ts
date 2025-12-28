@@ -113,6 +113,7 @@ export async function controllerListQuestions(params: {
   difficultyLevels?: DifficultyLevel[];
   types?: QuestionType[];
   statuses?: QuestionStatus[];
+  hasPassage?: boolean;
   search?: string;
   sortBy?: QuestionSortBy;
   sortDir?: QuestionSortDir;

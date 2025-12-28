@@ -116,6 +116,14 @@ export function parseNumber(searchParams: URLSearchParams, key: string) {
   return parseFiniteNumber(searchParams.get(key));
 }
 
+export function parseBoolean(searchParams: URLSearchParams, key: string) {
+  const raw = searchParams.get(key);
+  if (!raw) return undefined;
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  return undefined;
+}
+
 function parseEnum<T extends string>(
   value: string | null,
   allowed: readonly T[],

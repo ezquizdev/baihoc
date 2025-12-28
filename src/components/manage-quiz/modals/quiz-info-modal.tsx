@@ -390,12 +390,12 @@ export function QuizInfoModal({
                         disabled={disabled}
                       />
                     </div>
-                    <div className={styles.formRow}>
+                    {/* <div className={styles.formRow}>
                       <div className={styles.label}>Thời gian:</div>
                       <span className={styles.hintInline}>
                         Dùng theo “Thời gian làm” của quiz.
                       </span>
-                    </div>
+                    </div> */}
                   </>
                 ) : null}
               </div>

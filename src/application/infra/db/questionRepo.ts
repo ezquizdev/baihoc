@@ -364,6 +364,7 @@ export async function listQuestions(params: {
   difficultyLevels?: Question["defaultDifficulty"][];
   types?: QuestionType[];
   statuses?: QuestionStatus[];
+  hasPassage?: boolean;
   search?: string;
   sortBy?: QuestionSortBy;
   sortDir?: QuestionSortDir;
@@ -385,6 +386,8 @@ export async function listQuestions(params: {
     add("q.type = ANY($idx::question_type[])", params.types);
   if (params.statuses?.length)
     add("q.status = ANY($idx::question_status[])", params.statuses);
+  if (params.hasPassage === true) where.push("qp.passage_id IS NOT NULL");
+  if (params.hasPassage === false) where.push("qp.passage_id IS NULL");
   if (params.search) {
     add("(stem ILIKE $idx OR explanation ILIKE $idx)", `%${params.search}%`);
   }
@@ -433,6 +436,7 @@ export async function countQuestions(params: {
   difficultyLevels?: Question["defaultDifficulty"][];
   types?: QuestionType[];
   statuses?: QuestionStatus[];
+  hasPassage?: boolean;
   search?: string;
 }): Promise<number> {
   const where: string[] = [];
@@ -450,6 +454,16 @@ export async function countQuestions(params: {
     add("type = ANY($idx::question_type[])", params.types);
   if (params.statuses?.length)
     add("status = ANY($idx::question_status[])", params.statuses);
+  if (params.hasPassage === true) {
+    where.push(
+      "EXISTS (SELECT 1 FROM question_passages qp WHERE qp.question_id = questions.id)",
+    );
+  }
+  if (params.hasPassage === false) {
+    where.push(
+      "NOT EXISTS (SELECT 1 FROM question_passages qp WHERE qp.question_id = questions.id)",
+    );
+  }
   if (params.search) {
     add("(stem ILIKE $idx OR explanation ILIKE $idx)", `%${params.search}%`);
   }

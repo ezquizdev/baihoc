@@ -45,6 +45,9 @@ export function ManageQuestionsScreen({
   const [types, setTypes] = useState<Question["type"][]>(() => [
     ...QuestionTypeValues,
   ]);
+  const [passageFilter, setPassageFilter] = useState<
+    "all" | "with" | "without"
+  >("all");
   const [statuses, setStatuses] = useState<Question["status"][]>(["active"]);
   const [sortBy, setSortBy] = useState<QuestionSortBy>("updatedAt");
   const [sortDir, setSortDir] = useState<QuestionSortDir>("desc");
@@ -86,6 +89,8 @@ export function ManageQuestionsScreen({
           params.set("difficultyLevels", difficultyLevels.join(","));
         if (types.length !== QuestionTypeValues.length)
           params.set("types", types.join(","));
+        if (passageFilter === "with") params.set("hasPassage", "true");
+        if (passageFilter === "without") params.set("hasPassage", "false");
         if (statuses.length) params.set("statuses", statuses.join(","));
         params.set("sortBy", sortBy);
         params.set("sortDir", sortDir);
@@ -119,6 +124,7 @@ export function ManageQuestionsScreen({
     difficultyLevels,
     page,
     pageSize,
+    passageFilter,
     refreshKey,
     sortBy,
     sortDir,
@@ -198,6 +204,11 @@ export function ManageQuestionsScreen({
             types={types}
             onTypesChange={(next) => {
               setTypes(next);
+              setPage(1);
+            }}
+            passageFilter={passageFilter}
+            onPassageFilterChange={(next) => {
+              setPassageFilter(next);
               setPage(1);
             }}
             statuses={statuses}

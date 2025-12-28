@@ -189,6 +189,7 @@ export async function listQuestions(params: {
   difficultyLevels?: DifficultyLevel[];
   types?: QuestionType[];
   statuses?: QuestionStatus[];
+  hasPassage?: boolean;
   search?: string;
   sortBy?: QuestionSortBy;
   sortDir?: QuestionSortDir;
@@ -203,6 +204,7 @@ export async function listQuestions(params: {
       difficultyLevels: params.difficultyLevels,
       types: params.types,
       statuses: params.statuses,
+      hasPassage: params.hasPassage,
       search: search || undefined,
     }),
   ]);
