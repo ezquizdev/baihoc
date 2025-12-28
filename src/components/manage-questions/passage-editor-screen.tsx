@@ -65,6 +65,7 @@ export function PassageEditorScreen({
   const router = useRouter();
   const searchParams = useSearchParams();
   const displayName = session.fullName ?? session.email.split("@")[0];
+  const createMode = searchParams.get("create") === "1";
 
   const [passage, setPassage] = useState<Passage>(initialDetail.passage);
   const [questions, setQuestions] = useState<Question[]>(
@@ -130,6 +131,11 @@ export function PassageEditorScreen({
     setQuestions(payload.questions ?? []);
     return { found: true };
   };
+
+  useEffect(() => {
+    if (!createMode) return;
+    setCreateOpen(true);
+  }, [createMode]);
 
   const subjectMap = useMemo(() => {
     const map = new Map<string, Subject>();
@@ -240,8 +246,7 @@ export function PassageEditorScreen({
       if (detailRes.ok) {
         const payload = (await detailRes.json()) as Partial<PassageDetail> | null;
         const questionCount = payload?.questions?.length ?? 0;
-        const content = payload?.passage?.content ?? "";
-        if (questionCount === 0 && !content.trim()) {
+        if (questionCount === 0) {
           await fetch(`/api/staff/passages/${passageId}`, { method: "DELETE" });
         }
       }
@@ -250,6 +255,23 @@ export function PassageEditorScreen({
     }
 
     router.push(`/staff/questions/${convert.questionId}`);
+    router.refresh();
+  };
+
+  const cancelCreate = async () => {
+    try {
+      const detailRes = await fetch(`/api/staff/passages/${passageId}`);
+      if (detailRes.ok) {
+        const payload = (await detailRes.json()) as Partial<PassageDetail> | null;
+        const questionCount = payload?.questions?.length ?? 0;
+        if (questionCount === 0) {
+          await fetch(`/api/staff/passages/${passageId}`, { method: "DELETE" });
+        }
+      }
+    } catch {
+      // ignore
+    }
+    router.push("/staff/questions/new");
     router.refresh();
   };
 
@@ -281,6 +303,12 @@ export function PassageEditorScreen({
       }
     } catch {
       router.refresh();
+    }
+
+    if (createMode) {
+      router.replace(
+        `/staff/questions/passages/${passageId}?questionId=${detail.question.id}`,
+      );
     }
   };
 
@@ -389,6 +417,15 @@ export function PassageEditorScreen({
             >
               Quay lại
             </Link>
+            {createMode ? (
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGray}`}
+                onClick={() => void cancelCreate()}
+              >
+                Hủy tạo passage
+              </button>
+            ) : null}
             <button
               type="button"
               className={`${styles.btn} ${styles.btnRed} ${
