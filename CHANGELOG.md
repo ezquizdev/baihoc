@@ -27,7 +27,7 @@
 
 ### refactor(leaderboard): unify staff/student leaderboard route
 - New canonical route: `/leaderboard` renders student vs staff view based on session role.
-- Legacy routes `/dashboard/leaderboard` and `/staff/leaderboard` now redirect to `/leaderboard`.
+- Removed legacy routes `/dashboard/leaderboard` and `/staff/leaderboard` (no backward compat).
 
 ## 2025-12-27
 
