@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-12-28
+
+### fix(leaderboard): cap searched user rank totals
+- Leaderboard search now uses the same 300-cap + ranking logic as the main leaderboard table.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger

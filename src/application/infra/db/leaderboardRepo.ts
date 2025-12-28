@@ -375,25 +375,39 @@ export async function getLeaderboardTableEntryByUserId(params: {
   const compareOp = params.sortDir === "asc" ? "<" : ">";
 
   const res = await query<LeaderboardTableRow>(
-    `SELECT u.id AS user_id,
-            u.full_name,
-            u.avatar_url,
-            u.xp_vi,
-            u.xp_en,
-            u.xp_math,
-            u.xp_sci,
-            u.xp_main_total AS xp_overall,
-            1 + (
-              SELECT COUNT(*)::int
-              FROM users u2
-              WHERE u2.role = 'student'
-                AND u2.status = 'active'
-                AND u2.${sortColumn} ${compareOp} u.${sortColumn}
-            ) AS rank
-     FROM users u
-     WHERE u.id = $1
-       AND u.role = 'student'
-       AND u.status = 'active'`,
+    `WITH scores AS (
+        SELECT u.id AS user_id,
+               u.full_name,
+               u.avatar_url,
+               LEAST(u.xp_vi, 300)::int AS xp_vi,
+               LEAST(u.xp_en, 300)::int AS xp_en,
+               LEAST(u.xp_math, 300)::int AS xp_math,
+               LEAST(u.xp_sci, 300)::int AS xp_sci,
+               (
+                 LEAST(u.xp_vi, 300)
+                 + LEAST(u.xp_en, 300)
+                 + LEAST(u.xp_math, 300)
+                 + LEAST(u.xp_sci, 300)
+               )::int AS xp_overall
+        FROM users u
+        WHERE u.role = 'student'
+          AND u.status = 'active'
+      )
+      SELECT s.user_id,
+             s.full_name,
+             s.avatar_url,
+             s.xp_vi,
+             s.xp_en,
+             s.xp_math,
+             s.xp_sci,
+             s.xp_overall,
+             1 + (
+               SELECT COUNT(*)::int
+               FROM scores s2
+               WHERE s2.${sortColumn} ${compareOp} s.${sortColumn}
+             ) AS rank
+      FROM scores s
+      WHERE s.user_id = $1`,
     [params.userId],
   );
 
