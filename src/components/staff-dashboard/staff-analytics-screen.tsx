@@ -19,6 +19,57 @@ const subjectStrokeBySlug: Record<string, string> = {
   sci: "var(--subject-sci)",
 };
 
+function TrophyIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M8 4h8v3h3v2c0 2.2-1.8 4-4 4h-.7A5.5 5.5 0 0 1 13 15.2V19h3v2H8v-2h3v-3.8A5.5 5.5 0 0 1 9.7 13H9c-2.2 0-4-1.8-4-4V7h3V4zm-1 5c0 1.1.9 2 2 2h.5V9H7zm12 0v2h-.5a2 2 0 0 1-2-2h2.5z" />
+    </svg>
+  );
+}
+
+function BookIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M6 3h6a3 3 0 0 1 3 3v15a2 2 0 0 0-2-2H6a3 3 0 0 0-3 3V6a3 3 0 0 1 3-3zm12 0h-3a4 4 0 0 0-4 4v14h7a2 2 0 0 1 2 2V5a2 2 0 0 0-2-2z" />
+    </svg>
+  );
+}
+
+function FastForwardIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <polygon points="4,6 12,12 4,18" />
+      <polygon points="12,6 20,12 12,18" />
+    </svg>
+  );
+}
+
+function topicBadgeVariant(slug: string) {
+  if (slug === "vi") return styles.topicSubjectVi;
+  if (slug === "en") return styles.topicSubjectEn;
+  if (slug === "math") return styles.topicSubjectMath;
+  if (slug === "sci") return styles.topicSubjectSci;
+  return styles.topicSubjectMixed;
+}
+
 async function ChartsCard({ windowDays }: { windowDays: number }) {
   const result = await controllerGetStaffDashboardCharts({ windowDays }).catch(
     () =>
@@ -31,50 +82,65 @@ async function ChartsCard({ windowDays }: { windowDays: number }) {
   if (result.status === "error") {
     return (
       <section
-        className={styles.chartsCard}
+        className={`${styles.chartsCard} ${styles.analyticsChartsCard}`}
         aria-label={`Biểu đồ (${windowDays} ngày gần nhất)`}
       >
-        <ul className={styles.legend} aria-label="Chú giải">
-          <li className={styles.legendItem}>
+        <ul
+          className={`${styles.legend} ${styles.analyticsLegend}`}
+          aria-label="Chú giải"
+        >
+          <li className={`${styles.legendItem} ${styles.analyticsLegendItem}`}>
             <span
-              className={`${styles.legendDot} ${styles.legendVi}`}
+              className={`${styles.legendDot} ${styles.analyticsLegendDot} ${styles.legendVi}`}
               aria-hidden="true"
             />
             Tiếng Việt
           </li>
-          <li className={styles.legendItem}>
+          <li className={`${styles.legendItem} ${styles.analyticsLegendItem}`}>
             <span
-              className={`${styles.legendDot} ${styles.legendEn}`}
+              className={`${styles.legendDot} ${styles.analyticsLegendDot} ${styles.legendEn}`}
               aria-hidden="true"
             />
             Tiếng Anh
           </li>
-          <li className={styles.legendItem}>
+          <li className={`${styles.legendItem} ${styles.analyticsLegendItem}`}>
             <span
-              className={`${styles.legendDot} ${styles.legendMath}`}
+              className={`${styles.legendDot} ${styles.analyticsLegendDot} ${styles.legendMath}`}
               aria-hidden="true"
             />
             Toán học
           </li>
-          <li className={styles.legendItem}>
+          <li className={`${styles.legendItem} ${styles.analyticsLegendItem}`}>
             <span
-              className={`${styles.legendDot} ${styles.legendSci}`}
+              className={`${styles.legendDot} ${styles.analyticsLegendDot} ${styles.legendSci}`}
               aria-hidden="true"
             />
             Tư duy Khoa học
           </li>
         </ul>
 
-        <div className={styles.chartsGrid}>
-          <div className={styles.chartPanel}>
-            <div className={styles.chartTitle}>Tần suất làm bài</div>
-            <div className={styles.chartFrame}>
+        <div className={`${styles.chartsGrid} ${styles.analyticsChartsGrid}`}>
+          <div className={`${styles.chartPanel} ${styles.analyticsChartPanel}`}>
+            <div
+              className={`${styles.chartTitle} ${styles.analyticsChartTitle}`}
+            >
+              Tần suất làm bài
+            </div>
+            <div
+              className={`${styles.chartFrame} ${styles.analyticsChartFrame}`}
+            >
               <div className={styles.chartError}>Không tải được biểu đồ</div>
             </div>
           </div>
-          <div className={styles.chartPanel}>
-            <div className={styles.chartTitle}>Tỉ lệ đúng</div>
-            <div className={styles.chartFrame}>
+          <div className={`${styles.chartPanel} ${styles.analyticsChartPanel}`}>
+            <div
+              className={`${styles.chartTitle} ${styles.analyticsChartTitle}`}
+            >
+              Tỉ lệ đúng
+            </div>
+            <div
+              className={`${styles.chartFrame} ${styles.analyticsChartFrame}`}
+            >
               <div className={styles.chartError}>Không tải được biểu đồ</div>
             </div>
           </div>
@@ -99,44 +165,49 @@ async function ChartsCard({ windowDays }: { windowDays: number }) {
 
   return (
     <section
-      className={styles.chartsCard}
+      className={`${styles.chartsCard} ${styles.analyticsChartsCard}`}
       aria-label={`Biểu đồ (${charts.windowDays} ngày gần nhất)`}
     >
-      <ul className={styles.legend} aria-label="Chú giải">
-        <li className={styles.legendItem}>
+      <ul
+        className={`${styles.legend} ${styles.analyticsLegend}`}
+        aria-label="Chú giải"
+      >
+        <li className={`${styles.legendItem} ${styles.analyticsLegendItem}`}>
           <span
-            className={`${styles.legendDot} ${styles.legendVi}`}
+            className={`${styles.legendDot} ${styles.analyticsLegendDot} ${styles.legendVi}`}
             aria-hidden="true"
           />
           Tiếng Việt
         </li>
-        <li className={styles.legendItem}>
+        <li className={`${styles.legendItem} ${styles.analyticsLegendItem}`}>
           <span
-            className={`${styles.legendDot} ${styles.legendEn}`}
+            className={`${styles.legendDot} ${styles.analyticsLegendDot} ${styles.legendEn}`}
             aria-hidden="true"
           />
           Tiếng Anh
         </li>
-        <li className={styles.legendItem}>
+        <li className={`${styles.legendItem} ${styles.analyticsLegendItem}`}>
           <span
-            className={`${styles.legendDot} ${styles.legendMath}`}
+            className={`${styles.legendDot} ${styles.analyticsLegendDot} ${styles.legendMath}`}
             aria-hidden="true"
           />
           Toán học
         </li>
-        <li className={styles.legendItem}>
+        <li className={`${styles.legendItem} ${styles.analyticsLegendItem}`}>
           <span
-            className={`${styles.legendDot} ${styles.legendSci}`}
+            className={`${styles.legendDot} ${styles.analyticsLegendDot} ${styles.legendSci}`}
             aria-hidden="true"
           />
           Tư duy Khoa học
         </li>
       </ul>
 
-      <div className={styles.chartsGrid}>
-        <div className={styles.chartPanel}>
-          <div className={styles.chartTitle}>Tần suất làm bài</div>
-          <div className={styles.chartFrame}>
+      <div className={`${styles.chartsGrid} ${styles.analyticsChartsGrid}`}>
+        <div className={`${styles.chartPanel} ${styles.analyticsChartPanel}`}>
+          <div className={`${styles.chartTitle} ${styles.analyticsChartTitle}`}>
+            Tần suất làm bài
+          </div>
+          <div className={`${styles.chartFrame} ${styles.analyticsChartFrame}`}>
             <StaffLineChart
               ariaLabel={`Tần suất làm bài theo môn (${charts.windowDays} ngày gần nhất)`}
               labels={charts.frequency.labels}
@@ -146,9 +217,11 @@ async function ChartsCard({ windowDays }: { windowDays: number }) {
             />
           </div>
         </div>
-        <div className={styles.chartPanel}>
-          <div className={styles.chartTitle}>Tỉ lệ đúng</div>
-          <div className={styles.chartFrame}>
+        <div className={`${styles.chartPanel} ${styles.analyticsChartPanel}`}>
+          <div className={`${styles.chartTitle} ${styles.analyticsChartTitle}`}>
+            Tỉ lệ đúng
+          </div>
+          <div className={`${styles.chartFrame} ${styles.analyticsChartFrame}`}>
             <StaffLineChart
               ariaLabel={`Tỉ lệ đúng theo môn (${charts.windowDays} ngày gần nhất)`}
               labels={charts.accuracy.labels}
@@ -195,6 +268,12 @@ export async function StaffAnalyticsScreen({
           <div className={styles.statCard}>
             <div className={styles.statTop}>
               <div className={styles.statTopLeft}>
+                <div
+                  className={`${styles.statIcon} ${styles.statIconStudents}`}
+                  aria-hidden="true"
+                >
+                  <TrophyIcon />
+                </div>
                 <p className={styles.statLabel}>Học sinh</p>
               </div>
             </div>
@@ -209,6 +288,12 @@ export async function StaffAnalyticsScreen({
           <div className={styles.statCard}>
             <div className={styles.statTop}>
               <div className={styles.statTopLeft}>
+                <div
+                  className={`${styles.statIcon} ${styles.statIconQuestions}`}
+                  aria-hidden="true"
+                >
+                  <BookIcon />
+                </div>
                 <p className={styles.statLabel}>Câu hỏi</p>
               </div>
             </div>
@@ -237,6 +322,12 @@ export async function StaffAnalyticsScreen({
           <div className={styles.statCard}>
             <div className={styles.statTop}>
               <div className={styles.statTopLeft}>
+                <div
+                  className={`${styles.statIcon} ${styles.statIconAttempts}`}
+                  aria-hidden="true"
+                >
+                  <FastForwardIcon />
+                </div>
                 <p className={styles.statLabel}>Lượt làm hôm nay</p>
               </div>
             </div>
@@ -251,19 +342,30 @@ export async function StaffAnalyticsScreen({
           <div className={styles.statCard}>
             <div className={styles.statTop}>
               <p className={styles.statLabel}>Chủ đề sai nhiều (7 ngày)</p>
+              {mostWrongTopic ? (
+                <span
+                  className={`${styles.topicSubjectBadge} ${topicBadgeVariant(
+                    mostWrongTopic.subjectSlug,
+                  )}`}
+                >
+                  {mostWrongTopic.subjectName}
+                </span>
+              ) : null}
             </div>
-            <div className={styles.topicName}>
-              {mostWrongTopic
-                ? `${mostWrongTopic.subjectName}: ${mostWrongTopic.topicName}`
-                : "—"}
-            </div>
-            <div className={styles.mutedHint}>
-              {mostWrongTopic
-                ? `${formatNumberVi(mostWrongTopic.wrongCount)} lượt sai`
-                : statsError
-                  ? "Không tải được"
-                  : "Chưa có dữ liệu"}
-            </div>
+            {mostWrongTopic ? (
+              <>
+                <div className={styles.topicName}>
+                  {mostWrongTopic.topicName}
+                </div>
+                <div className={styles.mutedHint}>
+                  {formatNumberVi(mostWrongTopic.wrongCount)} lượt sai
+                </div>
+              </>
+            ) : statsError ? (
+              <div className={styles.topicName}>Không tải được</div>
+            ) : (
+              <div className={styles.topicName}>Chưa có dữ liệu</div>
+            )}
           </div>
         </div>
       </section>

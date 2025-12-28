@@ -2,6 +2,10 @@
 
 ## 2025-12-28
 
+### fix(staff-analytics): enlarge charts and align stats grid
+- `/staff/analytics` charts and legends are larger for readability while keeping `/staff/dashboard` sizing unchanged.
+- Analytics stats cards now match the staff dashboard style (icons + subject badge).
+
 ### fix(staff-line-chart): span gaps for percent series
 - Staff accuracy charts (`unit="percent"`) now connect across empty days instead of rendering broken line segments.
 

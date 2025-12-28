@@ -589,6 +589,45 @@
   background: var(--subject-sci);
 }
 
+.analyticsChartsCard {
+  padding: 20px;
+}
+
+.analyticsChartsGrid {
+  gap: 16px;
+}
+
+.analyticsChartPanel {
+  min-height: 260px;
+  padding: 16px;
+}
+
+.analyticsChartTitle {
+  font-size: 14px;
+}
+
+.analyticsChartFrame {
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  top: 50px;
+  padding: 12px;
+}
+
+.analyticsLegend {
+  gap: 10px;
+}
+
+.analyticsLegendItem {
+  font-size: 13px;
+}
+
+.analyticsLegendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 5px;
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -943,6 +982,9 @@
     flex-direction: row;
     flex-wrap: wrap;
   }
+  .analyticsLegend {
+    margin-bottom: 12px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1010,6 +1052,10 @@
 
   .chartPanel {
     min-height: 180px;
+  }
+
+  .analyticsChartPanel {
+    min-height: 210px;
   }
 
   .actionPill {
