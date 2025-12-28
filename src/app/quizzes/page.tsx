@@ -8,15 +8,18 @@ const PAGE_SIZE = 12;
 const LEADERBOARD_ROWS = 5;
 
 type QuizCatalogPageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?:
+    | Record<string, string | string[] | undefined>
+    | Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function QuizCatalogPage({
   searchParams,
 }: QuizCatalogPageProps) {
   const session = await requireAuthenticatedPage({ next: "/quizzes" });
-  const status = parseStatus(searchParams?.status);
-  const openCustom = parseBoolean(searchParams?.custom);
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const status = parseStatus(resolvedSearchParams?.status);
+  const openCustom = parseBoolean(resolvedSearchParams?.custom);
   const [catalog, subjects, leaderboard] = await Promise.all([
     controllerListCatalogPage(session.sub, {
       status: status ?? "all",
