@@ -11,10 +11,10 @@ import {
   buildEmptyShortAnswer,
   normalizeOptionsForPayload,
   type OptionDraft,
-  parseTags,
 } from "./question-draft";
 import editorStyles from "./question-editor-screen.module.css";
 import { QuestionPreview } from "./question-preview";
+import { TopicPicker } from "./topic-picker";
 
 type ViewMode = "edit" | "split" | "preview";
 
@@ -47,7 +47,7 @@ export function QuestionInlineCreate({
   const [defaultScore, setDefaultScore] = useState<number>(1);
   const [stem, setStem] = useState<string>("");
   const [explanation, setExplanation] = useState<string>("");
-  const [tagsText, setTagsText] = useState<string>("");
+  const [topicIds, setTopicIds] = useState<string[]>([]);
   const [passagePosition, setPassagePosition] = useState<number>(
     Math.max(1, initialPassagePosition),
   );
@@ -138,7 +138,7 @@ export function QuestionInlineCreate({
         type,
         stem: stem.trim(),
         explanation: explanation.trim() ? explanation.trim() : null,
-        tags: parseTags(tagsText),
+        topicIds,
         defaultScore,
         passagePosition: Math.max(
           1,
@@ -190,6 +190,8 @@ export function QuestionInlineCreate({
   const titleLabel = passageId
     ? `Câu hỏi #${passagePosition}`
     : "Câu hỏi đầu tiên";
+  const subjectName =
+    subjects.find((subject) => subject.id === subjectId)?.name ?? "";
 
   return (
     <div>
@@ -384,16 +386,13 @@ export function QuestionInlineCreate({
                 />
 
                 <div className={editorStyles.row}>
-                  <div className={editorStyles.label}>Tags</div>
-                  <span className={editorStyles.muted}>
-                    (cách nhau bởi dấu phẩy)
-                  </span>
+                  <div className={editorStyles.label}>Chủ đề</div>
                 </div>
-                <input
-                  className={editorStyles.input}
-                  value={tagsText}
-                  onChange={(e) => setTagsText(e.target.value)}
-                  placeholder="vd: ngữ pháp, đại số, ..."
+                <TopicPicker
+                  subjectId={subjectId}
+                  subjectName={subjectName}
+                  selectedIds={topicIds}
+                  onChange={setTopicIds}
                   disabled={disabled}
                 />
               </div>

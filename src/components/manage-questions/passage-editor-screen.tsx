@@ -24,12 +24,12 @@ import {
   normalizeOptionsForPayload,
   normalizeShortAnswerDrafts,
   type OptionDraft,
-  parseTags,
 } from "./question-draft";
 import editorStyles from "./question-editor-screen.module.css";
 import { QuestionInlineCreate } from "./question-inline-create";
 import { QuestionPreview } from "./question-preview";
 import tableStyles from "./question-table.module.css";
+import { TopicPicker } from "./topic-picker";
 
 type PassageDetail = { passage: Passage; questions: Question[] };
 
@@ -866,8 +866,8 @@ function InlineQuestionEditor({
   const [explanation, setExplanation] = useState<string>(
     initialQuestion.explanation ?? "",
   );
-  const [tagsText, setTagsText] = useState<string>(
-    (initialQuestion.tags ?? []).join(", "),
+  const [topicIds, setTopicIds] = useState<string[]>(
+    initialQuestion.topicIds ?? [],
   );
   const [status, setStatus] = useState<"active" | "archived">(
     initialQuestion.status ?? "active",
@@ -891,7 +891,7 @@ function InlineQuestionEditor({
     setDefaultScore(q.defaultScore ?? 1);
     setStem(q.stem ?? "");
     setExplanation(q.explanation ?? "");
-    setTagsText((q.tags ?? []).join(", "));
+    setTopicIds(q.topicIds ?? []);
     setStatus(q.status ?? "active");
     setOptions(normalizeOptionDrafts(detail.options));
     setShortAnswers(normalizeShortAnswerDrafts(detail.shortAnswerKeys));
@@ -900,6 +900,8 @@ function InlineQuestionEditor({
   const disabled = loading || saving;
   const isMcq = type === "mcq_single" || type === "mcq_multi";
   const isMultiCorrect = type === "mcq_multi";
+  const subjectName =
+    subjects.find((subject) => subject.id === subjectId)?.name ?? "";
 
   const canSave = useMemo(() => {
     if (!subjectId) return false;
@@ -950,7 +952,7 @@ function InlineQuestionEditor({
         type,
         stem: stem.trim(),
         explanation: explanation.trim() ? explanation.trim() : null,
-        tags: parseTags(tagsText),
+        topicIds,
         defaultScore,
         status,
         options: null,
@@ -1234,16 +1236,13 @@ function InlineQuestionEditor({
                 />
 
                 <div className={editorStyles.row}>
-                  <div className={editorStyles.label}>Tags</div>
-                  <span className={editorStyles.muted}>
-                    (cách nhau bởi dấu phẩy)
-                  </span>
+                  <div className={editorStyles.label}>Chủ đề</div>
                 </div>
-                <input
-                  className={editorStyles.input}
-                  value={tagsText}
-                  onChange={(e) => setTagsText(e.target.value)}
-                  placeholder="vd: ngữ pháp, đại số, ..."
+                <TopicPicker
+                  subjectId={subjectId}
+                  subjectName={subjectName}
+                  selectedIds={topicIds}
+                  onChange={setTopicIds}
                   disabled={disabled}
                 />
 

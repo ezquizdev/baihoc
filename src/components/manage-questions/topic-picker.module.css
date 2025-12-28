@@ -1,0 +1,93 @@
+.topicPicker {
+  position: relative;
+  display: grid;
+  gap: 4px;
+}
+
+.topicTrigger {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-strong);
+  background: var(--card);
+  width: 100%;
+  text-align: left;
+  box-shadow: 0 10px 20px rgba(26, 46, 93, 0.05);
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.topicTrigger:focus-visible {
+  border-color: rgba(40, 104, 230, 0.35);
+  box-shadow:
+    0 10px 20px rgba(26, 46, 93, 0.06),
+    0 0 0 3px rgba(40, 104, 230, 0.14);
+  outline: none;
+}
+
+.topicTrigger:disabled {
+  opacity: 0.7;
+  background: rgba(248, 250, 252, 0.9);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.topicPlaceholder {
+  color: var(--muted);
+}
+
+.topicDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: var(--card);
+  padding: 6px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  max-height: 220px;
+  overflow: auto;
+}
+
+.topicOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px;
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--text-strong);
+  line-height: 1.2;
+}
+
+.topicOption:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.topicHint {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 4px 6px;
+}
+
+.inlineError {
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
+  color: var(--danger-text);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .topicDropdown {
+    position: static;
+  }
+}

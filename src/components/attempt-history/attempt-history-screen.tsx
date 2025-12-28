@@ -186,13 +186,13 @@ export function AttemptHistoryScreen({
             ))}
           </div>
 
-          <div className={styles.statusPill} aria-live="polite">
+          {/* <div className={styles.statusPill} aria-live="polite">
             <span
               className={`${styles.dot} ${loading ? styles.dotLoading : ""}`}
               aria-hidden="true"
             />
             {statusLabel}
-          </div>
+          </div> */}
         </section>
 
         {error ? (

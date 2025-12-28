@@ -161,10 +161,17 @@
   padding: 16px;
 }
 
-.grid {
+.metaGrid {
   display: grid;
-  gap: 14px;
-  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.metaField {
+  display: grid;
+  gap: 8px;
+  align-content: start;
 }
 
 .row {
@@ -443,10 +450,6 @@
   margin-top: 14px;
 }
 
-.splitLayout .grid {
-  grid-template-columns: 1fr;
-}
-
 .previewPanel {
   border: 1px solid rgba(15, 23, 42, 0.1);
   border-radius: 16px;
@@ -523,7 +526,7 @@
 }
 
 @media (max-width: 900px) {
-  .grid {
+  .metaGrid {
     grid-template-columns: 1fr;
   }
 

@@ -59,13 +59,6 @@ export function normalizeOptionsForPayload(options: OptionDraft[]) {
   return normalized;
 }
 
-export function parseTags(text: string): string[] {
-  return text
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
-}
-
 export function buildEmptyShortAnswer(): AnswerDraft {
   return {
     clientId: makeClientId(),

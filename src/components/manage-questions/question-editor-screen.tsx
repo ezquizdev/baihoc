@@ -16,6 +16,7 @@ import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { handleMarkdownImagePaste } from "@/components/ui/markdown-image-paste";
 import styles from "./question-editor-screen.module.css";
 import { QuestionPreview } from "./question-preview";
+import { TopicPicker } from "./topic-picker";
 
 type QuestionEditorScreenProps =
   | {
@@ -78,8 +79,8 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
   const [explanation, setExplanation] = useState<string>(
     initialQuestion?.explanation ?? "",
   );
-  const [tagsText, setTagsText] = useState<string>(
-    (initialQuestion?.tags ?? []).join(", "),
+  const [topicIds, setTopicIds] = useState<string[]>(
+    initialQuestion?.topicIds ?? [],
   );
   const [status, setStatus] = useState<"active" | "archived">(
     initialQuestion?.status ?? "active",
@@ -167,6 +168,8 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
       : "Chỉnh sửa nội dung, đáp án và trạng thái.";
 
   const disabled = busyAction !== null;
+  const subjectName =
+    props.subjects.find((subject) => subject.id === subjectId)?.name ?? "";
 
   const submit = async () => {
     setError(null);
@@ -184,7 +187,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
         type,
         stem: stem.trim(),
         explanation: explanation.trim() ? explanation.trim() : null,
-        tags: parseTags(tagsText),
+        topicIds,
         defaultScore,
       };
 
@@ -488,114 +491,109 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
               shortAnswers={shortAnswers}
             />
           ) : (
-            <div
-              className={viewMode === "split" ? styles.splitLayout : undefined}
-            >
-              <div>
-                <div className={styles.grid}>
-                  <div className={styles.stack}>
-                    <div className={styles.row}>
-                      <div className={styles.label}>Môn học</div>
-                    </div>
-                    <select
-                      className={styles.select}
-                      value={subjectId}
-                      onChange={(e) => setSubjectId(e.target.value)}
-                      disabled={disabled}
-                    >
-                      <option value="" disabled>
-                        Chọn môn học...
+            <>
+              <div className={styles.metaGrid}>
+                <div className={styles.metaField}>
+                  <div className={styles.label}>Môn học</div>
+                  <select
+                    className={styles.select}
+                    value={subjectId}
+                    onChange={(e) => setSubjectId(e.target.value)}
+                    disabled={disabled}
+                  >
+                    <option value="" disabled>
+                      Chọn môn học...
+                    </option>
+                    {props.subjects.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
                       </option>
-                      {props.subjects.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
+                    ))}
+                  </select>
+                </div>
 
-                    <div className={styles.row}>
-                      <div className={styles.label}>Loại câu hỏi</div>
-                    </div>
-                    <select
-                      className={styles.select}
-                      value={type}
-                      onChange={(e) => setType(e.target.value as QuestionType)}
-                      disabled={disabled}
-                    >
-                      <option value="mcq_single">MCQ (1 đáp án)</option>
-                      <option value="mcq_multi">MCQ (nhiều đáp án)</option>
-                      <option value="short_answer">Tự luận ngắn</option>
-                    </select>
+                <div className={styles.metaField}>
+                  <div className={styles.label}>Loại câu hỏi</div>
+                  <select
+                    className={styles.select}
+                    value={type}
+                    onChange={(e) => setType(e.target.value as QuestionType)}
+                    disabled={disabled}
+                  >
+                    <option value="mcq_single">MCQ (1 đáp án)</option>
+                    <option value="mcq_multi">MCQ (nhiều đáp án)</option>
+                    <option value="short_answer">Tự luận ngắn</option>
+                  </select>
+                </div>
 
-                    <div className={styles.row}>
-                      <div className={styles.label}>Độ khó</div>
-                    </div>
-                    <div className={styles.row}>
-                      {[5, 4, 3, 2, 1].map((lvl) => (
-                        <label key={lvl} className={styles.smallBtn}>
-                          <input
-                            type="radio"
-                            name="difficulty"
-                            checked={defaultDifficulty === lvl}
-                            onChange={() =>
-                              setDefaultDifficulty(lvl as DifficultyLevel)
-                            }
-                            disabled={disabled}
-                          />{" "}
-                          {lvl} ★
-                        </label>
-                      ))}
-                    </div>
-
-                    <div className={styles.row}>
-                      <div className={styles.label}>Điểm mặc định</div>
-                    </div>
-                    <input
-                      className={styles.input}
-                      type="number"
-                      min={1}
-                      value={defaultScore}
-                      onChange={(e) => {
-                        const next = Number(e.target.value);
-                        setDefaultScore(Number.isFinite(next) ? next : 1);
-                      }}
-                      disabled={disabled}
-                    />
-
-                    <div className={styles.row}>
-                      <div className={styles.label}>Tags</div>
-                      <span className={styles.muted}>
-                        (cách nhau bởi dấu phẩy)
-                      </span>
-                    </div>
-                    <input
-                      className={styles.input}
-                      value={tagsText}
-                      onChange={(e) => setTagsText(e.target.value)}
-                      placeholder="vd: ngữ pháp, đại số, ..."
-                      disabled={disabled}
-                    />
-
-                    {props.mode === "edit" ? (
-                      <>
-                        <div className={styles.row}>
-                          <div className={styles.label}>Trạng thái</div>
-                        </div>
-                        <select
-                          className={styles.select}
-                          value={status}
-                          onChange={(e) =>
-                            setStatus(e.target.value as "active" | "archived")
+                <div className={styles.metaField}>
+                  <div className={styles.label}>Độ khó</div>
+                  <div className={styles.row}>
+                    {[5, 4, 3, 2, 1].map((lvl) => (
+                      <label key={lvl} className={styles.smallBtn}>
+                        <input
+                          type="radio"
+                          name="difficulty"
+                          checked={defaultDifficulty === lvl}
+                          onChange={() =>
+                            setDefaultDifficulty(lvl as DifficultyLevel)
                           }
                           disabled={disabled}
-                        >
-                          <option value="active">Hoạt động</option>
-                          <option value="archived">Lưu trữ</option>
-                        </select>
-                      </>
-                    ) : null}
+                        />{" "}
+                        {lvl} ★
+                      </label>
+                    ))}
                   </div>
+                </div>
 
+                <div className={styles.metaField}>
+                  <div className={styles.label}>Điểm mặc định</div>
+                  <input
+                    className={styles.input}
+                    type="number"
+                    min={1}
+                    value={defaultScore}
+                    onChange={(e) => {
+                      const next = Number(e.target.value);
+                      setDefaultScore(Number.isFinite(next) ? next : 1);
+                    }}
+                    disabled={disabled}
+                  />
+                </div>
+
+                <div className={styles.metaField}>
+                  <div className={styles.label}>Chủ đề</div>
+                  <TopicPicker
+                    subjectId={subjectId}
+                    subjectName={subjectName}
+                    selectedIds={topicIds}
+                    onChange={setTopicIds}
+                    disabled={disabled}
+                  />
+                </div>
+
+                {props.mode === "edit" ? (
+                  <div className={styles.metaField}>
+                    <div className={styles.label}>Trạng thái</div>
+                    <select
+                      className={styles.select}
+                      value={status}
+                      onChange={(e) =>
+                        setStatus(e.target.value as "active" | "archived")
+                      }
+                      disabled={disabled}
+                    >
+                      <option value="active">Hoạt động</option>
+                      <option value="archived">Lưu trữ</option>
+                    </select>
+                  </div>
+                ) : null}
+              </div>
+
+              <div
+                className={viewMode === "split" ? styles.splitLayout : undefined}
+              >
+                <div>
                   <div className={styles.stack}>
                     <div className={styles.row}>
                       <div className={styles.label}>Nội dung câu hỏi</div>
@@ -635,9 +633,8 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                       disabled={disabled}
                     />
                   </div>
-                </div>
 
-                <div className={styles.stack} style={{ marginTop: 16 }}>
+                  <div className={styles.stack} style={{ marginTop: 16 }}>
                   <h3 className={styles.sectionTitle}>
                     {isMcq ? "Đáp án (MCQ)" : "Đáp án (Tự luận ngắn)"}
                   </h3>
@@ -812,65 +809,68 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                   )}
                 </div>
 
-                <div className={styles.stack} style={{ marginTop: 16 }}>
-                  <h3 className={styles.sectionTitle}>Đoạn văn (tuỳ chọn)</h3>
-                  <label className={styles.smallBtn}>
-                    <input
-                      type="checkbox"
-                      checked={passageEnabled}
-                      onChange={() => setPassageEnabled((prev) => !prev)}
-                      disabled={disabled}
-                    />{" "}
-                    Kèm đoạn văn
-                  </label>
-                  {passageEnabled ? (
-                    <>
-                      <textarea
-                        className={`${styles.textarea} ${styles.textareaSmall}`}
-                        value={passageContent}
-                        onChange={(e) => setPassageContent(e.target.value)}
-                        onPaste={(e) =>
-                          handleMarkdownImagePaste(e, {
-                            setValue: setPassageContent,
-                            setUploadingCount: setMediaUploadingCount,
-                            setUploadError: setMediaUploadError,
-                            altPrefix: "passage",
-                          })
-                        }
-                        placeholder="Nội dung đoạn văn..."
+                  <div className={styles.stack} style={{ marginTop: 16 }}>
+                    <h3 className={styles.sectionTitle}>Đoạn văn (tuỳ chọn)</h3>
+                    <label className={styles.smallBtn}>
+                      <input
+                        type="checkbox"
+                        checked={passageEnabled}
+                        onChange={() => setPassageEnabled((prev) => !prev)}
                         disabled={disabled}
-                      />
-                      <div className={styles.row}>
-                        <div className={styles.label}>Vị trí trong passage</div>
-                        <input
-                          className={styles.input}
-                          type="number"
-                          min={1}
-                          value={passagePosition}
-                          onChange={(e) => {
-                            const next = Number(e.target.value);
-                            setPassagePosition(
-                              Number.isFinite(next) ? next : 1,
-                            );
-                          }}
+                      />{" "}
+                      Kèm đoạn văn
+                    </label>
+                    {passageEnabled ? (
+                      <>
+                        <textarea
+                          className={`${styles.textarea} ${styles.textareaSmall}`}
+                          value={passageContent}
+                          onChange={(e) => setPassageContent(e.target.value)}
+                          onPaste={(e) =>
+                            handleMarkdownImagePaste(e, {
+                              setValue: setPassageContent,
+                              setUploadingCount: setMediaUploadingCount,
+                              setUploadError: setMediaUploadError,
+                              altPrefix: "passage",
+                            })
+                          }
+                          placeholder="Nội dung đoạn văn..."
                           disabled={disabled}
                         />
-                      </div>
-                    </>
-                  ) : null}
+                        <div className={styles.row}>
+                          <div className={styles.label}>
+                            Vị trí trong passage
+                          </div>
+                          <input
+                            className={styles.input}
+                            type="number"
+                            min={1}
+                            value={passagePosition}
+                            onChange={(e) => {
+                              const next = Number(e.target.value);
+                              setPassagePosition(
+                                Number.isFinite(next) ? next : 1,
+                              );
+                            }}
+                            disabled={disabled}
+                          />
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
+                {viewMode === "split" ? (
+                  <QuestionPreview
+                    passageContent={passageEnabled ? passageContent : null}
+                    stem={stem}
+                    explanation={explanation}
+                    type={type}
+                    options={options}
+                    shortAnswers={shortAnswers}
+                  />
+                ) : null}
               </div>
-              {viewMode === "split" ? (
-                <QuestionPreview
-                  passageContent={passageEnabled ? passageContent : null}
-                  stem={stem}
-                  explanation={explanation}
-                  type={type}
-                  options={options}
-                  shortAnswers={shortAnswers}
-                />
-              ) : null}
-            </div>
+            </>
           )}
 
           {error ? (
@@ -963,13 +963,6 @@ function pickCorrect(
     }
     return prev.map((o, idx) => ({ ...o, isCorrect: idx === index }));
   });
-}
-
-function parseTags(text: string): string[] {
-  return text
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
 }
 
 function buildEmptyShortAnswer(): AnswerDraft {
