@@ -1,7 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowSquareOut, PaperPlaneRight, SpinnerGap, X } from "phosphor-react";
+import {
+  ArrowSquareOut,
+  PaperPlaneRight,
+  Plus,
+  SpinnerGap,
+  X,
+} from "phosphor-react";
 import {
   type FormEvent,
   useCallback,
@@ -263,6 +269,16 @@ export function AiChatDialog({ onClose }: Props) {
     onClose();
   }, [onClose, pathname, router, sessionId]);
 
+  const handleNewChat = useCallback(() => {
+    setError(null);
+    setMessages([]);
+    setSessionId(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(storageKey);
+    }
+    textareaRef.current?.focus();
+  }, [storageKey]);
+
   const body = (
     <>
       {!messages.length ? (
@@ -326,6 +342,15 @@ export function AiChatDialog({ onClose }: Props) {
         </div>
 
         <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.newChatButton}
+            onClick={handleNewChat}
+            disabled={!access.allowed || loading}
+          >
+            <Plus size={16} weight="bold" aria-hidden="true" />
+            Chat mới
+          </button>
           <button
             type="button"
             className={styles.iconButton}
