@@ -365,3 +365,68 @@ export async function getLeaderboardTable(params: {
 
   return { items, total, self: mapLeaderboardTableRow(selfRow) };
 }
+
+export async function getLeaderboardTableEntryByUserId(params: {
+  userId: string;
+  sortBy: LeaderboardSortBy;
+  sortDir: LeaderboardSortDir;
+}): Promise<LeaderboardTableEntry | null> {
+  const sortColumn = sortColumns[params.sortBy];
+  const compareOp = params.sortDir === "asc" ? "<" : ">";
+
+  const res = await query<LeaderboardTableRow>(
+    `SELECT u.id AS user_id,
+            u.full_name,
+            u.avatar_url,
+            u.xp_vi,
+            u.xp_en,
+            u.xp_math,
+            u.xp_sci,
+            u.xp_main_total AS xp_overall,
+            1 + (
+              SELECT COUNT(*)::int
+              FROM users u2
+              WHERE u2.role = 'student'
+                AND u2.status = 'active'
+                AND u2.${sortColumn} ${compareOp} u.${sortColumn}
+            ) AS rank
+     FROM users u
+     WHERE u.id = $1
+       AND u.role = 'student'
+       AND u.status = 'active'`,
+    [params.userId],
+  );
+
+  const row = res.rows[0];
+  return row ? mapLeaderboardTableRow(row) : null;
+}
+
+export async function findActiveStudentIdByEmail(email: string) {
+  const res = await query<{ id: string }>(
+    `SELECT id
+     FROM users
+     WHERE email = $1
+       AND role = 'student'
+       AND status = 'active'
+     LIMIT 1`,
+    [email],
+  );
+  return res.rows[0]?.id ?? null;
+}
+
+export async function findActiveStudentIdsByFullName(params: {
+  query: string;
+  limit: number;
+}) {
+  const res = await query<{ id: string }>(
+    `SELECT id
+     FROM users
+     WHERE role = 'student'
+       AND status = 'active'
+       AND lower(full_name) LIKE $1
+     ORDER BY id ASC
+     LIMIT $2`,
+    [`%${params.query.toLowerCase()}%`, params.limit],
+  );
+  return res.rows.map((row) => row.id);
+}

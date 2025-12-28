@@ -497,7 +497,7 @@ export async function listCatalogPage(params: {
   maxQuestions?: number;
   minDurationSeconds?: number;
   maxDurationSeconds?: number;
-  status?: "todo" | "done" | "all";
+  status?: "todo" | "done" | "challenge" | "all";
   sort?: "newest" | "oldest";
   limit?: number;
   offset?: number;
@@ -555,6 +555,9 @@ export async function listCatalogPage(params: {
       "COALESCE(q.estimated_time_seconds, 0) <= $idx",
       params.maxDurationSeconds,
     );
+  }
+  if (params.status === "challenge") {
+    where.push("q.is_challenge IS TRUE");
   }
   if (params.status === "done") {
     where.push("ua.user_attempted IS TRUE");

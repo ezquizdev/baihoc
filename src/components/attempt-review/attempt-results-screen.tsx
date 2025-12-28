@@ -219,7 +219,7 @@ function QuestionReviewCard({
       )}
 
       {question.exists && question.explanation ? (
-        <details className={styles.explanation} open>
+        <details className={styles.explanation}>
           <summary className={styles.explanationHeader}>
             <span className={styles.explanationTitle}>Giải thích</span>
             <span className={styles.explanationToggle} aria-hidden="true">

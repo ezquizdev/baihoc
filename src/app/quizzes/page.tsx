@@ -11,7 +11,7 @@ export default async function QuizCatalogPage() {
   const session = await requireAuthenticatedPage({ next: "/quizzes" });
   const [catalog, subjects, leaderboard] = await Promise.all([
     controllerListCatalogPage(session.sub, {
-      status: "todo",
+      status: "all",
       sort: "newest",
       limit: PAGE_SIZE,
       offset: 0,

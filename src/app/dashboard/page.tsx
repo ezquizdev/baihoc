@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
+import { controllerGetLeaderboard } from "@/application/controllers/leaderboardController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import { DailyChallengeCard } from "@/components/dashboard/daily-challenge-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
 import { PromoBanner } from "@/components/dashboard/promo-banner";
 import {
   type QuickAction,
@@ -10,13 +10,10 @@ import {
 } from "@/components/dashboard/quick-actions-card";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
+import { QuizLeaderboard } from "@/components/quiz-catalog/quiz-leaderboard";
 import layoutStyles from "./dashboard-page.module.css";
 
-type LeaderboardRow = {
-  rank: number;
-  name: string;
-  xp: number;
-};
+const LEADERBOARD_ROWS = 5;
 
 const quickActions = [
   { label: "TẤT CẢ", href: "/quizzes" },
@@ -25,20 +22,19 @@ const quickActions = [
   { label: "TẤT CẢ CHALLENGE", disabled: true },
 ] satisfies QuickAction[];
 
-const leaderboard: LeaderboardRow[] = [
-  { rank: 1, name: "Trần Bảo Quyên", xp: 1047 },
-  { rank: 2, name: "Nguyễn Thị Hằng", xp: 1023 },
-  { rank: 3, name: "Lê Văn Minh", xp: 1015 },
-  { rank: 4, name: "Phạm Thị Lan", xp: 932 },
-  { rank: 5, name: "Trần Văn An", xp: 910 },
-];
-
 export default async function DashboardPage() {
   const session = await requireAuthenticatedPage({ next: "/dashboard" });
   if (session.role === "staff") {
     redirect("/staff/dashboard");
   }
   const displayName = session.fullName ?? session.email.split("@")[0];
+
+  const leaderboard = await controllerGetLeaderboard({
+    viewerUserId: session.sub,
+    limit: LEADERBOARD_ROWS,
+    includeSelf: true,
+    subjectId: null,
+  }).catch(() => ({ items: [], self: null }));
 
   return (
     <DashboardShell
@@ -100,11 +96,14 @@ export default async function DashboardPage() {
           ]}
         />
 
-        <LeaderboardCard
+        <QuizLeaderboard
           title="Bảng xếp hạng"
           actionLabel="Xem tất cả"
           actionHref="/dashboard/leaderboard"
-          rows={leaderboard}
+          initial={leaderboard}
+          maxRows={LEADERBOARD_ROWS}
+          includeSelf={true}
+          sticky={false}
         />
 
         <PromoBanner

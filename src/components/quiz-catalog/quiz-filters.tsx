@@ -7,7 +7,7 @@ import type { Subject } from "@/application/models/subject";
 import styles from "./quiz-catalog.module.css";
 import { getSubjectTone } from "./subject-tone";
 
-type StatusFilter = "todo" | "done" | "all";
+type StatusFilter = "done" | "challenge" | "all";
 type SortOrder = "newest" | "oldest";
 
 type QuizFiltersProps = {
@@ -83,23 +83,23 @@ export function QuizFilters({
           type="button"
           role="tab"
           className={`${styles.tab} ${
-            status === "todo" ? styles.tabActive : ""
-          }`}
-          aria-selected={status === "todo"}
-          onClick={() => onStatusChange("todo")}
-        >
-          Chưa làm
-        </button>
-        <button
-          type="button"
-          role="tab"
-          className={`${styles.tab} ${
             status === "done" ? styles.tabActive : ""
           }`}
           aria-selected={status === "done"}
           onClick={() => onStatusChange("done")}
         >
           Đã làm
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className={`${styles.tab} ${
+            status === "challenge" ? styles.tabActive : ""
+          }`}
+          aria-selected={status === "challenge"}
+          onClick={() => onStatusChange("challenge")}
+        >
+          Challenge
         </button>
         <button
           type="button"

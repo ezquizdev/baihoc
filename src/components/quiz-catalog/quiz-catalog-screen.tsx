@@ -16,7 +16,7 @@ import { QuizLeaderboard } from "./quiz-leaderboard";
 import { QuizModal } from "./quiz-modal";
 import { QuizPagination } from "./quiz-pagination";
 
-type StatusFilter = "todo" | "done" | "all";
+type StatusFilter = "done" | "challenge" | "all";
 type SortOrder = "newest" | "oldest";
 
 type QuizCatalogScreenProps = {
@@ -42,7 +42,7 @@ export function QuizCatalogScreen({
 }: QuizCatalogScreenProps) {
   const router = useRouter();
   const displayName = session.fullName ?? session.email.split("@")[0];
-  const [status, setStatus] = useState<StatusFilter>("todo");
+  const [status, setStatus] = useState<StatusFilter>("all");
   const [sort, setSort] = useState<SortOrder>("newest");
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<
@@ -66,6 +66,8 @@ export function QuizCatalogScreen({
   const initialLoadRef = useRef(true);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const leaderboardSubjectId =
+    selectedSubjectIds.length === 1 ? selectedSubjectIds[0] : null;
 
   useEffect(() => {
     if (page > totalPages) {
@@ -259,7 +261,7 @@ export function QuizCatalogScreen({
             initial={leaderboard}
             maxRows={leaderboardMaxRows}
             includeSelf={leaderboardIncludeSelf}
-            subjects={subjects}
+            subjectId={leaderboardSubjectId}
           />
         </section>
       </div>

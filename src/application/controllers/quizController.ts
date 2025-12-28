@@ -112,7 +112,7 @@ export async function controllerListCatalogPage(
     maxQuestions?: number;
     minDurationMinutes?: number;
     maxDurationMinutes?: number;
-    status?: "todo" | "done" | "all";
+    status?: "todo" | "done" | "challenge" | "all";
     sort?: "newest" | "oldest";
     limit?: number;
     offset?: number;
