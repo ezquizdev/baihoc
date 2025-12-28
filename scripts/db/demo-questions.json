@@ -1,0 +1,470 @@
+[
+  {
+    "subjectSlug": "math",
+    "difficulty": 3,
+    "stem": "Tìm số giá trị nguyên của tham số m thuộc [-10; 10] để phương trình x + 2*sqrt(x-1) = m + 3 có nghiệm.",
+    "options": [
+      "13",
+      "11",
+      "9",
+      "10"
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\n\nĐKXĐ: x >= 1. Đặt t = sqrt(x-1) (t >= 0) => x = t^2 + 1\nPhương trình trở thành: (t^2 + 1) + 2t = m + 3 <=> t^2 + 2t - 2 = m\n\nXét f(t) = t^2 + 2t - 2 trên [0; +vo cung)\nf'(t) = 2t + 2 >= 0 với mọi t >= 0 => f(t) đồng biến trên [0; +vo cung)\n=> min f(t) = f(0) = -2\n\nĐể phương trình có nghiệm thì m >= min f(t) = -2.\nKết hợp với m thuộc [-10; 10], ta tính được các giá trị nguyên của tham số m:\nm thuộc {-2, -1, 0, ..., 10}\nSố giá trị là: 10 - (-2) + 1 = 13 giá trị.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 2,
+    "stem": "Cho tam giác ABC có cạnh AB = 4, AC = 6 biết rằng cos(B+C) = 1/3. Độ dài đường trung tuyến AM kẻ từ đỉnh A của tam giác là:",
+    "options": [
+      "sqrt(19)",
+      "5",
+      "sqrt(17)",
+      "3"
+    ],
+    "correctIndex": 3,
+    "explanation": "Chọn D\n\nTa có cos A = cos(180 - (B+C)) = -cos(B+C) = -1/3\nÁp dụng định lý hàm Cos:\nBC^2 = AB^2 + AC^2 - 2*AB*AC*cosA = 4^2 + 6^2 - 2*4*6*(-1/3) = 68\n\nTính độ dài trung tuyến AM:\nAM^2 = (AB^2 + AC^2)/2 - BC^2/4 = (16+36)/2 - 68/4 = 26 - 17 = 9 \n=> AM = 3\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 2,
+    "stem": "Cho tam giác ABC có cạnh AC = sqrt(2)*AB và góc C = 30 độ. Biết góc B là góc tù. Số đo góc A là:",
+    "options": [
+      "15 độ",
+      "105 độ",
+      "45 độ",
+      "135 độ"
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\n\nTheo định lý Sin:\nAC / sin B = AB / sin C => sin B = (AC * sin C) / AB = (sqrt(2) * 1/2) = sqrt(2)/2\nMà góc B tù nên B = 135 độ.\n\nA = 180 - B - C = 180 - 135 - 30 = 15 độ.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 2,
+    "stem": "Ba tổ công nhân A, B, C cùng sản xuất được tổng cộng 1500 sản phẩm trong một ngày. Biết rằng tổng số sản phẩm của tổ A và B làm được là 950, tổng số sản phẩm của B và C làm được là 900 sản phẩm. Hỏi tổ B làm được bao nhiêu sản phẩm.",
+    "options": [
+      "350",
+      "400",
+      "550",
+      "450"
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\n\nTa có:\n(1) A + B + C = 1500\n(2) A + B = 950\n(3) B + C = 900\nLấy (2) + (3) - (1) vế theo vế:\n(A + B) + (B + C) - (A + B + C) = B\n=> B = 950 + 900 - 1500 = 350.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 2,
+    "stem": "Số nghiệm của phương trình x^2 + 2x - 5*sqrt(x^2 + 2x + 8) + 14 = 0 là:",
+    "options": [
+      "1",
+      "2",
+      "4",
+      "0"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B\n\nĐặt t = sqrt(x^2 + 2x + 8). Điều kiện t >= sqrt(7).\nPhương trình trở thành: (t^2 - 8) - 5t + 14 = 0 <=> t^2 - 5t + 6 = 0\n<=> t = 2 (loại) hoặc t = 3 (nhận)\n\nVới t = 3 => x^2 + 2x + 8 = 9 <=> x^2 + 2x - 1 = 0\nPhương trình này có 2 nghiệm phân biệt.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 2,
+    "stem": "Xác định số hạng đầu u_1 và công bội q của cấp số nhân.",
+    "options": [
+      "---",
+      "u_1 = 4; q = 1/2",
+      "u_1 = 2; q = -2",
+      "u_1 = 4; q = -1/4"
+    ],
+    "correctIndex": 0,
+    "explanation": "Giải hệ phương trình tìm được q = -1/2 (thỏa mãn điều kiện).\nThế vào tìm u_1 = 8.\nChọn A.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 2,
+    "stem": "Xét dãy số (v_n) xác định bởi v_n = u_n^3. Tính tổng của cấp số nhân lùi vô hạn (v_n).",
+    "options": [
+      "512/9",
+      "4096/9",
+      "64/7",
+      "4096/7"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B\n\nv_1 = u_1^3 = 8^3 = 512.\nCông bội Q = q^3 = (-1/2)^3 = -1/8.\nTổng S = v_1 / (1 - Q) = 512 / (1 - (-1/8)) = 4096/9.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 3,
+    "stem": "Tính giá trị gần đúng của tổng vô hạn sau:\nT = u_1 + 2u_2 + 3u_3 + ... + n*u_n + ...",
+    "options": [
+      "32/9",
+      "16/9",
+      "8/3",
+      "64/9"
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\n\nCông thức tổng quát cho dạng này là T = u_1 / (1-q)^2\nT = 8 / (1 - (-0.5))^2 = 8 / (1.5)^2 = 8 / 2.25 = 32/9.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 3,
+    "stem": "Tìm m để phương trình log_3^2(x) - 3log_3(x) + 2m - 7 = 0 có hai nghiệm x1, x2 thỏa mãn (x1+3)(x2+3) = 72.",
+    "options": [
+      "m = 9/2",
+      "m = 3",
+      "Không tồn tại",
+      "m = 61/2"
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\n\nĐặt t = log_3(x). PT trở thành t^2 - 3t + 2m - 7 = 0.\nVi-et: t1 + t2 = 3 => log_3(x1) + log_3(x2) = 3 => x1*x2 = 27.\nTừ (x1+3)(x2+3) = 72 => x1*x2 + 3(x1+x2) + 9 = 72 => 27 + 3(x1+x2) + 9 = 72 => x1+x2 = 12.\nGiải hệ x1*x2=27, x1+x2=12 => x1=3, x2=9.\n=> t1=1, t2=2.\nTích t1*t2 = 2m - 7 => 2 = 2m - 7 => 2m = 9 => m = 9/2."
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 2,
+    "stem": "Hàm số biểu thị tổng lợi nhuận f(x, y) (đơn vị: nghìn đồng) của xưởng mộc là:",
+    "options": [
+      "f(x, y) = 800x + 1200y",
+      "f(x, y) = 1200x + 800y",
+      "f(x, y) = 400x + 300y",
+      "f(x, y) = 150x + 200y"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B\nLợi nhuận từ Bàn trà là 1200, từ Ghế tựa là 800.\nf(x,y) = 1200x + 800y.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 2,
+    "stem": "Bất phương trình mô tả ràng buộc về tổng số giờ công hoàn thiện là:",
+    "options": [
+      "3x + 4y <= 96",
+      "15x + 20y <= 96",
+      "4x + 3y <= 96",
+      "4x + 3y >= 96"
+    ],
+    "correctIndex": 2,
+    "explanation": "Chọn C\nBàn trà tốn 4h, Ghế tựa tốn 3h. Tổng <= 96.\n4x + 3y <= 96.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 3,
+    "stem": "Để đạt lợi nhuận cao nhất, xưởng mộc cần lên kế hoạch sản xuất như thế nào? (Biết số lượng sản phẩm phải là số nguyên).",
+    "options": [
+      "---",
+      "Sản xuất 9 Bàn trà và 20 Ghế tựa.",
+      "Chỉ sản xuất 15 Bàn trà.",
+      "Chỉ sản xuất 80 Ghế tựa."
+    ],
+    "correctIndex": 0,
+    "explanation": "Hệ bất phương trình:\n4x + 3y <= 96\n0 <= x <= 15\n0 <= y <= 20\n\nthêm hình ở đây\n\nXét các đỉnh của miền nghiệm: O(0;0), A(15;0), B(15;12), C(9;20), D(0;20).\nTính f(x,y) = 1200x + 800y:\n- Tại B(15;12): f = 27600 (Max)\n- Tại C(9;20): f = 26800\nChọn A.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 3,
+    "stem": "Tính xác suất để lấy ra dãy có đúng 3 kí hiệu là 1.",
+    "options": [
+      "7/32",
+      "3/32",
+      "21/64",
+      "5/64"
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\nKhông gian mẫu n(Omega) = 2^8.\nChọn 3 vị trí cho số 1 trong 8 vị trí: C(8,3) = 56.\nP = 56/256 = 7/32.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 3,
+    "stem": "Xác suất để dãy lấy ra có nhiều nhất 6 kí hiệu là 1 là",
+    "options": [
+      "255/256",
+      "219/256",
+      "9/256",
+      "247/256"
+    ],
+    "correctIndex": 3,
+    "explanation": "Chọn D\nDùng biến cố đối: \"Có hơn 6 kí hiệu là 1\" (tức 7 hoặc 8).\nSố trường hợp: C(8,7) + C(8,8) = 8 + 1 = 9.\nP = 1 - 9/256 = 247/256.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 4,
+    "stem": "Một dãy được gọi là đối xứng nếu đọc từ trái sang giống đọc từ phải sang. Tính xác suất để chọn được một dãy đối xứng.",
+    "options": [
+      "1/2",
+      "1/8",
+      "1/16",
+      "1/32"
+    ],
+    "correctIndex": 2,
+    "explanation": "Chọn C\nDãy đối xứng thì 4 kí tự đầu quyết định 4 kí tự sau.\nSố cách chọn 4 kí tự đầu là 2^4 = 16.\nP = 16/256 = 1/16.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 3,
+    "stem": "Tính diện tích thiết diện của lăng trụ cắt bởi mặt phẳng (AMN).",
+    "options": [
+      "3a^2",
+      "6a^2",
+      "3*sqrt(3)a^2",
+      "12a^2"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B\nthêm hình ở đây\nTa tính được MN = 4a, đường cao thiết diện AF = 3a.\nDiện tích = 1/2 * AF * MN = 6a^2.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 3,
+    "stem": "Tính thể tích lăng trụ đã cho theo a:",
+    "options": [
+      "3*sqrt(3)a^3",
+      "24*sqrt(3)a^3",
+      "12*sqrt(3)a^3",
+      "4*sqrt(3)a^3"
+    ],
+    "correctIndex": 2,
+    "explanation": "Chọn C\nTheo lời giải: V = AA' * S_AMN = 2*sqrt(3)a * 6a^2 = 12*sqrt(3)a^3.\n\n---"
+  },
+  {
+    "subjectSlug": "math",
+    "difficulty": 3,
+    "stem": "Tính cosin của góc tạo bởi mặt phẳng đáy (ABC) và mặt phẳng thiết diện (AMN).",
+    "options": [
+      "1/2",
+      "sqrt(3)/2",
+      "sqrt(2)/2",
+      "sqrt(3)/3"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B\nGóc cần tìm là góc FAE.\ncos(FAE) = AF / AE = 3a / (2*sqrt(3)a) = sqrt(3)/2.\n\n-----------------------------------------------------------"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 2,
+    "stem": "Nếu Họp Tài chính là buổi họp đầu tiên thì buổi họp cuối cùng là:",
+    "options": [
+      "Họp IT.",
+      "Họp Kế hoạch.",
+      "Họp Tài chính.",
+      "Họp Pháp lý."
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\nTa thấy dữ kiện 3 là dữ kiện chiếm nhiều ô, nên suy luận từ dữ kiện đó.\nDữ kiện 3 ta có Họp kế hoạch diễn ra trước 2 cuộc họp so với Họp Nhân sự (Kế hoạch _ _ Nhân sự).\nVậy Họp Nhân sự là 5 hoặc 6. Quy tắc 2 ta có IT sau Nhân sự nên IT cuối.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 1,
+    "stem": "Buổi họp nào chắc chắn diễn ra từ khung giờ thứ tư trở đi?",
+    "options": [
+      "Họp Kế hoạch.",
+      "Họp Marketing.",
+      "Họp Nhân sự.",
+      "Không có buổi họp nào."
+    ],
+    "correctIndex": 2,
+    "explanation": "Chọn C\nTừ quy tắc 3 (Nhân viên tham dự 2 buổi họp sau Họp Kế hoạch rồi mới tham dự Họp Nhân sự => Kế hoạch ở vị trí i, Nhân sự ở vị trí i+3), ta dễ dàng thấy được họp Nhân sự phải từ khung giờ thứ tư trở đi (vì Kế hoạch sớm nhất là khung 1 thì Nhân sự là khung 4).\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 4,
+    "stem": "Hai buổi họp nào có thể diễn ra vào khung giờ thứ hai?",
+    "options": [
+      "Họp Tài chính và Họp Kế hoạch.",
+      "Họp Kế hoạch và Họp Marketing.",
+      "Họp Kế hoạch và Họp Pháp lý.",
+      "Họp Pháp lý và Họp IT."
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\nTa sẽ chia trường hợp để thử.\nNhư ở trên suy luận, dựa vào dữ kiện 2 và 3 ta thấy Nhân sự họp trước khung thứ 6, dẫn tới Kế hoạch họp trước khung thứ 3, tức chỉ có 2 trường hợp: Kế hoạch ở khung 2 hoặc 1.\n\n- TH1: Kế hoạch ở 2 => Nhân sự ở 5 => IT ở 6.\nNhư câu 91, Tài chính ở 1 hoặc 3.\nNếu Tài chính ở 1: TC - KH - _ - _ - NS - IT. (Marketing sau TC nên Marketing có thể ở 3 hoặc 4. Pháp lý ở ô còn lại).\n=> Kế hoạch có thể ở 2.\n\n- TH2: Kế hoạch ở 1 => Nhân sự ở 4 => IT ở 5 hoặc 6.\nKhi này Tài chính ở 3 (vì TC ở 1 trùng Kế hoạch). NS ở 4, MKT > 3 (vì sau TC), IT > 4.\nNên chỉ còn Pháp lý là có thể ở 2.\n\nTa có thể sắp xếp:\n| Kế hoạch | Pháp lý | Tài chính | Nhân sự | IT | Marketing |\nThỏa mãn.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 4,
+    "stem": "Danh sách nào sau đây có thể là danh sách đầy đủ và chính xác của những đứa trẻ cùng sở hữu chó K?",
+    "options": [
+      "Từ dữ kiện 2 và 3 để loại được B và D (U và S, T và R không có giống chó nào chung).",
+      "V, U, S.",
+      "---",
+      "V, T, R."
+    ],
+    "correctIndex": 2,
+    "explanation": "Chọn C\nỞ cụm này, suy luận từ ban đầu rất quan trọng.\nKí hiệu số giống chó một người sở hữu bằng tên của người đó, ví dụ V = 3 tức là V có 3 giống chó.\nỞ đây ta thấy, từ dữ kiện 1 và 4, ta suy ra V > U > T, mà mình chỉ có 3 giống nên có ngay V = 3, U = 2, T = 1.\nKết hợp với dữ kiện 2, ta có S = 1 (Vì U có 2 con, tổng có 3 loại, U và S không chung nên S chỉ có thể lấy loại còn lại duy nhất).\nKết hợp với dữ kiện 3, ta có R = 1 hoặc 2.\n\nChốt lại, ta suy ra được bảng số lượng chó:\n\n| V | U | T | S | R |\n|---|---|---|---|---|\n| 3 | 2 | 1 | 1 | 1 hoặc 2 |\n\nBắt đầu làm câu 94. Ta thấy V chắc chắn có K (vì V có cả 3 loại). Ta loại A.\nTừ dữ kiện 2 và 3 để loại được B và D (U và S, T và R không có giống chó nào chung).\nNhư vậy đáp án là C.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 3,
+    "stem": "Nếu S và T không sở hữu bất kỳ giống chó nào chung, điều nào sau đây PHẢI đúng?",
+    "options": [
+      "---",
+      "Ít nhất ba đứa trẻ sở hữu chó K.",
+      "R hoặc T phải sở hữu chó M.",
+      "Ít nhất ba đứa trẻ sở hữu chó L."
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\nTa thấy điều kiện mới này sẽ kết hợp với dữ kiện 2 vì cùng liên quan tới S. Như vậy giống chó duy nhất T sở hữu sẽ rơi vào một trong 2 giống S không có, cũng chính là một trong hai giống của U. Ta thấy chọn được đáp án A.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 3,
+    "stem": "Nếu chỉ có đúng hai đứa trẻ sở hữu chó L, điều nào sau đây CÓ THỂ đúng?",
+    "options": [
+      "R sở hữu chó L.",
+      "S sở hữu chó L.",
+      "Như vậy trong R, S, T, U có đúng 1 người có L.",
+      "Cả S và U đều không sở hữu chó L."
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B\nỞ trên ta đã suy luận được V = 3, nên V phải có L. Loại C.\nNhư vậy trong R, S, T, U có đúng 1 người có L.\nCũng dựa vào dữ kiện số lượng đã suy luận ở câu 91 (U=2, S=1, T=1), kết hợp với các điều kiện 2 và 3, ta thấy S và U là “đối nhau” (tức không giao nhau, mà hợp của nó bao hết cả tập K, L, M), nên một trong hai phải có L.\nNhư vậy A và D đều chắc chắn sai.\nChỉ có B có thể đúng.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 2,
+    "stem": "Doanh thu kết hợp từ Máy Slot và Roulette khác biệt bao nhiêu so với doanh thu từ Các trò chơi bàn khác trong khoảng thời gian từ 2006-2009 (bao gồm cả 2009) (tính bằng triệu £)?",
+    "options": [
+      "0,9.",
+      "9,0.",
+      "9,2.",
+      "0,92."
+    ],
+    "correctIndex": 3,
+    "explanation": "Chọn D\nBước 1 – Tính tổng (doanh thu) cho Máy Slot, Roulette, Các trò chơi bàn khác (từ 2006-2009).\n* Máy Slot = 1,3 + 1,4 + 1,8 + 1,5 = 6,0\n* Roulette = 0,8 + 0,6 + 0,6 + 0,7 = 2,7\n* Các trò chơi bàn khác = 4,4 + 4,2 + 4,5 + 4,8 = 17,9\n\nBước 2 – Tính toán chênh lệch (đơn vị là £100.000s).\n17,9 - (6,0 + 2,7) = 17,9 - 8,7 = 9,2\n\nBước 3 – Đổi sang đơn vị triệu £.\nVì 9,2 đang ở đơn vị £100.000s, nên giá trị thực là: 9,2 x 100.000 = 920.000 = 0,92 triệu £.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 3,
+    "stem": "Có một khoản phí vào cửa là £15 cho mỗi người chơi tại sòng bạc Calewall. Trong năm nào, hoặc những năm nào, doanh thu từ phí vào cửa thấp hơn 23 triệu £?",
+    "options": [
+      "2006, 2007.",
+      "2007, 2008.",
+      "2007.",
+      "2006."
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\nBước 1 - Tính doanh thu phí vào cửa cho mỗi năm (Số lượt khách x £15).\n* 2006: 1.460.000 x 15 = 21.900.000 £ (Thấp hơn 23 triệu)\n* 2007: 1.520.000 x 15 = 22.800.000 £ (Thấp hơn 23 triệu)\n* 2008: 1.630.000 x 15 = 24.450.000 £ (Cao hơn 23 triệu)\n* 2009: 1.680.000 x 15 = 25.200.000 £ (Cao hơn 23 triệu)\n\nVì vậy, câu trả lời đúng là A. 2006, 2007.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 4,
+    "stem": "Sòng bạc Calewall đang được đề nghị thâu tóm với giá gấp 7 lần doanh thu dự kiến năm 2010 của sòng bạc. Hội đồng quản trị phản hồi rằng họ có thể mang lại 10% giá trị gia tăng thông qua việc cắt giảm chi phí so với giá mua này. Hội đồng quản trị đang định giá sòng bạc Calewall là bao nhiêu (tính bằng triệu £)?",
+    "options": [
+      "48,51 triệu £.",
+      "44,1 triệu £.",
+      "4,85 triệu £.",
+      "4,41 triệu £."
+    ],
+    "correctIndex": 2,
+    "explanation": "Chọn C\nBước 1 - Tính tổng doanh thu dự kiến năm 2010 (đơn vị £100.000s).\n4,7 (Trò chơi bàn khác) + 1,1 (Máy Slot) + 0,5 (Roulette) = 6,3\n\nBước 2 - Tính giá thâu tóm ban đầu.\n6,3 x 7 = 44,1 (đơn vị £100.000s)\n\nBước 3 - Tính giá trị định giá của Hội đồng quản trị (thêm 10%).\n44,1 x 110% (hoặc 44,1 x 1,1) = 48,51 (đơn vị £100.000s)\n\nBước 4 - Đổi sang đơn vị triệu £.\n48,51 x 100.000 = 4.851.000 = 4,851 triệu £ (làm tròn là 4,85 triệu £).\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 3,
+    "stem": "Tổng số tiền phí lót tay mà câu lạc bộ phải chi trả cho người đại diện của cả 3 cầu thủ là bao nhiêu triệu USD?",
+    "options": [
+      "17,0 triệu USD.",
+      "19,5 triệu USD.",
+      "22,5 triệu USD.",
+      "18,5 triệu USD."
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B\nTổng = 12 (A) + 5 (B) + 2,5 (C) = 19,5 triệu USD.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 3,
+    "stem": "Xét \"Tổng giá trị gói hợp đồng\" (bao gồm: Phí chuyển nhượng + Phí lót tay + Tổng tiền lương trả trong suốt thời hạn hợp đồng). Gói hợp đồng của Tiền đạo A chiếm bao nhiêu phần trăm trong tổng chi phí đầu tư cho cả 3 cầu thủ này? (Làm tròn kết quả đến 2 chữ số thập phân)",
+    "options": [
+      "49,42%.",
+      "52,15%.",
+      "46,88%.",
+      "50,05%."
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A\n* Gói A = 120 + 12 + (20,8 x 5) = 236 triệu.\n* Tổng toàn đội = 477,5 triệu.\nTỉ lệ = (236 : 477,5) x 100 ≈ 49,42%.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 2,
+    "stem": "Theo luật Công bằng tài chính, \"Chi phí đội hình hàng năm\" của một cầu thủ được tính theo công thức:\nChi phí năm = (Phí chuyển nhượng / Số năm hợp đồng) + Lương hằng năm\nGiả sử sang năm tài chính 2025, câu lạc bộ kích hoạt điều khoản tăng lương 20% cho Tiền vệ B (các yếu tố khác không đổi). Chi phí đội hình hàng năm của Tiền vệ B ghi nhận trong sổ sách năm 2025 là bao nhiêu?",
+    "options": [
+      "33,0 triệu USD.",
+      "38,2 triệu USD.",
+      "35,6 triệu USD.",
+      "40,0 triệu."
+    ],
+    "correctIndex": 2,
+    "explanation": "Chọn C\nPhí khấu hao = 80 : 4 = 20 triệu.\nLương mới = 13 x 1,2 = 15,6 triệu.\nTổng = 20 + 15,6 = 35,6 triệu USD.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 2,
+    "stem": "Một bạn học sinh phát biểu rằng: “Trong thí nghiệm trên, việc pha loãng 10,00 ml giấm ăn bằng nước cất sẽ làm giảm nồng độ acetic acid, do đó khi chuẩn độ sẽ cần ít dung dịch NaOH hơn, dẫn đến kết quả xác định hàm lượng acid trong giấm không chính xác.”\nPhát biểu trên:",
+    "options": [
+      "Đúng, vì pha loãng luôn làm giảm nồng độ chất tan nên làm sai lệch kết quả chuẩn độ.",
+      "Đúng, vì khi thể tích dung dịch tăng lên thì phản ứng xảy ra không hoàn toàn.",
+      "Sai, vì pha loãng chỉ làm thay đổi nồng độ, không làm thay đổi số mol acid.",
+      "Sai, vì phenolphtalein chỉ đổi màu trong dung dịch loãng nên bắt buộc phải pha loãng."
+    ],
+    "correctIndex": 2,
+    "explanation": "Đáp án C\nSố mol chất tan không đổi khi pha loãng, nên thể tích NaOH tiêu tốn để trung hòa lượng mol đó cũng không đổi.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 2,
+    "stem": "Sau khi thực hiện chuẩn độ, kết quả 3 lần chuẩn độ ghi nhận thể tích dung dịch NaOH tiêu tốn lần lượt là: 12,40 ml; 12,50 ml; 12,45 ml. Nồng độ của acetic acid trong mẫu giấm ăn ban đầu là bao nhiêu?",
+    "options": [
+      "0,1245 M.",
+      "1,245 M.",
+      "0,0803 M.",
+      "0,8030 M."
+    ],
+    "correctIndex": 0,
+    "explanation": "Đáp án A\nV_tb NaOH = 12,45 ml.\nn_acid = n_NaOH = 0,1 x 0,01245 = 0,001245 mol.\nC_acid = 0,001245 / 0,01 = 0,1245 M.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 4,
+    "stem": "Trong quá trình chuẩn độ, một học sinh đã mắc lỗi thao tác như sau: trước khi chuẩn độ, trong phần vòi nhọn bên dưới khóa burette (dụng cụ nhỏ dd NaOH) chứa một bọt khí lớn. Phần bọt khí này vẫn được tính vào phần thể tích dd NaOH nhỏ xuống. Lỗi này sẽ ảnh hưởng như thế nào đến kết quả tính toán nồng độ acetic acid?",
+    "options": [
+      "Không ảnh hưởng, vì lượng acid trong bình tam giác không đổi.",
+      "Nồng độ acetic acid tính được thấp hơn giá trị thực.",
+      "Nồng độ acetic acid tính được cao hơn giá trị thực.",
+      "Làm cho điểm kết thúc (đổi màu) xảy ra sớm hơn, kết quả nồng độ acid tính được thấp hơn giá trị thực."
+    ],
+    "correctIndex": 2,
+    "explanation": "Đáp án C\nThể tích đọc được lớn hơn thực tế => Số mol tính toán lớn hơn thực tế => Nồng độ tính toán cao hơn thực tế.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 2,
+    "stem": "Nền kinh tế thị trường định hướng xã hội chủ nghĩa của Việt Nam hướng tới mục đích:",
+    "options": [
+      "cải thiện đời sống, nâng cao vị thế đất nước, bình đẳng, văn minh.",
+      "công nghiệp hóa, hiện đại hóa gắn với kinh tế tri thức.",
+      "phát triển con người toàn diện, ổn định trật tự xã hội.",
+      "xây dựng và bảo vệ hòa bình của Tổ quốc."
+    ],
+    "correctIndex": 0,
+    "explanation": "Đáp án A\nTương ứng với mục tiêu \"dân giàu, nước mạnh, công bằng, dân chủ, văn minh\".\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 3,
+    "stem": "Nền kinh tế thị trường định hướng xã hội chủ nghĩa được thực hiện ở Việt Nam từ khi:",
+    "options": [
+      "miền Bắc xây dựng chủ nghĩa xã hội năm 1961.",
+      "bắt đầu tiến hành công cuộc Đổi mới năm 1986.",
+      "đất nước thống nhất, cả nước cùng xây dựng chủ nghĩa xã hội năm 1975.",
+      "xuất hiện xu hướng chung ở các nước xã hội chủ nghĩa là cải cách, đổi mới."
+    ],
+    "correctIndex": 1,
+    "explanation": "Đáp án B\nGắn liền với công cuộc Đổi mới năm 1986.\n\n---"
+  },
+  {
+    "subjectSlug": "sci",
+    "difficulty": 3,
+    "stem": "Nội dung nào sau đây phản ánh điểm khác biệt giữa nền kinh tế thị trường định hướng xã hội chủ nghĩa với nền kinh tế thị trường ở các nước tư bản chủ nghĩa?",
+    "options": [
+      "Có sự tham gia của nhiều thành phần kinh tế và nhiều loại hình sở hữu tồn tại.",
+      "Có sự quản lí của nhà nước và hướng tới mục tiêu công bằng, tiến bộ xã hội.",
+      "Các thành phần kinh tế có tính độc lập cao, tự quyết định hoạt động kinh doanh.",
+      "Động lực tham gia vào nền kinh tế của các thành phần là lợi ích kinh tế cao nhất."
+    ],
+    "correctIndex": 1,
+    "explanation": "Đáp án B\nSự khác biệt nằm ở sự quản lý của nhà nước pháp quyền XHCN và mục tiêu định hướng xã hội chủ nghĩa (công bằng, tiến bộ xã hội).\n\n\"\"\""
+  }
+]

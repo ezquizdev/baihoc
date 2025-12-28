@@ -2401,81 +2401,13 @@ function buildDemoQuestionList({
   return ordered;
 }
 
-function mapDemoTagToSubjectSlug(tagLine) {
-  const normalized = tagLine.toLowerCase();
-  if (normalized.includes("toán")) return "math";
-  if (normalized.includes("tiếng việt") || normalized.includes("ngữ văn"))
-    return "vi";
-  if (normalized.includes("tiếng anh")) return "en";
-  if (
-    normalized.includes("tdkh") ||
-    normalized.includes("khtn") ||
-    normalized.includes("khxh")
-  ) {
-    return "sci";
-  }
-  return "sci";
-}
-
-function parseDemoDifficulty(tagLine) {
-  const match = tagLine.match(/[–-]\s*(\d)\s*$/);
-  if (!match) return 3;
-  const value = Number(match[1]);
-  if (!Number.isFinite(value)) return 3;
-  return Math.min(5, Math.max(1, value));
-}
-
-function parseDemoQuestionsFromText(text) {
-  const blocks = text.split(/^###\s+Câu\s+/m).slice(1);
-  const questions = [];
-
-  blocks.forEach((block) => {
-    const tagLine = block.match(/Tag:\s*([^\n]+)/)?.[1] ?? "";
-    const subjectSlug = mapDemoTagToSubjectSlug(tagLine);
-    const difficulty = parseDemoDifficulty(tagLine);
-    const stemMatch = block.match(/Đề bài:\s*([\s\S]*?)\n\s*[ABCD]\./);
-    if (!stemMatch) return;
-    const stem = stemMatch[1].trim();
-    if (!stem) return;
-
-    const optionMap = new Map();
-    const optionRegex = /\b([ABCD])\.\s*([^\n]+)/g;
-    let optionMatch = optionRegex.exec(block);
-    while (optionMatch) {
-      optionMap.set(optionMatch[1], optionMatch[2].trim());
-      optionMatch = optionRegex.exec(block);
-    }
-    if (optionMap.size !== 4) return;
-    const options = ["A", "B", "C", "D"].map((key) => optionMap.get(key));
-    if (options.some((value) => !value)) return;
-
-    const answerMatch = block.match(/(?:Chọn|Đáp án)\s*([ABCD])/);
-    if (!answerMatch) return;
-    const correctIndex = ["A", "B", "C", "D"].indexOf(answerMatch[1]);
-    if (correctIndex < 0) return;
-
-    const explanation = block.match(/Lời giải:\s*([\s\S]*)/)?.[1]?.trim();
-
-    questions.push({
-      subjectSlug,
-      difficulty,
-      stem,
-      options,
-      correctIndex,
-      explanation,
-    });
-  });
-
-  return questions;
-}
-
 function loadDemoQuestionBank() {
-  const demoPath = "agent-resources/demo.txt";
+  const demoPath = "scripts/db/demo-questions.json";
   if (!fs.existsSync(demoPath)) {
     throw new Error(`Seed misconfigured: missing ${demoPath}.`);
   }
-  const demoText = fs.readFileSync(demoPath, "utf8");
-  const questions = parseDemoQuestionsFromText(demoText);
+  const raw = fs.readFileSync(demoPath, "utf8");
+  const questions = JSON.parse(raw);
   const validQuestions = questions.filter(
     (question) =>
       question.options.length === 4 && Number.isInteger(question.correctIndex),
