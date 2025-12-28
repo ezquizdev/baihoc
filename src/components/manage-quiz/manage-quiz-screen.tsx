@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { DifficultyLevel } from "@/application/models/enums";
@@ -13,8 +14,6 @@ import { NoticeModal } from "@/components/ui/notice-modal";
 import { ManageQuizFilters } from "./manage-quiz-filters";
 import styles from "./manage-quiz-screen.module.css";
 import { CreateQuizModal } from "./modals/create-quiz-modal";
-import { QuestionEditModal } from "./modals/question-edit-modal";
-import { QuizBuilderModal } from "./modals/quiz-builder-modal";
 import { QuizInfoModal } from "./modals/quiz-info-modal";
 import { StaffQuizGrid } from "./staff-quiz-grid";
 
@@ -44,6 +43,7 @@ export function ManageQuizScreen({
   leaderboardMaxRows,
   leaderboardIncludeSelf,
 }: ManageQuizScreenProps) {
+  const router = useRouter();
   const displayName = session.fullName ?? session.email.split("@")[0];
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [sort, setSort] = useState<SortOrder>("newest");
@@ -68,13 +68,6 @@ export function ManageQuizScreen({
   const [refreshKey, setRefreshKey] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
   const [infoQuizId, setInfoQuizId] = useState<string | null>(null);
-  const [builderQuizId, setBuilderQuizId] = useState<string | null>(null);
-  const [builderRefreshKey, setBuilderRefreshKey] = useState(0);
-  const [questionTarget, setQuestionTarget] = useState<{
-    quizId: string;
-    questionId: string;
-    position: number;
-  } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -139,29 +132,19 @@ export function ManageQuizScreen({
         setCreateOpen(false);
         return;
       }
-      if (questionTarget) {
-        setQuestionTarget(null);
-        return;
-      }
-      if (builderQuizId) {
-        setBuilderQuizId(null);
-        return;
-      }
       if (infoQuizId) {
         setInfoQuizId(null);
       }
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [actionError, builderQuizId, createOpen, infoQuizId, questionTarget]);
+  }, [actionError, createOpen, infoQuizId]);
 
   useEffect(() => {
-    const open = Boolean(
-      createOpen || infoQuizId || builderQuizId || questionTarget,
-    );
+    const open = Boolean(createOpen || infoQuizId);
     document.body.classList.toggle("modal-open", open);
     return () => document.body.classList.remove("modal-open");
-  }, [builderQuizId, createOpen, infoQuizId, questionTarget]);
+  }, [createOpen, infoQuizId]);
 
   const questionMaxLimit = useMemo(() => {
     let max = RANGE_MAX_INITIAL;
@@ -418,31 +401,10 @@ export function ManageQuizScreen({
         quizId={infoQuizId}
         onClose={() => setInfoQuizId(null)}
         onMutated={handleMutated}
-        onContinue={(quizId) => {
+        onManageContent={(quizId) => {
           setInfoQuizId(null);
-          setBuilderQuizId(quizId);
+          router.push(`/staff/quizzes/${quizId}/content`);
         }}
-      />
-
-      <QuizBuilderModal
-        quizId={builderQuizId}
-        refreshKey={builderRefreshKey}
-        subjects={subjects}
-        onClose={() => {
-          setQuestionTarget(null);
-          setBuilderQuizId(null);
-        }}
-        onEditQuestion={(questionId, position) => {
-          if (!builderQuizId) return;
-          setQuestionTarget({ quizId: builderQuizId, questionId, position });
-        }}
-        onMutated={handleMutated}
-      />
-
-      <QuestionEditModal
-        target={questionTarget}
-        onClose={() => setQuestionTarget(null)}
-        onSaved={() => setBuilderRefreshKey((prev) => prev + 1)}
       />
 
       <CreateQuizModal

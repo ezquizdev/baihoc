@@ -13,7 +13,7 @@ import styles from "./manage-quiz-modals.module.css";
 type QuizInfoModalProps = {
   quizId: string | null;
   onClose: () => void;
-  onContinue: (quizId: string) => void;
+  onManageContent: (quizId: string) => void;
   onMutated: () => void;
 };
 
@@ -22,7 +22,7 @@ type LocalError = string | null;
 export function QuizInfoModal({
   quizId,
   onClose,
-  onContinue,
+  onManageContent,
   onMutated,
 }: QuizInfoModalProps) {
   const titleId = "manage-quiz-info-title";
@@ -115,7 +115,7 @@ export function QuizInfoModal({
 
   const disabled = loading || saving;
 
-  const submit = async (mode: "save" | "continue") => {
+  const submit = async (mode: "save" | "manageContent") => {
     if (!quizId) return;
     if (!challengeValidation.ok) {
       setError(challengeValidation.message);
@@ -167,8 +167,8 @@ export function QuizInfoModal({
       }
 
       onMutated();
-      if (mode === "continue") {
-        onContinue(quizId);
+      if (mode === "manageContent") {
+        onManageContent(quizId);
       } else {
         onClose();
       }
@@ -423,9 +423,9 @@ export function QuizInfoModal({
               }`}
               type="button"
               disabled={disabled || !challengeValidation.ok}
-              onClick={() => submit("continue")}
+              onClick={() => submit("manageContent")}
             >
-              Tiếp tục
+              Quản lý nội dung quiz
             </button>
             <button
               className={`${styles.pillBtn} ${styles.pillAccent} ${
