@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(staff-quizzes): portal quiz error modals
+- Staff quiz delete error popups now render in a portal so they are no longer clipped by quiz cards.
+
 ### fix(staff-questions): unclip table menus
 - Question table filter/action menus now render in a portal overlay so they remain usable when the table only has a single row.
 

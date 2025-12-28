@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import styles from "./notice-modal.module.css";
 
 export type NoticeTone = "info" | "success" | "error";
@@ -90,6 +91,8 @@ export function NoticeModal({
   }, [onClose, open]);
 
   if (!open) return null;
+  const portalRoot = typeof document === "undefined" ? null : document.body;
+  if (!portalRoot) return null;
 
   const dialogToneClassName =
     tone === "error"
@@ -98,7 +101,7 @@ export function NoticeModal({
         ? styles.dialogSuccess
         : "";
 
-  return (
+  return createPortal(
     <div className={styles.modal} role="presentation">
       <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
       <div
@@ -128,7 +131,8 @@ export function NoticeModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    portalRoot,
   );
 }
 

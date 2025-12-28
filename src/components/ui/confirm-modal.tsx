@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import styles from "./notice-modal.module.css";
 
 export type ConfirmVariant = "primary" | "danger";
@@ -96,12 +97,14 @@ export function ConfirmModal({
   }, [onCancel, open]);
 
   if (!open) return null;
+  const portalRoot = typeof document === "undefined" ? null : document.body;
+  if (!portalRoot) return null;
 
   const primaryClassName = `${styles.btn} ${
     confirmVariant === "danger" ? styles.btnDanger : ""
   }`.trim();
 
-  return (
+  return createPortal(
     <div className={styles.modal} role="presentation">
       <div className={styles.backdrop} onClick={onCancel} aria-hidden="true" />
       <div
@@ -137,7 +140,8 @@ export function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    portalRoot,
   );
 }
 
