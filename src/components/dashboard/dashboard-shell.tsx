@@ -599,7 +599,7 @@ export function DashboardShell({
                     />
                     Hồ sơ
                   </Link>
-                  <Link
+                  {/*<Link
                     href={settingsHref}
                     role="menuitem"
                     className={styles.profileLink}
@@ -612,7 +612,7 @@ export function DashboardShell({
                       aria-hidden="true"
                     />
                     Cài đặt
-                  </Link>
+                  </Link>*/}
                   <div className={styles.profileSeparator} aria-hidden="true" />
                   <button
                     type="button"

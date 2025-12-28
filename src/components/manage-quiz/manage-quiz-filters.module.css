@@ -281,6 +281,7 @@
   pointer-events: none;
   -webkit-appearance: none;
   z-index: 2;
+  top: -5px;
 }
 
 .rangeInput::-webkit-slider-runnable-track {
