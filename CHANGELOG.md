@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### chore(db): seed demo questions from demo.txt
+- Demo challenge questions now sample from `agent-resources/demo.txt` during `db:seed`.
+
 ### fix(staff-quizzes): portal quiz error modals
 - Staff quiz delete error popups now render in a portal so they are no longer clipped by quiz cards.
 

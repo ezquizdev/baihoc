@@ -2401,6 +2401,93 @@ function buildDemoQuestionList({
   return ordered;
 }
 
+function mapDemoTagToSubjectSlug(tagLine) {
+  const normalized = tagLine.toLowerCase();
+  if (normalized.includes("toán")) return "math";
+  if (normalized.includes("tiếng việt") || normalized.includes("ngữ văn"))
+    return "vi";
+  if (normalized.includes("tiếng anh")) return "en";
+  if (
+    normalized.includes("tdkh") ||
+    normalized.includes("khtn") ||
+    normalized.includes("khxh")
+  ) {
+    return "sci";
+  }
+  return "sci";
+}
+
+function parseDemoDifficulty(tagLine) {
+  const match = tagLine.match(/[–-]\s*(\d)\s*$/);
+  if (!match) return 3;
+  const value = Number(match[1]);
+  if (!Number.isFinite(value)) return 3;
+  return Math.min(5, Math.max(1, value));
+}
+
+function parseDemoQuestionsFromText(text) {
+  const blocks = text.split(/^###\s+Câu\s+/m).slice(1);
+  const questions = [];
+
+  blocks.forEach((block) => {
+    const tagLine = block.match(/Tag:\s*([^\n]+)/)?.[1] ?? "";
+    const subjectSlug = mapDemoTagToSubjectSlug(tagLine);
+    const difficulty = parseDemoDifficulty(tagLine);
+    const stemMatch = block.match(/Đề bài:\s*([\s\S]*?)\n\s*[ABCD]\./);
+    if (!stemMatch) return;
+    const stem = stemMatch[1].trim();
+    if (!stem) return;
+
+    const optionMap = new Map();
+    const optionRegex = /\b([ABCD])\.\s*([^\n]+)/g;
+    let optionMatch = optionRegex.exec(block);
+    while (optionMatch) {
+      optionMap.set(optionMatch[1], optionMatch[2].trim());
+      optionMatch = optionRegex.exec(block);
+    }
+    if (optionMap.size !== 4) return;
+    const options = ["A", "B", "C", "D"].map((key) => optionMap.get(key));
+    if (options.some((value) => !value)) return;
+
+    const answerMatch = block.match(/(?:Chọn|Đáp án)\s*([ABCD])/);
+    if (!answerMatch) return;
+    const correctIndex = ["A", "B", "C", "D"].indexOf(answerMatch[1]);
+    if (correctIndex < 0) return;
+
+    const explanation = block.match(/Lời giải:\s*([\s\S]*)/)?.[1]?.trim();
+
+    questions.push({
+      subjectSlug,
+      difficulty,
+      stem,
+      options,
+      correctIndex,
+      explanation,
+    });
+  });
+
+  return questions;
+}
+
+function loadDemoQuestionBank() {
+  const demoPath = "agent-resources/demo.txt";
+  if (!fs.existsSync(demoPath)) {
+    throw new Error(`Seed misconfigured: missing ${demoPath}.`);
+  }
+  const demoText = fs.readFileSync(demoPath, "utf8");
+  const questions = parseDemoQuestionsFromText(demoText);
+  const validQuestions = questions.filter(
+    (question) =>
+      question.options.length === 4 && Number.isInteger(question.correctIndex),
+  );
+  if (validQuestions.length < DEMO_1_QUESTION_IDS.length) {
+    throw new Error(
+      `Seed misconfigured: demo question bank needs at least ${DEMO_1_QUESTION_IDS.length} valid questions.`,
+    );
+  }
+  return validQuestions;
+}
+
 function seedDemo1Questions({
   questionRows,
   questionOptionRows,
@@ -2455,110 +2542,12 @@ function seedDemo1Questions({
     });
   };
 
-  const specs = [
-    {
-      questionId: DEMO_1_QUESTION_IDS[0],
-      subjectSlug: "vi",
-      stem: "Dòng nào dưới đây có các từ viết đúng chính tả?",
-      options: [
-        "Sai xót, sơ suất, sừng sộ.",
-        "Sai xót, sơ xuất, sừng sộ.",
-        "Sai sót, sơ xuất, sừng xộ.",
-        "Sai sót, sơ suất, sừng sộ.",
-      ],
-      correctIndex: 3,
-      explanation:
-        "Chỉ phương án D viết đúng chính tả: sai sót, sơ suất, sừng sộ.",
-      difficulty: 3,
-    },
-    {
-      questionId: DEMO_1_QUESTION_IDS[1],
-      subjectSlug: "vi",
-      stem: "Trong các từ sau, từ nào là từ láy?",
-      options: ["Bất ngờ", "Lấp lánh", "Chăm chỉ", "Hi vọng"],
-      correctIndex: 1,
-      explanation: "“Lấp lánh” là từ láy (lặp âm đầu và vần).",
-      difficulty: 2,
-    },
-    {
-      questionId: DEMO_1_QUESTION_IDS[2],
-      subjectSlug: "vi",
-      stem: "Dấu câu nào thường dùng để kết thúc câu hỏi?",
-      options: [".", "!", "?", ","],
-      correctIndex: 2,
-      explanation: "Câu hỏi thường kết thúc bằng dấu chấm hỏi “?”.",
-      difficulty: 1,
-    },
-    {
-      questionId: DEMO_1_QUESTION_IDS[3],
-      subjectSlug: "math",
-      stem: "Giá trị của biểu thức 3^2 + 4^2 bằng bao nhiêu?",
-      options: ["7", "12", "25", "49"],
-      correctIndex: 2,
-      explanation: "3^2 + 4^2 = 9 + 16 = 25.",
-      difficulty: 2,
-    },
-    {
-      questionId: DEMO_1_QUESTION_IDS[4],
-      subjectSlug: "math",
-      stem: "Nghiệm lớn hơn của phương trình x^2 - 5x + 6 = 0 là:",
-      options: ["1", "2", "3", "6"],
-      correctIndex: 2,
-      explanation: "x^2 - 5x + 6 = (x-2)(x-3) = 0 ⇒ nghiệm lớn hơn là 3.",
-      difficulty: 3,
-    },
-    {
-      questionId: DEMO_1_QUESTION_IDS[5],
-      subjectSlug: "math",
-      stem: "Một hình chữ nhật có chu vi 24 cm, chiều dài hơn chiều rộng 2 cm. Chiều rộng là:",
-      options: ["4 cm", "5 cm", "6 cm", "7 cm"],
-      correctIndex: 1,
-      explanation: "2(L+W)=24 ⇒ L+W=12; L=W+2 ⇒ 2W+2=12 ⇒ W=5 cm.",
-      difficulty: 4,
-    },
-    {
-      questionId: DEMO_1_QUESTION_IDS[6],
-      subjectSlug: "en",
-      stem: "Choose the correct option: She ____ to school every day.",
-      options: ["go", "goes", "going", "went"],
-      correctIndex: 1,
-      explanation: "With “she” in the present simple, use “goes”.",
-      difficulty: 2,
-    },
-    {
-      questionId: DEMO_1_QUESTION_IDS[7],
-      subjectSlug: "en",
-      stem: "Choose the word closest in meaning to “rapid”.",
-      options: ["fast", "slow", "late", "weak"],
-      correctIndex: 0,
-      explanation: "“Rapid” means “fast”.",
-      difficulty: 2,
-    },
-    {
-      questionId: DEMO_1_QUESTION_IDS[8],
-      subjectSlug: "sci",
-      stem: "Trong một thí nghiệm, “biến độc lập” là gì?",
-      options: [
-        "Yếu tố được thay đổi có chủ đích để quan sát ảnh hưởng",
-        "Yếu tố được đo để ghi nhận kết quả",
-        "Tất cả các yếu tố không đổi trong thí nghiệm",
-        "Kết luận rút ra sau khi thí nghiệm kết thúc",
-      ],
-      correctIndex: 0,
-      explanation:
-        "Biến độc lập là yếu tố người làm thí nghiệm chủ động thay đổi.",
-      difficulty: 3,
-    },
-    {
-      questionId: DEMO_1_QUESTION_IDS[9],
-      subjectSlug: "sci",
-      stem: "Bộ phận nào của tế bào thực vật thực hiện quang hợp?",
-      options: ["Ti thể", "Lục lạp", "Nhân tế bào", "Không bào"],
-      correctIndex: 1,
-      explanation: "Quang hợp diễn ra trong lục lạp.",
-      difficulty: 2,
-    },
-  ];
+  const demoQuestions = loadDemoQuestionBank();
+  const selected = sample(demoQuestions, DEMO_1_QUESTION_IDS.length);
+  const specs = selected.map((question, index) => ({
+    ...question,
+    questionId: DEMO_1_QUESTION_IDS[index],
+  }));
 
   if (specs.length !== DEMO_1_QUESTION_IDS.length) {
     throw new Error(

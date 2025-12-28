@@ -39,6 +39,18 @@ Suggested structure:
 
 ---
 
+## Seed demo questions from demo.txt (2025-12-28)
+- What: Replace hardcoded demo-1 seed questions with a random sample parsed from `agent-resources/demo.txt`.
+- Why: Keep demo seed data aligned with the shared demo question source.
+- Roles impacted: student, staff (seed data only).
+
+### Data / DB
+- Tables touched: `questions`, `question_options` (seed insert only).
+- Schema changes: none.
+
+### Testing
+- Run `npm exec -- biome check --write`.
+
 ## Staff question editor: save blockers warning (2025-12-28)
 - What: Show a warning panel listing why the question cannot be saved when the save button is disabled.
 - Why: Make validation requirements visible instead of a silent disabled state.
