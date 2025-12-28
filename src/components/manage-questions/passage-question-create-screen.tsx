@@ -55,7 +55,7 @@ export function PassageQuestionCreateScreen({
       <div className={styles.page}>
         <section className={`cardBase ${styles.hero}`} aria-label="Hero">
           <div>
-            <h1 className={styles.heroTitle}>Tạo passage</h1>
+            <h1 className={styles.heroTitle}>Tạo câu hỏi với ngữ liệu</h1>
             <p className={styles.heroText}>
               Tạo đoạn ngữ liệu và câu hỏi đầu tiên. Sau khi tạo xong, bạn sẽ được
               chuyển tới màn hình quản lý để thêm/xóa các câu hỏi khác.
@@ -80,7 +80,7 @@ export function PassageQuestionCreateScreen({
         <section className={`cardBase ${styles.card}`} aria-label="Passage">
           <h2 className={styles.sectionTitle}>Đoạn ngữ liệu</h2>
           <p className={styles.sectionSub}>
-            Đoạn ngữ liệu này sẽ được dùng chung cho các câu hỏi trong passage.
+            Đoạn ngữ liệu này sẽ được dùng chung cho các câu hỏi trong đoạn ngữ liệu.
           </p>
 
           <div
@@ -225,7 +225,7 @@ export function PassageQuestionCreateScreen({
               <h2 className={styles.sectionTitle}>Câu hỏi đầu tiên</h2>
               <div className={styles.subtle}>
                 Tip: sau khi tạo xong, dùng “+ Thêm câu hỏi” để bổ sung câu hỏi
-                khác trong passage.
+                khác trong đoạn ngữ liệu.
               </div>
             </div>
           </div>

@@ -371,7 +371,7 @@ export function QuestionInlineCreate({
                 />
 
                 <div className={editorStyles.row}>
-                  <div className={editorStyles.label}>Vị trí trong passage</div>
+                  <div className={editorStyles.label}>Vị trí trong cụm câu hỏi</div>
                 </div>
                 <input
                   className={editorStyles.input}

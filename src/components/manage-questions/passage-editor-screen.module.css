@@ -130,12 +130,12 @@
 }
 
 .btnGray {
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(148, 163, 184, 255);
   color: var(--text-strong);
 }
 
 .btnGray:hover {
-  background: rgba(148, 163, 184, 0.28);
+  background: rgba(148, 163, 184, 255);
 }
 
 .btnRed {

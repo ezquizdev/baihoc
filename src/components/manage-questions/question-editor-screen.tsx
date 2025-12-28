@@ -839,7 +839,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                         />
                         <div className={styles.row}>
                           <div className={styles.label}>
-                            Vị trí trong passage
+                            Thứ tự trong cụm câu hỏi
                           </div>
                           <input
                             className={styles.input}
