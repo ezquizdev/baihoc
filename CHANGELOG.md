@@ -29,6 +29,21 @@
 - New canonical route: `/leaderboard` renders student vs staff view based on session role.
 - Removed legacy routes `/dashboard/leaderboard` and `/staff/leaderboard` (no backward compat).
 
+### feat(highlight-challenge): add config and submissions backend
+- Added `dashboard_highlight_challenge` (single-row staff config) and `dashboard_highlight_challenge_submissions` (one-time-per-user submissions; not counted toward attempts/XP/IRT).
+- Added staff config API (`GET/PUT /api/staff/settings/highlight-challenge`) and student submit API (`POST /api/dashboard/highlight-challenge/submit`) with `mcq_single`/`mcq_multi` validation.
+
+### feat(staff-settings): add highlight challenge configuration
+- Added a “Highlight challenge” settings card to `/staff/settings` to choose an active challenge + one question to surface on student dashboards.
+- Server enforces “active challenge only”; UI shows ACTIVE/INACTIVE state and provides refresh/clear actions.
+
+### feat(dashboard): add highlight challenge card
+- Student `/dashboard` now shows the staff-configured highlight question + options, with “Nộp đáp án” appearing only after interaction (no layout shift).
+- After submitting, the card reveals correct answers + explanation and opens a result modal that links into the full challenge attempt flow (start/continue/view results).
+
+### chore(changelog): document highlight challenge feature
+- Recorded the highlight challenge feature work in this changelog.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger
