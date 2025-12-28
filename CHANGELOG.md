@@ -7,6 +7,7 @@
 - Added `POST /api/staff/media/images` (multipart upload, returns `{ url }`).
 - `RichText` now renders markdown images (responsive styling).
 - Staff quiz builder modals now render question stems via `RichText` so pasted images display while building quizzes.
+- Suppressed Biome `noImgElement` warning locally in `RichText` (markdown images are dynamic).
 - Removed legacy passage `mediaUrls` and dropped `passages.media_urls` (images are embedded in markdown `content` now).
 
 ### feat(staff): add excel-like sort/filter to question bank

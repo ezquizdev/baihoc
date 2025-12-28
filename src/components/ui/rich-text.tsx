@@ -42,6 +42,7 @@ export function RichText({
             if (!rawSrc) return null;
             if (!isAllowedImageSrc(rawSrc)) return null;
             return (
+              // biome-ignore lint/performance/noImgElement: Markdown images are dynamic; next/image requires sizing/config we don't have here.
               <img
                 src={rawSrc}
                 alt={props.alt ?? ""}
