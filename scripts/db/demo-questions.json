@@ -75,7 +75,8 @@
       "$u_1 = 4; q = \\frac{-1}{4}$"
     ],
     "correctIndex": 0,
-    "explanation": "Giải hệ phương trình tìm được q = -1/2 (thỏa mãn điều kiện).\nThế vào tìm u_1 = 8.\nChọn A.\n\n---"
+    "explanation": "Giải hệ phương trình tìm được q = -1/2 (thỏa mãn điều kiện).\nThế vào tìm u_1 = 8.\nChọn A.\n\n---",
+    "passage": "Cho (u_n) là một cấp số nhân lùi vô hạn có công bội âm (q < 0). Biết rằng:\nu_1 + u_3 = 10\nu_1^2 + u_3^2 = 68"
   },
   {
     "subjectSlug": "math",
@@ -88,7 +89,8 @@
       "$\\frac{4096}{7}$"
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\n\nv_1 = u_1^3 = 8^3 = 512.\nCông bội Q = q^3 = (-1/2)^3 = -1/8.\nTổng S = v_1 / (1 - Q) = 512 / (1 - (-1/8)) = 4096/9.\n\n---"
+    "explanation": "Chọn B\n\nv_1 = u_1^3 = 8^3 = 512.\nCông bội Q = q^3 = (-1/2)^3 = -1/8.\nTổng S = v_1 / (1 - Q) = 512 / (1 - (-1/8)) = 4096/9.\n\n---",
+    "passage": "Cho (u_n) là một cấp số nhân lùi vô hạn có công bội âm (q < 0). Biết rằng:\nu_1 + u_3 = 10\nu_1^2 + u_3^2 = 68"
   },
   {
     "subjectSlug": "math",
@@ -101,7 +103,8 @@
       "$\\frac{64}{9}$"
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\n\nCông thức tổng quát cho dạng này là T = u_1 / (1-q)^2\nT = 8 / (1 - (-0.5))^2 = 8 / (1.5)^2 = 8 / 2.25 = 32/9.\n\n---"
+    "explanation": "Chọn A\n\nCông thức tổng quát cho dạng này là T = u_1 / (1-q)^2\nT = 8 / (1 - (-0.5))^2 = 8 / (1.5)^2 = 8 / 2.25 = 32/9.\n\n---",
+    "passage": "Cho (u_n) là một cấp số nhân lùi vô hạn có công bội âm (q < 0). Biết rằng:\nu_1 + u_3 = 10\nu_1^2 + u_3^2 = 68"
   },
   {
     "subjectSlug": "math",
@@ -114,7 +117,8 @@
       "$m = \\frac{61}{2}$"
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\n\nĐặt t = log_3(x). PT trở thành t^2 - 3t + 2m - 7 = 0.\nVi-et: t1 + t2 = 3 => log_3(x1) + log_3(x2) = 3 => x1*x2 = 27.\nTừ (x1+3)(x2+3) = 72 => x1*x2 + 3(x1+x2) + 9 = 72 => 27 + 3(x1+x2) + 9 = 72 => x1+x2 = 12.\nGiải hệ x1*x2=27, x1+x2=12 => x1=3, x2=9.\n=> t1=1, t2=2.\nTích t1*t2 = 2m - 7 => 2 = 2m - 7 => 2m = 9 => m = 9/2."
+    "explanation": "Chọn A\n\nĐặt t = log_3(x). PT trở thành t^2 - 3t + 2m - 7 = 0.\nVi-et: t1 + t2 = 3 => log_3(x1) + log_3(x2) = 3 => x1*x2 = 27.\nTừ (x1+3)(x2+3) = 72 => x1*x2 + 3(x1+x2) + 9 = 72 => 27 + 3(x1+x2) + 9 = 72 => x1+x2 = 12.\nGiải hệ x1*x2=27, x1+x2=12 => x1=3, x2=9.\n=> t1=1, t2=2.\nTích t1*t2 = 2m - 7 => 2 = 2m - 7 => 2m = 9 => m = 9/2.",
+    "passage": "Cho (u_n) là một cấp số nhân lùi vô hạn có công bội âm (q < 0). Biết rằng:\nu_1 + u_3 = 10\nu_1^2 + u_3^2 = 68"
   },
   {
     "subjectSlug": "math",
@@ -127,7 +131,8 @@
       "f(x, y) = 150x + 200y"
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\nLợi nhuận từ Bàn trà là 1200, từ Ghế tựa là 800.\nf(x,y) = 1200x + 800y.\n\n---"
+    "explanation": "Chọn B\nLợi nhuận từ Bàn trà là 1200, từ Ghế tựa là 800.\nf(x,y) = 1200x + 800y.\n\n---",
+    "passage": "Một xưởng thủ công mỹ nghệ sản xuất hai loại sản phẩm chính: Bàn trà (kiểu X) và Ghế tựa (kiểu Y). Phân xưởng làm mộc cho Bàn trà có thể sản xuất tối đa 15 chiếc/tháng. Phân xưởng làm mộc cho Ghế tựa có thể sản xuất tối đa 20 chiếc/tháng. Để hoàn thiện (sơn, lắp ráp), mỗi chiếc Bàn trà tốn 4 giờ công, mỗi chiếc Ghế tựa tốn 3 giờ công. Tổng số giờ tối đa công xưởng có thể huy động trong tháng là 96 giờ. Lợi nhuận từ một chiếc bàn trà là 1.200.000 đồng, từ một chiếc Ghế tựa là 800.000 đồng. Gọi x và y lần lượt là số Bàn trà và Ghế tựa sản xuất trong 1 tháng (x, y >= 0).\n\n---"
   },
   {
     "subjectSlug": "math",
@@ -140,7 +145,8 @@
       "4x + 3y >= 96"
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nBàn trà tốn 4h, Ghế tựa tốn 3h. Tổng <= 96.\n4x + 3y <= 96.\n\n---"
+    "explanation": "Chọn C\nBàn trà tốn 4h, Ghế tựa tốn 3h. Tổng <= 96.\n4x + 3y <= 96.\n\n---",
+    "passage": "Một xưởng thủ công mỹ nghệ sản xuất hai loại sản phẩm chính: Bàn trà (kiểu X) và Ghế tựa (kiểu Y). Phân xưởng làm mộc cho Bàn trà có thể sản xuất tối đa 15 chiếc/tháng. Phân xưởng làm mộc cho Ghế tựa có thể sản xuất tối đa 20 chiếc/tháng. Để hoàn thiện (sơn, lắp ráp), mỗi chiếc Bàn trà tốn 4 giờ công, mỗi chiếc Ghế tựa tốn 3 giờ công. Tổng số giờ tối đa công xưởng có thể huy động trong tháng là 96 giờ. Lợi nhuận từ một chiếc bàn trà là 1.200.000 đồng, từ một chiếc Ghế tựa là 800.000 đồng. Gọi x và y lần lượt là số Bàn trà và Ghế tựa sản xuất trong 1 tháng (x, y >= 0).\n\n---"
   },
   {
     "subjectSlug": "math",
@@ -153,7 +159,8 @@
       "Chỉ sản xuất 80 Ghế tựa."
     ],
     "correctIndex": 0,
-    "explanation": "Hệ bất phương trình:\n4x + 3y <= 96\n0 <= x <= 15\n0 <= y <= 20\n\nthêm hình ở đây\n\nXét các đỉnh của miền nghiệm: O(0;0), A(15;0), B(15;12), C(9;20), D(0;20).\nTính f(x,y) = 1200x + 800y:\n- Tại B(15;12): f = 27600 (Max)\n- Tại C(9;20): f = 26800\nChọn A.\n\n---"
+    "explanation": "Hệ bất phương trình:\n4x + 3y <= 96\n0 <= x <= 15\n0 <= y <= 20\n\nthêm hình ở đây\n\nXét các đỉnh của miền nghiệm: O(0;0), A(15;0), B(15;12), C(9;20), D(0;20).\nTính f(x,y) = 1200x + 800y:\n- Tại B(15;12): f = 27600 (Max)\n- Tại C(9;20): f = 26800\nChọn A.\n\n---",
+    "passage": "Một xưởng thủ công mỹ nghệ sản xuất hai loại sản phẩm chính: Bàn trà (kiểu X) và Ghế tựa (kiểu Y). Phân xưởng làm mộc cho Bàn trà có thể sản xuất tối đa 15 chiếc/tháng. Phân xưởng làm mộc cho Ghế tựa có thể sản xuất tối đa 20 chiếc/tháng. Để hoàn thiện (sơn, lắp ráp), mỗi chiếc Bàn trà tốn 4 giờ công, mỗi chiếc Ghế tựa tốn 3 giờ công. Tổng số giờ tối đa công xưởng có thể huy động trong tháng là 96 giờ. Lợi nhuận từ một chiếc bàn trà là 1.200.000 đồng, từ một chiếc Ghế tựa là 800.000 đồng. Gọi x và y lần lượt là số Bàn trà và Ghế tựa sản xuất trong 1 tháng (x, y >= 0).\n\n---"
   },
   {
     "subjectSlug": "math",
@@ -166,7 +173,8 @@
       "$\\frac{5}{64}$"
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\nKhông gian mẫu n(Omega) = 2^8.\nChọn 3 vị trí cho số 1 trong 8 vị trí: C(8,3) = 56.\nP = 56/256 = 7/32.\n\n---"
+    "explanation": "Chọn A\nKhông gian mẫu n(Omega) = 2^8.\nChọn 3 vị trí cho số 1 trong 8 vị trí: C(8,3) = 56.\nP = 56/256 = 7/32.\n\n---",
+    "passage": "Bộ mã ASCII là bảng mã dùng một dãy gồm 8 kí hiệu là 0 hoặc 1 để mã hóa cho một kí tự. Lấy ngẫu nhiên 1 dãy 8 kí hiệu trong bảng mã này.\n\n---"
   },
   {
     "subjectSlug": "math",
@@ -179,7 +187,8 @@
       "$\\frac{247}{256}$"
     ],
     "correctIndex": 3,
-    "explanation": "Chọn D\nDùng biến cố đối: \"Có hơn 6 kí hiệu là 1\" (tức 7 hoặc 8).\nSố trường hợp: C(8,7) + C(8,8) = 8 + 1 = 9.\nP = 1 - 9/256 = 247/256.\n\n---"
+    "explanation": "Chọn D\nDùng biến cố đối: \"Có hơn 6 kí hiệu là 1\" (tức 7 hoặc 8).\nSố trường hợp: C(8,7) + C(8,8) = 8 + 1 = 9.\nP = 1 - 9/256 = 247/256.\n\n---",
+    "passage": "Bộ mã ASCII là bảng mã dùng một dãy gồm 8 kí hiệu là 0 hoặc 1 để mã hóa cho một kí tự. Lấy ngẫu nhiên 1 dãy 8 kí hiệu trong bảng mã này.\n\n---"
   },
   {
     "subjectSlug": "math",
@@ -192,7 +201,8 @@
       "$\\frac{1}{32}$"
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nDãy đối xứng thì 4 kí tự đầu quyết định 4 kí tự sau.\nSố cách chọn 4 kí tự đầu là 2^4 = 16.\nP = 16/256 = 1/16.\n\n---"
+    "explanation": "Chọn C\nDãy đối xứng thì 4 kí tự đầu quyết định 4 kí tự sau.\nSố cách chọn 4 kí tự đầu là 2^4 = 16.\nP = 16/256 = 1/16.\n\n---",
+    "passage": "Bộ mã ASCII là bảng mã dùng một dãy gồm 8 kí hiệu là 0 hoặc 1 để mã hóa cho một kí tự. Lấy ngẫu nhiên 1 dãy 8 kí hiệu trong bảng mã này.\n\n---"
   },
   {
     "subjectSlug": "math",
@@ -205,7 +215,8 @@
       "$12a^2$"
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\nthêm hình ở đây\nTa tính được MN = 4a, đường cao thiết diện AF = 3a.\nDiện tích = 1/2 * AF * MN = 6a^2.\n\n---"
+    "explanation": "Chọn B\nthêm hình ở đây\nTa tính được MN = 4a, đường cao thiết diện AF = 3a.\nDiện tích = 1/2 * AF * MN = 6a^2.\n\n---",
+    "passage": "Cho lăng trụ ABC.A'B'C' có đáy là tam giác đều cạnh 4a; AA' = 2*sqrt(3)a. Gọi M; N lần lượt là trung điểm của BB' và CC'. Biết mặt bên BCC'B' là hình chữ nhật và mặt phẳng (AMN) vuông góc với mặt phẳng (BCC'B').\n\n---"
   },
   {
     "subjectSlug": "math",
@@ -218,7 +229,8 @@
       "$4 \\cdot \\sqrt{3}a^3$"
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nTheo lời giải: V = AA' * S_AMN = 2*sqrt(3)a * 6a^2 = 12*sqrt(3)a^3.\n\n---"
+    "explanation": "Chọn C\nTheo lời giải: V = AA' * S_AMN = 2*sqrt(3)a * 6a^2 = 12*sqrt(3)a^3.\n\n---",
+    "passage": "Cho lăng trụ ABC.A'B'C' có đáy là tam giác đều cạnh 4a; AA' = 2*sqrt(3)a. Gọi M; N lần lượt là trung điểm của BB' và CC'. Biết mặt bên BCC'B' là hình chữ nhật và mặt phẳng (AMN) vuông góc với mặt phẳng (BCC'B').\n\n---"
   },
   {
     "subjectSlug": "math",
@@ -231,7 +243,8 @@
       "$\\sqrt{3}/3$"
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\nGóc cần tìm là góc FAE.\ncos(FAE) = AF / AE = 3a / (2*sqrt(3)a) = sqrt(3)/2.\n\n-----------------------------------------------------------"
+    "explanation": "Chọn B\nGóc cần tìm là góc FAE.\ncos(FAE) = AF / AE = 3a / (2*sqrt(3)a) = sqrt(3)/2.\n\n-----------------------------------------------------------",
+    "passage": "Cho lăng trụ ABC.A'B'C' có đáy là tam giác đều cạnh 4a; AA' = 2*sqrt(3)a. Gọi M; N lần lượt là trung điểm của BB' và CC'. Biết mặt bên BCC'B' là hình chữ nhật và mặt phẳng (AMN) vuông góc với mặt phẳng (BCC'B').\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -244,7 +257,8 @@
       "Họp Pháp lý."
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\nTa thấy dữ kiện 3 là dữ kiện chiếm nhiều ô, nên suy luận từ dữ kiện đó.\nDữ kiện 3 ta có Họp kế hoạch diễn ra trước 2 cuộc họp so với Họp Nhân sự (Kế hoạch _ _ Nhân sự).\nVậy Họp Nhân sự là 5 hoặc 6. Quy tắc 2 ta có IT sau Nhân sự nên IT cuối.\n\n---"
+    "explanation": "Chọn A\nTa thấy dữ kiện 3 là dữ kiện chiếm nhiều ô, nên suy luận từ dữ kiện đó.\nDữ kiện 3 ta có Họp kế hoạch diễn ra trước 2 cuộc họp so với Họp Nhân sự (Kế hoạch _ _ Nhân sự).\nVậy Họp Nhân sự là 5 hoặc 6. Quy tắc 2 ta có IT sau Nhân sự nên IT cuối.\n\n---",
+    "passage": "Một nhóm nhân viên trong công ty BAILEARN phải tham gia 6 buổi họp: Họp Kế hoạch, Họp Marketing, Họp Tài chính, Họp Nhân sự, Họp IT và Họp Pháp lý. Thông tin về lịch họp như sau:\n* Nhân viên tham dự Họp Tài chính trước Họp Marketing.\n* Nhân viên tham dự Họp IT sau Họp Nhân sự.\n* Nhân viên tham dự 2 buổi họp sau Họp Kế hoạch rồi mới tham dự Họp Nhân sự.\n* Họp Tài chính diễn ra vào buổi sáng đầu tiên hoặc khung giờ thứ ba.\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -257,7 +271,8 @@
       "Không có buổi họp nào."
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nTừ quy tắc 3 (Nhân viên tham dự 2 buổi họp sau Họp Kế hoạch rồi mới tham dự Họp Nhân sự => Kế hoạch ở vị trí i, Nhân sự ở vị trí i+3), ta dễ dàng thấy được họp Nhân sự phải từ khung giờ thứ tư trở đi (vì Kế hoạch sớm nhất là khung 1 thì Nhân sự là khung 4).\n\n---"
+    "explanation": "Chọn C\nTừ quy tắc 3 (Nhân viên tham dự 2 buổi họp sau Họp Kế hoạch rồi mới tham dự Họp Nhân sự => Kế hoạch ở vị trí i, Nhân sự ở vị trí i+3), ta dễ dàng thấy được họp Nhân sự phải từ khung giờ thứ tư trở đi (vì Kế hoạch sớm nhất là khung 1 thì Nhân sự là khung 4).\n\n---",
+    "passage": "Một nhóm nhân viên trong công ty BAILEARN phải tham gia 6 buổi họp: Họp Kế hoạch, Họp Marketing, Họp Tài chính, Họp Nhân sự, Họp IT và Họp Pháp lý. Thông tin về lịch họp như sau:\n* Nhân viên tham dự Họp Tài chính trước Họp Marketing.\n* Nhân viên tham dự Họp IT sau Họp Nhân sự.\n* Nhân viên tham dự 2 buổi họp sau Họp Kế hoạch rồi mới tham dự Họp Nhân sự.\n* Họp Tài chính diễn ra vào buổi sáng đầu tiên hoặc khung giờ thứ ba.\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -270,7 +285,8 @@
       "Họp Pháp lý và Họp IT."
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\nTa sẽ chia trường hợp để thử.\nNhư ở trên suy luận, dựa vào dữ kiện 2 và 3 ta thấy Nhân sự họp trước khung thứ 6, dẫn tới Kế hoạch họp trước khung thứ 3, tức chỉ có 2 trường hợp: Kế hoạch ở khung 2 hoặc 1.\n\n- TH1: Kế hoạch ở 2 => Nhân sự ở 5 => IT ở 6.\nNhư câu 91, Tài chính ở 1 hoặc 3.\nNếu Tài chính ở 1: TC - KH - _ - _ - NS - IT. (Marketing sau TC nên Marketing có thể ở 3 hoặc 4. Pháp lý ở ô còn lại).\n=> Kế hoạch có thể ở 2.\n\n- TH2: Kế hoạch ở 1 => Nhân sự ở 4 => IT ở 5 hoặc 6.\nKhi này Tài chính ở 3 (vì TC ở 1 trùng Kế hoạch). NS ở 4, MKT > 3 (vì sau TC), IT > 4.\nNên chỉ còn Pháp lý là có thể ở 2.\n\nTa có thể sắp xếp:\n| Kế hoạch | Pháp lý | Tài chính | Nhân sự | IT | Marketing |\nThỏa mãn.\n\n---"
+    "explanation": "Chọn A\nTa sẽ chia trường hợp để thử.\nNhư ở trên suy luận, dựa vào dữ kiện 2 và 3 ta thấy Nhân sự họp trước khung thứ 6, dẫn tới Kế hoạch họp trước khung thứ 3, tức chỉ có 2 trường hợp: Kế hoạch ở khung 2 hoặc 1.\n\n- TH1: Kế hoạch ở 2 => Nhân sự ở 5 => IT ở 6.\nNhư câu 91, Tài chính ở 1 hoặc 3.\nNếu Tài chính ở 1: TC - KH - _ - _ - NS - IT. (Marketing sau TC nên Marketing có thể ở 3 hoặc 4. Pháp lý ở ô còn lại).\n=> Kế hoạch có thể ở 2.\n\n- TH2: Kế hoạch ở 1 => Nhân sự ở 4 => IT ở 5 hoặc 6.\nKhi này Tài chính ở 3 (vì TC ở 1 trùng Kế hoạch). NS ở 4, MKT > 3 (vì sau TC), IT > 4.\nNên chỉ còn Pháp lý là có thể ở 2.\n\nTa có thể sắp xếp:\n| Kế hoạch | Pháp lý | Tài chính | Nhân sự | IT | Marketing |\nThỏa mãn.\n\n---",
+    "passage": "Một nhóm nhân viên trong công ty BAILEARN phải tham gia 6 buổi họp: Họp Kế hoạch, Họp Marketing, Họp Tài chính, Họp Nhân sự, Họp IT và Họp Pháp lý. Thông tin về lịch họp như sau:\n* Nhân viên tham dự Họp Tài chính trước Họp Marketing.\n* Nhân viên tham dự Họp IT sau Họp Nhân sự.\n* Nhân viên tham dự 2 buổi họp sau Họp Kế hoạch rồi mới tham dự Họp Nhân sự.\n* Họp Tài chính diễn ra vào buổi sáng đầu tiên hoặc khung giờ thứ ba.\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -283,7 +299,8 @@
       "V, T, R."
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nỞ cụm này, suy luận từ ban đầu rất quan trọng.\nKí hiệu số giống chó một người sở hữu bằng tên của người đó, ví dụ V = 3 tức là V có 3 giống chó.\nỞ đây ta thấy, từ dữ kiện 1 và 4, ta suy ra V > U > T, mà mình chỉ có 3 giống nên có ngay V = 3, U = 2, T = 1.\nKết hợp với dữ kiện 2, ta có S = 1 (Vì U có 2 con, tổng có 3 loại, U và S không chung nên S chỉ có thể lấy loại còn lại duy nhất).\nKết hợp với dữ kiện 3, ta có R = 1 hoặc 2.\n\nChốt lại, ta suy ra được bảng số lượng chó:\n\n| V | U | T | S | R |\n|---|---|---|---|---|\n| 3 | 2 | 1 | 1 | 1 hoặc 2 |\n\nBắt đầu làm câu 94. Ta thấy V chắc chắn có K (vì V có cả 3 loại). Ta loại A.\nTừ dữ kiện 2 và 3 để loại được B và D (U và S, T và R không có giống chó nào chung).\nNhư vậy đáp án là C.\n\n---"
+    "explanation": "Chọn C\nỞ cụm này, suy luận từ ban đầu rất quan trọng.\nKí hiệu số giống chó một người sở hữu bằng tên của người đó, ví dụ V = 3 tức là V có 3 giống chó.\nỞ đây ta thấy, từ dữ kiện 1 và 4, ta suy ra V > U > T, mà mình chỉ có 3 giống nên có ngay V = 3, U = 2, T = 1.\nKết hợp với dữ kiện 2, ta có S = 1 (Vì U có 2 con, tổng có 3 loại, U và S không chung nên S chỉ có thể lấy loại còn lại duy nhất).\nKết hợp với dữ kiện 3, ta có R = 1 hoặc 2.\n\nChốt lại, ta suy ra được bảng số lượng chó:\n\n| V | U | T | S | R |\n|---|---|---|---|---|\n| 3 | 2 | 1 | 1 | 1 hoặc 2 |\n\nBắt đầu làm câu 94. Ta thấy V chắc chắn có K (vì V có cả 3 loại). Ta loại A.\nTừ dữ kiện 2 và 3 để loại được B và D (U và S, T và R không có giống chó nào chung).\nNhư vậy đáp án là C.\n\n---",
+    "passage": "Năm đứa trẻ trong một khu phố R, S, T, U, và V mỗi đứa sở hữu ít nhất một con chó thuộc ba loại duy nhất: K, L, và M. Không đứa trẻ nào sở hữu nhiều hơn một con thuộc bất kỳ giống chó cụ thể nào. Các điều kiện sau được áp dụng:\n- U sở hữu nhiều chó hơn T.\n- U và S không sở hữu bất kỳ giống chó nào chung.\n- R và T không sở hữu bất kỳ giống chó nào chung.\n- V sở hữu nhiều chó hơn bất kỳ đứa trẻ nào khác.\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -296,7 +313,8 @@
       "Ít nhất ba đứa trẻ sở hữu chó L."
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\nTa thấy điều kiện mới này sẽ kết hợp với dữ kiện 2 vì cùng liên quan tới S. Như vậy giống chó duy nhất T sở hữu sẽ rơi vào một trong 2 giống S không có, cũng chính là một trong hai giống của U. Ta thấy chọn được đáp án A.\n\n---"
+    "explanation": "Chọn A\nTa thấy điều kiện mới này sẽ kết hợp với dữ kiện 2 vì cùng liên quan tới S. Như vậy giống chó duy nhất T sở hữu sẽ rơi vào một trong 2 giống S không có, cũng chính là một trong hai giống của U. Ta thấy chọn được đáp án A.\n\n---",
+    "passage": "Năm đứa trẻ trong một khu phố R, S, T, U, và V mỗi đứa sở hữu ít nhất một con chó thuộc ba loại duy nhất: K, L, và M. Không đứa trẻ nào sở hữu nhiều hơn một con thuộc bất kỳ giống chó cụ thể nào. Các điều kiện sau được áp dụng:\n- U sở hữu nhiều chó hơn T.\n- U và S không sở hữu bất kỳ giống chó nào chung.\n- R và T không sở hữu bất kỳ giống chó nào chung.\n- V sở hữu nhiều chó hơn bất kỳ đứa trẻ nào khác.\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -309,7 +327,8 @@
       "Cả S và U đều không sở hữu chó L."
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\nỞ trên ta đã suy luận được V = 3, nên V phải có L. Loại C.\nNhư vậy trong R, S, T, U có đúng 1 người có L.\nCũng dựa vào dữ kiện số lượng đã suy luận ở câu 91 (U=2, S=1, T=1), kết hợp với các điều kiện 2 và 3, ta thấy S và U là “đối nhau” (tức không giao nhau, mà hợp của nó bao hết cả tập K, L, M), nên một trong hai phải có L.\nNhư vậy A và D đều chắc chắn sai.\nChỉ có B có thể đúng.\n\n---"
+    "explanation": "Chọn B\nỞ trên ta đã suy luận được V = 3, nên V phải có L. Loại C.\nNhư vậy trong R, S, T, U có đúng 1 người có L.\nCũng dựa vào dữ kiện số lượng đã suy luận ở câu 91 (U=2, S=1, T=1), kết hợp với các điều kiện 2 và 3, ta thấy S và U là “đối nhau” (tức không giao nhau, mà hợp của nó bao hết cả tập K, L, M), nên một trong hai phải có L.\nNhư vậy A và D đều chắc chắn sai.\nChỉ có B có thể đúng.\n\n---",
+    "passage": "Năm đứa trẻ trong một khu phố R, S, T, U, và V mỗi đứa sở hữu ít nhất một con chó thuộc ba loại duy nhất: K, L, và M. Không đứa trẻ nào sở hữu nhiều hơn một con thuộc bất kỳ giống chó cụ thể nào. Các điều kiện sau được áp dụng:\n- U sở hữu nhiều chó hơn T.\n- U và S không sở hữu bất kỳ giống chó nào chung.\n- R và T không sở hữu bất kỳ giống chó nào chung.\n- V sở hữu nhiều chó hơn bất kỳ đứa trẻ nào khác.\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -322,7 +341,8 @@
       "0,92."
     ],
     "correctIndex": 3,
-    "explanation": "Chọn D\nBước 1 – Tính tổng (doanh thu) cho Máy Slot, Roulette, Các trò chơi bàn khác (từ 2006-2009).\n* Máy Slot = 1,3 + 1,4 + 1,8 + 1,5 = 6,0\n* Roulette = 0,8 + 0,6 + 0,6 + 0,7 = 2,7\n* Các trò chơi bàn khác = 4,4 + 4,2 + 4,5 + 4,8 = 17,9\n\nBước 2 – Tính toán chênh lệch (đơn vị là £100.000s).\n17,9 - (6,0 + 2,7) = 17,9 - 8,7 = 9,2\n\nBước 3 – Đổi sang đơn vị triệu £.\nVì 9,2 đang ở đơn vị £100.000s, nên giá trị thực là: 9,2 x 100.000 = 920.000 = 0,92 triệu £.\n\n---"
+    "explanation": "Chọn D\nBước 1 – Tính tổng (doanh thu) cho Máy Slot, Roulette, Các trò chơi bàn khác (từ 2006-2009).\n* Máy Slot = 1,3 + 1,4 + 1,8 + 1,5 = 6,0\n* Roulette = 0,8 + 0,6 + 0,6 + 0,7 = 2,7\n* Các trò chơi bàn khác = 4,4 + 4,2 + 4,5 + 4,8 = 17,9\n\nBước 2 – Tính toán chênh lệch (đơn vị là £100.000s).\n17,9 - (6,0 + 2,7) = 17,9 - 8,7 = 9,2\n\nBước 3 – Đổi sang đơn vị triệu £.\nVì 9,2 đang ở đơn vị £100.000s, nên giá trị thực là: 9,2 x 100.000 = 920.000 = 0,92 triệu £.\n\n---",
+    "passage": "Dựa vào thông tin dưới đây để trả lời các câu từ 97 đến 99.\nBiểu đồ bên dưới thể hiện Doanh thu Sòng bạc Calewall. (Đơn vị: £100.000s)\n\n**[Thêm hình biểu đồ cột ngang tại đây]**\n\nBảng số lượt khách hàng năm (Đơn vị: 100.000 người):\n\n| Năm | Số lượt khách hàng năm |\n|---|---|\n| 2006 | 14.6 |\n| 2007 | 15.2 |\n| 2008 | 16.3 |\n| 2009 | 16.8 |\n| 2010 (Dự đoán) | 16.5 |\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -335,7 +355,8 @@
       "2006."
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\nBước 1 - Tính doanh thu phí vào cửa cho mỗi năm (Số lượt khách x £15).\n* 2006: 1.460.000 x 15 = 21.900.000 £ (Thấp hơn 23 triệu)\n* 2007: 1.520.000 x 15 = 22.800.000 £ (Thấp hơn 23 triệu)\n* 2008: 1.630.000 x 15 = 24.450.000 £ (Cao hơn 23 triệu)\n* 2009: 1.680.000 x 15 = 25.200.000 £ (Cao hơn 23 triệu)\n\nVì vậy, câu trả lời đúng là A. 2006, 2007.\n\n---"
+    "explanation": "Chọn A\nBước 1 - Tính doanh thu phí vào cửa cho mỗi năm (Số lượt khách x £15).\n* 2006: 1.460.000 x 15 = 21.900.000 £ (Thấp hơn 23 triệu)\n* 2007: 1.520.000 x 15 = 22.800.000 £ (Thấp hơn 23 triệu)\n* 2008: 1.630.000 x 15 = 24.450.000 £ (Cao hơn 23 triệu)\n* 2009: 1.680.000 x 15 = 25.200.000 £ (Cao hơn 23 triệu)\n\nVì vậy, câu trả lời đúng là A. 2006, 2007.\n\n---",
+    "passage": "Dựa vào thông tin dưới đây để trả lời các câu từ 97 đến 99.\nBiểu đồ bên dưới thể hiện Doanh thu Sòng bạc Calewall. (Đơn vị: £100.000s)\n\n**[Thêm hình biểu đồ cột ngang tại đây]**\n\nBảng số lượt khách hàng năm (Đơn vị: 100.000 người):\n\n| Năm | Số lượt khách hàng năm |\n|---|---|\n| 2006 | 14.6 |\n| 2007 | 15.2 |\n| 2008 | 16.3 |\n| 2009 | 16.8 |\n| 2010 (Dự đoán) | 16.5 |\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -348,7 +369,8 @@
       "4,41 triệu £."
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nBước 1 - Tính tổng doanh thu dự kiến năm 2010 (đơn vị £100.000s).\n4,7 (Trò chơi bàn khác) + 1,1 (Máy Slot) + 0,5 (Roulette) = 6,3\n\nBước 2 - Tính giá thâu tóm ban đầu.\n6,3 x 7 = 44,1 (đơn vị £100.000s)\n\nBước 3 - Tính giá trị định giá của Hội đồng quản trị (thêm 10%).\n44,1 x 110% (hoặc 44,1 x 1,1) = 48,51 (đơn vị £100.000s)\n\nBước 4 - Đổi sang đơn vị triệu £.\n48,51 x 100.000 = 4.851.000 = 4,851 triệu £ (làm tròn là 4,85 triệu £).\n\n---"
+    "explanation": "Chọn C\nBước 1 - Tính tổng doanh thu dự kiến năm 2010 (đơn vị £100.000s).\n4,7 (Trò chơi bàn khác) + 1,1 (Máy Slot) + 0,5 (Roulette) = 6,3\n\nBước 2 - Tính giá thâu tóm ban đầu.\n6,3 x 7 = 44,1 (đơn vị £100.000s)\n\nBước 3 - Tính giá trị định giá của Hội đồng quản trị (thêm 10%).\n44,1 x 110% (hoặc 44,1 x 1,1) = 48,51 (đơn vị £100.000s)\n\nBước 4 - Đổi sang đơn vị triệu £.\n48,51 x 100.000 = 4.851.000 = 4,851 triệu £ (làm tròn là 4,85 triệu £).\n\n---",
+    "passage": "Dựa vào thông tin dưới đây để trả lời các câu từ 97 đến 99.\nBiểu đồ bên dưới thể hiện Doanh thu Sòng bạc Calewall. (Đơn vị: £100.000s)\n\n**[Thêm hình biểu đồ cột ngang tại đây]**\n\nBảng số lượt khách hàng năm (Đơn vị: 100.000 người):\n\n| Năm | Số lượt khách hàng năm |\n|---|---|\n| 2006 | 14.6 |\n| 2007 | 15.2 |\n| 2008 | 16.3 |\n| 2009 | 16.8 |\n| 2010 (Dự đoán) | 16.5 |\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -361,7 +383,8 @@
       "18,5 triệu USD."
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\nTổng = 12 (A) + 5 (B) + 2,5 (C) = 19,5 triệu USD.\n\n---"
+    "explanation": "Chọn B\nTổng = 12 (A) + 5 (B) + 2,5 (C) = 19,5 triệu USD.\n\n---",
+    "passage": "Trong kỳ chuyển nhượng Hè 2024, câu lạc bộ Royal FC đã hoàn tất mua sắm 3 cầu thủ ngôi sao với kế hoạch tài chính chi tiết bên dưới. Tuy nhiên, một số thông tin đã bị ẩn (ký hiệu X, Y, Z).\n\n| Cầu thủ | Phí chuyển nhượng (Triệu USD) | Lương tuần (USD/tuần) | Thời hạn hợp đồng (Năm) | Phí lót tay cho người đại diện |\n|---|---|---|---|---|\n| Tiền đạo A | X | 400.000 | 5 | 10% trên Phí chuyển nhượng |\n| Tiền vệ B | 80 | 250.000 | 4 | Y (Triệu USD) |\n| Hậu vệ C | 50 | Z | 4 | 5% trên Phí chuyển nhượng |\n\nThông tin bổ sung:\n* Tổng ngân sách Phí chuyển nhượng cho cả 3 cầu thủ là 250 triệu USD.\n* Phí chuyển nhượng của Tiền đạo A gấp 1,5 lần Phí chuyển nhượng của Tiền vệ B.\n* Tổng chi phí Lương cơ bản (chưa bao gồm thưởng) phải trả cho cả 3 cầu thủ trong năm đầu tiên là 46,8 triệu USD. (Quy ước: 1 năm = 52 tuần lương).\n* Phí lót tay (số tiền thực tế) trả cho người đại diện của Tiền vệ B gặp đôi phí lót tay trả cho người đại diện của Hậu vệ C.\n\nTrước khi giải, ta cần tìm các ẩn số X, Y, Z.\n* Tìm X (Phí chuyển nhượng A): X = 120.\n* Tìm Z (Lương tuần C): Z = 250.000.\n* Tìm Y (Lót tay B): Y = 5,0.\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -374,7 +397,8 @@
       "50,05%."
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\n* Gói A = 120 + 12 + (20,8 x 5) = 236 triệu.\n* Tổng toàn đội = 477,5 triệu.\nTỉ lệ = (236 : 477,5) x 100 ≈ 49,42%.\n\n---"
+    "explanation": "Chọn A\n* Gói A = 120 + 12 + (20,8 x 5) = 236 triệu.\n* Tổng toàn đội = 477,5 triệu.\nTỉ lệ = (236 : 477,5) x 100 ≈ 49,42%.\n\n---",
+    "passage": "Trong kỳ chuyển nhượng Hè 2024, câu lạc bộ Royal FC đã hoàn tất mua sắm 3 cầu thủ ngôi sao với kế hoạch tài chính chi tiết bên dưới. Tuy nhiên, một số thông tin đã bị ẩn (ký hiệu X, Y, Z).\n\n| Cầu thủ | Phí chuyển nhượng (Triệu USD) | Lương tuần (USD/tuần) | Thời hạn hợp đồng (Năm) | Phí lót tay cho người đại diện |\n|---|---|---|---|---|\n| Tiền đạo A | X | 400.000 | 5 | 10% trên Phí chuyển nhượng |\n| Tiền vệ B | 80 | 250.000 | 4 | Y (Triệu USD) |\n| Hậu vệ C | 50 | Z | 4 | 5% trên Phí chuyển nhượng |\n\nThông tin bổ sung:\n* Tổng ngân sách Phí chuyển nhượng cho cả 3 cầu thủ là 250 triệu USD.\n* Phí chuyển nhượng của Tiền đạo A gấp 1,5 lần Phí chuyển nhượng của Tiền vệ B.\n* Tổng chi phí Lương cơ bản (chưa bao gồm thưởng) phải trả cho cả 3 cầu thủ trong năm đầu tiên là 46,8 triệu USD. (Quy ước: 1 năm = 52 tuần lương).\n* Phí lót tay (số tiền thực tế) trả cho người đại diện của Tiền vệ B gặp đôi phí lót tay trả cho người đại diện của Hậu vệ C.\n\nTrước khi giải, ta cần tìm các ẩn số X, Y, Z.\n* Tìm X (Phí chuyển nhượng A): X = 120.\n* Tìm Z (Lương tuần C): Z = 250.000.\n* Tìm Y (Lót tay B): Y = 5,0.\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -387,7 +411,8 @@
       "40,0 triệu."
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nPhí khấu hao = 80 : 4 = 20 triệu.\nLương mới = 13 x 1,2 = 15,6 triệu.\nTổng = 20 + 15,6 = 35,6 triệu USD.\n\n---"
+    "explanation": "Chọn C\nPhí khấu hao = 80 : 4 = 20 triệu.\nLương mới = 13 x 1,2 = 15,6 triệu.\nTổng = 20 + 15,6 = 35,6 triệu USD.\n\n---",
+    "passage": "Trong kỳ chuyển nhượng Hè 2024, câu lạc bộ Royal FC đã hoàn tất mua sắm 3 cầu thủ ngôi sao với kế hoạch tài chính chi tiết bên dưới. Tuy nhiên, một số thông tin đã bị ẩn (ký hiệu X, Y, Z).\n\n| Cầu thủ | Phí chuyển nhượng (Triệu USD) | Lương tuần (USD/tuần) | Thời hạn hợp đồng (Năm) | Phí lót tay cho người đại diện |\n|---|---|---|---|---|\n| Tiền đạo A | X | 400.000 | 5 | 10% trên Phí chuyển nhượng |\n| Tiền vệ B | 80 | 250.000 | 4 | Y (Triệu USD) |\n| Hậu vệ C | 50 | Z | 4 | 5% trên Phí chuyển nhượng |\n\nThông tin bổ sung:\n* Tổng ngân sách Phí chuyển nhượng cho cả 3 cầu thủ là 250 triệu USD.\n* Phí chuyển nhượng của Tiền đạo A gấp 1,5 lần Phí chuyển nhượng của Tiền vệ B.\n* Tổng chi phí Lương cơ bản (chưa bao gồm thưởng) phải trả cho cả 3 cầu thủ trong năm đầu tiên là 46,8 triệu USD. (Quy ước: 1 năm = 52 tuần lương).\n* Phí lót tay (số tiền thực tế) trả cho người đại diện của Tiền vệ B gặp đôi phí lót tay trả cho người đại diện của Hậu vệ C.\n\nTrước khi giải, ta cần tìm các ẩn số X, Y, Z.\n* Tìm X (Phí chuyển nhượng A): X = 120.\n* Tìm Z (Lương tuần C): Z = 250.000.\n* Tìm Y (Lót tay B): Y = 5,0.\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -400,7 +425,8 @@
       "Sai, vì phenolphtalein chỉ đổi màu trong dung dịch loãng nên bắt buộc phải pha loãng."
     ],
     "correctIndex": 2,
-    "explanation": "Đáp án C\nSố mol chất tan không đổi khi pha loãng, nên thể tích NaOH tiêu tốn để trung hòa lượng mol đó cũng không đổi.\n\n---"
+    "explanation": "Đáp án C\nSố mol chất tan không đổi khi pha loãng, nên thể tích NaOH tiêu tốn để trung hòa lượng mol đó cũng không đổi.\n\n---",
+    "passage": "Chuẩn độ là phương pháp định lượng dùng để xác định nồng độ của một chất đã hòa tan trong mẫu thử bằng cách cho phản ứng với một thể tích chính xác dung dịch chuẩn (dung dịch đã biết trước nồng độ).\nMột nhóm học sinh tiến hành thí nghiệm xác định hàm lượng acetic acid trong giấm ăn bằng dung dịch chuẩn sodium hydroxide nồng độ 0,10 M (0,01 mol/lít). Phản ứng xảy ra dựa trên phương trình sau:\nCH3COOH + NaOH -> CH3COONa + H2O\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -413,7 +439,8 @@
       "0,8030 M."
     ],
     "correctIndex": 0,
-    "explanation": "Đáp án A\nV_tb NaOH = 12,45 ml.\nn_acid = n_NaOH = 0,1 x 0,01245 = 0,001245 mol.\nC_acid = 0,001245 / 0,01 = 0,1245 M.\n\n---"
+    "explanation": "Đáp án A\nV_tb NaOH = 12,45 ml.\nn_acid = n_NaOH = 0,1 x 0,01245 = 0,001245 mol.\nC_acid = 0,001245 / 0,01 = 0,1245 M.\n\n---",
+    "passage": "Chuẩn độ là phương pháp định lượng dùng để xác định nồng độ của một chất đã hòa tan trong mẫu thử bằng cách cho phản ứng với một thể tích chính xác dung dịch chuẩn (dung dịch đã biết trước nồng độ).\nMột nhóm học sinh tiến hành thí nghiệm xác định hàm lượng acetic acid trong giấm ăn bằng dung dịch chuẩn sodium hydroxide nồng độ 0,10 M (0,01 mol/lít). Phản ứng xảy ra dựa trên phương trình sau:\nCH3COOH + NaOH -> CH3COONa + H2O\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -426,7 +453,8 @@
       "Làm cho điểm kết thúc (đổi màu) xảy ra sớm hơn, kết quả nồng độ acid tính được thấp hơn giá trị thực."
     ],
     "correctIndex": 2,
-    "explanation": "Đáp án C\nThể tích đọc được lớn hơn thực tế => Số mol tính toán lớn hơn thực tế => Nồng độ tính toán cao hơn thực tế.\n\n---"
+    "explanation": "Đáp án C\nThể tích đọc được lớn hơn thực tế => Số mol tính toán lớn hơn thực tế => Nồng độ tính toán cao hơn thực tế.\n\n---",
+    "passage": "Chuẩn độ là phương pháp định lượng dùng để xác định nồng độ của một chất đã hòa tan trong mẫu thử bằng cách cho phản ứng với một thể tích chính xác dung dịch chuẩn (dung dịch đã biết trước nồng độ).\nMột nhóm học sinh tiến hành thí nghiệm xác định hàm lượng acetic acid trong giấm ăn bằng dung dịch chuẩn sodium hydroxide nồng độ 0,10 M (0,01 mol/lít). Phản ứng xảy ra dựa trên phương trình sau:\nCH3COOH + NaOH -> CH3COONa + H2O\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -439,7 +467,8 @@
       "xây dựng và bảo vệ hòa bình của Tổ quốc."
     ],
     "correctIndex": 0,
-    "explanation": "Đáp án A\nTương ứng với mục tiêu \"dân giàu, nước mạnh, công bằng, dân chủ, văn minh\".\n\n---"
+    "explanation": "Đáp án A\nTương ứng với mục tiêu \"dân giàu, nước mạnh, công bằng, dân chủ, văn minh\".\n\n---",
+    "passage": "Dựa vào thông tin dưới đây để trả lời các câu từ 112 đến 114:\n“Theo nhận thức của chúng ta, kinh tế thị trường định hướng xã hội chủ nghĩa là nền kinh tế thị trường hiện đại, hội nhập quốc tế, vận hành đầy đủ, đồng bộ theo các quy luật của kinh tế thị trường, có sự quản lí của nhà nước pháp quyền xã hội chủ nghĩa, do Đảng Cộng sản Việt Nam lãnh đạo; bảo đảm định hướng xã hội chủ nghĩa, nhằm mục tiêu “dân giàu, nước mạnh, công bằng, dân chủ, văn minh…”\n(Nguyễn Phú Trọng, Một số vấn đề lý luận và thực tiễn về chủ nghĩa xã hội và con đường đi lên chủ nghĩa xã hội ở Việt Nam, NXB Chính trị quốc gia Sự thật, Hà Nội, 2022)\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -452,7 +481,8 @@
       "xuất hiện xu hướng chung ở các nước xã hội chủ nghĩa là cải cách, đổi mới."
     ],
     "correctIndex": 1,
-    "explanation": "Đáp án B\nGắn liền với công cuộc Đổi mới năm 1986.\n\n---"
+    "explanation": "Đáp án B\nGắn liền với công cuộc Đổi mới năm 1986.\n\n---",
+    "passage": "Dựa vào thông tin dưới đây để trả lời các câu từ 112 đến 114:\n“Theo nhận thức của chúng ta, kinh tế thị trường định hướng xã hội chủ nghĩa là nền kinh tế thị trường hiện đại, hội nhập quốc tế, vận hành đầy đủ, đồng bộ theo các quy luật của kinh tế thị trường, có sự quản lí của nhà nước pháp quyền xã hội chủ nghĩa, do Đảng Cộng sản Việt Nam lãnh đạo; bảo đảm định hướng xã hội chủ nghĩa, nhằm mục tiêu “dân giàu, nước mạnh, công bằng, dân chủ, văn minh…”\n(Nguyễn Phú Trọng, Một số vấn đề lý luận và thực tiễn về chủ nghĩa xã hội và con đường đi lên chủ nghĩa xã hội ở Việt Nam, NXB Chính trị quốc gia Sự thật, Hà Nội, 2022)\n\n---"
   },
   {
     "subjectSlug": "sci",
@@ -465,6 +495,7 @@
       "Động lực tham gia vào nền kinh tế của các thành phần là lợi ích kinh tế cao nhất."
     ],
     "correctIndex": 1,
-    "explanation": "Đáp án B\nSự khác biệt nằm ở sự quản lý của nhà nước pháp quyền XHCN và mục tiêu định hướng xã hội chủ nghĩa (công bằng, tiến bộ xã hội).\n\n\"\"\""
+    "explanation": "Đáp án B\nSự khác biệt nằm ở sự quản lý của nhà nước pháp quyền XHCN và mục tiêu định hướng xã hội chủ nghĩa (công bằng, tiến bộ xã hội).\n\n\"\"\"",
+    "passage": "Dựa vào thông tin dưới đây để trả lời các câu từ 112 đến 114:\n“Theo nhận thức của chúng ta, kinh tế thị trường định hướng xã hội chủ nghĩa là nền kinh tế thị trường hiện đại, hội nhập quốc tế, vận hành đầy đủ, đồng bộ theo các quy luật của kinh tế thị trường, có sự quản lí của nhà nước pháp quyền xã hội chủ nghĩa, do Đảng Cộng sản Việt Nam lãnh đạo; bảo đảm định hướng xã hội chủ nghĩa, nhằm mục tiêu “dân giàu, nước mạnh, công bằng, dân chủ, văn minh…”\n(Nguyễn Phú Trọng, Một số vấn đề lý luận và thực tiễn về chủ nghĩa xã hội và con đường đi lên chủ nghĩa xã hội ở Việt Nam, NXB Chính trị quốc gia Sự thật, Hà Nội, 2022)\n\n---"
   }
 ]

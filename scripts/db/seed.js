@@ -211,6 +211,8 @@ async function main() {
     seedDemo1Questions({
       questionRows,
       questionOptionRows,
+      passageRows,
+      questionPassageRows,
       subjectBySlug,
       staffUserId: staff.id,
     });
@@ -2423,6 +2425,8 @@ function loadDemoQuestionBank() {
 function seedDemo1Questions({
   questionRows,
   questionOptionRows,
+  passageRows,
+  questionPassageRows,
   subjectBySlug,
   staffUserId,
 }) {
@@ -2434,6 +2438,9 @@ function seedDemo1Questions({
     return subject;
   };
 
+  const passageIdsByContent = new Map();
+  const passagePositions = new Map();
+
   const addMcqSingle = ({
     questionId,
     subjectSlug,
@@ -2442,6 +2449,7 @@ function seedDemo1Questions({
     correctIndex,
     explanation,
     difficulty = 3,
+    passage,
   }) => {
     const subject = requireSubject(subjectSlug);
     questionRows.push([
@@ -2472,6 +2480,18 @@ function seedDemo1Questions({
         idx + 1,
       ]);
     });
+
+    if (passage) {
+      let passageId = passageIdsByContent.get(passage);
+      if (!passageId) {
+        passageId = crypto.randomUUID();
+        passageIdsByContent.set(passage, passageId);
+        passageRows.push([passageId, passage]);
+      }
+      const position = (passagePositions.get(passageId) ?? 0) + 1;
+      passagePositions.set(passageId, position);
+      questionPassageRows.push([questionId, passageId, position]);
+    }
   };
 
   const demoQuestions = loadDemoQuestionBank();
