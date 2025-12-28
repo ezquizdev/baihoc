@@ -48,13 +48,12 @@ export function StaffSettingsScreen({
           <div>
             <h1 className={styles.heroTitle}>Cài đặt hệ thống</h1>
             <p className={styles.heroText}>
-              Cấu hình và vận hành nền tảng: allowlist, tích hợp, và các gợi ý
-              thiết lập để hệ thống chạy ổn định.
+              Cấu hình và vận hành nền tảng.
             </p>
           </div>
         </section>
 
-        <div className={styles.grid}>
+        {/* <div className={styles.grid}>
           <section className={`cardBase ${styles.card}`} aria-label="Status">
             <h2 className={styles.cardTitle}>Trạng thái cấu hình</h2>
             <div className={styles.statusList}>
@@ -120,7 +119,7 @@ export function StaffSettingsScreen({
               </li>
             </ul>
           </section>
-        </div>
+        </div> */}
 
         <section
           className={`cardBase ${styles.allowlistCard}`}

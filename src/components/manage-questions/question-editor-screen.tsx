@@ -52,7 +52,7 @@ type AnswerDraft = {
   caseSensitive: boolean;
 };
 
-type BusyAction = "save" | "archive" | "restore" | "delete";
+type BusyAction = "save" | "archive" | "restore" | "delete" | "convert";
 type ViewMode = "edit" | "split" | "preview";
 
 export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
@@ -336,10 +336,12 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
     }
   };
 
-  const startConvertToPassage = () => {
+  const startConvertToPassage = async () => {
     if (props.mode !== "edit") return;
+    if (busyAction) return;
     setError(null);
     setNotice(null);
+    setBusyAction("convert");
     try {
       const draftId = makePassageConversionDraftId();
       writePassageConversionDraft(draftId, {
@@ -357,13 +359,31 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
         shortAnswers,
         passagePosition: 1,
       });
+      const response = await fetch("/api/staff/passages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: "" }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error ?? "Không thể tạo đoạn ngữ liệu");
+      }
+      const data = (await response.json()) as {
+        passage?: { id?: string } | null;
+      };
+      const passageId = data.passage?.id;
+      if (!passageId) throw new Error("Không thể tạo đoạn ngữ liệu");
       router.push(
-        `/staff/questions/passages/new?questionId=${props.questionId}&draftId=${draftId}`,
+        `/staff/questions/passages/${passageId}?convertQuestionId=${props.questionId}&draftId=${draftId}`,
       );
-    } catch {
+    } catch (err) {
       setError(
-        "Không thể tạo bản nháp chuyển đổi (có thể do trình duyệt chặn lưu trữ tạm thời).",
+        err instanceof Error
+          ? err.message
+          : "Không thể tạo bản nháp chuyển đổi",
       );
+    } finally {
+      setBusyAction(null);
     }
   };
 

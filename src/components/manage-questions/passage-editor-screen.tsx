@@ -39,39 +39,29 @@ import { TopicPicker } from "./topic-picker";
 
 type PassageDetail = { passage: Passage; questions: Question[] };
 
-type PassageEditorScreenProps =
-  | {
-      mode: "edit";
-      session: SessionPayload;
-      subjects: Subject[];
-      passageId: string;
-      initialDetail: PassageDetail;
-    }
-  | {
-      mode: "convert";
-      session: SessionPayload;
-      subjects: Subject[];
-      questionId: string;
-      initialQuestionDetail: QuestionDetail;
-      draftId?: string;
-    };
+type PassageEditorScreenProps = {
+  session: SessionPayload;
+  subjects: Subject[];
+  passageId: string;
+  initialDetail: PassageDetail;
+  convert?:
+    | {
+        questionId: string;
+        initialQuestionDetail: QuestionDetail;
+        draftId?: string;
+      }
+    | null;
+};
 
 type ViewMode = "edit" | "split" | "preview";
 
-export function PassageEditorScreen(props: PassageEditorScreenProps) {
-  if (props.mode === "convert") {
-    return (
-      <PassageEditorConvert
-        session={props.session}
-        subjects={props.subjects}
-        questionId={props.questionId}
-        initialQuestionDetail={props.initialQuestionDetail}
-        draftId={props.draftId}
-      />
-    );
-  }
-
-  const { session, subjects, passageId, initialDetail } = props;
+export function PassageEditorScreen({
+  session,
+  subjects,
+  passageId,
+  initialDetail,
+  convert = null,
+}: PassageEditorScreenProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const displayName = session.fullName ?? session.email.split("@")[0];
@@ -103,6 +93,25 @@ export function PassageEditorScreen(props: PassageEditorScreenProps) {
     null,
   );
   const [deletePassageBusy, setDeletePassageBusy] = useState(false);
+
+  const [convertDraft, setConvertDraft] = useState<PassageConversionDraftV1 | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!convert?.draftId) return;
+    try {
+      const next = readPassageConversionDraft(convert.draftId);
+      if (!next) return;
+      if (next.sourceQuestionId !== convert.questionId) {
+        deletePassageConversionDraft(convert.draftId);
+        return;
+      }
+      setConvertDraft(next);
+    } catch {
+      // ignore (draft is optional)
+    }
+  }, [convert?.draftId, convert?.questionId]);
 
   const refreshDetail = async (): Promise<{ found: boolean }> => {
     const response = await fetch(`/api/staff/passages/${passageId}`);
@@ -210,6 +219,50 @@ export function PassageEditorScreen(props: PassageEditorScreenProps) {
       .filter((pos) => pos > 0);
     return positions.length ? Math.max(...positions) + 1 : 1;
   }, [questions]);
+
+  const convertAlreadyLinked = useMemo(() => {
+    if (!convert) return false;
+    return questions.some((q) => q.id === convert.questionId);
+  }, [convert, questions]);
+
+  const cancelConvert = async () => {
+    if (!convert) return;
+    if (convert.draftId) {
+      try {
+        deletePassageConversionDraft(convert.draftId);
+      } catch {
+        // ignore
+      }
+    }
+
+    try {
+      const detailRes = await fetch(`/api/staff/passages/${passageId}`);
+      if (detailRes.ok) {
+        const payload = (await detailRes.json()) as Partial<PassageDetail> | null;
+        const questionCount = payload?.questions?.length ?? 0;
+        const content = payload?.passage?.content ?? "";
+        if (questionCount === 0 && !content.trim()) {
+          await fetch(`/api/staff/passages/${passageId}`, { method: "DELETE" });
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    router.push(`/staff/questions/${convert.questionId}`);
+    router.refresh();
+  };
+
+  const handleConverted = async (detail: QuestionDetail) => {
+    setNotice("Đã chuyển câu hỏi vào passage.");
+    router.push(`/staff/questions/passages/${passageId}?questionId=${detail.question.id}`);
+    try {
+      await refreshDetail();
+    } catch {
+      // ignore
+    }
+    router.refresh();
+  };
 
   const handleQuestionCreated = async (detail: QuestionDetail) => {
     setNotice("Đã tạo câu hỏi.");
@@ -360,7 +413,7 @@ export function PassageEditorScreen(props: PassageEditorScreenProps) {
         </section>
 
         <section className={`cardBase ${styles.card}`} aria-label="Passage">
-          <h2 className={styles.sectionTitle}>Đoạn ngữ liệun</h2>
+          <h2 className={styles.sectionTitle}>Đoạn ngữ liệu</h2>
           <p className={styles.sectionSub}>
             Đoạn ngữ liệu này được dùng chung cho các câu hỏi bên dưới.
           </p>
@@ -530,6 +583,28 @@ export function PassageEditorScreen(props: PassageEditorScreenProps) {
             Tip: bấm vào hàng để mở/đóng chỉnh sửa nhanh từng câu hỏi.
           </div>
 
+          {convert && !convertAlreadyLinked ? (
+            <div style={{ marginTop: 12 }}>
+              <div className={styles.expandedCard}>
+                <div className={styles.subtle} style={{ marginBottom: 10 }}>
+                  Đang chuyển câu hỏi từ kho câu hỏi vào passage này.
+                </div>
+                <QuestionInlineConvertToPassage
+                  subjects={subjects}
+                  questionId={convert.questionId}
+                  targetPassageId={passageId}
+                  initialPassagePosition={nextPassagePosition}
+                  initialDetail={convert.initialQuestionDetail}
+                  passageContent={passageContent}
+                  draft={convertDraft}
+                  draftId={convert.draftId}
+                  onCancel={() => void cancelConvert()}
+                  onConverted={handleConverted}
+                />
+              </div>
+            </div>
+          ) : null}
+
           {createOpen ? (
             <div style={{ marginTop: 12 }}>
               <div className={styles.expandedCard}>
@@ -547,7 +622,7 @@ export function PassageEditorScreen(props: PassageEditorScreenProps) {
             </div>
           ) : null}
 
-          {!questions.length ? (
+          {!questions.length && !(convert && !convertAlreadyLinked) ? (
             <div className={tableStyles.stateCard} aria-live="polite">
               Passage này hiện không có câu hỏi nào.
             </div>
@@ -679,267 +754,6 @@ export function PassageEditorScreen(props: PassageEditorScreenProps) {
         onConfirm={handleConfirmDeletePassage}
         onCancel={closeDeletePassageModal}
       />
-    </StaffShell>
-  );
-}
-
-function PassageEditorConvert({
-  session,
-  subjects,
-  questionId,
-  initialQuestionDetail,
-  draftId,
-}: {
-  session: SessionPayload;
-  subjects: Subject[];
-  questionId: string;
-  initialQuestionDetail: QuestionDetail;
-  draftId?: string;
-}) {
-  const router = useRouter();
-  const displayName = session.fullName ?? session.email.split("@")[0];
-
-  const [passageContent, setPassageContent] = useState<string>("");
-  const [passageViewMode, setPassageViewMode] = useState<ViewMode>("edit");
-  const [mediaUploadingCount, setMediaUploadingCount] = useState(0);
-  const [mediaUploadError, setMediaUploadError] = useState<string | null>(null);
-
-  const [draft, setDraft] = useState<PassageConversionDraftV1 | null>(null);
-
-  useEffect(() => {
-    if (!draftId) return;
-    try {
-      const next = readPassageConversionDraft(draftId);
-      if (!next) return;
-      if (next.sourceQuestionId !== questionId) {
-        deletePassageConversionDraft(draftId);
-        return;
-      }
-      setDraft(next);
-    } catch {
-      // ignore (draft is optional)
-    }
-  }, [draftId, questionId]);
-
-  const handleConverted = (detail: QuestionDetail) => {
-    const nextPassageId = detail.question.passageId;
-    if (!nextPassageId) {
-      router.push(`/staff/questions/${detail.question.id}`);
-      router.refresh();
-      return;
-    }
-    router.push(
-      `/staff/questions/passages/${nextPassageId}?questionId=${detail.question.id}`,
-    );
-    router.refresh();
-  };
-
-  return (
-    <StaffShell
-      activeNav="questions"
-      userEmail={session.email}
-      userName={displayName}
-      avatarUrl={session.avatarUrl}
-      searchDisabled
-      searchPlaceholder="Tìm câu hỏi"
-    >
-      <div className={styles.page}>
-        <section className={`cardBase ${styles.hero}`} aria-label="Hero">
-          <div>
-            <h1 className={styles.heroTitle}>Chuyển sang câu hỏi có ngữ liệu</h1>
-            <p className={styles.heroText}>
-              Tạo đoạn ngữ liệu mới và đưa câu hỏi hiện tại vào nhóm này. Cho
-              tới khi bấm “Chuyển & lưu”, hệ thống chưa lưu gì.
-            </p>
-          </div>
-          <div className={styles.heroActions}>
-            <Link
-              className={`${styles.btn} ${styles.btnGray}`}
-              href={`/staff/questions/${questionId}`}
-            >
-              Quay lại câu hỏi
-            </Link>
-            <Link
-              className={`${styles.btn} ${styles.btnGray}`}
-              href="/staff/questions"
-            >
-              Về danh sách
-            </Link>
-          </div>
-        </section>
-
-        <section className={`cardBase ${styles.card}`} aria-label="Passage">
-          <h2 className={styles.sectionTitle}>Đoạn ngữ liệu</h2>
-          <p className={styles.sectionSub}>
-            Đoạn ngữ liệu này sẽ được dùng chung cho các câu hỏi trong passage.
-          </p>
-
-          <div
-            className={editorStyles.row}
-            style={{ justifyContent: "space-between", marginTop: 10 }}
-          >
-            <div>
-              <div className={editorStyles.muted}>
-                Xem trước hỗ trợ Markdown + LaTeX.
-              </div>
-              <div className={editorStyles.muted} aria-live="polite">
-                {mediaUploadingCount > 0
-                  ? `Đang upload ${mediaUploadingCount} ảnh...`
-                  : "Tip: Dán ảnh (Ctrl/Cmd+V) để tự upload và chèn ảnh vào nội dung."}
-              </div>
-              {mediaUploadError ? (
-                <div
-                  className={editorStyles.inlineError}
-                  role="alert"
-                  style={{ marginTop: 10 }}
-                >
-                  {mediaUploadError}
-                </div>
-              ) : null}
-            </div>
-            <fieldset
-              className={`${editorStyles.row} ${editorStyles.toggleGroup}`}
-              aria-label="Chế độ"
-            >
-              <button
-                type="button"
-                aria-pressed={passageViewMode === "edit"}
-                className={`${editorStyles.smallBtn} ${
-                  passageViewMode === "edit" ? editorStyles.smallBtnBlue : ""
-                }`}
-                onClick={() => setPassageViewMode("edit")}
-              >
-                Soạn thảo
-              </button>
-              <button
-                type="button"
-                aria-pressed={passageViewMode === "split"}
-                className={`${editorStyles.smallBtn} ${
-                  passageViewMode === "split" ? editorStyles.smallBtnBlue : ""
-                }`}
-                onClick={() => setPassageViewMode("split")}
-              >
-                Chia đôi
-              </button>
-              <button
-                type="button"
-                aria-pressed={passageViewMode === "preview"}
-                className={`${editorStyles.smallBtn} ${
-                  passageViewMode === "preview" ? editorStyles.smallBtnBlue : ""
-                }`}
-                onClick={() => setPassageViewMode("preview")}
-              >
-                Xem trước
-              </button>
-            </fieldset>
-          </div>
-
-          {passageViewMode === "preview" ? (
-            <div style={{ marginTop: 14 }}>
-              <div className={editorStyles.previewPanel}>
-                <h3 className={editorStyles.previewTitle}>Xem trước</h3>
-                <div className={editorStyles.previewSection}>
-                  <h4 className={editorStyles.previewLabel}>Nội dung</h4>
-                  {passageContent.trim() ? (
-                    <RichText content={passageContent} allowLinks />
-                  ) : (
-                    <div className={editorStyles.previewEmpty}>
-                      Chưa có nội dung đoạn ngữ liệu để xem trước.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div
-              className={
-                passageViewMode === "split"
-                  ? editorStyles.splitLayout
-                  : undefined
-              }
-              style={
-                passageViewMode === "split" ? undefined : { marginTop: 12 }
-              }
-            >
-              <div>
-                <div className={styles.grid2}>
-                  <div className={styles.fullRow}>
-                    <div className={editorStyles.row}>
-                      <div className={editorStyles.label}>Nội dung</div>
-                    </div>
-                    <textarea
-                      className={editorStyles.textarea}
-                      value={passageContent}
-                      onChange={(e) => {
-                        setPassageContent(e.target.value);
-                        setMediaUploadError(null);
-                      }}
-                      onPaste={(e) =>
-                        handleMarkdownImagePaste(e, {
-                          setValue: setPassageContent,
-                          setUploadingCount: setMediaUploadingCount,
-                          setUploadError: setMediaUploadError,
-                          altPrefix: "passage",
-                        })
-                      }
-                      placeholder="Nội dung đoạn ngữ liệu..."
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {passageViewMode === "split" ? (
-                <div className={editorStyles.previewPanel}>
-                  <h3 className={editorStyles.previewTitle}>Xem trước</h3>
-                  <div className={editorStyles.previewSection}>
-                    <h4 className={editorStyles.previewLabel}>Nội dung</h4>
-                    {passageContent.trim() ? (
-                      <RichText content={passageContent} allowLinks />
-                    ) : (
-                      <div className={editorStyles.previewEmpty}>
-                        Chưa có nội dung đoạn ngữ liệu để xem trước.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          )}
-        </section>
-
-        <section className={`cardBase ${styles.card}`} aria-label="Question">
-          <div className={styles.tableTitleRow}>
-            <div>
-              <h2 className={styles.sectionTitle}>Câu hỏi</h2>
-              <div className={styles.subtle}>
-                Sau khi chuyển, bạn có thể thêm câu hỏi khác trong passage.
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.expandedCard}>
-            <QuestionInlineConvertToPassage
-              subjects={subjects}
-              questionId={questionId}
-              initialDetail={initialQuestionDetail}
-              passageContent={passageContent}
-              draft={draft}
-              draftId={draftId}
-              onCancel={() => {
-                if (draftId) {
-                  try {
-                    deletePassageConversionDraft(draftId);
-                  } catch {
-                    // ignore
-                  }
-                }
-                router.back();
-              }}
-              onConverted={handleConverted}
-            />
-          </div>
-        </section>
-      </div>
     </StaffShell>
   );
 }

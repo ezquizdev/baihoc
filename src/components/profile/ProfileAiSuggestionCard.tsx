@@ -226,7 +226,7 @@ export function ProfileAiSuggestionCard() {
         >
           Tải lại
         </button>
-        {!blockedMessage && eligible ? (
+        {/* {!blockedMessage && eligible ? (
           <button
             type="button"
             className={styles.aiButton}
@@ -235,7 +235,7 @@ export function ProfileAiSuggestionCard() {
           >
             {requesting ? "Đang tạo lại..." : "Tạo lại"}
           </button>
-        ) : null}
+        ) : null} */}
       </div>
 
       {updatedLabel ? (
