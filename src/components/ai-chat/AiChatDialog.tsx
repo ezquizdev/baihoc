@@ -400,9 +400,7 @@ export function AiChatDialog({ onClose }: Props) {
         </button>
       </form>
 
-      <div className={styles.hint}>
-        Nội dung do AI chỉ mang tính tham khảo.
-      </div>
+      <div className={styles.hint}>Nội dung do AI chỉ mang tính tham khảo.</div>
     </section>
   );
 }

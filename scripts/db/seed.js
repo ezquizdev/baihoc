@@ -191,7 +191,9 @@ async function main() {
 
     const subjects = await upsertSubjects(client, subjectSeeds);
     const { topicsBySubject } = await seedTopics(client, subjects);
-    const subjectBySlug = new Map(subjects.map((subject) => [subject.slug, subject]));
+    const subjectBySlug = new Map(
+      subjects.map((subject) => [subject.slug, subject]),
+    );
 
     const questionRows = [];
     const questionTopicRows = [];
@@ -2511,8 +2513,7 @@ function seedDemo1Questions({
       stem: "Một hình chữ nhật có chu vi 24 cm, chiều dài hơn chiều rộng 2 cm. Chiều rộng là:",
       options: ["4 cm", "5 cm", "6 cm", "7 cm"],
       correctIndex: 1,
-      explanation:
-        "2(L+W)=24 ⇒ L+W=12; L=W+2 ⇒ 2W+2=12 ⇒ W=5 cm.",
+      explanation: "2(L+W)=24 ⇒ L+W=12; L=W+2 ⇒ 2W+2=12 ⇒ W=5 cm.",
       difficulty: 4,
     },
     {

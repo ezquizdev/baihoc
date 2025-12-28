@@ -138,7 +138,9 @@ export function HighlightChallengeCard({
           </div>
         </div>
         <div className={styles.right}>
-          <div className={styles.question}>Chưa có challenge của ngày hôm nay.</div>
+          <div className={styles.question}>
+            Chưa có challenge của ngày hôm nay.
+          </div>
           <ul className={styles.answers} aria-label="Lựa chọn">
             <li className={styles.pill}>Quay lại sau bạn nhé!</li>
           </ul>
