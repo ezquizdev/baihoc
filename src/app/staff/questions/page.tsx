@@ -14,7 +14,9 @@ export default async function StaffQuestionsPage() {
   const [subjects, initial] = await Promise.all([
     controllerListSubjects(),
     controllerListQuestions({
-      status: "active",
+      statuses: ["active"],
+      sortBy: "updatedAt",
+      sortDir: "desc",
       limit: INITIAL_LIMIT,
       offset: 0,
     }),

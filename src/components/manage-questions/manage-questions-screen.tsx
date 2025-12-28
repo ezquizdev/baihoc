@@ -3,16 +3,20 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
-import type { DifficultyLevel } from "@/application/models/enums";
+import {
+  type DifficultyLevel,
+  DifficultyLevelValues,
+  QuestionTypeValues,
+} from "@/application/models/enums";
 import type { Question } from "@/application/models/question";
+import type {
+  QuestionSortBy,
+  QuestionSortDir,
+} from "@/application/models/questionList";
 import type { Subject } from "@/application/models/subject";
 import { QuizPagination } from "@/components/quiz-catalog/quiz-pagination";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import { NoticeModal } from "@/components/ui/notice-modal";
-import {
-  ManageQuestionsFilters,
-  type QuestionStatusFilter,
-} from "./manage-questions-filters";
 import styles from "./manage-questions-screen.module.css";
 import { QuestionTable } from "./question-table";
 
@@ -32,9 +36,18 @@ export function ManageQuestionsScreen({
   initialLimit,
 }: ManageQuestionsScreenProps) {
   const displayName = session.fullName ?? session.email.split("@")[0];
-  const [subjectId, setSubjectId] = useState<string | null>(null);
-  const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
-  const [status, setStatus] = useState<QuestionStatusFilter>("active");
+  const [subjectIds, setSubjectIds] = useState<string[]>(() =>
+    subjects.map((subject) => subject.id),
+  );
+  const [difficultyLevels, setDifficultyLevels] = useState<DifficultyLevel[]>(
+    () => [...DifficultyLevelValues],
+  );
+  const [types, setTypes] = useState<Question["type"][]>(() => [
+    ...QuestionTypeValues,
+  ]);
+  const [statuses, setStatuses] = useState<Question["status"][]>(["active"]);
+  const [sortBy, setSortBy] = useState<QuestionSortBy>("updatedAt");
+  const [sortDir, setSortDir] = useState<QuestionSortDir>("desc");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
@@ -67,9 +80,15 @@ export function ManageQuestionsScreen({
         const params = new URLSearchParams();
         params.set("limit", String(pageSize));
         params.set("offset", String((page - 1) * pageSize));
-        if (subjectId) params.set("subjectId", subjectId);
-        if (difficulty !== null) params.set("difficulty", String(difficulty));
-        if (status !== "all") params.set("status", status);
+        if (subjectIds.length !== subjects.length)
+          params.set("subjectIds", subjectIds.join(","));
+        if (difficultyLevels.length !== DifficultyLevelValues.length)
+          params.set("difficultyLevels", difficultyLevels.join(","));
+        if (types.length !== QuestionTypeValues.length)
+          params.set("types", types.join(","));
+        if (statuses.length) params.set("statuses", statuses.join(","));
+        params.set("sortBy", sortBy);
+        params.set("sortDir", sortDir);
         if (debouncedSearch.trim())
           params.set("search", debouncedSearch.trim());
         params.set("_", String(refreshKey));
@@ -97,12 +116,16 @@ export function ManageQuestionsScreen({
     return () => controller.abort();
   }, [
     debouncedSearch,
-    difficulty,
+    difficultyLevels,
     page,
     pageSize,
     refreshKey,
-    status,
-    subjectId,
+    sortBy,
+    sortDir,
+    statuses,
+    subjectIds,
+    subjects.length,
+    types,
   ]);
 
   const caption = useMemo(() => {
@@ -153,25 +176,6 @@ export function ManageQuestionsScreen({
           </div>
         </section>
 
-        <ManageQuestionsFilters
-          subjects={subjects}
-          subjectId={subjectId}
-          onSubjectChange={(next) => {
-            setSubjectId(next);
-            setPage(1);
-          }}
-          difficulty={difficulty}
-          onDifficultyChange={(next) => {
-            setDifficulty(next);
-            setPage(1);
-          }}
-          status={status}
-          onStatusChange={(next) => {
-            setStatus(next);
-            setPage(1);
-          }}
-        />
-
         <section className={`cardBase ${styles.listCard}`} aria-label="List">
           <div className={styles.listHead}>
             <h2 className={styles.listTitle}>Danh sách câu hỏi</h2>
@@ -181,6 +185,33 @@ export function ManageQuestionsScreen({
           <QuestionTable
             items={items}
             subjects={subjects}
+            subjectIds={subjectIds}
+            onSubjectIdsChange={(next) => {
+              setSubjectIds(next);
+              setPage(1);
+            }}
+            difficultyLevels={difficultyLevels}
+            onDifficultyLevelsChange={(next) => {
+              setDifficultyLevels(next);
+              setPage(1);
+            }}
+            types={types}
+            onTypesChange={(next) => {
+              setTypes(next);
+              setPage(1);
+            }}
+            statuses={statuses}
+            onStatusesChange={(next) => {
+              setStatuses(next);
+              setPage(1);
+            }}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSortChange={(nextBy, nextDir) => {
+              setSortBy(nextBy);
+              setSortDir(nextDir);
+              setPage(1);
+            }}
             isLoading={loading}
             error={error}
             onRetry={handleRetry}

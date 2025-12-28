@@ -16,6 +16,10 @@ import type {
   QuestionType,
   ShortAnswerKey,
 } from "@/application/models/question";
+import type {
+  QuestionSortBy,
+  QuestionSortDir,
+} from "@/application/models/questionList";
 import { ServiceError } from "@/application/services/errors";
 
 type CreateQuestionInput = {
@@ -181,10 +185,13 @@ export async function updateQuestion(
 }
 
 export async function listQuestions(params: {
-  subjectId?: string;
-  difficulty?: DifficultyLevel;
-  status?: QuestionStatus;
+  subjectIds?: string[];
+  difficultyLevels?: DifficultyLevel[];
+  types?: QuestionType[];
+  statuses?: QuestionStatus[];
   search?: string;
+  sortBy?: QuestionSortBy;
+  sortDir?: QuestionSortDir;
   limit?: number;
   offset?: number;
 }) {
@@ -192,9 +199,10 @@ export async function listQuestions(params: {
   const [items, total] = await Promise.all([
     listQuestionsRepo({ ...params, search: search || undefined }),
     countQuestions({
-      subjectId: params.subjectId,
-      difficulty: params.difficulty,
-      status: params.status,
+      subjectIds: params.subjectIds,
+      difficultyLevels: params.difficultyLevels,
+      types: params.types,
+      statuses: params.statuses,
       search: search || undefined,
     }),
   ]);

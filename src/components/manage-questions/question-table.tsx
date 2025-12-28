@@ -1,8 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { CaretDown, CaretUp, FunnelSimple } from "phosphor-react";
+import { useEffect, useMemo, useState } from "react";
+import type {
+  DifficultyLevel,
+  QuestionStatus,
+} from "@/application/models/enums";
+import {
+  DifficultyLevelValues,
+  QuestionStatusValues,
+  QuestionTypeValues,
+} from "@/application/models/enums";
 import type { Question, QuestionType } from "@/application/models/question";
+import type {
+  QuestionSortBy,
+  QuestionSortDir,
+} from "@/application/models/questionList";
 import type { Subject } from "@/application/models/subject";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { formatDateVi } from "@/lib/formatters";
@@ -11,6 +25,17 @@ import styles from "./question-table.module.css";
 type QuestionTableProps = {
   items: Question[];
   subjects: Subject[];
+  subjectIds: string[];
+  onSubjectIdsChange: (subjectIds: string[]) => void;
+  difficultyLevels: DifficultyLevel[];
+  onDifficultyLevelsChange: (difficultyLevels: DifficultyLevel[]) => void;
+  types: QuestionType[];
+  onTypesChange: (types: QuestionType[]) => void;
+  statuses: QuestionStatus[];
+  onStatusesChange: (statuses: QuestionStatus[]) => void;
+  sortBy: QuestionSortBy;
+  sortDir: QuestionSortDir;
+  onSortChange: (sortBy: QuestionSortBy, sortDir: QuestionSortDir) => void;
   isLoading: boolean;
   error: string | null;
   onRetry: () => void;
@@ -23,6 +48,17 @@ type RowError = { questionId: string; message: string } | null;
 export function QuestionTable({
   items,
   subjects,
+  subjectIds,
+  onSubjectIdsChange,
+  difficultyLevels,
+  onDifficultyLevelsChange,
+  types,
+  onTypesChange,
+  statuses,
+  onStatusesChange,
+  sortBy,
+  sortDir,
+  onSortChange,
   isLoading,
   error,
   onRetry,
@@ -45,6 +81,51 @@ export function QuestionTable({
   const [deleteCandidateId, setDeleteCandidateId] = useState<string | null>(
     null,
   );
+  const [openDropdown, setOpenDropdown] = useState<
+    "subject" | "type" | "difficulty" | "status" | null
+  >(null);
+
+  const totalSubjects = subjects.length;
+  const totalTypes = QuestionTypeValues.length;
+  const totalDifficulties = DifficultyLevelValues.length;
+
+  const hasSubjectFilter = subjectIds.length !== totalSubjects;
+  const hasTypeFilter = types.length !== totalTypes;
+  const hasDifficultyFilter = difficultyLevels.length !== totalDifficulties;
+  const hasStatusFilter = !setsEqual(statuses, [
+    "active",
+  ] satisfies QuestionStatus[]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const root = event.target.closest("[data-dropdown-root]");
+      if (!root) setOpenDropdown(null);
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  useEffect(() => {
+    if (!openDropdown) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenDropdown(null);
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [openDropdown]);
+
+  const handleSortToggle = (key: QuestionSortBy) => {
+    if (sortBy === key) {
+      onSortChange(key, sortDir === "asc" ? "desc" : "asc");
+      return;
+    }
+    onSortChange(key, defaultSortDirFor(key));
+  };
+
+  const toggleDropdown = (key: typeof openDropdown) => {
+    setOpenDropdown((prev) => (prev === key ? null : key));
+  };
 
   const patchStatus = async (
     questionId: string,
@@ -117,134 +198,764 @@ export function QuestionTable({
     setDeleteCandidateId(questionId);
   };
 
-  if (error) {
-    return (
-      <div className={styles.stateCard} role="alert">
-        {error}
-        <div>
-          <button
-            className={styles.stateAction}
-            type="button"
-            onClick={onRetry}
-          >
-            Thử lại
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const allSubjectIds = useMemo(
+    () => subjects.map((subject) => subject.id),
+    [subjects],
+  );
+  const difficultyOptions: DifficultyLevel[] = [5, 4, 3, 2, 1];
 
-  if (!items.length) {
-    return (
-      <div className={styles.stateCard} aria-live="polite">
-        {isLoading ? "Đang tải câu hỏi..." : "Không có câu hỏi phù hợp."}
-      </div>
+  const toggleSubject = (subjectId: string) => {
+    const next = new Set(subjectIds);
+    if (next.has(subjectId)) {
+      next.delete(subjectId);
+    } else {
+      next.add(subjectId);
+    }
+    if (next.size === 0) return;
+    onSubjectIdsChange(allSubjectIds.filter((id) => next.has(id)));
+  };
+
+  const toggleType = (type: QuestionType) => {
+    const next = new Set(types);
+    if (next.has(type)) {
+      next.delete(type);
+    } else {
+      next.add(type);
+    }
+    if (next.size === 0) return;
+    onTypesChange(
+      QuestionTypeValues.filter((value) =>
+        next.has(value as QuestionType),
+      ) as QuestionType[],
     );
-  }
+  };
+
+  const toggleDifficulty = (level: DifficultyLevel) => {
+    const next = new Set(difficultyLevels);
+    if (next.has(level)) {
+      next.delete(level);
+    } else {
+      next.add(level);
+    }
+    if (next.size === 0) return;
+    onDifficultyLevelsChange(
+      difficultyOptions.filter((value) => next.has(value)),
+    );
+  };
+
+  const toggleStatus = (status: QuestionStatus) => {
+    const next = new Set(statuses);
+    if (next.has(status)) {
+      next.delete(status);
+    } else {
+      next.add(status);
+    }
+    if (next.size === 0) return;
+    onStatusesChange(
+      QuestionStatusValues.filter((value) =>
+        next.has(value as QuestionStatus),
+      ) as QuestionStatus[],
+    );
+  };
 
   return (
     <div className={styles.tableWrap} aria-busy={isLoading}>
       <table className={styles.table} aria-label="Danh sách câu hỏi">
         <thead>
           <tr>
-            <th scope="col">Nội dung</th>
-            <th scope="col">Môn</th>
-            <th scope="col">Loại</th>
-            <th scope="col">Độ khó</th>
-            <th scope="col">Trạng thái</th>
-            <th scope="col">Cập nhật</th>
+            <th
+              scope="col"
+              aria-sort={
+                (sortBy === "stem"
+                  ? sortDir === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none") as "ascending" | "descending" | "none"
+              }
+            >
+              <button
+                type="button"
+                className={`${styles.sortButton} ${
+                  sortBy === "stem" ? styles.sortButtonActive : ""
+                }`}
+                onClick={() => handleSortToggle("stem")}
+                disabled={isLoading}
+                title="Sắp xếp theo nội dung"
+              >
+                <span>Nội dung</span>
+                <span className={styles.sortIcon} aria-hidden="true">
+                  {sortBy === "stem" ? (
+                    sortDir === "asc" ? (
+                      <CaretUp weight="bold" size={16} />
+                    ) : (
+                      <CaretDown weight="bold" size={16} />
+                    )
+                  ) : (
+                    <>
+                      <CaretUp size={12} />
+                      <CaretDown size={12} />
+                    </>
+                  )}
+                </span>
+              </button>
+            </th>
+            <th
+              scope="col"
+              aria-sort={
+                (sortBy === "subject"
+                  ? sortDir === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none") as "ascending" | "descending" | "none"
+              }
+            >
+              <div className={styles.th} data-dropdown-root>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    sortBy === "subject" ? styles.sortButtonActive : ""
+                  }`}
+                  onClick={() => handleSortToggle("subject")}
+                  disabled={isLoading}
+                  title="Sắp xếp theo môn"
+                >
+                  <span>Môn</span>
+                  <span className={styles.sortIcon} aria-hidden="true">
+                    {sortBy === "subject" ? (
+                      sortDir === "asc" ? (
+                        <CaretUp weight="bold" size={16} />
+                      ) : (
+                        <CaretDown weight="bold" size={16} />
+                      )
+                    ) : (
+                      <>
+                        <CaretUp size={12} />
+                        <CaretDown size={12} />
+                      </>
+                    )}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.filterButton} ${
+                    hasSubjectFilter ? styles.filterButtonActive : ""
+                  }`}
+                  aria-label="Lọc theo môn"
+                  aria-expanded={openDropdown === "subject"}
+                  onClick={() => toggleDropdown("subject")}
+                  disabled={isLoading}
+                >
+                  <FunnelSimple
+                    size={16}
+                    weight={hasSubjectFilter ? "bold" : "regular"}
+                  />
+                </button>
+                {openDropdown === "subject" ? (
+                  <div
+                    className={styles.menuPanel}
+                    role="dialog"
+                    aria-label="Bộ lọc môn"
+                  >
+                    <div className={styles.menuSection}>
+                      <div className={styles.menuTitle}>Sắp xếp</div>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        onClick={() => {
+                          onSortChange("subject", "asc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        A → Z
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        onClick={() => {
+                          onSortChange("subject", "desc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Z → A
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={sortBy === "updatedAt" && sortDir === "desc"}
+                        onClick={() => {
+                          onSortChange("updatedAt", "desc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Mặc định
+                      </button>
+                    </div>
+
+                    <div className={styles.menuDivider} role="presentation" />
+
+                    <div className={styles.menuSection}>
+                      <div className={styles.menuTitle}>Lọc</div>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={!hasSubjectFilter}
+                        onClick={() => onSubjectIdsChange(allSubjectIds)}
+                      >
+                        Tất cả
+                      </button>
+                      <fieldset
+                        className={styles.menuList}
+                        aria-label="Môn học"
+                      >
+                        {subjects.map((subject) => (
+                          <label key={subject.id} className={styles.ck}>
+                            <input
+                              type="checkbox"
+                              checked={subjectIds.includes(subject.id)}
+                              onChange={() => toggleSubject(subject.id)}
+                            />
+                            {subject.name}
+                          </label>
+                        ))}
+                      </fieldset>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </th>
+            <th
+              scope="col"
+              aria-sort={
+                (sortBy === "type"
+                  ? sortDir === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none") as "ascending" | "descending" | "none"
+              }
+            >
+              <div className={styles.th} data-dropdown-root>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    sortBy === "type" ? styles.sortButtonActive : ""
+                  }`}
+                  onClick={() => handleSortToggle("type")}
+                  disabled={isLoading}
+                  title="Sắp xếp theo loại"
+                >
+                  <span>Loại</span>
+                  <span className={styles.sortIcon} aria-hidden="true">
+                    {sortBy === "type" ? (
+                      sortDir === "asc" ? (
+                        <CaretUp weight="bold" size={16} />
+                      ) : (
+                        <CaretDown weight="bold" size={16} />
+                      )
+                    ) : (
+                      <>
+                        <CaretUp size={12} />
+                        <CaretDown size={12} />
+                      </>
+                    )}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.filterButton} ${
+                    hasTypeFilter ? styles.filterButtonActive : ""
+                  }`}
+                  aria-label="Lọc theo loại"
+                  aria-expanded={openDropdown === "type"}
+                  onClick={() => toggleDropdown("type")}
+                  disabled={isLoading}
+                >
+                  <FunnelSimple
+                    size={16}
+                    weight={hasTypeFilter ? "bold" : "regular"}
+                  />
+                </button>
+                {openDropdown === "type" ? (
+                  <div
+                    className={styles.menuPanel}
+                    role="dialog"
+                    aria-label="Bộ lọc loại câu hỏi"
+                  >
+                    <div className={styles.menuSection}>
+                      <div className={styles.menuTitle}>Sắp xếp</div>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        onClick={() => {
+                          onSortChange("type", "asc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        A → Z
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        onClick={() => {
+                          onSortChange("type", "desc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Z → A
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={sortBy === "updatedAt" && sortDir === "desc"}
+                        onClick={() => {
+                          onSortChange("updatedAt", "desc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Mặc định
+                      </button>
+                    </div>
+
+                    <div className={styles.menuDivider} role="presentation" />
+
+                    <div className={styles.menuSection}>
+                      <div className={styles.menuTitle}>Lọc</div>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={!hasTypeFilter}
+                        onClick={() => onTypesChange([...QuestionTypeValues])}
+                      >
+                        Tất cả
+                      </button>
+                      <fieldset className={styles.menuList} aria-label="Loại">
+                        {QuestionTypeValues.map((type) => (
+                          <label key={type} className={styles.ck}>
+                            <input
+                              type="checkbox"
+                              checked={types.includes(type as QuestionType)}
+                              onChange={() => toggleType(type as QuestionType)}
+                            />
+                            {questionTypeLabel(type as QuestionType)}
+                          </label>
+                        ))}
+                      </fieldset>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </th>
+            <th
+              scope="col"
+              aria-sort={
+                (sortBy === "difficulty"
+                  ? sortDir === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none") as "ascending" | "descending" | "none"
+              }
+            >
+              <div className={styles.th} data-dropdown-root>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    sortBy === "difficulty" ? styles.sortButtonActive : ""
+                  }`}
+                  onClick={() => handleSortToggle("difficulty")}
+                  disabled={isLoading}
+                  title="Sắp xếp theo độ khó"
+                >
+                  <span>Độ khó</span>
+                  <span className={styles.sortIcon} aria-hidden="true">
+                    {sortBy === "difficulty" ? (
+                      sortDir === "asc" ? (
+                        <CaretUp weight="bold" size={16} />
+                      ) : (
+                        <CaretDown weight="bold" size={16} />
+                      )
+                    ) : (
+                      <>
+                        <CaretUp size={12} />
+                        <CaretDown size={12} />
+                      </>
+                    )}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.filterButton} ${
+                    hasDifficultyFilter ? styles.filterButtonActive : ""
+                  }`}
+                  aria-label="Lọc theo độ khó"
+                  aria-expanded={openDropdown === "difficulty"}
+                  onClick={() => toggleDropdown("difficulty")}
+                  disabled={isLoading}
+                >
+                  <FunnelSimple
+                    size={16}
+                    weight={hasDifficultyFilter ? "bold" : "regular"}
+                  />
+                </button>
+                {openDropdown === "difficulty" ? (
+                  <div
+                    className={styles.menuPanel}
+                    role="dialog"
+                    aria-label="Bộ lọc độ khó"
+                  >
+                    <div className={styles.menuSection}>
+                      <div className={styles.menuTitle}>Sắp xếp</div>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        onClick={() => {
+                          onSortChange("difficulty", "asc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Tăng dần
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        onClick={() => {
+                          onSortChange("difficulty", "desc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Giảm dần
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={sortBy === "updatedAt" && sortDir === "desc"}
+                        onClick={() => {
+                          onSortChange("updatedAt", "desc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Mặc định
+                      </button>
+                    </div>
+
+                    <div className={styles.menuDivider} role="presentation" />
+
+                    <div className={styles.menuSection}>
+                      <div className={styles.menuTitle}>Lọc</div>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={!hasDifficultyFilter}
+                        onClick={() =>
+                          onDifficultyLevelsChange([...difficultyOptions])
+                        }
+                      >
+                        Tất cả
+                      </button>
+                      <fieldset className={styles.menuList} aria-label="Độ khó">
+                        {difficultyOptions.map((level) => (
+                          <label key={level} className={styles.ck}>
+                            <input
+                              type="checkbox"
+                              checked={difficultyLevels.includes(level)}
+                              onChange={() => toggleDifficulty(level)}
+                            />
+                            {level} ★
+                          </label>
+                        ))}
+                      </fieldset>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </th>
+            <th
+              scope="col"
+              aria-sort={
+                (sortBy === "status"
+                  ? sortDir === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none") as "ascending" | "descending" | "none"
+              }
+            >
+              <div className={styles.th} data-dropdown-root>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    sortBy === "status" ? styles.sortButtonActive : ""
+                  }`}
+                  onClick={() => handleSortToggle("status")}
+                  disabled={isLoading}
+                  title="Sắp xếp theo trạng thái"
+                >
+                  <span>Trạng thái</span>
+                  <span className={styles.sortIcon} aria-hidden="true">
+                    {sortBy === "status" ? (
+                      sortDir === "asc" ? (
+                        <CaretUp weight="bold" size={16} />
+                      ) : (
+                        <CaretDown weight="bold" size={16} />
+                      )
+                    ) : (
+                      <>
+                        <CaretUp size={12} />
+                        <CaretDown size={12} />
+                      </>
+                    )}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.filterButton} ${
+                    hasStatusFilter ? styles.filterButtonActive : ""
+                  }`}
+                  aria-label="Lọc theo trạng thái"
+                  aria-expanded={openDropdown === "status"}
+                  onClick={() => toggleDropdown("status")}
+                  disabled={isLoading}
+                >
+                  <FunnelSimple
+                    size={16}
+                    weight={hasStatusFilter ? "bold" : "regular"}
+                  />
+                </button>
+                {openDropdown === "status" ? (
+                  <div
+                    className={styles.menuPanel}
+                    role="dialog"
+                    aria-label="Bộ lọc trạng thái"
+                  >
+                    <div className={styles.menuSection}>
+                      <div className={styles.menuTitle}>Sắp xếp</div>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        onClick={() => {
+                          onSortChange("status", "asc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Tăng dần
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        onClick={() => {
+                          onSortChange("status", "desc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Giảm dần
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={sortBy === "updatedAt" && sortDir === "desc"}
+                        onClick={() => {
+                          onSortChange("updatedAt", "desc");
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        Mặc định
+                      </button>
+                    </div>
+
+                    <div className={styles.menuDivider} role="presentation" />
+
+                    <div className={styles.menuSection}>
+                      <div className={styles.menuTitle}>Lọc</div>
+                      <button
+                        type="button"
+                        className={styles.menuButton}
+                        disabled={!hasStatusFilter}
+                        onClick={() => onStatusesChange(["active"])}
+                      >
+                        Mặc định (Hoạt động)
+                      </button>
+                      <fieldset
+                        className={styles.menuList}
+                        aria-label="Trạng thái"
+                      >
+                        <label className={styles.ck}>
+                          <input
+                            type="checkbox"
+                            checked={statuses.includes("active")}
+                            onChange={() => toggleStatus("active")}
+                          />
+                          Đang hoạt động
+                        </label>
+                        <label className={styles.ck}>
+                          <input
+                            type="checkbox"
+                            checked={statuses.includes("archived")}
+                            onChange={() => toggleStatus("archived")}
+                          />
+                          Đã lưu trữ
+                        </label>
+                      </fieldset>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </th>
+            <th
+              scope="col"
+              aria-sort={
+                (sortBy === "updatedAt"
+                  ? sortDir === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none") as "ascending" | "descending" | "none"
+              }
+            >
+              <button
+                type="button"
+                className={`${styles.sortButton} ${
+                  sortBy === "updatedAt" ? styles.sortButtonActive : ""
+                }`}
+                onClick={() => handleSortToggle("updatedAt")}
+                disabled={isLoading}
+                title="Sắp xếp theo cập nhật"
+              >
+                <span>Cập nhật</span>
+                <span className={styles.sortIcon} aria-hidden="true">
+                  {sortBy === "updatedAt" ? (
+                    sortDir === "asc" ? (
+                      <CaretUp weight="bold" size={16} />
+                    ) : (
+                      <CaretDown weight="bold" size={16} />
+                    )
+                  ) : (
+                    <>
+                      <CaretUp size={12} />
+                      <CaretDown size={12} />
+                    </>
+                  )}
+                </span>
+              </button>
+            </th>
             <th scope="col">Thao tác</th>
           </tr>
         </thead>
         <tbody>
-          {items.map((q) => {
-            const subject = subjectMap.get(q.subjectId);
-            const rowBusy = mutating?.questionId === q.id;
-            const busy = rowBusy ? mutating?.action : null;
-            const dateLabel = formatDateVi(q.updatedAt ?? q.createdAt);
-            const editHref = q.passageId
-              ? {
-                  pathname: `/staff/questions/passages/${q.passageId}`,
-                  query: { questionId: q.id },
-                }
-              : { pathname: `/staff/questions/${q.id}` };
-            return (
-              <tr key={q.id}>
-                <td className={styles.stem}>{q.stem}</td>
-                <td>{subject?.name ?? "—"}</td>
-                <td>
-                  <span className={`${styles.pill} ${styles.pillGray}`}>
-                    {questionTypeLabel(q.type)}
-                  </span>
-                </td>
-                <td>
-                  <span className={`${styles.pill} ${styles.pillBlue}`}>
-                    {q.defaultDifficulty} ★
-                  </span>
-                </td>
-                <td>
-                  <span
-                    className={`${styles.pill} ${
-                      q.status === "archived"
-                        ? styles.pillGray
-                        : styles.pillBlue
-                    }`}
-                  >
-                    {q.status === "archived" ? "Lưu trữ" : "Hoạt động"}
-                  </span>
-                </td>
-                <td>{dateLabel}</td>
-                <td>
-                  <div className={styles.actions}>
-                    <Link
-                      className={`${styles.linkBtn} ${styles.linkBtnBlue}`}
-                      href={editHref}
-                    >
-                      Sửa
-                    </Link>
-                    {q.status === "archived" ? (
-                      <button
-                        type="button"
-                        className={`${styles.linkBtn} ${
-                          rowBusy ? styles.linkBtnDisabled : ""
-                        }`}
-                        disabled={rowBusy}
-                        onClick={() => patchStatus(q.id, "active")}
-                      >
-                        {busy === "restore" ? "Đang khôi phục..." : "Khôi phục"}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className={`${styles.linkBtn} ${
-                          rowBusy ? styles.linkBtnDisabled : ""
-                        }`}
-                        disabled={rowBusy}
-                        onClick={() => patchStatus(q.id, "archived")}
-                      >
-                        {busy === "archive" ? "Đang lưu trữ..." : "Lưu trữ"}
-                      </button>
-                    )}
+          {error ? (
+            <tr>
+              <td colSpan={7}>
+                <div className={styles.stateCard} role="alert">
+                  {error}
+                  <div>
                     <button
+                      className={styles.stateAction}
                       type="button"
-                      className={`${styles.linkBtn} ${styles.linkBtnRed} ${
-                        rowBusy ? styles.linkBtnDisabled : ""
-                      }`}
-                      disabled={rowBusy}
-                      onClick={() => requestDeleteQuestion(q.id)}
+                      onClick={onRetry}
                     >
-                      {busy === "delete" ? "Đang xóa..." : "Xóa"}
+                      Thử lại
                     </button>
                   </div>
-                  {rowError?.questionId === q.id ? (
-                    <div className={styles.meta} role="alert">
-                      {rowError.message}
+                </div>
+              </td>
+            </tr>
+          ) : !items.length ? (
+            <tr>
+              <td colSpan={7}>
+                <div className={styles.stateCard} aria-live="polite">
+                  {isLoading
+                    ? "Đang tải câu hỏi..."
+                    : "Không có câu hỏi phù hợp."}
+                </div>
+              </td>
+            </tr>
+          ) : (
+            items.map((q) => {
+              const subject = subjectMap.get(q.subjectId);
+              const rowBusy = mutating?.questionId === q.id;
+              const busy = rowBusy ? mutating?.action : null;
+              const dateLabel = formatDateVi(q.updatedAt ?? q.createdAt);
+              const editHref = q.passageId
+                ? {
+                    pathname: `/staff/questions/passages/${q.passageId}`,
+                    query: { questionId: q.id },
+                  }
+                : { pathname: `/staff/questions/${q.id}` };
+              return (
+                <tr key={q.id}>
+                  <td className={styles.stem}>{q.stem}</td>
+                  <td>{subject?.name ?? "—"}</td>
+                  <td>
+                    <span className={`${styles.pill} ${styles.pillGray}`}>
+                      {questionTypeLabel(q.type)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`${styles.pill} ${styles.pillBlue}`}>
+                      {q.defaultDifficulty} ★
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className={`${styles.pill} ${
+                        q.status === "archived"
+                          ? styles.pillGray
+                          : styles.pillBlue
+                      }`}
+                    >
+                      {q.status === "archived" ? "Lưu trữ" : "Hoạt động"}
+                    </span>
+                  </td>
+                  <td>{dateLabel}</td>
+                  <td>
+                    <div className={styles.actions}>
+                      <Link
+                        className={`${styles.linkBtn} ${styles.linkBtnBlue}`}
+                        href={editHref}
+                      >
+                        Sửa
+                      </Link>
+                      {q.status === "archived" ? (
+                        <button
+                          type="button"
+                          className={`${styles.linkBtn} ${
+                            rowBusy ? styles.linkBtnDisabled : ""
+                          }`}
+                          disabled={rowBusy}
+                          onClick={() => patchStatus(q.id, "active")}
+                        >
+                          {busy === "restore"
+                            ? "Đang khôi phục..."
+                            : "Khôi phục"}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className={`${styles.linkBtn} ${
+                            rowBusy ? styles.linkBtnDisabled : ""
+                          }`}
+                          disabled={rowBusy}
+                          onClick={() => patchStatus(q.id, "archived")}
+                        >
+                          {busy === "archive" ? "Đang lưu trữ..." : "Lưu trữ"}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={`${styles.linkBtn} ${styles.linkBtnRed} ${
+                          rowBusy ? styles.linkBtnDisabled : ""
+                        }`}
+                        disabled={rowBusy}
+                        onClick={() => requestDeleteQuestion(q.id)}
+                      >
+                        {busy === "delete" ? "Đang xóa..." : "Xóa"}
+                      </button>
                     </div>
-                  ) : null}
-                </td>
-              </tr>
-            );
-          })}
+                    {rowError?.questionId === q.id ? (
+                      <div className={styles.meta} role="alert">
+                        {rowError.message}
+                      </div>
+                    ) : null}
+                  </td>
+                </tr>
+              );
+            })
+          )}
         </tbody>
       </table>
 
@@ -278,5 +989,26 @@ function questionTypeLabel(type: QuestionType) {
       return "Tự luận";
     default:
       return type;
+  }
+}
+
+function setsEqual<T extends string | number>(
+  a: readonly T[],
+  b: readonly T[],
+) {
+  if (a.length !== b.length) return false;
+  const setA = new Set(a);
+  if (setA.size !== a.length) return false;
+  return b.every((value) => setA.has(value));
+}
+
+function defaultSortDirFor(sortBy: QuestionSortBy): QuestionSortDir {
+  switch (sortBy) {
+    case "createdAt":
+    case "difficulty":
+    case "updatedAt":
+      return "desc";
+    default:
+      return "asc";
   }
 }

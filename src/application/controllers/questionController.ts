@@ -4,6 +4,10 @@ import type {
   QuestionStatus,
   QuestionType,
 } from "@/application/models/question";
+import type {
+  QuestionSortBy,
+  QuestionSortDir,
+} from "@/application/models/questionList";
 import {
   archiveQuestion,
   createQuestion,
@@ -105,10 +109,13 @@ export async function controllerUpdateQuestion(
 }
 
 export async function controllerListQuestions(params: {
-  subjectId?: string;
-  difficulty?: DifficultyLevel;
-  status?: QuestionStatus;
+  subjectIds?: string[];
+  difficultyLevels?: DifficultyLevel[];
+  types?: QuestionType[];
+  statuses?: QuestionStatus[];
   search?: string;
+  sortBy?: QuestionSortBy;
+  sortDir?: QuestionSortDir;
   limit?: number;
   offset?: number;
 }) {

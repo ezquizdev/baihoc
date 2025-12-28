@@ -2,6 +2,10 @@
 
 ## 2025-12-28
 
+### feat(staff): add excel-like sort/filter to question bank
+- `/staff/questions` now supports sorting/filtering via table headers (subject/type/difficulty/status) and removes the standalone filter bar.
+- `GET /api/staff/questions` now accepts `subjectIds`, `difficultyLevels`, `types`, `statuses`, `sortBy`, and `sortDir`.
+
 ### fix(leaderboard): cap searched user rank totals
 - Leaderboard search now uses the same 300-cap + ranking logic as the main leaderboard table.
 

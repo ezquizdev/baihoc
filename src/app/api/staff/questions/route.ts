@@ -1,9 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  parseCommaIds,
   parseDifficulty,
+  parseEnumArray,
+  parseNumberArray,
   parsePagination,
   parseQuestionStatus,
+  parseQuestionType,
 } from "@/app/api/_utils/query";
 import {
   controllerCreateQuestion,
@@ -12,8 +16,15 @@ import {
 import { requireAuthenticatedApi } from "@/application/infra/auth/guards";
 import {
   type DifficultyLevel,
+  QuestionStatusValues,
   QuestionTypeValues,
 } from "@/application/models/enums";
+import {
+  type QuestionSortBy,
+  QuestionSortByValues,
+  type QuestionSortDir,
+  QuestionSortDirValues,
+} from "@/application/models/questionList";
 
 const createSchema = z.object({
   subjectId: z.string().uuid(),
@@ -62,11 +73,49 @@ export async function GET(request: NextRequest) {
     offset: 0,
   });
   try {
+    const legacySubjectId = searchParams.get("subjectId") ?? undefined;
+    const legacyDifficulty = parseDifficulty(searchParams) as
+      | DifficultyLevel
+      | undefined;
+    const legacyType = parseQuestionType(searchParams);
+    const legacyStatus = parseQuestionStatus(searchParams);
+
+    const sortBy = parseSortBy(searchParams.get("sortBy")) ?? "updatedAt";
+    const sortDir = parseSortDir(searchParams.get("sortDir")) ?? "desc";
+
+    const subjectIds =
+      parseCommaIds(searchParams, "subjectIds") ??
+      (legacySubjectId ? [legacySubjectId] : undefined);
+
+    let difficultyLevels = parseNumberArray(searchParams, "difficultyLevels", {
+      min: 1,
+      max: 5,
+    })?.filter((value) => Number.isInteger(value)) as
+      | DifficultyLevel[]
+      | undefined;
+    if (!difficultyLevels?.length && legacyDifficulty !== undefined) {
+      difficultyLevels = [legacyDifficulty];
+    }
+
+    let types = parseEnumArray(searchParams, "types", QuestionTypeValues);
+    if (!types?.length && legacyType) types = [legacyType];
+
+    let statuses = parseEnumArray(
+      searchParams,
+      "statuses",
+      QuestionStatusValues,
+    );
+    if (!statuses?.length && legacyStatus) statuses = [legacyStatus];
+    if (!statuses?.length) statuses = ["active"];
+
     const result = await controllerListQuestions({
-      subjectId: searchParams.get("subjectId") ?? undefined,
-      difficulty: parseDifficulty(searchParams) as DifficultyLevel | undefined,
-      status: parseQuestionStatus(searchParams),
+      subjectIds,
+      difficultyLevels,
+      types,
+      statuses,
       search: searchParams.get("search") ?? undefined,
+      sortBy,
+      sortDir,
       limit,
       offset,
     });
@@ -76,6 +125,20 @@ export async function GET(request: NextRequest) {
       error instanceof Error ? error.message : "Không thể tải câu hỏi";
     return NextResponse.json({ error: message }, { status: 400 });
   }
+}
+
+function parseSortBy(value: string | null): QuestionSortBy | undefined {
+  if (!value) return undefined;
+  return QuestionSortByValues.includes(value as QuestionSortBy)
+    ? (value as QuestionSortBy)
+    : undefined;
+}
+
+function parseSortDir(value: string | null): QuestionSortDir | undefined {
+  if (!value) return undefined;
+  return QuestionSortDirValues.includes(value as QuestionSortDir)
+    ? (value as QuestionSortDir)
+    : undefined;
 }
 
 export async function POST(request: NextRequest) {
