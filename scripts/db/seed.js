@@ -406,6 +406,14 @@ async function main() {
     let demoQuizId = null;
     let demoChallengeId = null;
 
+    const demoSubjectIds = new Set(
+      demoSeed.demoQuestionGroupsBySubject.keys(),
+    );
+    const quizSubjects = subjects.filter((subject) =>
+      demoSubjectIds.has(subject.id),
+    );
+    const baseQuizSubjects = quizSubjects.length ? quizSubjects : subjects;
+
     for (let i = 0; i < config.quizzes; i += 1) {
       const isDemoChallenge = i === 0;
       const isDemoQuiz = i === 1;
@@ -415,8 +423,8 @@ async function main() {
         : crypto.randomUUID();
       const chosenSubjects =
         isDemoQuiz || isDemoChallenge
-          ? subjects
-          : pickSubjects(subjects, config.multiSubjectRate);
+          ? baseQuizSubjects
+          : pickSubjects(baseQuizSubjects, config.multiSubjectRate);
       const primarySubject = pick(chosenSubjects);
       const difficulty =
         isDemoQuiz || isDemoChallenge ? 2 : pick(difficultyLevels);

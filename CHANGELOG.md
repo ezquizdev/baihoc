@@ -5,6 +5,7 @@
 ### chore(db): seed demo questions from demo.txt
 - Demo challenge questions now sample from `scripts/db/demo-questions.json` (derived from `agent-resources/demo.txt`) during `db:seed`.
 - All seeded quizzes now source their question content from the demo question bank, filtered by quiz subjects.
+- Quiz subject selection now favors subjects that exist in the demo question bank to avoid empty quizzes.
 - Demo challenge questions are fixed/deterministic; an identical demo quiz is seeded with a 15-second time limit.
 - Demo highlight challenge now prefers a non-passage question from the demo challenge set.
 
