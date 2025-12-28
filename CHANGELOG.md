@@ -849,6 +849,10 @@
 - Replaced sidebar and profile menu links with placeholder anchors to avoid typed-routes errors before routes exist.
 - Added no-op click handler for placeholder links while keeping existing styles.
 
+### chore(db): align seed data with real flows
+- `db:seed` now creates submitted attempts with snapshot fields plus full artifacts (`attempt_answers`, `attempt_answer_events`, `attempt_question_snapshots`) and first-attempt/IRT tracking (`user_quiz_first_attempts`, `question_irt_stats`).
+- Seed now includes allowlist examples + audit logs, a pending-verification example token (printed), custom quiz samples, and a highlight challenge config + sample submission.
+
 ## 2025-12-18
 
 ### feat(db): add quiz & question repositories
