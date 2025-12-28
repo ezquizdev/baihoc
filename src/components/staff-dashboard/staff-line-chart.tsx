@@ -17,6 +17,7 @@ type StaffLineChartProps = {
   series: StaffLineChartSeries[];
   yMax?: number;
   unit?: "count" | "percent";
+  spanGaps?: boolean;
   emptyLabel?: string;
 };
 
@@ -61,6 +62,7 @@ function buildPath(
   values: Array<number | null>,
   xForIndex: (index: number) => number,
   yForValue: (value: number) => number,
+  spanGaps: boolean,
 ) {
   let path = "";
   let hasStarted = false;
@@ -68,7 +70,7 @@ function buildPath(
   values.forEach((value, index) => {
     const numeric = safeNumber(value);
     if (numeric === null) {
-      hasStarted = false;
+      if (!spanGaps) hasStarted = false;
       return;
     }
     const x = xForIndex(index);
@@ -86,10 +88,12 @@ export function StaffLineChart({
   series,
   yMax: yMaxProp,
   unit = "count",
+  spanGaps: spanGapsProp,
   emptyLabel = "Chưa có dữ liệu",
 }: StaffLineChartProps) {
   const pointCount = labels.length;
   const hasSeries = series.length > 0 && pointCount > 1;
+  const spanGaps = spanGapsProp ?? unit === "percent";
 
   const allValues = useMemo(
     () => series.flatMap((line) => line.values),
@@ -247,7 +251,7 @@ export function StaffLineChart({
         })}
 
         {series.map((line) => {
-          const d = buildPath(line.values, xForIndex, yForValue);
+          const d = buildPath(line.values, xForIndex, yForValue, spanGaps);
           if (!d) return null;
 
           return (

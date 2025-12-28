@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(staff-line-chart): span gaps for percent series
+- Staff accuracy charts (`unit="percent"`) now connect across empty days instead of rendering broken line segments.
+
 ### fix(staff-dashboard): align leaderboard card styling
 - Staff dashboard leaderboard now uses the shared leaderboard card styling and omits the self row to match other surfaces.
 
