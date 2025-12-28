@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "phosphor-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { QuestionDetail } from "@/application/models/question";
 import { RichText } from "@/components/ui/rich-text";
 import styles from "./manage-quiz-modals.module.css";
@@ -31,11 +31,25 @@ export function QuestionEditModal({
   onSaved,
 }: QuestionEditModalProps) {
   const titleId = "manage-quiz-question-title";
+  const hadModalOpenClassRef = useRef(false);
   const [detail, setDetail] = useState<QuestionDetail | null>(null);
   const [options, setOptions] = useState<OptionDraft[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!target) return;
+    hadModalOpenClassRef.current =
+      document.body.classList.contains("modal-open");
+    document.body.classList.add("modal-open");
+    return () => {
+      if (!hadModalOpenClassRef.current) {
+        document.body.classList.remove("modal-open");
+      }
+      hadModalOpenClassRef.current = false;
+    };
+  }, [target]);
 
   useEffect(() => {
     if (!target) return;

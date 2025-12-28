@@ -5,6 +5,9 @@
 ### feat(staff-quizzes): move quiz content builder to page
 - Quiz info modal now routes to `/staff/quizzes/[quizId]/content` for managing quiz questions instead of opening a nested builder modal.
 
+### fix(staff-quizzes): render quiz content builder as page
+- `/staff/quizzes/[quizId]/content` now renders the builder as normal page content (no modal backdrop/fixed positioning) while preserving the existing UI and nested modals.
+
 ### fix(db): reuse pg pool across hot reloads
 - The server db pool now caches in `globalThis` to avoid creating new connections per module reload.
 

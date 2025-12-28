@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { X } from "phosphor-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DifficultyLevel } from "@/application/models/enums";
 import type { Question } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
@@ -27,6 +27,7 @@ export function QuestionBankPickerModal({
   onAdd,
 }: QuestionBankPickerModalProps) {
   const titleId = "question-bank-picker-title";
+  const hadModalOpenClassRef = useRef(false);
   const existingSet = useMemo(
     () => new Set(existingQuestionIds),
     [existingQuestionIds],
@@ -54,6 +55,19 @@ export function QuestionBankPickerModal({
   useEffect(() => {
     if (!open) return;
     setPage(1);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    hadModalOpenClassRef.current =
+      document.body.classList.contains("modal-open");
+    document.body.classList.add("modal-open");
+    return () => {
+      if (!hadModalOpenClassRef.current) {
+        document.body.classList.remove("modal-open");
+      }
+      hadModalOpenClassRef.current = false;
+    };
   }, [open]);
 
   useEffect(() => {

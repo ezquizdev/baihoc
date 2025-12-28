@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { Subject } from "@/application/models/subject";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
+import styles from "./manage-quiz-content-screen.module.css";
 import { QuestionEditModal } from "./modals/question-edit-modal";
 import { QuizBuilderModal } from "./modals/quiz-builder-modal";
 
@@ -31,11 +32,6 @@ export function ManageQuizContentScreen({
   const [questionTarget, setQuestionTarget] =
     useState<QuestionEditTarget | null>(null);
 
-  useEffect(() => {
-    document.body.classList.add("modal-open");
-    return () => document.body.classList.remove("modal-open");
-  }, []);
-
   return (
     <StaffShell
       activeNav="quizzes"
@@ -44,26 +40,27 @@ export function ManageQuizContentScreen({
       avatarUrl={session.avatarUrl}
       hideSearch
     >
-      <div />
+      <div className={styles.page}>
+        <QuizBuilderModal
+          quizId={quizId}
+          refreshKey={builderRefreshKey}
+          subjects={subjects}
+          variant="page"
+          onClose={() => {
+            router.push("/staff/quizzes");
+          }}
+          onEditQuestion={(questionId, position) =>
+            setQuestionTarget({ quizId, questionId, position })
+          }
+          onMutated={() => {}}
+        />
 
-      <QuizBuilderModal
-        quizId={quizId}
-        refreshKey={builderRefreshKey}
-        subjects={subjects}
-        onClose={() => {
-          router.push("/staff/quizzes");
-        }}
-        onEditQuestion={(questionId, position) =>
-          setQuestionTarget({ quizId, questionId, position })
-        }
-        onMutated={() => {}}
-      />
-
-      <QuestionEditModal
-        target={questionTarget}
-        onClose={() => setQuestionTarget(null)}
-        onSaved={() => setBuilderRefreshKey((prev) => prev + 1)}
-      />
+        <QuestionEditModal
+          target={questionTarget}
+          onClose={() => setQuestionTarget(null)}
+          onSaved={() => setBuilderRefreshKey((prev) => prev + 1)}
+        />
+      </div>
     </StaffShell>
   );
 }
