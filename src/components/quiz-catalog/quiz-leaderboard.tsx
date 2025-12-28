@@ -131,7 +131,7 @@ export function QuizLeaderboard({
             <tr>
               <th className={styles.colRank}>#</th>
               <th className={styles.colName}>Họ và tên</th>
-              <th className={styles.colXp}>IRT</th>
+              <th className={styles.colXp}>ĐNL</th>
             </tr>
           </thead>
           <tbody>

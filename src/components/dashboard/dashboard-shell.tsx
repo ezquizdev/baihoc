@@ -60,14 +60,14 @@ type DashboardShellProps = {
 
 const defaultNav: NavItem[] = [
   { key: "overview", label: "Tổng quan", href: "/dashboard" },
-  { key: "quizzes", label: "Tất cả bài trắc nghiệm", href: "/quizzes" },
+  { key: "quizzes", label: "Tất cả quiz", href: "/quizzes" },
   { key: "history", label: "Lịch sử", href: "/dashboard/history" },
   {
     key: "leaderboard",
     label: "Bảng xếp hạng",
     href: "/leaderboard",
   },
-  { key: "settings", label: "Cài đặt", href: "/profile" },
+  { key: "settings", label: "Hồ sơ", href: "/profile" },
 ];
 
 export function DashboardShell({

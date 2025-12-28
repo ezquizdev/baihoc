@@ -40,6 +40,7 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  z-index: 1;
 }
 
 .heroCta {
@@ -76,7 +77,8 @@
 }
 
 .heroFigure {
-  position: relative;
+  position: absolute;
+  right: 20px;
   width: 210px;
   height: 92px;
   flex: 0 0 auto;
@@ -425,6 +427,7 @@
   pointer-events: none;
   -webkit-appearance: none;
   z-index: 2;
+  top: -5px;
 }
 
 .rangeInput::-webkit-slider-runnable-track {

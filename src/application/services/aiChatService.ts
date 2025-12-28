@@ -661,7 +661,7 @@ function buildResultContext(review: AttemptReviewStateResponse) {
   lines.push(
     `- Điểm: ${review.attempt.scorePercent}% (${review.attempt.correctCount}/${review.attempt.totalQuestions})`,
   );
-  lines.push(`- IRT: ${review.attempt.xpEarned}`);
+  lines.push(`- Điểm năng lực: ${review.attempt.xpEarned}`);
   lines.push(`- Nộp lúc: ${review.attempt.submittedAt ?? "—"}`);
 
   if (review.subjectScores.length) {

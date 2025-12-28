@@ -132,7 +132,7 @@ export function AttemptHistoryCard({ item }: { item: AttemptHistoryItem }) {
             >
               <Lightning size={12} weight="bold" />
             </span>
-            <span className={styles.metaKey}>IRT</span>{" "}
+            <span className={styles.metaKey}>ĐNL</span>{" "}
             {formatNumberVi(item.xpEarned)}
           </span>
           {minutesEstimate !== null ? (

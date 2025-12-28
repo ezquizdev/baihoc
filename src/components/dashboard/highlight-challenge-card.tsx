@@ -134,7 +134,7 @@ export function HighlightChallengeCard({
           <div className={styles.tag}>CHALLENGE</div>
           <div className={styles.titleWrap} aria-hidden="true">
             <div className={styles.quizShape} />
-            <div className={styles.quizName}>HIGHLIGHT</div>
+            <div className={styles.quizName}>DAILY QUIZ</div>
           </div>
         </div>
         <div className={styles.right}>
@@ -195,7 +195,7 @@ export function HighlightChallengeCard({
           </div>
           <div className={styles.titleWrap} aria-hidden="true">
             <div className={styles.quizShape} />
-            <div className={styles.quizName}>HIGHLIGHT</div>
+            <div className={styles.quizName}>DAILY QUIZ</div>
           </div>
         </div>
 

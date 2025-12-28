@@ -53,7 +53,7 @@ export default async function DashboardPage() {
 
   const welcomeSubtitle =
     stats.completedQuizCount > 0
-      ? `Bạn đã hoàn thành ${formatNumberVi(stats.completedQuizCount)} quiz • Học ${formatNumberVi(stats.activeDays30d)} ngày (30 ngày gần đây)`
+      ? `Bạn đã hoàn thành ${formatNumberVi(stats.completedQuizCount)} quiz trong 30 ngày qua.`
       : "Bắt đầu làm quiz đầu tiên để ghi điểm nhé.";
 
   const quickActions = [
@@ -131,17 +131,9 @@ export default async function DashboardPage() {
         />
 
         <PromoBanner
-          tag="THÀNH TÍCH"
-          titleLines={
-            selfRank
-              ? ["HẠNG", `#${formatNumberVi(selfRank.rank)}`]
-              : ["BẮT", "ĐẦU"]
-          }
-          subtitle={
-            selfRank
-              ? `Bạn đang có ${formatNumberVi(selfRank.xp)} IRT trên leaderboard.`
-              : "Làm quiz để xuất hiện trên bảng xếp hạng."
-          }
+          tag="BANNER"
+          titleLines={["QUẢNG CÁO KHÓA HỌC"]}
+          subtitle={"Quảng cáo khóa học ĐGNL"}
         />
       </section>
     </DashboardShell>

@@ -62,7 +62,7 @@ export function ProfileScoreCards({ xp, showAiSuggestion = true }: Props) {
               <div className={styles.subjectValue}>
                 {formatNumberVi(subject.value)}
               </div>
-              <div className={styles.subjectHint}>IRT</div>
+              <div className={styles.subjectHint}>trên 300</div>
             </div>
           </div>
         ))}

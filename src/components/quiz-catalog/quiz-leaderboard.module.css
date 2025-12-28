@@ -95,7 +95,7 @@
 
 .colXp {
   width: 64px;
-  text-align: right;
+  text-align: right !important;
 }
 
 .table tbody td {

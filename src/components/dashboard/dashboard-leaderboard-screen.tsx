@@ -198,7 +198,7 @@ export function DashboardLeaderboardScreen({
 
   return (
     <DashboardShell
-      pageTitle="Bảng xếp hạng"
+      pageTitle=""
       activeNav="leaderboard"
       navItems={navItems}
       userEmail={session.email}
@@ -222,7 +222,7 @@ export function DashboardLeaderboardScreen({
         <section className={`cardBase ${styles.card}`} aria-label="Leaderboard">
           <div className={styles.cardHeader}>
             <div>
-              <h2 className={styles.cardTitle}>Xếp hạng học sinh</h2>
+              {/*<h2 className={styles.cardTitle}>Xếp hạng học sinh</h2>*/}
               <span className={styles.caption}>{caption}</span>
             </div>
           </div>

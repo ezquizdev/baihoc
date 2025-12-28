@@ -45,16 +45,9 @@ export function AttemptResultsScreen({
     };
   });
 
-  const defaultOpenPosition =
-    baseSummaries.find((q) => q.status !== "correct")?.question.position ??
-    baseSummaries[0]?.question.position ??
-    null;
-
   const questionSummaries = baseSummaries.map((summary) => ({
     ...summary,
-    defaultOpen:
-      defaultOpenPosition !== null &&
-      summary.question.position === defaultOpenPosition,
+    defaultOpen: summary.status !== "correct",
   }));
 
   const correctCount = questionSummaries.filter(
@@ -125,7 +118,7 @@ export function AttemptResultsScreen({
           >
             <div className={styles.scoreInner}>
               <div className={styles.scoreValue}>{scorePercent}%</div>
-              <div className={styles.scoreLabel}>Điểm</div>
+              {/*<div className={styles.scoreLabel}>Điểm</div>*/}
             </div>
           </div>
 
@@ -137,7 +130,7 @@ export function AttemptResultsScreen({
                 tone="success"
               />
               <MetaStat
-                label="IRT"
+                label="Điểm năng lực"
                 value={formatNumberVi(state.attempt.xpEarned)}
                 tone="primary"
               />
@@ -173,9 +166,9 @@ export function AttemptResultsScreen({
               )}
             </section>
 
-            <div className={styles.metaFootnote}>
+            {/*<div className={styles.metaFootnote}>
               Phiên bản chấm: v{state.judgementVersion}
-            </div>
+            </div>*/}
           </div>
         </div>
       </section>
@@ -249,7 +242,7 @@ export function AttemptResultsScreen({
                           {Math.round(percent)}%
                         </span>
                         <span className={styles.subjectIrt}>
-                          {formatNumberVi(subject.irtScore)} IRT
+                          {formatNumberVi(subject.irtScore)} ĐNL
                         </span>
                       </div>
                     </div>
@@ -404,7 +397,7 @@ function QuestionReviewCard({
 
         <div className={styles.questionSummaryRight}>
           <span className={styles.questionIrt}>
-            <span className={styles.questionIrtLabel}>IRT</span>{" "}
+            <span className={styles.questionIrtLabel}>ĐNL</span>{" "}
             {awardedIrtScore === undefined
               ? "—"
               : formatNumberVi(awardedIrtScore)}
@@ -517,9 +510,7 @@ function McqReview({
 
   const selectedLabelText = selectedOptions.length
     ? selectedOptions.map(formatOptionLabel).join(", ")
-    : answered
-      ? "Lựa chọn bạn chọn không còn tồn tại."
-      : "—";
+    : "—";
 
   const correctLabelText = correctOptions.length
     ? correctOptions.map(formatOptionLabel).join(", ")

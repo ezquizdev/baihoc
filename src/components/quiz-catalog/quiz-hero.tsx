@@ -16,18 +16,18 @@ export function QuizHero({ onGenerateCustomQuiz }: QuizHeroProps) {
         <p className={styles.heroText}>
           Chọn quiz phù hợp với bạn, lọc theo môn học/độ khó và bắt đầu ngay.
         </p>
-        {onGenerateCustomQuiz ? (
-          <div className={styles.heroActions}>
-            <button
-              type="button"
-              className={styles.heroCta}
-              onClick={onGenerateCustomQuiz}
-            >
-              Tạo quiz tuỳ chỉnh
-            </button>
-          </div>
-        ) : null}
       </div>
+      {onGenerateCustomQuiz ? (
+        <div className={styles.heroActions}>
+          <button
+            type="button"
+            className={styles.heroCta}
+            onClick={onGenerateCustomQuiz}
+          >
+            Tạo quiz tuỳ chỉnh
+          </button>
+        </div>
+      ) : null}
       <div className={styles.heroFigure} aria-hidden="true">
         <div className={styles.heroHead} />
         <div className={styles.heroArm} />
