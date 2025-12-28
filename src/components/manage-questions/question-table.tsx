@@ -33,6 +33,7 @@ import type {
 } from "@/application/models/questionList";
 import type { Subject } from "@/application/models/subject";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { NoticeModal } from "@/components/ui/notice-modal";
 import { formatDateVi } from "@/lib/formatters";
 import styles from "./question-table.module.css";
 
@@ -1196,11 +1197,6 @@ export function QuestionTable({
                           )
                         : null}
                     </div>
-                    {rowError?.questionId === q.id ? (
-                      <div className={styles.meta} role="alert">
-                        {rowError.message}
-                      </div>
-                    ) : null}
                   </td>
                 </tr>
               );
@@ -1224,6 +1220,14 @@ export function QuestionTable({
           if (!targetId) return;
           void deleteQuestionConfirmed(targetId);
         }}
+      />
+      <NoticeModal
+        open={rowError !== null}
+        title="Không thể thao tác"
+        message={rowError?.message ?? ""}
+        tone="error"
+        closeLabel="Đóng"
+        onClose={() => setRowError(null)}
       />
     </div>
   );

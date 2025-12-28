@@ -8,6 +8,9 @@
 ### fix(staff-questions): unclip table menus
 - Question table filter/action menus now render in a portal overlay so they remain usable when the table only has a single row.
 
+### fix(staff-questions): show action errors as popup
+- Question table action errors now display in a modal instead of inline under the row.
+
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 
