@@ -497,5 +497,161 @@
     "correctIndex": 1,
     "explanation": "Đáp án B\nSự khác biệt nằm ở sự quản lý của nhà nước pháp quyền XHCN và mục tiêu định hướng xã hội chủ nghĩa (công bằng, tiến bộ xã hội).\n\n\"\"\"",
     "passage": "Dựa vào thông tin dưới đây để trả lời các câu từ 112 đến 114:\n“Theo nhận thức của chúng ta, kinh tế thị trường định hướng xã hội chủ nghĩa là nền kinh tế thị trường hiện đại, hội nhập quốc tế, vận hành đầy đủ, đồng bộ theo các quy luật của kinh tế thị trường, có sự quản lí của nhà nước pháp quyền xã hội chủ nghĩa, do Đảng Cộng sản Việt Nam lãnh đạo; bảo đảm định hướng xã hội chủ nghĩa, nhằm mục tiêu “dân giàu, nước mạnh, công bằng, dân chủ, văn minh…”\n(Nguyễn Phú Trọng, Một số vấn đề lý luận và thực tiễn về chủ nghĩa xã hội và con đường đi lên chủ nghĩa xã hội ở Việt Nam, NXB Chính trị quốc gia Sự thật, Hà Nội, 2022)\n\n---"
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 2,
+    "stem": "Từ nào dưới đây là từ ghép?",
+    "options": [
+      "Xanh xao",
+      "Học tập",
+      "Lấp lánh",
+      "Run rẩy"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B. “Học tập” là từ ghép; các từ còn lại là từ láy."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 3,
+    "stem": "Câu nào dưới đây dùng dấu phẩy đúng?",
+    "options": [
+      "Buổi sáng, em đi học rồi về nhà.",
+      "Buổi sáng em, đi học rồi về nhà.",
+      "Buổi sáng em đi, học rồi về nhà.",
+      "Buổi sáng em đi học rồi, về nhà."
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A. Dấu phẩy ngăn cách trạng ngữ “Buổi sáng” với phần còn lại của câu."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 2,
+    "stem": "Trong các từ sau, từ nào viết đúng chính tả?",
+    "options": [
+      "Chỉnh chu",
+      "Chỉn chu",
+      "Chỉnh chư",
+      "Chỉn chư"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B. Từ đúng là “chỉn chu”."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 3,
+    "stem": "Biện pháp tu từ nào được dùng trong câu: “Sóng vỗ rì rào gọi bờ”?",
+    "options": [
+      "So sánh",
+      "Nhân hóa",
+      "Ẩn dụ",
+      "Hoán dụ"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B. “Gọi bờ” là hành động của con người được gán cho sóng."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 2,
+    "stem": "Câu nào là câu ghép?",
+    "options": [
+      "Trời mưa, đường trơn.",
+      "Em đọc sách rất chăm chỉ.",
+      "Nhà em có một con mèo.",
+      "Vì trời mưa nên em ở nhà."
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A. Có hai vế “Trời mưa” và “đường trơn”."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 3,
+    "stem": "Từ nào dưới đây là từ đồng nghĩa với “nhanh chóng”?",
+    "options": [
+      "Chậm rãi",
+      "Mau lẹ",
+      "Ung dung",
+      "Lững thững"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B. “Mau lẹ” đồng nghĩa với “nhanh chóng”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 2,
+    "stem": "Choose the correct option: He ____ football every weekend.",
+    "options": [
+      "play",
+      "plays",
+      "played",
+      "playing"
+    ],
+    "correctIndex": 1,
+    "explanation": "With “he” in the present simple, use “plays”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 2,
+    "stem": "Choose the correct option: There ____ two books on the table.",
+    "options": [
+      "is",
+      "are",
+      "was",
+      "be"
+    ],
+    "correctIndex": 1,
+    "explanation": "Plural subject “two books” takes “are”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 3,
+    "stem": "Choose the word closest in meaning to “begin”.",
+    "options": [
+      "start",
+      "end",
+      "break",
+      "stop"
+    ],
+    "correctIndex": 0,
+    "explanation": "“Begin” means “start”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 3,
+    "stem": "Choose the correct option: If it ____ tomorrow, we will stay home.",
+    "options": [
+      "rains",
+      "rain",
+      "rained",
+      "raining"
+    ],
+    "correctIndex": 0,
+    "explanation": "First conditional: present simple in the if-clause."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 2,
+    "stem": "Choose the correct option: She is ____ than her brother.",
+    "options": [
+      "tall",
+      "taller",
+      "tallest",
+      "more tall"
+    ],
+    "correctIndex": 1,
+    "explanation": "Comparative of “tall” is “taller”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 3,
+    "stem": "Choose the correct option: I have lived here ____ 2018.",
+    "options": [
+      "for",
+      "since",
+      "from",
+      "during"
+    ],
+    "correctIndex": 1,
+    "explanation": "“Since” is used with a specific starting point."
   }
 ]
