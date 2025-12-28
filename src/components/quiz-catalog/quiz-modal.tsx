@@ -81,7 +81,9 @@ export function QuizModal({ quiz, onClose, onStart }: QuizModalProps) {
   const questionCount = quiz.questionCount ?? 0;
   const isDone = Boolean(quiz.userAttempted);
   const ctaLabel = isDone
-    ? "Làm lại"
+    ? quiz.isChallenge
+      ? "Xem kết quả"
+      : "Làm lại"
     : quiz.isChallenge
       ? "Thử thách ngay"
       : "Làm bài ngay";

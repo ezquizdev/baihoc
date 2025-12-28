@@ -26,7 +26,9 @@ export function QuizCard({
   const dateLabel = formatDateVi(quiz.updatedAt ?? quiz.createdAt);
   const isDone = Boolean(quiz.userAttempted);
   const ctaLabel = isDone
-    ? "Làm lại"
+    ? quiz.isChallenge
+      ? "Xem kết quả"
+      : "Làm lại"
     : quiz.isChallenge
       ? "Thử thách ngay"
       : "Làm ngay";
