@@ -11,6 +11,10 @@ import type {
   ShortAnswerKey,
 } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
+import {
+  makePassageConversionDraftId,
+  writePassageConversionDraft,
+} from "@/components/manage-questions/passage-conversion-draft";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { handleMarkdownImagePaste } from "@/components/ui/markdown-image-paste";
@@ -329,6 +333,37 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
       );
     } finally {
       setBusyAction(null);
+    }
+  };
+
+  const startConvertToPassage = () => {
+    if (props.mode !== "edit") return;
+    setError(null);
+    setNotice(null);
+    try {
+      const draftId = makePassageConversionDraftId();
+      writePassageConversionDraft(draftId, {
+        version: 1,
+        createdAt: new Date().toISOString(),
+        sourceQuestionId: props.questionId,
+        subjectId,
+        type,
+        defaultDifficulty,
+        defaultScore,
+        stem,
+        explanation,
+        topicIds,
+        options,
+        shortAnswers,
+        passagePosition: 1,
+      });
+      router.push(
+        `/staff/questions/passages/new?questionId=${props.questionId}&draftId=${draftId}`,
+      );
+    } catch {
+      setError(
+        "Không thể tạo bản nháp chuyển đổi (có thể do trình duyệt chặn lưu trữ tạm thời).",
+      );
     }
   };
 
@@ -809,55 +844,77 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                   )}
                 </div>
 
-                  <div className={styles.stack} style={{ marginTop: 16 }}>
-                    <h3 className={styles.sectionTitle}>Đoạn ngữ liệu (tuỳ chọn)</h3>
-                    <label className={styles.smallBtn}>
-                      <input
-                        type="checkbox"
-                        checked={passageEnabled}
-                        onChange={() => setPassageEnabled((prev) => !prev)}
-                        disabled={disabled}
-                      />{" "}
-                      Kèm đoạn ngữ liệu
-                    </label>
-                    {passageEnabled ? (
-                      <>
-                        <textarea
-                          className={`${styles.textarea} ${styles.textareaSmall}`}
-                          value={passageContent}
-                          onChange={(e) => setPassageContent(e.target.value)}
-                          onPaste={(e) =>
-                            handleMarkdownImagePaste(e, {
-                              setValue: setPassageContent,
-                              setUploadingCount: setMediaUploadingCount,
-                              setUploadError: setMediaUploadError,
-                              altPrefix: "passage",
-                            })
-                          }
-                          placeholder="Nội dung đoạn ngữ liệu..."
+                  {props.mode === "create" ? (
+                    <div className={styles.stack} style={{ marginTop: 16 }}>
+                      <h3 className={styles.sectionTitle}>
+                        Đoạn ngữ liệu (tuỳ chọn)
+                      </h3>
+                      <label className={styles.smallBtn}>
+                        <input
+                          type="checkbox"
+                          checked={passageEnabled}
+                          onChange={() => setPassageEnabled((prev) => !prev)}
                           disabled={disabled}
-                        />
-                        <div className={styles.row}>
-                          <div className={styles.label}>
-                            Thứ tự trong cụm câu hỏi
-                          </div>
-                          <input
-                            className={styles.input}
-                            type="number"
-                            min={1}
-                            value={passagePosition}
-                            onChange={(e) => {
-                              const next = Number(e.target.value);
-                              setPassagePosition(
-                                Number.isFinite(next) ? next : 1,
-                              );
-                            }}
+                        />{" "}
+                        Kèm đoạn ngữ liệu
+                      </label>
+                      {passageEnabled ? (
+                        <>
+                          <textarea
+                            className={`${styles.textarea} ${styles.textareaSmall}`}
+                            value={passageContent}
+                            onChange={(e) => setPassageContent(e.target.value)}
+                            onPaste={(e) =>
+                              handleMarkdownImagePaste(e, {
+                                setValue: setPassageContent,
+                                setUploadingCount: setMediaUploadingCount,
+                                setUploadError: setMediaUploadError,
+                                altPrefix: "passage",
+                              })
+                            }
+                            placeholder="Nội dung đoạn ngữ liệu..."
                             disabled={disabled}
                           />
-                        </div>
-                      </>
-                    ) : null}
-                  </div>
+                          <div className={styles.row}>
+                            <div className={styles.label}>
+                              Thứ tự trong cụm câu hỏi
+                            </div>
+                            <input
+                              className={styles.input}
+                              type="number"
+                              min={1}
+                              value={passagePosition}
+                              onChange={(e) => {
+                                const next = Number(e.target.value);
+                                setPassagePosition(
+                                  Number.isFinite(next) ? next : 1,
+                                );
+                              }}
+                              disabled={disabled}
+                            />
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className={styles.stack} style={{ marginTop: 16 }}>
+                      <h3 className={styles.sectionTitle}>Đoạn ngữ liệu</h3>
+                      <div className={styles.muted}>
+                        Câu hỏi thường không kèm đoạn ngữ liệu. Nếu bạn muốn thêm
+                        đoạn ngữ liệu, hãy chuyển câu hỏi sang dạng passage.
+                      </div>
+                      <button
+                        type="button"
+                        className={`${styles.smallBtn} ${styles.smallBtnBlue} ${
+                          disabled ? styles.btnDisabled : ""
+                        }`}
+                        disabled={disabled}
+                        onClick={startConvertToPassage}
+                      >
+                        Chuyển thành câu hỏi có đoạn ngữ liệu
+                      </button>
+                    </div>
+                  )}
                 </div>
                 {viewMode === "split" ? (
                   <QuestionPreview
