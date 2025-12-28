@@ -16,6 +16,11 @@
 ### chore(test): update repo mocks for new exports
 - Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
 
+### feat(dashboard): wire student overview to real data
+- `/dashboard` now shows real user stats (active days, completed quizzes, study time, average score, and 7-day correct/wrong bars).
+- Daily challenge card now pulls the currently active challenge quiz (if any) and links into the attempt start flow.
+- Replaced the placeholder banner with the user’s leaderboard rank + IRT total when available.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger

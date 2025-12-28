@@ -149,6 +149,45 @@
   margin: 0;
 }
 
+.footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--text-inverse);
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.cta:hover {
+  background: var(--primary-2);
+  border-color: var(--primary-2);
+}
+
+.cta:focus-visible {
+  outline: 2px solid rgba(var(--primary-rgb), 0.28);
+  outline-offset: 2px;
+}
+
+.cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .pill {
   width: 100%;
   padding: 10px 14px;
