@@ -62,6 +62,24 @@
 ### chore(test): update repo mocks for new exports
 - Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
 
+### feat(ai): add AI companion chat bubble
+- Added a bottom-right AI chat bubble + dialog on student pages (hidden on `/auth/*` and `/staff/*`).
+- Added `GET /api/ai/session` + `POST /api/ai/chat` with DB logging (`ai_sessions`, `ai_messages`, `ai_failures`) and UC016-aware context (home vs attempt results).
+- Premium gating: students must be `tier=paid` to send messages; free students see a locked state.
+
+### feat(ai): add full-page AI chat with history sidebar
+- Added `/ai` page with ChatGPT-style layout (session history sidebar + conversation panel) and a back button.
+- Added `GET/POST /api/ai/sessions` and `GET /api/ai/sessions/[sessionId]` for conversation history and loading.
+- Chat bubble dialog now links to the full page via “Mở toàn màn hình”.
+
+### feat(profile): add premium AI study strategy summary
+- Added a premium-only “Chiến lược học tập” card on `/profile` that asynchronously generates and persists an AI study plan when a user has attempt history.
+- Added `ai_profile_summaries` table + `GET/POST /api/profile/ai-summary`.
+
+### feat(staff): regenerate AI profile summary from student detail panel
+- Added `GET/POST /api/staff/users/[userId]/ai-summary` and surfaced it in `/staff/students` (detail panel).
+- Removed the per-row “Thao tác” column from the student table; actions now live in the detail panel to reduce clutter.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger
