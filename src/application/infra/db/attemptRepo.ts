@@ -1,4 +1,8 @@
 import type { PoolClient, QueryResultRow } from "pg";
+import {
+  applyQuestionIrtStatsDelta,
+  getOrCreateUserQuizFirstAttempt,
+} from "@/application/infra/db/irtRepo";
 import { query, withTransaction } from "@/application/infra/db/pool";
 import {
   insertXpEvent,
@@ -74,6 +78,7 @@ type AttemptAnswerRow = {
   answered_at: string | null;
   is_correct: boolean | null;
   awarded_score: number | null;
+  awarded_irt_score: number | null;
 };
 
 type AttemptQuestionRow = {
@@ -185,6 +190,7 @@ type AttemptHistoryRow = {
     slug: string;
     correctCount: number;
     totalQuestions: number;
+    irtScore?: number;
     scorePercent: number;
   }> | null;
   custom_quiz_id: string | null;
@@ -238,6 +244,7 @@ export type GradedAnswerInput = {
   textAnswer: string | null;
   isCorrect: boolean;
   awardedScore: number;
+  awardedIrtScore: number;
 };
 
 export type AttemptStateResult = AttemptStateResponse;
@@ -282,7 +289,10 @@ type RejudgeAttemptInput = {
   attemptId: string;
   expectedJudgementVersion: number;
   gradedAnswers: Array<
-    Pick<GradedAnswerInput, "questionId" | "isCorrect" | "awardedScore">
+    Pick<
+      GradedAnswerInput,
+      "questionId" | "isCorrect" | "awardedScore" | "awardedIrtScore"
+    >
   >;
   scoreRaw: number;
   scorePercent: number;
@@ -327,6 +337,10 @@ function mapAttemptAnswer(row: AttemptAnswerRow): AttemptAnswer {
     awardedScore:
       row.awarded_score !== null && row.awarded_score !== undefined
         ? Number(row.awarded_score)
+        : undefined,
+    awardedIrtScore:
+      row.awarded_irt_score !== null && row.awarded_irt_score !== undefined
+        ? Number(row.awarded_irt_score)
         : undefined,
   };
 }
@@ -411,19 +425,19 @@ export async function listInProgressAttemptsForUser(
 ): Promise<InProgressAttemptRow[]> {
   const res = await runQuery<InProgressAttemptRow>(
     client,
-    `SELECT id,
-            quiz_id,
-            challenge_id,
-            status,
-            started_at,
-            time_limit_seconds,
-            remaining_seconds,
+    `SELECT a.id,
+            a.quiz_id,
+            a.challenge_id,
+            a.status,
+            a.started_at,
+            a.time_limit_seconds,
+            a.remaining_seconds,
             cs.end_at AS challenge_end_at
-     FROM attempts
-     LEFT JOIN challenge_settings cs ON cs.quiz_id = attempts.challenge_id
-     WHERE user_id = $1
-       AND status = 'in_progress'
-     ORDER BY started_at DESC, id DESC`,
+     FROM attempts a
+     LEFT JOIN challenge_settings cs ON cs.quiz_id = a.challenge_id
+     WHERE a.user_id = $1
+       AND a.status = 'in_progress'
+     ORDER BY a.started_at DESC, a.id DESC`,
     [userId],
   );
   return res.rows;
@@ -903,7 +917,8 @@ export async function listAttemptAnswers(
             text_answer,
             answered_at,
             is_correct,
-            awarded_score
+            awarded_score,
+            awarded_irt_score
      FROM attempt_answers
      WHERE attempt_id = $1`,
     [attemptId],
@@ -1163,6 +1178,7 @@ function mapAttemptHistoryRow(
       slug: item.slug,
       correctCount: Number(item.correctCount),
       totalQuestions: Number(item.totalQuestions),
+      irtScore: Number(item.irtScore ?? 0),
       scorePercent: Number(item.scorePercent),
     })),
     status: row.status,
@@ -1531,6 +1547,12 @@ export async function submitAttemptWithClient(
     return { status: "already_submitted", attempt: mapAttempt(attemptRow) };
   }
 
+  const firstAttempt = await getOrCreateUserQuizFirstAttempt(client, {
+    userId: attemptRow.user_id,
+    quizId: attemptRow.quiz_id,
+    attemptId: attemptRow.id,
+  });
+
   await upsertGradedAnswers(client, input.attemptId, input.gradedAnswers);
   await insertAnswerEvents(
     client,
@@ -1545,6 +1567,17 @@ export async function submitAttemptWithClient(
     attemptRow.judgement_version ?? 1,
     input.questionSnapshots,
   );
+
+  if (firstAttempt.isFirst) {
+    await applyQuestionIrtStatsDelta(
+      client,
+      input.gradedAnswers.map((answer) => ({
+        questionId: answer.questionId,
+        attemptDelta: 1,
+        correctDelta: answer.isCorrect ? 1 : 0,
+      })),
+    );
+  }
 
   const status = options?.status ?? "submitted";
   const submittedAt = options?.submittedAt ?? null;
@@ -1591,13 +1624,15 @@ export async function submitAttemptWithClient(
     ],
   );
 
-  const xpEventCreatedAt = options?.xpEventCreatedAt ?? null;
-  await insertXpEvent(
-    xpEventCreatedAt
-      ? { ...input.xpEvent, createdAt: xpEventCreatedAt }
-      : input.xpEvent,
-    client,
-  );
+  if (firstAttempt.isFirst) {
+    const xpEventCreatedAt = options?.xpEventCreatedAt ?? null;
+    await insertXpEvent(
+      xpEventCreatedAt
+        ? { ...input.xpEvent, createdAt: xpEventCreatedAt }
+        : input.xpEvent,
+      client,
+    );
+  }
 
   const updated = updatedRes.rows[0];
   if (!updated) throw new Error("Failed to submit attempt");
@@ -1626,6 +1661,32 @@ export async function rejudgeAttempt(
 
     const newJudgementVersion = attemptRow.judgement_version + 1;
 
+    const firstAttempt = await getOrCreateUserQuizFirstAttempt(client, {
+      userId: attemptRow.user_id,
+      quizId: attemptRow.quiz_id,
+      attemptId: attemptRow.id,
+    });
+
+    const previousCorrectByQuestion = new Map<string, boolean>();
+    if (firstAttempt.isFirst && input.gradedAnswers.length) {
+      const questionIds = input.gradedAnswers.map(
+        (answer) => answer.questionId,
+      );
+      const prevRes = await client.query<{
+        question_id: string;
+        is_correct: boolean | null;
+      }>(
+        `SELECT question_id, is_correct
+         FROM attempt_answers
+         WHERE attempt_id = $1
+           AND question_id = ANY($2::uuid[])`,
+        [input.attemptId, questionIds],
+      );
+      prevRes.rows.forEach((row) => {
+        previousCorrectByQuestion.set(row.question_id, row.is_correct === true);
+      });
+    }
+
     await updateAttemptAnswerJudgements(
       client,
       input.attemptId,
@@ -1642,6 +1703,22 @@ export async function rejudgeAttempt(
       newJudgementVersion,
       input.questionSnapshots,
     );
+
+    if (firstAttempt.isFirst && previousCorrectByQuestion.size) {
+      await applyQuestionIrtStatsDelta(
+        client,
+        input.gradedAnswers.map((answer) => {
+          const prev =
+            previousCorrectByQuestion.get(answer.questionId) === true;
+          const next = answer.isCorrect === true;
+          return {
+            questionId: answer.questionId,
+            attemptDelta: 0,
+            correctDelta: (next ? 1 : 0) - (prev ? 1 : 0),
+          };
+        }),
+      );
+    }
 
     const updatedRes = await client.query<AttemptRow>(
       `UPDATE attempts
@@ -1679,7 +1756,11 @@ export async function rejudgeAttempt(
       ],
     );
 
-    if (input.xpAdjustmentEvent && input.xpAdjustmentEvent.amount !== 0) {
+    if (
+      firstAttempt.isFirst &&
+      input.xpAdjustmentEvent &&
+      input.xpAdjustmentEvent.amount !== 0
+    ) {
       await insertXpEvent(input.xpAdjustmentEvent, client);
     }
 
@@ -1743,25 +1824,34 @@ async function updateAttemptAnswerJudgements(
   client: PoolClient,
   attemptId: string,
   answers: Array<
-    Pick<GradedAnswerInput, "questionId" | "isCorrect" | "awardedScore">
+    Pick<
+      GradedAnswerInput,
+      "questionId" | "isCorrect" | "awardedScore" | "awardedIrtScore"
+    >
   >,
 ) {
   if (!answers.length) return;
   const values: string[] = [];
   const params: unknown[] = [attemptId];
   answers.forEach((answer, index) => {
-    const base = index * 3;
+    const base = index * 4;
     values.push(
-      `($${base + 2}::uuid, $${base + 3}::boolean, $${base + 4}::numeric)`,
+      `($${base + 2}::uuid, $${base + 3}::boolean, $${base + 4}::numeric, $${base + 5}::int)`,
     );
-    params.push(answer.questionId, answer.isCorrect, answer.awardedScore);
+    params.push(
+      answer.questionId,
+      answer.isCorrect,
+      answer.awardedScore,
+      answer.awardedIrtScore,
+    );
   });
 
   await client.query(
     `UPDATE attempt_answers aa
      SET is_correct = v.is_correct,
-         awarded_score = v.awarded_score
-     FROM (VALUES ${values.join(", ")}) AS v(question_id, is_correct, awarded_score)
+         awarded_score = v.awarded_score,
+         awarded_irt_score = v.awarded_irt_score
+     FROM (VALUES ${values.join(", ")}) AS v(question_id, is_correct, awarded_score, awarded_irt_score)
      WHERE aa.attempt_id = $1
        AND aa.question_id = v.question_id`,
     params,
@@ -1772,7 +1862,10 @@ async function insertRejudgeEvents(
   client: PoolClient,
   attemptId: string,
   answers: Array<
-    Pick<GradedAnswerInput, "questionId" | "isCorrect" | "awardedScore">
+    Pick<
+      GradedAnswerInput,
+      "questionId" | "isCorrect" | "awardedScore" | "awardedIrtScore"
+    >
   >,
   meta?: Record<string, unknown>,
 ) {
@@ -1785,6 +1878,7 @@ async function insertRejudgeEvents(
     const payload = {
       isCorrect: answer.isCorrect,
       awardedScore: answer.awardedScore,
+      awardedIrtScore: answer.awardedIrtScore,
       ...(meta ?? {}),
     };
     params.push(answer.questionId, payload, "rejudge");
@@ -1844,9 +1938,9 @@ async function upsertGradedAnswers(
   const values: string[] = [];
   const params: unknown[] = [attemptId];
   answers.forEach((answer, index) => {
-    const base = index * 5;
+    const base = index * 6;
     values.push(
-      `($1, $${base + 2}, $${base + 3}::uuid[], $${base + 4}, $${base + 5}, $${base + 6}, now(), false)`,
+      `($1, $${base + 2}, $${base + 3}::uuid[], $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, now(), false)`,
     );
     params.push(
       answer.questionId,
@@ -1854,6 +1948,7 @@ async function upsertGradedAnswers(
       answer.textAnswer,
       answer.isCorrect,
       answer.awardedScore,
+      answer.awardedIrtScore,
     );
   });
 
@@ -1865,6 +1960,7 @@ async function upsertGradedAnswers(
        text_answer,
        is_correct,
        awarded_score,
+       awarded_irt_score,
        answered_at,
        auto_saved
      ) VALUES ${values.join(", ")}
@@ -1874,6 +1970,7 @@ async function upsertGradedAnswers(
        text_answer = EXCLUDED.text_answer,
        is_correct = EXCLUDED.is_correct,
        awarded_score = EXCLUDED.awarded_score,
+       awarded_irt_score = EXCLUDED.awarded_irt_score,
        answered_at = EXCLUDED.answered_at,
        auto_saved = FALSE`,
     params,
@@ -1902,6 +1999,7 @@ async function insertAnswerEvents(
       Object.assign(payload, {
         isCorrect: answer.isCorrect,
         awardedScore: answer.awardedScore,
+        awardedIrtScore: answer.awardedIrtScore,
       });
     }
     params.push(answer.questionId, payload, eventType);

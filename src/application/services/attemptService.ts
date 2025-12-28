@@ -28,6 +28,10 @@ import {
   submitAttempt as submitAttemptRepo,
   submitAttemptWithClient,
 } from "@/application/infra/db/attemptRepo";
+import {
+  listQuestionIrtStats,
+  type QuestionIrtStats,
+} from "@/application/infra/db/irtRepo";
 import { withTransaction } from "@/application/infra/db/pool";
 import { listQuizStatusesByIds } from "@/application/infra/db/quizRepo";
 import type {
@@ -125,12 +129,16 @@ async function autoSubmitAttemptAsEnded(
     });
   });
 
-  const { gradedAnswers, correctCount, scoreRaw, scorePercent } = gradeAnswers(
-    gradingData,
-    answerMap,
+  const irtStats = await listQuestionIrtStats(
+    gradingData.map((question) => question.questionId),
+    client,
+  );
+  const irtStatsByQuestionId = new Map(
+    irtStats.map((stat) => [stat.questionId, stat]),
   );
 
-  const xpEarned = Math.round(scorePercent);
+  const { gradedAnswers, correctCount, scoreRaw, scorePercent, irtScore } =
+    gradeAnswers(gradingData, answerMap, irtStatsByQuestionId);
   const quizMetaForSnapshot = await getQuizSnapshotMeta(
     attempt.quiz_id,
     client,
@@ -138,6 +146,10 @@ async function autoSubmitAttemptAsEnded(
 
   const questionSnapshots = buildQuestionSnapshots(gradingData);
   const subjectScores = computeSubjectScores(gradingData, gradedAnswers);
+  const subjectAllocations = subjectScores.map((subject) => ({
+    subjectId: subject.subjectId,
+    amount: subject.irtScore,
+  }));
   const quizContentHash = computeQuizContentHashSnapshot(gradingData);
 
   await submitAttemptWithClient(
@@ -153,8 +165,8 @@ async function autoSubmitAttemptAsEnded(
       xpEvent: {
         userId,
         source: attempt.challenge_id ? "challenge" : "attempt",
-        amount: xpEarned,
-        metadata: { quizId: attempt.quiz_id },
+        amount: irtScore,
+        metadata: { quizId: attempt.quiz_id, subjectAllocations },
       },
       snapshot: {
         quizContentHash,
@@ -583,12 +595,15 @@ export async function submitAttempt(
       : normalizeSubmitAnswers(input.answers, gradingMap);
   const merged = mergeAnswers(existingAnswers, normalized);
 
-  const { gradedAnswers, correctCount, scoreRaw, scorePercent } = gradeAnswers(
-    gradingData,
-    merged,
+  const irtStats = await listQuestionIrtStats(
+    gradingData.map((question) => question.questionId),
+  );
+  const irtStatsByQuestionId = new Map(
+    irtStats.map((stat) => [stat.questionId, stat]),
   );
 
-  const xpEarned = Math.round(scorePercent);
+  const { gradedAnswers, correctCount, scoreRaw, scorePercent, irtScore } =
+    gradeAnswers(gradingData, merged, irtStatsByQuestionId);
   const quizMetaForSnapshot = await getQuizSnapshotMeta(attempt.quiz_id);
   if (!quizMetaForSnapshot) {
     throw new ServiceError("QUIZ_NOT_FOUND", "Quiz not found", 404);
@@ -596,6 +611,10 @@ export async function submitAttempt(
 
   const questionSnapshots = buildQuestionSnapshots(gradingData);
   const subjectScores = computeSubjectScores(gradingData, gradedAnswers);
+  const subjectAllocations = subjectScores.map((subject) => ({
+    subjectId: subject.subjectId,
+    amount: subject.irtScore,
+  }));
   const quizContentHash = computeQuizContentHashSnapshot(gradingData);
 
   const result = await submitAttemptRepo({
@@ -609,8 +628,8 @@ export async function submitAttempt(
     xpEvent: {
       userId,
       source: attempt.challenge_id ? "challenge" : "attempt",
-      amount: xpEarned,
-      metadata: { quizId: attempt.quiz_id },
+      amount: irtScore,
+      metadata: { quizId: attempt.quiz_id, subjectAllocations },
     },
     snapshot: {
       quizContentHash,
@@ -697,16 +716,42 @@ export async function rejudgeAttempt(
     });
   });
 
-  const { gradedAnswers, correctCount, scoreRaw, scorePercent } = gradeAnswers(
-    gradingData,
-    answerMap,
+  const irtStats = await listQuestionIrtStats(
+    gradingData.map((question) => question.questionId),
+  );
+  const irtStatsByQuestionId = new Map(
+    irtStats.map((stat) => [stat.questionId, stat]),
   );
 
-  const xpEarned = Math.round(scorePercent);
-  const xpDelta = xpEarned - Number(attempt.xp_earned ?? 0);
+  const { gradedAnswers, correctCount, scoreRaw, scorePercent, irtScore } =
+    gradeAnswers(gradingData, answerMap, irtStatsByQuestionId);
+
+  const xpDelta = irtScore - Number(attempt.xp_earned ?? 0);
 
   const questionSnapshots = buildQuestionSnapshots(gradingData);
   const subjectScores = computeSubjectScores(gradingData, gradedAnswers);
+  const previousSubjectScores = parseAttemptSubjectScores(
+    attempt.snapshot_subject_scores,
+  );
+  const previousIrtBySubject = new Map(
+    previousSubjectScores.map((subject) => [
+      subject.subjectId,
+      subject.irtScore,
+    ]),
+  );
+  const nextIrtBySubject = new Map(
+    subjectScores.map((subject) => [subject.subjectId, subject.irtScore]),
+  );
+  const subjectAllocations = Array.from(
+    new Set([...previousIrtBySubject.keys(), ...nextIrtBySubject.keys()]),
+  )
+    .map((subjectId) => ({
+      subjectId,
+      amount:
+        (nextIrtBySubject.get(subjectId) ?? 0) -
+        (previousIrtBySubject.get(subjectId) ?? 0),
+    }))
+    .filter((allocation) => allocation.amount !== 0);
   const quizContentHash = computeQuizContentHashSnapshot(gradingData);
 
   const result = await rejudgeAttemptRepo({
@@ -716,12 +761,13 @@ export async function rejudgeAttempt(
       questionId: answer.questionId,
       isCorrect: answer.isCorrect,
       awardedScore: answer.awardedScore,
+      awardedIrtScore: answer.awardedIrtScore,
     })),
     scoreRaw,
     scorePercent,
     correctCount,
     totalQuestions: gradingData.length,
-    xpEarned,
+    xpEarned: irtScore,
     xpAdjustmentEvent:
       xpDelta !== 0
         ? {
@@ -732,6 +778,9 @@ export async function rejudgeAttempt(
               quizId: attempt.quiz_id,
               attemptId,
               reason: "rejudge",
+              ...(subjectAllocations.length
+                ? { subjectAllocations }
+                : undefined),
             },
           }
         : null,
@@ -953,18 +1002,38 @@ function mergeAnswers(
   return map;
 }
 
+function computeIrtWeight(stat: QuestionIrtStats | undefined): number {
+  const attemptCount = stat?.firstAttemptCount ?? 0;
+  const correctCount = stat?.firstCorrectCount ?? 0;
+
+  // Beta(2,2) prior (smooths early questions toward 50%).
+  const priorAttempts = 4;
+  const priorCorrect = 2;
+  const pCorrect =
+    (correctCount + priorCorrect) / Math.max(1, attemptCount + priorAttempts);
+  const difficulty = 1 - Math.min(1, Math.max(0, pCorrect));
+
+  const minWeight = 4;
+  const maxWeight = 10;
+  const weight = Math.round(minWeight + difficulty * (maxWeight - minWeight));
+  return Math.min(maxWeight, Math.max(minWeight, weight));
+}
+
 function gradeAnswers(
   gradingData: QuizQuestionGrading[],
   answerMap: Map<string, AttemptAnswerInput>,
+  irtStatsByQuestionId: Map<string, QuestionIrtStats>,
 ): {
   gradedAnswers: GradedAnswerInput[];
   correctCount: number;
   scoreRaw: number;
   scorePercent: number;
+  irtScore: number;
 } {
   let correctCount = 0;
   let scoreRaw = 0;
   let totalPossible = 0;
+  let irtScore = 0;
   const gradedAnswers = gradingData.map((question) => {
     const answer = answerMap.get(question.questionId);
     const selectedOptionIds = answer?.selectedOptionIds ?? null;
@@ -981,8 +1050,13 @@ function gradeAnswers(
     }
 
     const awardedScore = isCorrect ? questionScore : 0;
+    const irtWeight = computeIrtWeight(
+      irtStatsByQuestionId.get(question.questionId),
+    );
+    const awardedIrtScore = isCorrect ? irtWeight : 0;
     if (isCorrect) correctCount += 1;
     scoreRaw += awardedScore;
+    irtScore += awardedIrtScore;
 
     return {
       questionId: question.questionId,
@@ -990,6 +1064,7 @@ function gradeAnswers(
       textAnswer: textAnswer ?? null,
       isCorrect,
       awardedScore,
+      awardedIrtScore,
     };
   });
 
@@ -997,7 +1072,7 @@ function gradeAnswers(
     totalPossible > 0
       ? Number(((scoreRaw / totalPossible) * 100).toFixed(2))
       : 0;
-  return { gradedAnswers, correctCount, scoreRaw, scorePercent };
+  return { gradedAnswers, correctCount, scoreRaw, scorePercent, irtScore };
 }
 
 function buildQuestionSnapshots(gradingData: QuizQuestionGrading[]): Array<{
@@ -1034,11 +1109,12 @@ function computeSubjectScores(
 ): AttemptSubjectScore[] {
   const gradedMap = new Map<
     string,
-    { awardedScore: number; isCorrect: boolean }
+    { awardedScore: number; awardedIrtScore: number; isCorrect: boolean }
   >();
   gradedAnswers.forEach((answer) => {
     gradedMap.set(answer.questionId, {
       awardedScore: answer.awardedScore,
+      awardedIrtScore: answer.awardedIrtScore,
       isCorrect: answer.isCorrect,
     });
   });
@@ -1053,6 +1129,7 @@ function computeSubjectScores(
       correctCount: number;
       totalPossible: number;
       awarded: number;
+      irtScore: number;
     }
   >();
 
@@ -1066,6 +1143,7 @@ function computeSubjectScores(
       correctCount: 0,
       totalPossible: 0,
       awarded: 0,
+      irtScore: 0,
     };
     const maxScore =
       question.score !== null ? question.score : question.defaultScore;
@@ -1074,6 +1152,7 @@ function computeSubjectScores(
     const graded = gradedMap.get(question.questionId);
     if (graded) {
       agg.awarded += graded.awardedScore;
+      agg.irtScore += graded.awardedIrtScore;
       if (graded.isCorrect) agg.correctCount += 1;
     }
     bySubject.set(subjectId, agg);
@@ -1086,6 +1165,7 @@ function computeSubjectScores(
       slug: agg.slug,
       correctCount: agg.correctCount,
       totalQuestions: agg.totalQuestions,
+      irtScore: agg.irtScore,
       scorePercent:
         agg.totalPossible > 0
           ? Number(((agg.awarded / agg.totalPossible) * 100).toFixed(2))
@@ -1117,6 +1197,7 @@ function parseAttemptSubjectScores(raw: unknown): AttemptSubjectScore[] {
       if (!subjectId || !name || !slug) return null;
       const correctCount = Number(record.correctCount ?? 0);
       const totalQuestions = Number(record.totalQuestions ?? 0);
+      const irtScore = Number(record.irtScore ?? 0);
       const scorePercent = Number(record.scorePercent ?? 0);
       return {
         subjectId,
@@ -1124,6 +1205,7 @@ function parseAttemptSubjectScores(raw: unknown): AttemptSubjectScore[] {
         slug,
         correctCount: Number.isFinite(correctCount) ? correctCount : 0,
         totalQuestions: Number.isFinite(totalQuestions) ? totalQuestions : 0,
+        irtScore: Number.isFinite(irtScore) ? irtScore : 0,
         scorePercent: Number.isFinite(scorePercent) ? scorePercent : 0,
       };
     })

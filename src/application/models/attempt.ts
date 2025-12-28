@@ -30,6 +30,7 @@ export type AttemptAnswer = {
   answeredAt?: string | null;
   isCorrect?: boolean;
   awardedScore?: number;
+  awardedIrtScore?: number;
 };
 
 export type AttemptQuestionOption = {
@@ -116,6 +117,7 @@ export type AttemptSubjectScore = {
   slug: string;
   correctCount: number;
   totalQuestions: number;
+  irtScore: number;
   scorePercent: number;
 };
 

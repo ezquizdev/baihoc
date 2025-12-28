@@ -61,7 +61,7 @@ export function ProfileScoreCards({ xp, showAiSuggestion = true }: Props) {
               <div className={styles.subjectValue}>
                 {formatNumberVi(subject.value)}
               </div>
-              <div className={styles.subjectHint}>XP</div>
+              <div className={styles.subjectHint}>IRT</div>
             </div>
           </div>
         ))}
