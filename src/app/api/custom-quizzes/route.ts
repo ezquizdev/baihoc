@@ -6,6 +6,7 @@ import type { DifficultyLevel } from "@/application/models/enums";
 import { isServiceError } from "@/application/services/errors";
 
 const generateSchema = z.object({
+  title: z.string().trim().min(1).max(120).optional(),
   difficulty: z.number().int().min(1).max(5),
   questionCount: z.number().int().min(1).max(100),
   durationSeconds: z.number().int().nonnegative().nullable().optional(),
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = generateSchema.parse(body);
     const result = await controllerGenerateCustomQuiz(auth.sub, {
+      title: parsed.title ?? null,
       difficulty: parsed.difficulty as DifficultyLevel,
       questionCount: parsed.questionCount,
       durationSeconds: parsed.durationSeconds,

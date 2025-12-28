@@ -214,8 +214,11 @@ export async function archiveQuestion(questionId: string) {
 export async function deleteQuestionWithRules(questionId: string) {
   const used = await isQuestionUsed(questionId);
   if (used) {
-    await archiveQuestionRepo(questionId);
-    return { status: "archived" as const, code: "QUESTION_IN_USE" as const };
+    throw new ServiceError(
+      "QUESTION_IN_USE",
+      "Không thể xóa câu hỏi vì đang được dùng trong quiz. Hãy gỡ câu hỏi khỏi quiz trước hoặc lưu trữ nếu bạn muốn ẩn khỏi ngân hàng câu hỏi.",
+      409,
+    );
   }
   await deleteQuestion(questionId);
   return { status: "deleted" as const };

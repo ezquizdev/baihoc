@@ -37,6 +37,10 @@
   border: 1px solid rgba(255, 68, 68, 0.25);
 }
 
+.dialogSuccess {
+  border: 1px solid rgba(4, 120, 87, 0.26);
+}
+
 .title {
   margin: 0;
   font-size: 16px;
@@ -46,6 +50,10 @@
 
 .dialogError .title {
   color: var(--danger-ink);
+}
+
+.dialogSuccess .title {
+  color: var(--success-text);
 }
 
 .message {
@@ -72,6 +80,11 @@
   background: var(--primary);
   color: var(--text-inverse);
   box-shadow: 0 14px 36px rgba(30, 108, 255, 0.22);
+}
+
+.btnSuccess {
+  background: var(--success);
+  box-shadow: 0 14px 36px rgba(4, 120, 87, 0.22);
 }
 
 .btnDanger {

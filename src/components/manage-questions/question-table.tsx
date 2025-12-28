@@ -15,6 +15,7 @@ type QuestionTableProps = {
   error: string | null;
   onRetry: () => void;
   onMutated: () => void;
+  onSuccess: (message: string) => void;
 };
 
 type RowError = { questionId: string; message: string } | null;
@@ -26,6 +27,7 @@ export function QuestionTable({
   error,
   onRetry,
   onMutated,
+  onSuccess,
 }: QuestionTableProps) {
   const subjectMap = useMemo(() => {
     const map = new Map<string, Subject>();
@@ -63,6 +65,9 @@ export function QuestionTable({
         const payload = await response.json().catch(() => ({}));
         throw new Error(payload?.error ?? "Không thể cập nhật câu hỏi");
       }
+      onSuccess(
+        status === "archived" ? "Đã lưu trữ câu hỏi." : "Đã khôi phục câu hỏi.",
+      );
       onMutated();
     } catch (err) {
       setRowError({
@@ -85,6 +90,17 @@ export function QuestionTable({
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         throw new Error(payload?.error ?? "Không thể xóa câu hỏi");
+      }
+      const payload = await response.json().catch(() => null);
+      if (payload && typeof payload === "object" && "status" in payload) {
+        const status = (payload as { status?: unknown }).status;
+        if (status === "archived") {
+          onSuccess("Câu hỏi đang được dùng trong quiz nên đã được lưu trữ.");
+        } else {
+          onSuccess("Đã xóa câu hỏi.");
+        }
+      } else {
+        onSuccess("Đã xóa câu hỏi.");
       }
       onMutated();
     } catch (err) {
@@ -235,7 +251,7 @@ export function QuestionTable({
       <ConfirmModal
         open={deleteCandidateId !== null}
         title="Xóa câu hỏi?"
-        message="Xóa câu hỏi này? Nếu câu hỏi đang được dùng, hệ thống sẽ lưu trữ thay vì xóa."
+        message="Xóa câu hỏi này? Nếu câu hỏi đang được dùng trong quiz, bạn sẽ không thể xóa."
         confirmLabel="Xóa"
         cancelLabel="Hủy"
         confirmVariant="danger"

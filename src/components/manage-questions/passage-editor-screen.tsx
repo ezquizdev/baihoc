@@ -196,24 +196,9 @@ export function PassageEditorScreen({
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.error ?? "Không thể xóa/lưu trữ câu hỏi");
+        throw new Error(payload?.error ?? "Không thể xóa câu hỏi");
       }
-
-      const payload = (await response.json().catch(() => ({}))) as
-        | { status?: "archived" | "deleted"; code?: string }
-        | undefined;
-
-      const status = payload?.status ?? "deleted";
-      if (status === "archived") {
-        setQuestions((prev) =>
-          prev.map((q) =>
-            q.id === deleteTarget.id ? { ...q, status: "archived" } : q,
-          ),
-        );
-        setNotice("Câu hỏi đang được dùng → đã lưu trữ thay vì xóa.");
-        setDeleteTarget(null);
-        return;
-      }
+      await response.json().catch(() => ({}));
 
       setDeleteTarget(null);
       setExpanded((prev) => {
@@ -231,7 +216,7 @@ export function PassageEditorScreen({
       setNotice("Đã xóa câu hỏi.");
     } catch (err) {
       setDeleteError(
-        err instanceof Error ? err.message : "Không thể xóa/lưu trữ câu hỏi",
+        err instanceof Error ? err.message : "Không thể xóa câu hỏi",
       );
     } finally {
       setDeleting(false);
@@ -1322,8 +1307,9 @@ function ConfirmDeleteModal({
           </div>
           <ul>
             <li>
-              Nếu câu hỏi đang được dùng trong quiz, hệ thống sẽ{" "}
-              <strong>lưu trữ</strong> thay vì xóa.
+              Nếu câu hỏi đang được dùng trong quiz, bạn sẽ{" "}
+              <strong>không thể xóa</strong>. (Gợi ý: dùng{" "}
+              <strong>lưu trữ</strong> nếu muốn ẩn khỏi ngân hàng câu hỏi.)
             </li>
             <li>
               Nếu câu hỏi được xóa hoàn toàn, thao tác này{" "}

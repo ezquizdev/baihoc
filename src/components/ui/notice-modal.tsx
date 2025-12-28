@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef } from "react";
 import styles from "./notice-modal.module.css";
 
-export type NoticeTone = "info" | "error";
+export type NoticeTone = "info" | "success" | "error";
 
 type NoticeModalProps = {
   open: boolean;
@@ -91,13 +91,18 @@ export function NoticeModal({
 
   if (!open) return null;
 
+  const dialogToneClassName =
+    tone === "error"
+      ? styles.dialogError
+      : tone === "success"
+        ? styles.dialogSuccess
+        : "";
+
   return (
     <div className={styles.modal} role="presentation">
       <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
       <div
-        className={`${styles.dialog} ${
-          tone === "error" ? styles.dialogError : ""
-        }`}
+        className={`${styles.dialog} ${dialogToneClassName}`.trim()}
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
@@ -114,7 +119,9 @@ export function NoticeModal({
           <button
             ref={primaryRef}
             type="button"
-            className={styles.btn}
+            className={`${styles.btn} ${
+              tone === "success" ? styles.btnSuccess : ""
+            }`.trim()}
             onClick={onClose}
           >
             {closeLabel}

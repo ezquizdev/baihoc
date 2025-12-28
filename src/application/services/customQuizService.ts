@@ -9,6 +9,7 @@ import type { DifficultyLevel } from "@/application/models/enums";
 import { ServiceError } from "@/application/services/errors";
 
 export type GenerateCustomQuizInput = {
+  title?: string | null;
   difficulty: DifficultyLevel;
   questionCount: number;
   durationSeconds?: number | null;
@@ -126,6 +127,7 @@ export async function generateCustomQuiz(
       : null;
 
   const config = {
+    title: normalizeTitle(input.title),
     difficulty: input.difficulty,
     questionCount: input.questionCount,
     durationSeconds: normalizedDuration,
@@ -136,7 +138,9 @@ export async function generateCustomQuiz(
     },
   };
 
-  const title = `Quiz tuỳ chỉnh (${input.questionCount} câu, ${input.difficulty}★)`;
+  const title =
+    normalizeTitle(input.title) ??
+    `Quiz tuỳ chỉnh (${input.questionCount} câu, ${input.difficulty}★)`;
   const description = `Quiz tuỳ chỉnh theo chủ đề • ${topicIds.length} chủ đề`;
   const shuffledQuestions = shuffledCopy(selectedQuestionIds);
 
@@ -161,6 +165,15 @@ export async function generateCustomQuiz(
 }
 
 function validateInput(input: GenerateCustomQuizInput) {
+  if (input.title !== undefined && input.title !== null) {
+    const trimmed = input.title.trim();
+    if (!trimmed) {
+      throw new ServiceError("TITLE_INVALID", "title must not be empty", 400);
+    }
+    if (trimmed.length > 120) {
+      throw new ServiceError("TITLE_TOO_LONG", "title too long", 400);
+    }
+  }
   if (
     !Number.isInteger(input.difficulty) ||
     input.difficulty < 1 ||
@@ -202,6 +215,13 @@ function validateInput(input: GenerateCustomQuizInput) {
       400,
     );
   }
+}
+
+function normalizeTitle(title: string | null | undefined) {
+  if (!title) return null;
+  const trimmed = title.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, 120);
 }
 
 async function requirePaidTier(userId: string) {

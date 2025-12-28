@@ -315,20 +315,13 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data?.error ?? "Không thể xóa/lưu trữ câu hỏi");
-      }
-      const data = await response.json().catch(() => ({}));
-      if (data?.status === "archived") {
-        setStatus("archived");
-        setNotice("Câu hỏi đang được dùng → đã lưu trữ thay vì xóa.");
-        setDeleteOpen(false);
-        return;
+        throw new Error(data?.error ?? "Không thể xóa câu hỏi");
       }
       router.push("/staff/questions");
       router.refresh();
     } catch (err) {
       setDeleteError(
-        err instanceof Error ? err.message : "Không thể xóa/lưu trữ câu hỏi",
+        err instanceof Error ? err.message : "Không thể xóa câu hỏi",
       );
     } finally {
       setBusyAction(null);
@@ -411,7 +404,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
         <ConfirmModal
           open={deleteConfirmOpen}
           title="Xóa câu hỏi?"
-          message="Xóa câu hỏi này? Nếu câu hỏi đang được dùng, hệ thống sẽ lưu trữ thay vì xóa."
+          message="Xóa câu hỏi này? Nếu câu hỏi đang được dùng trong quiz, bạn sẽ không thể xóa."
           confirmLabel="Xóa"
           cancelLabel="Hủy"
           confirmVariant="danger"
@@ -1049,8 +1042,9 @@ function ConfirmDeleteModal({
           </div>
           <ul>
             <li>
-              Nếu câu hỏi đang được dùng trong quiz, hệ thống sẽ{" "}
-              <strong>lưu trữ</strong> thay vì xóa.
+              Nếu câu hỏi đang được dùng trong quiz, bạn sẽ{" "}
+              <strong>không thể xóa</strong>. (Gợi ý: dùng{" "}
+              <strong>lưu trữ</strong> nếu muốn ẩn khỏi ngân hàng câu hỏi.)
             </li>
             <li>
               Nếu câu hỏi được xóa hoàn toàn, thao tác này{" "}
