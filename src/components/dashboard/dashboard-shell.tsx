@@ -254,6 +254,7 @@ export function DashboardShell({
       <div className={styles.app}>
         <aside className={styles.sidebar} aria-label="Thanh bên">
           <div className={styles.brand}>
+          <Link href="/dashboard" className={styles.brand} aria-label="Về trang tổng quan">
             <Image
               src="/assets/logo-mark.svg"
               alt="BaiHoc"
@@ -263,6 +264,7 @@ export function DashboardShell({
               priority
             />
             <div className={styles.brandName}>BaiHoc</div>
+          </Link>
           </div>
 
           <nav className={styles.nav} aria-label="Trình đơn">
