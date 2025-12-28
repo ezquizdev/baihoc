@@ -54,6 +54,9 @@
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 
+### fix(staff-passages): compact option row grid
+- Passage editor inline question create uses a compact answer option row grid (`max-content auto max-content`) so the “Đúng” toggle doesn’t stretch.
+
 ### fix(staff-questions): surface save blockers in editor
 - Question editor now shows a warning panel listing missing/invalid fields when the save button is disabled.
 

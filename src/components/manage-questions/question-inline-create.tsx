@@ -451,7 +451,7 @@ export function QuestionInlineCreate({
                     {options.map((opt, idx) => (
                       <div
                         key={`${opt.position}-${idx}`}
-                        className={editorStyles.optionRow}
+                        className={`${editorStyles.optionRow} ${editorStyles.optionRowCompact}`}
                       >
                         <label className={editorStyles.smallBtn}>
                           <input
