@@ -1209,11 +1209,14 @@ async function seedCustomQuizzes(client, input) {
     const durationSeconds = randomInt(10, 25) * 60;
 
     const questionRes = await client.query(
-      `SELECT DISTINCT q.id
-       FROM questions q
-       JOIN question_topics qt ON qt.question_id = q.id
-       WHERE q.status = 'active'::question_status
-         AND qt.topic_id = ANY($1::uuid[])
+      `SELECT id
+       FROM (
+         SELECT DISTINCT q.id AS id
+         FROM questions q
+         JOIN question_topics qt ON qt.question_id = q.id
+         WHERE q.status = 'active'::question_status
+           AND qt.topic_id = ANY($1::uuid[])
+       ) t
        ORDER BY random()
        LIMIT $2`,
       [topicIds, questionCount],

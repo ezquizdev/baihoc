@@ -853,6 +853,7 @@
 - `db:seed` now creates submitted attempts with snapshot fields plus full artifacts (`attempt_answers`, `attempt_answer_events`, `attempt_question_snapshots`) and first-attempt/IRT tracking (`user_quiz_first_attempts`, `question_irt_stats`).
 - Seed now includes allowlist examples + audit logs, a pending-verification example token (printed), custom quiz samples, and a highlight challenge config + sample submission.
 - Seed now creates clearly-labeled test accounts: `student.X@baihoc.dev` (free) and `paid.X@baihoc.dev` (paid).
+- Fix: custom quiz seeding query no longer uses `SELECT DISTINCT ... ORDER BY random()` directly (Postgres restriction); distinct selection is done in a subquery.
 
 ## 2025-12-18
 
