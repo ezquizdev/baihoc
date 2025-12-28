@@ -26,6 +26,10 @@
 ### chore(test): update repo mocks for new exports
 - Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
 
+### fix(custom-quiz): keep passage question groups atomic
+- Custom quiz generation now includes passage-linked questions as an all-or-none group (no partial passages).
+- Passage question ordering is preserved (by `question_passages.position`) and inserted contiguously in generated quizzes.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger

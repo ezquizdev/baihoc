@@ -1,8 +1,7 @@
 import {
-  countActiveQuestionsByTopicAndDifficulty,
   createReadyCustomQuizWithGeneratedQuiz,
+  listEligibleQuestionsForCustomQuiz,
   listTopicsByIds,
-  pickQuestionIdsForTopicDifficulty,
 } from "@/application/infra/db/customQuizRepo";
 import { findUserById } from "@/application/infra/db/userRepo";
 import type { DifficultyLevel } from "@/application/models/enums";
@@ -105,21 +104,28 @@ export async function generateCustomQuiz(
     );
   }
 
+  const eligibleQuestions = await listEligibleQuestionsForCustomQuiz(topicIds);
+
   const difficultyCounts = computeDifficultyCounts(
     input.difficulty,
     input.questionCount,
   );
   const topicOrder = shuffledCopy(topicIds);
-  const buckets = await buildSelectionPlan({
+  const availableByTopicDifficulty =
+    countAvailableByTopicDifficulty(eligibleQuestions);
+  const buckets = buildSelectionPlan({
     topics,
     topicOrder,
     difficultyCounts,
+    availableByTopicDifficulty,
   });
 
-  const selectedQuestionIds = await selectQuestions(buckets);
-  if (selectedQuestionIds.length !== input.questionCount) {
-    throw new Error("Question selection failed to match questionCount");
-  }
+  const questionIds = selectQuestionIdsAtomic({
+    eligibleQuestions,
+    buckets,
+    difficultyCounts,
+    questionCount: input.questionCount,
+  });
 
   const normalizedDuration =
     input.durationSeconds && input.durationSeconds > 0
@@ -142,7 +148,6 @@ export async function generateCustomQuiz(
     normalizeTitle(input.title) ??
     `Quiz tuỳ chỉnh (${input.questionCount} câu, ${input.difficulty}★)`;
   const description = `Quiz tuỳ chỉnh theo chủ đề • ${topicIds.length} chủ đề`;
-  const shuffledQuestions = shuffledCopy(selectedQuestionIds);
 
   try {
     return await createReadyCustomQuizWithGeneratedQuiz({
@@ -152,7 +157,7 @@ export async function generateCustomQuiz(
       description,
       difficulty: input.difficulty,
       estimatedTimeSeconds: normalizedDuration,
-      questionIds: shuffledQuestions,
+      questionIds,
     });
   } catch (error) {
     if (error instanceof ServiceError) throw error;
@@ -296,11 +301,12 @@ async function resolveAndValidateTopics(
   return { topics, topicIds: uniqueTopicIds };
 }
 
-async function buildSelectionPlan(input: {
+function buildSelectionPlan(input: {
   topics: TopicMeta[];
   topicOrder: string[];
   difficultyCounts: Record<DifficultyLevel, number>;
-}): Promise<TopicDifficultyBucket[]> {
+  availableByTopicDifficulty: Map<string, Map<DifficultyLevel, number>>;
+}): TopicDifficultyBucket[] {
   const { topics, topicOrder, difficultyCounts } = input;
   const topicMetaById = new Map(topics.map((t) => [t.id, t]));
 
@@ -327,15 +333,6 @@ async function buildSelectionPlan(input: {
     });
   }
 
-  const counts = await countActiveQuestionsByTopicAndDifficulty(topicOrder);
-  const available = new Map<string, Map<DifficultyLevel, number>>();
-  counts.forEach((row) => {
-    const byDifficulty =
-      available.get(row.topicId) ?? new Map<DifficultyLevel, number>();
-    byDifficulty.set(row.difficulty, row.count);
-    available.set(row.topicId, byDifficulty);
-  });
-
   const buckets: TopicDifficultyBucket[] = [];
   for (const topicId of topicOrder) {
     const meta = topicMetaById.get(topicId);
@@ -343,7 +340,8 @@ async function buildSelectionPlan(input: {
     const needed = requiredByTopicDifficulty.get(topicId);
     if (!needed) continue;
     for (const [difficulty, requiredCount] of needed.entries()) {
-      const availableCount = available.get(topicId)?.get(difficulty) ?? 0;
+      const availableCount =
+        input.availableByTopicDifficulty.get(topicId)?.get(difficulty) ?? 0;
       if (availableCount < requiredCount) {
         throw new ServiceError(
           "QUESTION_BANK_INSUFFICIENT",
@@ -370,32 +368,356 @@ async function buildSelectionPlan(input: {
   });
 }
 
-async function selectQuestions(buckets: TopicDifficultyBucket[]) {
-  const selected: string[] = [];
-  const selectedSet = new Set<string>();
+type EligibleQuestion = {
+  id: string;
+  difficulty: DifficultyLevel;
+  topicIds: string[];
+  passageId: string | null;
+  passagePosition: number | null;
+};
 
-  for (const bucket of buckets) {
-    const picked = await pickQuestionIdsForTopicDifficulty({
-      topicId: bucket.topicId,
-      difficulty: bucket.difficulty,
-      limit: bucket.required,
-      excludeQuestionIds: selected,
-    });
-    if (picked.length !== bucket.required) {
-      throw new ServiceError(
-        "QUESTION_BANK_INSUFFICIENT",
-        `Không đủ câu hỏi (unique) cho chủ đề "${bucket.topicName}" (độ khó ${bucket.difficulty})`,
-        409,
+type QuestionGroup = {
+  groupId: string;
+  kind: "single" | "passage";
+  questions: Array<Pick<EligibleQuestion, "id" | "difficulty" | "topicIds">>;
+};
+
+type BucketAssignment = {
+  questionId: string;
+  topicId: string;
+  difficulty: DifficultyLevel;
+};
+
+function countAvailableByTopicDifficulty(
+  questions: EligibleQuestion[],
+): Map<string, Map<DifficultyLevel, number>> {
+  const counts = new Map<string, Map<DifficultyLevel, number>>();
+  for (const question of questions) {
+    for (const topicId of question.topicIds) {
+      const byDifficulty =
+        counts.get(topicId) ?? new Map<DifficultyLevel, number>();
+      byDifficulty.set(
+        question.difficulty,
+        (byDifficulty.get(question.difficulty) ?? 0) + 1,
       );
-    }
-    for (const id of picked) {
-      if (selectedSet.has(id)) continue;
-      selectedSet.add(id);
-      selected.push(id);
+      counts.set(topicId, byDifficulty);
     }
   }
+  return counts;
+}
 
-  return selected;
+function selectQuestionIdsAtomic(input: {
+  eligibleQuestions: EligibleQuestion[];
+  buckets: TopicDifficultyBucket[];
+  difficultyCounts: Record<DifficultyLevel, number>;
+  questionCount: number;
+}): string[] {
+  const groups = buildQuestionGroups(input.eligibleQuestions);
+
+  const strict = selectGroupsStrictByTopicDifficulty({
+    groups,
+    buckets: input.buckets,
+    maxAttempts: 25,
+  });
+  const selectedGroups =
+    strict ??
+    selectGroupsByDifficultyOnly({
+      groups,
+      difficultyCounts: input.difficultyCounts,
+      maxAttempts: 25,
+    });
+
+  if (!selectedGroups) {
+    throw new ServiceError(
+      "QUESTION_BANK_INSUFFICIENT",
+      "Không đủ câu hỏi để tạo quiz tuỳ chỉnh với cấu hình hiện tại.",
+      409,
+    );
+  }
+
+  const totalQuestions = selectedGroups.reduce(
+    (sum, group) => sum + group.questions.length,
+    0,
+  );
+  if (totalQuestions !== input.questionCount) {
+    throw new Error("Question selection failed to match questionCount");
+  }
+
+  const orderedGroups = shuffledCopy(selectedGroups);
+  return orderedGroups.flatMap((group) => group.questions.map((q) => q.id));
+}
+
+function buildQuestionGroups(questions: EligibleQuestion[]): QuestionGroup[] {
+  const groups: QuestionGroup[] = [];
+  const passageMap = new Map<string, EligibleQuestion[]>();
+
+  for (const question of questions) {
+    if (question.passageId) {
+      const list = passageMap.get(question.passageId) ?? [];
+      list.push(question);
+      passageMap.set(question.passageId, list);
+      continue;
+    }
+    groups.push({
+      groupId: question.id,
+      kind: "single",
+      questions: [
+        {
+          id: question.id,
+          difficulty: question.difficulty,
+          topicIds: question.topicIds,
+        },
+      ],
+    });
+  }
+
+  for (const [passageId, list] of passageMap.entries()) {
+    const ordered = [...list].sort((a, b) => {
+      const posA = a.passagePosition ?? 0;
+      const posB = b.passagePosition ?? 0;
+      if (posA !== posB) return posA - posB;
+      return a.id.localeCompare(b.id);
+    });
+    groups.push({
+      groupId: passageId,
+      kind: "passage",
+      questions: ordered.map((question) => ({
+        id: question.id,
+        difficulty: question.difficulty,
+        topicIds: question.topicIds,
+      })),
+    });
+  }
+
+  return groups;
+}
+
+function selectGroupsStrictByTopicDifficulty(input: {
+  groups: QuestionGroup[];
+  buckets: TopicDifficultyBucket[];
+  maxAttempts: number;
+}): QuestionGroup[] | null {
+  const required = new Map<string, number>();
+  for (const bucket of input.buckets) {
+    required.set(bucketKey(bucket.topicId, bucket.difficulty), bucket.required);
+  }
+
+  for (let attempt = 0; attempt < input.maxAttempts; attempt += 1) {
+    const remaining = new Map(required);
+    const selectedGroupIds = new Set<string>();
+    const selectedGroups: QuestionGroup[] = [];
+    const pool = shuffledCopy(input.groups);
+
+    let ok = true;
+    for (const bucket of input.buckets) {
+      const targetKey = bucketKey(bucket.topicId, bucket.difficulty);
+      while ((remaining.get(targetKey) ?? 0) > 0) {
+        const picked = pickNextGroupStrict({
+          pool,
+          selectedGroupIds,
+          remaining,
+          target: { topicId: bucket.topicId, difficulty: bucket.difficulty },
+        });
+        if (!picked) {
+          ok = false;
+          break;
+        }
+        selectedGroupIds.add(picked.group.groupId);
+        selectedGroups.push(picked.group);
+        for (const assignment of picked.assignments) {
+          const key = bucketKey(assignment.topicId, assignment.difficulty);
+          remaining.set(key, (remaining.get(key) ?? 0) - 1);
+        }
+      }
+      if (!ok) break;
+    }
+
+    if (!ok) continue;
+    const remainingTotal = Array.from(remaining.values()).reduce(
+      (sum, value) => sum + Math.max(0, value),
+      0,
+    );
+    if (remainingTotal !== 0) continue;
+    return selectedGroups;
+  }
+
+  return null;
+}
+
+function pickNextGroupStrict(input: {
+  pool: QuestionGroup[];
+  selectedGroupIds: Set<string>;
+  remaining: Map<string, number>;
+  target: { topicId: string; difficulty: DifficultyLevel };
+}): { group: QuestionGroup; assignments: BucketAssignment[] } | null {
+  for (const group of input.pool) {
+    if (input.selectedGroupIds.has(group.groupId)) continue;
+    if (!groupHasBucket(group, input.target)) continue;
+    const assignments = tryAssignGroupStrict({
+      group,
+      remaining: input.remaining,
+      target: input.target,
+    });
+    if (!assignments) continue;
+    return { group, assignments };
+  }
+  return null;
+}
+
+function tryAssignGroupStrict(input: {
+  group: QuestionGroup;
+  remaining: Map<string, number>;
+  target: { topicId: string; difficulty: DifficultyLevel };
+}): BucketAssignment[] | null {
+  const remainingTarget =
+    input.remaining.get(
+      bucketKey(input.target.topicId, input.target.difficulty),
+    ) ?? 0;
+  if (remainingTarget <= 0) return null;
+
+  const candidates = shuffledCopy(
+    input.group.questions
+      .map((question, index) => ({ question, index }))
+      .filter(
+        ({ question }) =>
+          question.difficulty === input.target.difficulty &&
+          question.topicIds.includes(input.target.topicId),
+      ),
+  );
+  if (!candidates.length) return null;
+
+  for (const candidate of candidates) {
+    const remaining = new Map(input.remaining);
+    const assignments: BucketAssignment[] = [];
+
+    assignments.push({
+      questionId: candidate.question.id,
+      topicId: input.target.topicId,
+      difficulty: input.target.difficulty,
+    });
+    remaining.set(
+      bucketKey(input.target.topicId, input.target.difficulty),
+      (remaining.get(
+        bucketKey(input.target.topicId, input.target.difficulty),
+      ) ?? 0) - 1,
+    );
+
+    const rest = input.group.questions
+      .filter((_, index) => index !== candidate.index)
+      .sort((a, b) => a.topicIds.length - b.topicIds.length);
+
+    let failed = false;
+    for (const item of rest) {
+      const options = item.topicIds
+        .map((topicId) => ({
+          topicId,
+          remaining: remaining.get(bucketKey(topicId, item.difficulty)) ?? 0,
+        }))
+        .filter((option) => option.remaining > 0)
+        .sort((a, b) => b.remaining - a.remaining);
+      const picked = options[0];
+      if (!picked) {
+        failed = true;
+        break;
+      }
+      assignments.push({
+        questionId: item.id,
+        topicId: picked.topicId,
+        difficulty: item.difficulty,
+      });
+      const key = bucketKey(picked.topicId, item.difficulty);
+      remaining.set(key, (remaining.get(key) ?? 0) - 1);
+    }
+
+    if (failed) continue;
+    if (assignments.length !== input.group.questions.length) continue;
+    return assignments;
+  }
+
+  return null;
+}
+
+function groupHasBucket(
+  group: QuestionGroup,
+  target: { topicId: string; difficulty: DifficultyLevel },
+) {
+  return group.questions.some(
+    (question) =>
+      question.difficulty === target.difficulty &&
+      question.topicIds.includes(target.topicId),
+  );
+}
+
+function bucketKey(topicId: string, difficulty: DifficultyLevel) {
+  return `${topicId}:${difficulty}`;
+}
+
+function selectGroupsByDifficultyOnly(input: {
+  groups: QuestionGroup[];
+  difficultyCounts: Record<DifficultyLevel, number>;
+  maxAttempts: number;
+}): QuestionGroup[] | null {
+  const required = new Map<DifficultyLevel, number>();
+  const difficultyLevels: DifficultyLevel[] = [1, 2, 3, 4, 5];
+  for (const difficulty of difficultyLevels) {
+    required.set(difficulty, input.difficultyCounts[difficulty] ?? 0);
+  }
+
+  for (let attempt = 0; attempt < input.maxAttempts; attempt += 1) {
+    const remaining = new Map(required);
+    const selectedGroupIds = new Set<string>();
+    const selectedGroups: QuestionGroup[] = [];
+    const pool = shuffledCopy(input.groups);
+
+    let remainingTotal = Array.from(remaining.values()).reduce(
+      (sum, value) => sum + value,
+      0,
+    );
+
+    let ok = true;
+    while (remainingTotal > 0) {
+      const candidate = pool.find((group) => {
+        if (selectedGroupIds.has(group.groupId)) return false;
+        if (group.questions.length > remainingTotal) return false;
+        const counts = countGroupDifficulties(group);
+        for (const [difficulty, count] of counts.entries()) {
+          const available = remaining.get(difficulty) ?? 0;
+          if (count > available) return false;
+        }
+        return true;
+      });
+
+      if (!candidate) {
+        ok = false;
+        break;
+      }
+
+      selectedGroupIds.add(candidate.groupId);
+      selectedGroups.push(candidate);
+      const counts = countGroupDifficulties(candidate);
+      for (const [difficulty, count] of counts.entries()) {
+        remaining.set(difficulty, (remaining.get(difficulty) ?? 0) - count);
+      }
+      remainingTotal = Array.from(remaining.values()).reduce(
+        (sum, value) => sum + value,
+        0,
+      );
+    }
+
+    if (!ok) continue;
+    if (Array.from(remaining.values()).some((value) => value !== 0)) continue;
+    return selectedGroups;
+  }
+
+  return null;
+}
+
+function countGroupDifficulties(group: QuestionGroup) {
+  const counts = new Map<DifficultyLevel, number>();
+  for (const question of group.questions) {
+    counts.set(question.difficulty, (counts.get(question.difficulty) ?? 0) + 1);
+  }
+  return counts;
 }
 
 function shuffledCopy<T>(items: T[]): T[] {
