@@ -42,7 +42,6 @@ export function QuizInfoModal({
   const [isChallenge, setIsChallenge] = useState(false);
   const [challengeStart, setChallengeStart] = useState("");
   const [challengeEnd, setChallengeEnd] = useState("");
-  const [challengeLimitMinutes, setChallengeLimitMinutes] = useState(15);
 
   useEffect(() => {
     if (!quizId) return;
@@ -78,11 +77,6 @@ export function QuizInfoModal({
         setIsChallenge(Boolean(nextQuiz.isChallenge));
         setChallengeStart(toDatetimeLocalValue(nextQuiz.challenge?.startAt));
         setChallengeEnd(toDatetimeLocalValue(nextQuiz.challenge?.endAt));
-        const fallbackLimit =
-          nextQuiz.challenge?.timeLimitSeconds ??
-          nextQuiz.estimatedTimeSeconds ??
-          900;
-        setChallengeLimitMinutes(Math.max(1, Math.round(fallbackLimit / 60)));
         requestAnimationFrame(() => primaryRef.current?.focus());
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
@@ -114,14 +108,8 @@ export function QuizInfoModal({
         message: "Thời gian kết thúc phải sau thời gian bắt đầu.",
       };
     }
-    if (!Number.isFinite(challengeLimitMinutes) || challengeLimitMinutes <= 0) {
-      return {
-        ok: false,
-        message: "Giới hạn thời gian challenge không hợp lệ.",
-      };
-    }
     return { ok: true, message: null as string | null };
-  }, [challengeEnd, challengeLimitMinutes, challengeStart, isChallenge]);
+  }, [challengeEnd, challengeStart, isChallenge]);
 
   if (!quizId) return null;
 
@@ -160,14 +148,9 @@ export function QuizInfoModal({
         }
         const startAt = startDate.toISOString();
         const endAt = endDate.toISOString();
-        const safeLimitMinutes =
-          Number.isFinite(challengeLimitMinutes) && challengeLimitMinutes > 0
-            ? challengeLimitMinutes
-            : safeMinutes;
         payload.challenge = {
           startAt,
           endAt,
-          timeLimitSeconds: Math.max(1, Math.round(safeLimitMinutes)) * 60,
         };
       } else {
         payload.challenge = null;
@@ -408,22 +391,10 @@ export function QuizInfoModal({
                       />
                     </div>
                     <div className={styles.formRow}>
-                      <div className={styles.label}>Giới hạn:</div>
-                      <input
-                        className={styles.dashInput}
-                        type="number"
-                        min={1}
-                        max={300}
-                        value={challengeLimitMinutes}
-                        onChange={(event) => {
-                          const next = Number(event.target.value);
-                          setChallengeLimitMinutes(
-                            Number.isFinite(next) ? next : 15,
-                          );
-                        }}
-                        disabled={disabled}
-                      />
-                      <span>phút</span>
+                      <div className={styles.label}>Thời gian:</div>
+                      <span className={styles.hintInline}>
+                        Dùng theo “Thời gian làm” của quiz.
+                      </span>
                     </div>
                   </>
                 ) : null}

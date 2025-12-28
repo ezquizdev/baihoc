@@ -135,7 +135,6 @@ type QuizAttemptMetaRow = {
   id: string;
   is_challenge: boolean;
   estimated_time_seconds: number | null;
-  challenge_time_limit_seconds: number | null;
   challenge_start_at: string | null;
   challenge_end_at: string | null;
   custom_quiz_id: string | null;
@@ -154,7 +153,6 @@ export type QuizAttemptMeta = {
   quizId: string;
   isChallenge: boolean;
   estimatedTimeSeconds: number | null;
-  challengeTimeLimitSeconds: number | null;
   challengeStartAt: string | null;
   challengeEndAt: string | null;
   customQuizId: string | null;
@@ -377,7 +375,6 @@ export async function getQuizAttemptMeta(
     `SELECT q.id,
             q.is_challenge,
             q.estimated_time_seconds,
-            cs.time_limit_seconds AS challenge_time_limit_seconds,
             cs.start_at AS challenge_start_at,
             cs.end_at AS challenge_end_at,
             cq.id AS custom_quiz_id,
@@ -403,7 +400,6 @@ export async function getQuizAttemptMeta(
     quizId: row.id,
     isChallenge: row.is_challenge,
     estimatedTimeSeconds: row.estimated_time_seconds,
-    challengeTimeLimitSeconds: row.challenge_time_limit_seconds,
     challengeStartAt: row.challenge_start_at,
     challengeEndAt: row.challenge_end_at,
     customQuizId: row.custom_quiz_id,

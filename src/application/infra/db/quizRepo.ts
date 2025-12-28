@@ -34,7 +34,6 @@ export type ChallengeSettingsRow = {
   quiz_id: string;
   start_at: string;
   end_at: string;
-  time_limit_seconds: number;
 };
 
 export type QuizQuestionRow = {
@@ -97,7 +96,6 @@ function mapChallenge(
     quizId: row.quiz_id,
     startAt: row.start_at,
     endAt: row.end_at,
-    timeLimitSeconds: row.time_limit_seconds,
   };
 }
 
@@ -168,12 +166,11 @@ export async function insertQuiz(input: {
     }
 
     if (quizRow.is_challenge && hasCompleteChallenge(input.challenge)) {
-      const { startAt, endAt, timeLimitSeconds } = input.challenge;
+      const { startAt, endAt } = input.challenge;
       await upsertChallengeInternal(client, {
         quizId: quizRow.id,
         startAt,
         endAt,
-        timeLimitSeconds,
       });
     }
 
@@ -256,12 +253,11 @@ export async function updateQuiz(input: {
           [input.quizId],
         );
       } else if (hasCompleteChallenge(input.challenge)) {
-        const { startAt, endAt, timeLimitSeconds } = input.challenge;
+        const { startAt, endAt } = input.challenge;
         await upsertChallengeInternal(client, {
           quizId: input.quizId,
           startAt,
           endAt,
-          timeLimitSeconds,
         });
       }
     } else {
@@ -350,7 +346,7 @@ export async function getQuizDetail(
   ]);
 
   const challengeRes = await query<ChallengeSettingsRow>(
-    `SELECT quiz_id, start_at, end_at, time_limit_seconds
+    `SELECT quiz_id, start_at, end_at
      FROM challenge_settings
      WHERE quiz_id = $1`,
     [quizId],
@@ -757,13 +753,12 @@ async function upsertChallengeInternal(
   input: ChallengeSettings,
 ) {
   await client.query(
-    `INSERT INTO challenge_settings (quiz_id, start_at, end_at, time_limit_seconds)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO challenge_settings (quiz_id, start_at, end_at)
+     VALUES ($1, $2, $3)
      ON CONFLICT (quiz_id)
      DO UPDATE SET start_at = EXCLUDED.start_at,
-                   end_at = EXCLUDED.end_at,
-                   time_limit_seconds = EXCLUDED.time_limit_seconds`,
-    [input.quizId, input.startAt, input.endAt, input.timeLimitSeconds],
+                   end_at = EXCLUDED.end_at`,
+    [input.quizId, input.startAt, input.endAt],
   );
 }
 
@@ -771,9 +766,6 @@ function hasCompleteChallenge(
   input?: Partial<ChallengeSettings> | null,
 ): input is ChallengeSettings {
   return Boolean(
-    input &&
-      input.startAt !== undefined &&
-      input.endAt !== undefined &&
-      input.timeLimitSeconds !== undefined,
+    input && input.startAt !== undefined && input.endAt !== undefined,
   );
 }

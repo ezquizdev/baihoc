@@ -2,6 +2,10 @@
 
 ## 2025-12-28
 
+### refactor(challenge): remove separate challenge time limit
+- Challenges now use the quiz duration (`estimated_time_seconds`) as their time limit (and may be untimed like regular quizzes).
+- Dropped `challenge_settings.time_limit_seconds`; staff quiz editor now configures challenge schedule only.
+
 ### feat(staff): add excel-like sort/filter to question bank
 - `/staff/questions` now supports sorting/filtering via table headers (subject/type/difficulty/status) and removes the standalone filter bar.
 - `GET /api/staff/questions` now accepts `subjectIds`, `difficultyLevels`, `types`, `statuses`, `sortBy`, and `sortDir`.

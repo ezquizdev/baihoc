@@ -99,8 +99,6 @@ function getAttemptStartMessage(error: unknown) {
       return "Quiz hiện chưa có câu hỏi để làm.";
     case "CHALLENGE_NOT_ACTIVE":
       return "Thử thách chưa bắt đầu hoặc đã kết thúc.";
-    case "CHALLENGE_TIME_LIMIT_MISSING":
-      return "Thử thách chưa được cấu hình thời gian làm bài.";
     case "CHALLENGE_SCHEDULE_MISSING":
       return "Thử thách chưa được cấu hình lịch diễn ra.";
     case "CHALLENGE_SCHEDULE_INVALID":

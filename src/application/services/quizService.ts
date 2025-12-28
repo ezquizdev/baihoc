@@ -230,9 +230,9 @@ function validateQuizInput(input: CreateQuizInput, partial = false) {
     if (!input.challenge) {
       throw new Error("Challenge settings are required for challenge quizzes");
     }
-    const { startAt, endAt, timeLimitSeconds } = input.challenge;
-    if (!startAt || !endAt || !timeLimitSeconds) {
-      throw new Error("Challenge requires start, end, and time limit");
+    const { startAt, endAt } = input.challenge;
+    if (!startAt || !endAt) {
+      throw new Error("Challenge requires start and end");
     }
     const startMs = new Date(startAt).getTime();
     const endMs = new Date(endAt).getTime();

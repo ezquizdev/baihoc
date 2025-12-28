@@ -273,16 +273,7 @@ export async function startOrResumeAttempt(
       }
     }
 
-    const timeLimitSeconds = quizMeta.isChallenge
-      ? quizMeta.challengeTimeLimitSeconds
-      : quizMeta.estimatedTimeSeconds;
-    if (quizMeta.isChallenge && timeLimitSeconds === null) {
-      throw new ServiceError(
-        "CHALLENGE_TIME_LIMIT_MISSING",
-        "Challenge time limit missing",
-        400,
-      );
-    }
+    const timeLimitSeconds = quizMeta.estimatedTimeSeconds;
     if (quizMeta.isChallenge) {
       const startAt = quizMeta.challengeStartAt;
       const endAt = quizMeta.challengeEndAt;

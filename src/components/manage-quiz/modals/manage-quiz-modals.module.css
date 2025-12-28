@@ -149,6 +149,12 @@
   font-weight: 900;
 }
 
+.hintInline {
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
 .dashInput,
 .dashArea {
   border: 0;
