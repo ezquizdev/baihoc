@@ -262,22 +262,20 @@ export function StaffLineChart({
                 style={{ stroke: line.stroke }}
                 vectorEffect="non-scaling-stroke"
               />
-              {pointCount <= 16
-                ? line.values.map((value, index) => {
-                    const numeric = safeNumber(value);
-                    if (numeric === null) return null;
-                    return (
-                      <circle
-                        key={`dot-${line.id}-${labels[index] ?? index}`}
-                        className={styles.dot}
-                        cx={xForIndex(index)}
-                        cy={yForValue(numeric)}
-                        r={4}
-                        style={{ fill: line.stroke }}
-                      />
-                    );
-                  })
-                : null}
+              {line.values.map((value, index) => {
+                const numeric = safeNumber(value);
+                if (numeric === null) return null;
+                return (
+                  <circle
+                    key={`dot-${line.id}-${labels[index] ?? index}`}
+                    className={styles.dot}
+                    cx={xForIndex(index)}
+                    cy={yForValue(numeric)}
+                    r={4}
+                    style={{ fill: line.stroke }}
+                  />
+                );
+              })}
             </g>
           );
         })}

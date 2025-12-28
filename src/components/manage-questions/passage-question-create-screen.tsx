@@ -57,8 +57,8 @@ export function PassageQuestionCreateScreen({
           <div>
             <h1 className={styles.heroTitle}>Tạo passage</h1>
             <p className={styles.heroText}>
-              Tạo đoạn văn và câu hỏi đầu tiên. Sau khi tạo xong, bạn sẽ được
-              chuyển tới màn hình quản lý passage để thêm/xóa các câu hỏi khác.
+              Tạo đoạn ngữ liệu và câu hỏi đầu tiên. Sau khi tạo xong, bạn sẽ được
+              chuyển tới màn hình quản lý để thêm/xóa các câu hỏi khác.
             </p>
           </div>
           <div className={styles.heroActions}>
@@ -78,9 +78,9 @@ export function PassageQuestionCreateScreen({
         </section>
 
         <section className={`cardBase ${styles.card}`} aria-label="Passage">
-          <h2 className={styles.sectionTitle}>Đoạn văn</h2>
+          <h2 className={styles.sectionTitle}>Đoạn ngữ liệu</h2>
           <p className={styles.sectionSub}>
-            Đoạn văn này sẽ được dùng chung cho các câu hỏi trong passage.
+            Đoạn ngữ liệu này sẽ được dùng chung cho các câu hỏi trong passage.
           </p>
 
           <div
@@ -153,7 +153,7 @@ export function PassageQuestionCreateScreen({
                     <RichText content={passageContent} allowLinks />
                   ) : (
                     <div className={editorStyles.previewEmpty}>
-                      Chưa có nội dung đoạn văn để xem trước.
+                      Chưa có nội dung đoạn ngữ liệu để xem trước.
                     </div>
                   )}
                 </div>
@@ -191,7 +191,7 @@ export function PassageQuestionCreateScreen({
                           altPrefix: "passage",
                         })
                       }
-                      placeholder="Nội dung đoạn văn..."
+                      placeholder="Nội dung đoạn ngữ liệu..."
                     />
                   </div>
                 </div>
@@ -206,7 +206,7 @@ export function PassageQuestionCreateScreen({
                       <RichText content={passageContent} allowLinks />
                     ) : (
                       <div className={editorStyles.previewEmpty}>
-                        Chưa có nội dung đoạn văn để xem trước.
+                        Chưa có nội dung đoạn ngữ liệu để xem trước.
                       </div>
                     )}
                   </div>

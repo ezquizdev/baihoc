@@ -129,7 +129,7 @@ export function PassageEditorScreen({
     setNotice(null);
     const content = passageContent.trim();
     if (!content) {
-      setPassageError("Đoạn văn không được để trống.");
+      setPassageError("Đoạn ngữ liệu không được để trống.");
       return;
     }
 
@@ -142,15 +142,15 @@ export function PassageEditorScreen({
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.error ?? "Không thể lưu đoạn văn");
+        throw new Error(payload?.error ?? "Không thể lưu đoạn ngữ liệu");
       }
       const payload = (await response.json()) as { passage?: Passage };
-      if (!payload.passage) throw new Error("Không thể lưu đoạn văn");
+      if (!payload.passage) throw new Error("Không thể lưu đoạn ngữ liệu");
       setPassage(payload.passage);
-      setNotice("Đã lưu đoạn văn.");
+      setNotice("Đã lưu đoạn ngữ liệu.");
     } catch (err) {
       setPassageError(
-        err instanceof Error ? err.message : "Không thể lưu đoạn văn",
+        err instanceof Error ? err.message : "Không thể lưu đoạn ngữ liệu",
       );
     } finally {
       setPassageSaving(false);
@@ -299,10 +299,10 @@ export function PassageEditorScreen({
       <div className={styles.page}>
         <section className={`cardBase ${styles.hero}`} aria-label="Hero">
           <div>
-            <h1 className={styles.heroTitle}>Chỉnh sửa passage</h1>
+            <h1 className={styles.heroTitle}>Chỉnh sửa đoạn ngữ liệu</h1>
             <p className={styles.heroSub}>ID: {passageId}</p>
             <p className={styles.heroText}>
-              Chỉnh sửa đoạn văn và các câu hỏi liên quan trong cùng nhóm.
+              Chỉnh sửa đoạn ngữ liệu và các câu hỏi liên quan trong cùng nhóm.
             </p>
           </div>
           <div className={styles.heroActions}>
@@ -330,15 +330,15 @@ export function PassageEditorScreen({
               disabled={passageSaving || !passageDirty}
               onClick={savePassage}
             >
-              {passageSaving ? "Đang lưu..." : "Lưu đoạn văn"}
+              {passageSaving ? "Đang lưu..." : "Lưu đoạn ngữ liệu"}
             </button>
           </div>
         </section>
 
         <section className={`cardBase ${styles.card}`} aria-label="Passage">
-          <h2 className={styles.sectionTitle}>Đoạn văn</h2>
+          <h2 className={styles.sectionTitle}>Đoạn ngữ liệun</h2>
           <p className={styles.sectionSub}>
-            Đoạn văn này được dùng chung cho các câu hỏi bên dưới.
+            Đoạn ngữ liệu này được dùng chung cho các câu hỏi bên dưới.
           </p>
           <div
             className={editorStyles.row}
@@ -410,7 +410,7 @@ export function PassageEditorScreen({
                     <RichText content={passageContent} allowLinks />
                   ) : (
                     <div className={editorStyles.previewEmpty}>
-                      Chưa có nội dung đoạn văn để xem trước.
+                      Chưa có nội dung đoạn ngữ liệu để xem trước.
                     </div>
                   )}
                 </div>
@@ -445,7 +445,7 @@ export function PassageEditorScreen({
                           altPrefix: "passage",
                         })
                       }
-                      placeholder="Nội dung đoạn văn..."
+                      placeholder="Nội dung đoạn ngữ liệu..."
                       disabled={passageSaving}
                     />
                   </div>
@@ -461,7 +461,7 @@ export function PassageEditorScreen({
                       <RichText content={passageContent} allowLinks />
                     ) : (
                       <div className={editorStyles.previewEmpty}>
-                        Chưa có nội dung đoạn văn để xem trước.
+                        Chưa có nội dung đoạn ngữ liệu để xem trước.
                       </div>
                     )}
                   </div>
@@ -482,7 +482,7 @@ export function PassageEditorScreen({
         <section className={`cardBase ${styles.card}`} aria-label="Questions">
           <div className={styles.tableTitleRow}>
             <div>
-              <h2 className={styles.sectionTitle}>Câu hỏi trong passage</h2>
+              <h2 className={styles.sectionTitle}>Câu hỏi</h2>
               <div className={styles.subtle}>{questionCountLabel}</div>
             </div>
             <div className={styles.tableActions}>
@@ -757,7 +757,7 @@ function ConfirmDeletePassageModal({
         </h2>
         <div id={descId} className={styles.modalBody}>
           <div>
-            Thao tác này sẽ xóa đoạn văn và <strong>{countLabel}</strong> trong
+            Thao tác này sẽ xóa đoạn ngữ liệu và <strong>{countLabel}</strong> trong
             nhóm. <strong>Không thể hoàn tác</strong>.
           </div>
           <ul>
@@ -1087,7 +1087,7 @@ function InlineQuestionEditor({
       </div>
 
       <div className={editorStyles.muted} style={{ marginTop: 6 }}>
-        Đoạn văn được chỉnh sửa ở phần “Đoạn văn” phía trên.
+        Đoạn ngữ liệu được chỉnh sửa ở phần “Đoạn ngữ liệu” phía trên.
       </div>
 
       <div

@@ -151,7 +151,7 @@ export function QuestionInlineCreate({
       } else {
         const content = (passageContent ?? "").trim();
         if (!content) {
-          throw new Error("Đoạn văn không được để trống.");
+          throw new Error("Đoạn ngữ liệu không được để trống.");
         }
         payload.passage = { content };
       }

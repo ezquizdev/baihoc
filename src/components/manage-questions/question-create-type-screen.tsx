@@ -28,7 +28,7 @@ export function QuestionCreateTypeScreen({
             <h1 className={editorStyles.heroTitle}>Tạo câu hỏi</h1>
             <p className={editorStyles.heroText}>
               Chọn loại câu hỏi để bắt đầu. Bạn có thể tạo câu hỏi đơn lẻ hoặc
-              một nhóm passage (đoạn văn + nhiều câu hỏi).
+              một nhóm passage (đoạn ngữ liệu + nhiều câu hỏi).
             </p>
           </div>
           <div className={editorStyles.heroActions}>
@@ -88,10 +88,10 @@ export function QuestionCreateTypeScreen({
               href="/staff/questions/new?type=passage"
             >
               <h3 className={styles.typeTitle}>
-                Passage (đoạn văn + nhiều câu hỏi)
+                Passage (đoạn ngữ liệu + nhiều câu hỏi)
               </h3>
               <p className={styles.typeDesc}>
-                Tạo một đoạn văn dùng chung cho nhiều câu hỏi và quản lý tất cả
+                Tạo một đoạn ngữ liệu dùng chung cho nhiều câu hỏi và quản lý tất cả
                 trên cùng một màn hình.
               </p>
               <div className={styles.typeMeta}>

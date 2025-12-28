@@ -64,7 +64,7 @@ export function QuestionPreview({
 
       {safePassage ? (
         <div className={styles.previewSection}>
-          <h4 className={styles.previewLabel}>Đoạn văn</h4>
+          <h4 className={styles.previewLabel}>Đoạn ngữ liệu</h4>
           <RichText content={safePassage} allowLinks />
         </div>
       ) : null}

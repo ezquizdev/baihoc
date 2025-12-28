@@ -541,13 +541,13 @@ export function QuestionTable({
             </th>
             <th scope="col">
               <div className={styles.th} data-dropdown-root>
-                <span className={styles.thLabel}>Đoạn văn</span>
+                <span className={styles.thLabel}>Ngữ liệu</span>
                 <button
                   type="button"
                   className={`${styles.filterButton} ${
                     hasPassageFilter ? styles.filterButtonActive : ""
                   }`}
-                  aria-label="Lọc theo đoạn văn"
+                  aria-label="Lọc theo ngữ liệu"
                   aria-expanded={openDropdown === "passage"}
                   onClick={() => toggleDropdown("passage")}
                   disabled={isLoading}
@@ -561,7 +561,7 @@ export function QuestionTable({
                   <div
                     className={styles.menuPanel}
                     role="dialog"
-                    aria-label="Bộ lọc đoạn văn"
+                    aria-label="Bộ lọc ngữ liệu"
                   >
                     <div className={styles.menuSection}>
                       <div className={styles.menuTitle}>Lọc</div>
@@ -585,7 +585,7 @@ export function QuestionTable({
                           setOpenDropdown(null);
                         }}
                       >
-                        Có đoạn văn
+                        Có ngữ liệu
                       </button>
                       <button
                         type="button"
@@ -596,7 +596,7 @@ export function QuestionTable({
                           setOpenDropdown(null);
                         }}
                       >
-                        Không có đoạn văn
+                        Không có ngữ liệu
                       </button>
                     </div>
                   </div>

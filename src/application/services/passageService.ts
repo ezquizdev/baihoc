@@ -29,7 +29,7 @@ export async function updatePassage(
   if (inProgress) {
     throw new ServiceError(
       "PASSAGE_UPDATE_BLOCKED_IN_PROGRESS",
-      "Đoạn văn đang nằm trong quiz có lượt làm đang diễn ra. Không thể chỉnh sửa nội dung.",
+      "Đoạn ngữ liệu đang nằm trong quiz có lượt làm đang diễn ra. Không thể chỉnh sửa nội dung.",
       409,
     );
   }
@@ -59,7 +59,7 @@ export async function deletePassageWithQuestions(passageId: string) {
   if (inProgress) {
     throw new ServiceError(
       "PASSAGE_DELETE_BLOCKED_IN_PROGRESS",
-      "Đoạn văn đang nằm trong quiz có lượt làm đang diễn ra. Không thể xóa.",
+      "Đoạn ngữ liệu đang nằm trong quiz có lượt làm đang diễn ra. Không thể xóa.",
       409,
     );
   }

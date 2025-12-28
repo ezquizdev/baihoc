@@ -215,7 +215,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
       if (passageEnabled) {
         const content = passageContent.trim();
         if (!content) {
-          throw new Error("Đoạn văn không được để trống.");
+          throw new Error("Đoạn ngữ liệu không được để trống.");
         }
         payload.passage = {
           content,
@@ -810,7 +810,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                 </div>
 
                   <div className={styles.stack} style={{ marginTop: 16 }}>
-                    <h3 className={styles.sectionTitle}>Đoạn văn (tuỳ chọn)</h3>
+                    <h3 className={styles.sectionTitle}>Đoạn ngữ liệu (tuỳ chọn)</h3>
                     <label className={styles.smallBtn}>
                       <input
                         type="checkbox"
@@ -818,7 +818,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                         onChange={() => setPassageEnabled((prev) => !prev)}
                         disabled={disabled}
                       />{" "}
-                      Kèm đoạn văn
+                      Kèm đoạn ngữ liệu
                     </label>
                     {passageEnabled ? (
                       <>
@@ -834,7 +834,7 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                               altPrefix: "passage",
                             })
                           }
-                          placeholder="Nội dung đoạn văn..."
+                          placeholder="Nội dung đoạn ngữ liệu..."
                           disabled={disabled}
                         />
                         <div className={styles.row}>
@@ -1097,8 +1097,8 @@ function ConfirmDeleteModal({
             </li>
             {hasPassage ? (
               <li>
-                Câu hỏi có đoạn văn đính kèm; nếu đoạn văn không còn được dùng,
-                hệ thống cũng sẽ xóa đoạn văn.
+                Câu hỏi có đoạn ngữ liệu đính kèm; nếu đoạn ngữ liệu không còn được dùng,
+                hệ thống cũng sẽ xóa đoạn ngữ liệu.
               </li>
             ) : null}
           </ul>

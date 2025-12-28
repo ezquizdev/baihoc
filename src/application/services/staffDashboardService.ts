@@ -271,7 +271,7 @@ async function buildChartsSection(
       values: days.map((day) => {
         const total = totalsByDay.get(day)?.[slug].total ?? 0;
         const correct = totalsByDay.get(day)?.[slug].correct ?? 0;
-        if (!total) return null;
+        if (!total) return 0;
         return Math.round((correct / total) * 100);
       }),
     }));

@@ -26,7 +26,7 @@ export async function GET(
     return NextResponse.json(detail);
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Không tìm thấy đoạn văn";
+      error instanceof Error ? error.message : "Không tìm thấy đoạn ngữ liệu";
     return NextResponse.json({ error: message }, { status: 404 });
   }
 }
@@ -51,7 +51,7 @@ export async function PATCH(
       );
     }
     const message =
-      error instanceof Error ? error.message : "Không thể cập nhật đoạn văn";
+      error instanceof Error ? error.message : "Không thể cập nhật đoạn ngữ liệu";
     const status = message.toLowerCase().includes("not found") ? 404 : 400;
     return NextResponse.json({ error: message }, { status });
   }
@@ -75,7 +75,7 @@ export async function DELETE(
       );
     }
     const message =
-      error instanceof Error ? error.message : "Không thể xóa đoạn văn";
+      error instanceof Error ? error.message : "Không thể xóa đoạn ngữ liệu";
     const status = message.toLowerCase().includes("not found") ? 404 : 400;
     return NextResponse.json({ error: message }, { status });
   }

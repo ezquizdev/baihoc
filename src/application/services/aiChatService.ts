@@ -715,7 +715,7 @@ function buildResultContext(review: AttemptReviewStateResponse) {
     lines.push(`Câu ${question.position}:`);
     lines.push(`- Loại: ${question.type}`);
     if (question.passage?.content) {
-      lines.push(`- Đoạn văn: ${truncate(question.passage.content, 900)}`);
+      lines.push(`- Đoạn ngữ liệu: ${truncate(question.passage.content, 900)}`);
     }
     lines.push(`- Đề: ${truncate(question.stem || "—", 1600)}`);
 
