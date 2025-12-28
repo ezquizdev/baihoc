@@ -71,6 +71,12 @@ export async function PATCH(
     });
     return NextResponse.json({ quiz });
   } catch (error) {
+    if (isServiceError(error)) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     const message =
       error instanceof Error ? error.message : "Không thể cập nhật quiz";
     return NextResponse.json({ error: message }, { status: 400 });

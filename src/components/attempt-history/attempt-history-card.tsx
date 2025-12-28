@@ -71,7 +71,7 @@ export function AttemptHistoryCard({ item }: { item: AttemptHistoryItem }) {
             {item.totalQuestions}
           </span>
           <span className={styles.metaItem}>
-            <span className={styles.metaKey}>XP</span>{" "}
+            <span className={styles.metaKey}>IRT</span>{" "}
             {formatNumberVi(item.xpEarned)}
           </span>
           {minutesEstimate !== null ? (

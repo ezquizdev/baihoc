@@ -54,9 +54,20 @@
 - Added `GET /api/attempts` for submitted/auto-submitted attempts (includes custom quiz config metadata when available).
 - Starting a generated custom quiz now stores `custom_quiz_id` on the attempt and blocks non-owners from starting it.
 
+### feat(history): show in-progress attempt
+- `/dashboard/history` now shows the current `in_progress` attempt (if any) with a “Tiếp tục” action.
+- `GET /api/attempts` now includes `activeAttempt` so the client can surface the running quiz.
+
+### fix(attempt): enforce single running attempt
+- Users can only have **one** `in_progress` attempt at a time; starting a different quiz now returns 409 and prompts the user to finish the running attempt first.
+- When starting a quiz, any other timed/challenge attempts that should have ended are auto-submitted at their expected end time.
+
 ### fix(quiz): block delete while attempts in progress
 - Staff hard-delete now returns 409 when any attempt is `in_progress` (archive remains allowed).
 - Deleting a quiz with completed attempts now backfills snapshot metadata and `attempt_question_snapshots` so history/results stay viewable after quiz deletion.
+
+### fix(quiz): block content edits while attempts in progress
+- Staff can no longer edit quiz meta/questions (or edit questions/passages used by those quizzes) while any attempt is `in_progress` (returns 409).
 
 ### perf(attempt): snapshot-first history and redo gating
 - Attempt history listing now reads from `attempts.snapshot_*` (avoids quiz joins and heavy per-request subject-score recomputation).

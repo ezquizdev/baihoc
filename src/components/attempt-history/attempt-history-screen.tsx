@@ -4,18 +4,24 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type {
+  ActiveAttemptSummary,
   AttemptHistoryItem,
   AttemptHistoryKind,
 } from "@/application/models/attempt";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { QuizPagination } from "@/components/quiz-catalog/quiz-pagination";
 import { formatNumberVi } from "@/lib/formatters";
+import { ActiveAttemptCard } from "./active-attempt-card";
 import styles from "./attempt-history.module.css";
 import { AttemptHistoryCard } from "./attempt-history-card";
 
 type AttemptHistoryScreenProps = {
   session: SessionPayload;
-  initialHistory: { items: AttemptHistoryItem[]; total: number };
+  initialHistory: {
+    items: AttemptHistoryItem[];
+    total: number;
+    activeAttempt: ActiveAttemptSummary | null;
+  };
   pageSize: number;
   initialError?: string | null;
 };
@@ -38,6 +44,8 @@ export function AttemptHistoryScreen({
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
   const [page, setPage] = useState(1);
+  const [activeAttempt, setActiveAttempt] =
+    useState<ActiveAttemptSummary | null>(initialHistory.activeAttempt ?? null);
   const [items, setItems] = useState(initialHistory.items);
   const [total, setTotal] = useState(initialHistory.total);
   const [loading, setLoading] = useState(false);
@@ -91,6 +99,7 @@ export function AttemptHistoryScreen({
         const payload = await response.json();
         setItems(payload.items ?? []);
         setTotal(payload.total ?? 0);
+        setActiveAttempt(payload.activeAttempt ?? null);
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
@@ -152,6 +161,8 @@ export function AttemptHistoryScreen({
             <div className={styles.summaryMeta}>lượt làm đã nộp</div>
           </div>
         </section>
+
+        {activeAttempt ? <ActiveAttemptCard attempt={activeAttempt} /> : null}
 
         <section className={styles.filtersRow} aria-label="Bộ lọc">
           <div

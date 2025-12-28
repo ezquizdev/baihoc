@@ -28,7 +28,7 @@ export default async function DashboardHistoryPage() {
         initialError =
           error instanceof Error ? error.message : "Không thể tải lịch sử";
       }
-      return { items: [], total: 0 };
+      return { items: [], total: 0, activeAttempt: null };
     }
   })();
 

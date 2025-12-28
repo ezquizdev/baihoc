@@ -449,6 +449,33 @@ CREATE TABLE IF NOT EXISTS attempts (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- First-attempt tracking (for scoring + question stats).
+-- Note: attempts intentionally do NOT FK to quizzes (to allow deleting quizzes while preserving attempts),
+-- so this table also avoids a quizzes FK.
+CREATE TABLE IF NOT EXISTS user_quiz_first_attempts (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  quiz_id uuid NOT NULL,
+  attempt_id uuid NOT NULL REFERENCES attempts(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, quiz_id),
+  UNIQUE (attempt_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_quiz_first_attempts_quiz
+ON user_quiz_first_attempts(quiz_id);
+
+-- Per-question aggregates for MVP difficulty (first-attempt-only).
+-- Note: attempt history preserves deleted questions, so avoid FK to questions.
+CREATE TABLE IF NOT EXISTS question_irt_stats (
+  question_id uuid PRIMARY KEY,
+  first_attempt_count integer NOT NULL DEFAULT 0,
+  first_correct_count integer NOT NULL DEFAULT 0,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_question_irt_stats_first_attempt_count
+ON question_irt_stats(first_attempt_count DESC, question_id ASC);
+
 -- Snapshot + rejudge support (idempotent schema evolution).
 DO $$
 BEGIN
@@ -572,10 +599,25 @@ CREATE TABLE IF NOT EXISTS attempt_answers (
   text_answer text,
   is_correct boolean,
   awarded_score numeric(5,2),
+  awarded_irt_score integer NOT NULL DEFAULT 0,
   answered_at timestamptz NOT NULL DEFAULT now(),
   auto_saved boolean NOT NULL DEFAULT false,
   UNIQUE(attempt_id, question_id)
 );
+
+-- IRT awarded score evolution (idempotent).
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attempt_answers'
+      AND column_name = 'awarded_irt_score'
+  ) THEN
+    ALTER TABLE attempt_answers
+    ADD COLUMN awarded_irt_score integer NOT NULL DEFAULT 0;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_attempt_answers_attempt ON attempt_answers(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_attempt_answers_selected_options ON attempt_answers USING GIN (selected_option_ids);
@@ -628,6 +670,44 @@ ON attempt_question_snapshots(attempt_id, judgement_version);
 
 CREATE INDEX IF NOT EXISTS idx_attempt_answer_events_attempt_created_at
 ON attempt_answer_events(attempt_id, created_at DESC);
+
+-- One-time backfill for first-attempt tracking + question IRT stats (best-effort, idempotent).
+DO $$
+BEGIN
+  -- Backfill first completed attempt per (user, quiz).
+  INSERT INTO user_quiz_first_attempts (user_id, quiz_id, attempt_id)
+  SELECT t.user_id, t.quiz_id, t.id
+  FROM (
+    SELECT a.*,
+           ROW_NUMBER() OVER (
+             PARTITION BY a.user_id, a.quiz_id
+             ORDER BY a.submitted_at ASC NULLS LAST, a.started_at ASC, a.id ASC
+           ) AS rn
+    FROM attempts a
+    WHERE a.status IN ('submitted', 'auto_submitted')
+      AND a.submitted_at IS NOT NULL
+  ) t
+  WHERE t.rn = 1
+  ON CONFLICT (user_id, quiz_id) DO NOTHING;
+
+  -- Backfill difficulty stats only once when empty (subsequent updates are applied incrementally by app code).
+  IF EXISTS (SELECT 1 FROM attempt_answers LIMIT 1)
+     AND NOT EXISTS (SELECT 1 FROM question_irt_stats LIMIT 1)
+  THEN
+    INSERT INTO question_irt_stats (question_id, first_attempt_count, first_correct_count, updated_at)
+    SELECT aa.question_id,
+           COUNT(*)::int AS first_attempt_count,
+           COUNT(*) FILTER (WHERE aa.is_correct IS TRUE)::int AS first_correct_count,
+           now() AS updated_at
+    FROM attempt_answers aa
+    JOIN user_quiz_first_attempts ufa ON ufa.attempt_id = aa.attempt_id
+    GROUP BY aa.question_id
+    ON CONFLICT (question_id) DO UPDATE
+      SET first_attempt_count = EXCLUDED.first_attempt_count,
+          first_correct_count = EXCLUDED.first_correct_count,
+          updated_at = EXCLUDED.updated_at;
+  END IF;
+END $$;
 
 -- XP and leaderboard
 CREATE TABLE IF NOT EXISTS xp_events (
@@ -757,6 +837,49 @@ BEGIN
   UPDATE users
   SET xp_total = xp_total + NEW.amount
   WHERE id = NEW.user_id;
+
+  -- Preferred path: explicit per-subject allocations in metadata.
+  IF NEW.metadata ? 'subjectAllocations' THEN
+    WITH allocated AS (
+      SELECT (elem->>'subjectId')::uuid AS subject_id,
+             s.slug,
+             (elem->>'amount')::int AS allocated_xp
+      FROM jsonb_array_elements(NEW.metadata->'subjectAllocations') AS elem
+      JOIN subjects s ON s.id = (elem->>'subjectId')::uuid
+      WHERE (elem ? 'subjectId') AND (elem ? 'amount')
+    ),
+    upserted AS (
+      INSERT INTO user_subject_xp_totals (user_id, subject_id, xp_total)
+      SELECT NEW.user_id,
+             allocated.subject_id,
+             allocated.allocated_xp
+      FROM allocated
+      ON CONFLICT (user_id, subject_id)
+      DO UPDATE SET xp_total = user_subject_xp_totals.xp_total + EXCLUDED.xp_total
+      RETURNING 1
+    ),
+    sums AS (
+      SELECT COALESCE(SUM(CASE WHEN allocated.slug = 'vi' THEN allocated.allocated_xp END), 0)::int AS add_vi,
+             COALESCE(SUM(CASE WHEN allocated.slug = 'en' THEN allocated.allocated_xp END), 0)::int AS add_en,
+             COALESCE(SUM(CASE WHEN allocated.slug = 'math' THEN allocated.allocated_xp END), 0)::int AS add_math,
+             COALESCE(SUM(CASE WHEN allocated.slug = 'sci' THEN allocated.allocated_xp END), 0)::int AS add_sci,
+             COALESCE(SUM(CASE WHEN allocated.slug IN ('vi', 'en', 'math', 'sci') THEN allocated.allocated_xp END), 0)::int AS add_main_total
+      FROM allocated
+    ),
+    gate AS (
+      SELECT 1 AS ok FROM upserted LIMIT 1
+    )
+    UPDATE users
+    SET xp_vi = xp_vi + sums.add_vi,
+        xp_en = xp_en + sums.add_en,
+        xp_math = xp_math + sums.add_math,
+        xp_sci = xp_sci + sums.add_sci,
+        xp_main_total = xp_main_total + sums.add_main_total
+    FROM sums, gate
+    WHERE users.id = NEW.user_id;
+
+    RETURN NEW;
+  END IF;
 
   -- Only allocate to subjects when a valid quizId is present.
   IF NEW.metadata ? 'quizId'

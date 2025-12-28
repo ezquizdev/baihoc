@@ -30,6 +30,7 @@ export type AttemptAnswer = {
   answeredAt?: string | null;
   isCorrect?: boolean;
   awardedScore?: number;
+  awardedIrtScore?: number;
 };
 
 export type AttemptQuestionOption = {
@@ -116,6 +117,7 @@ export type AttemptSubjectScore = {
   slug: string;
   correctCount: number;
   totalQuestions: number;
+  irtScore: number;
   scorePercent: number;
 };
 
@@ -141,4 +143,17 @@ export type AttemptHistoryItem = {
     id: string;
     config: unknown;
   };
+};
+
+export type ActiveAttemptSummary = {
+  attemptId: string;
+  quizId: string;
+  quizTitle: string | null;
+  quizDifficulty: DifficultyLevel;
+  quizEstimatedTimeSeconds: number | null;
+  isChallenge: boolean;
+  customQuizId: string | null;
+  startedAt: string;
+  timeLimitSeconds: number | null;
+  remainingSeconds: number | null;
 };
