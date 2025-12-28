@@ -12,6 +12,7 @@ import type {
 } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
+import { handleMarkdownImagePaste } from "@/components/ui/markdown-image-paste";
 import { RichText } from "@/components/ui/rich-text";
 import { formatDateVi } from "@/lib/formatters";
 import styles from "./passage-editor-screen.module.css";
@@ -59,13 +60,12 @@ export function PassageEditorScreen({
   );
 
   const [passageContent, setPassageContent] = useState(passage.content);
-  const [passageMedia, setPassageMedia] = useState(
-    (passage.mediaUrls ?? []).join("\n"),
-  );
   const [passageViewMode, setPassageViewMode] = useState<ViewMode>("edit");
   const [passageSaving, setPassageSaving] = useState(false);
   const [passageError, setPassageError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [mediaUploadingCount, setMediaUploadingCount] = useState(0);
+  const [mediaUploadError, setMediaUploadError] = useState<string | null>(null);
 
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const didInitExpandedRef = useRef(false);
@@ -102,20 +102,13 @@ export function PassageEditorScreen({
 
   const passageDirty = useMemo(() => {
     const nextContent = passageContent.trim();
-    const nextMedia = passageMedia
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
     if (nextContent !== passage.content) return true;
-    if ((passage.mediaUrls ?? []).join("\n") !== nextMedia.join("\n"))
-      return true;
     return false;
-  }, [passage.content, passage.mediaUrls, passageContent, passageMedia]);
+  }, [passage.content, passageContent]);
 
   useEffect(() => {
     setPassageContent(passage.content);
-    setPassageMedia((passage.mediaUrls ?? []).join("\n"));
-  }, [passage.content, passage.mediaUrls]);
+  }, [passage.content]);
 
   useEffect(() => {
     if (didInitExpandedRef.current) return;
@@ -133,17 +126,13 @@ export function PassageEditorScreen({
       setPassageError("Đoạn văn không được để trống.");
       return;
     }
-    const mediaUrls = passageMedia
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
 
     try {
       setPassageSaving(true);
       const response = await fetch(`/api/staff/passages/${passageId}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ content, mediaUrls }),
+        body: JSON.stringify({ content }),
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
@@ -281,8 +270,24 @@ export function PassageEditorScreen({
             className={editorStyles.row}
             style={{ justifyContent: "space-between", marginTop: 10 }}
           >
-            <div className={editorStyles.muted}>
-              Xem trước hỗ trợ Markdown + LaTeX.
+            <div>
+              <div className={editorStyles.muted}>
+                Xem trước hỗ trợ Markdown + LaTeX.
+              </div>
+              <div className={editorStyles.muted} aria-live="polite">
+                {mediaUploadingCount > 0
+                  ? `Đang upload ${mediaUploadingCount} ảnh...`
+                  : "Tip: Dán ảnh (Ctrl/Cmd+V) để tự upload và chèn ảnh vào nội dung."}
+              </div>
+              {mediaUploadError ? (
+                <div
+                  className={editorStyles.inlineError}
+                  role="alert"
+                  style={{ marginTop: 10 }}
+                >
+                  {mediaUploadError}
+                </div>
+              ) : null}
             </div>
             <fieldset
               className={`${editorStyles.row} ${editorStyles.toggleGroup}`}
@@ -358,23 +363,15 @@ export function PassageEditorScreen({
                       className={editorStyles.textarea}
                       value={passageContent}
                       onChange={(e) => setPassageContent(e.target.value)}
+                      onPaste={(e) =>
+                        handleMarkdownImagePaste(e, {
+                          setValue: setPassageContent,
+                          setUploadingCount: setMediaUploadingCount,
+                          setUploadError: setMediaUploadError,
+                          altPrefix: "passage",
+                        })
+                      }
                       placeholder="Nội dung đoạn văn..."
-                      disabled={passageSaving}
-                    />
-                  </div>
-
-                  <div className={styles.fullRow}>
-                    <div className={editorStyles.row}>
-                      <div className={editorStyles.label}>Media URLs</div>
-                      <span className={editorStyles.muted}>
-                        (mỗi dòng 1 URL)
-                      </span>
-                    </div>
-                    <textarea
-                      className={`${editorStyles.textarea} ${editorStyles.textareaSmall}`}
-                      value={passageMedia}
-                      onChange={(e) => setPassageMedia(e.target.value)}
-                      placeholder="https://..."
                       disabled={passageSaving}
                     />
                   </div>
@@ -563,6 +560,8 @@ function InlineQuestionEditor({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
+  const [mediaUploadingCount, setMediaUploadingCount] = useState(0);
+  const [mediaUploadError, setMediaUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -833,8 +832,24 @@ function InlineQuestionEditor({
         className={editorStyles.row}
         style={{ justifyContent: "space-between", marginTop: 12 }}
       >
-        <div className={editorStyles.muted}>
-          Xem trước hỗ trợ Markdown + LaTeX.
+        <div>
+          <div className={editorStyles.muted}>
+            Xem trước hỗ trợ Markdown + LaTeX.
+          </div>
+          <div className={editorStyles.muted} aria-live="polite">
+            {mediaUploadingCount > 0
+              ? `Đang upload ${mediaUploadingCount} ảnh...`
+              : "Tip: Dán ảnh (Ctrl/Cmd+V) để tự upload và chèn ảnh vào nội dung."}
+          </div>
+          {mediaUploadError ? (
+            <div
+              className={editorStyles.inlineError}
+              role="alert"
+              style={{ marginTop: 10 }}
+            >
+              {mediaUploadError}
+            </div>
+          ) : null}
         </div>
         <fieldset
           className={`${editorStyles.row} ${editorStyles.toggleGroup}`}
@@ -996,6 +1011,14 @@ function InlineQuestionEditor({
                   className={editorStyles.textarea}
                   value={stem}
                   onChange={(e) => setStem(e.target.value)}
+                  onPaste={(e) =>
+                    handleMarkdownImagePaste(e, {
+                      setValue: setStem,
+                      setUploadingCount: setMediaUploadingCount,
+                      setUploadError: setMediaUploadError,
+                      altPrefix: "question",
+                    })
+                  }
                   placeholder="Nhập nội dung câu hỏi..."
                   disabled={disabled}
                 />
@@ -1009,6 +1032,14 @@ function InlineQuestionEditor({
                   className={`${editorStyles.textarea} ${editorStyles.textareaSmall}`}
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
+                  onPaste={(e) =>
+                    handleMarkdownImagePaste(e, {
+                      setValue: setExplanation,
+                      setUploadingCount: setMediaUploadingCount,
+                      setUploadError: setMediaUploadError,
+                      altPrefix: "explanation",
+                    })
+                  }
                   placeholder="Giải thích / lời giải..."
                   disabled={disabled}
                 />
@@ -1040,6 +1071,24 @@ function InlineQuestionEditor({
                             ),
                           );
                         }}
+                        onPaste={(e) =>
+                          handleMarkdownImagePaste(e, {
+                            setValue: (next) =>
+                              setOptions((prev) =>
+                                prev.map((o, oi) => {
+                                  if (oi !== idx) return o;
+                                  const text =
+                                    typeof next === "function"
+                                      ? next(o.text)
+                                      : next;
+                                  return { ...o, text };
+                                }),
+                              ),
+                            setUploadingCount: setMediaUploadingCount,
+                            setUploadError: setMediaUploadError,
+                            altPrefix: `option-${idx + 1}`,
+                          })
+                        }
                         placeholder={`Đáp án ${idx + 1}`}
                         disabled={disabled}
                       />

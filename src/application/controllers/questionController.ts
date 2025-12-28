@@ -37,7 +37,7 @@ export async function controllerCreateQuestion(input: {
     acceptableAnswer: string;
     caseSensitive?: boolean;
   }[];
-  passage?: { content: string; mediaUrls?: string[] } | null;
+  passage?: { content: string } | null;
   passageId?: string | null;
   passagePosition?: number;
 }): Promise<QuestionDetail> {
@@ -82,7 +82,7 @@ export async function controllerUpdateQuestion(
           caseSensitive?: boolean;
         }[]
       | null;
-    passage?: { content: string; mediaUrls?: string[] } | null;
+    passage?: { content: string } | null;
     passageId?: string | null;
     passagePosition?: number;
   },

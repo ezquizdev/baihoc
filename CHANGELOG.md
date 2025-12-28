@@ -2,6 +2,12 @@
 
 ## 2025-12-28
 
+### feat(staff): paste images into question markdown (Supabase upload)
+- Staff question + passage editors now support pasting images (Ctrl/Cmd+V) to auto-upload to Supabase Storage and insert markdown image syntax.
+- Added `POST /api/staff/media/images` (multipart upload, returns `{ url }`).
+- `RichText` now renders markdown images (responsive styling).
+- Removed legacy passage `mediaUrls` and dropped `passages.media_urls` (images are embedded in markdown `content` now).
+
 ### feat(staff): add excel-like sort/filter to question bank
 - `/staff/questions` now supports sorting/filtering via table headers (subject/type/difficulty/status) and removes the standalone filter bar.
 - `GET /api/staff/questions` now accepts `subjectIds`, `difficultyLevels`, `types`, `statuses`, `sortBy`, and `sortDir`.

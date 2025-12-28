@@ -327,9 +327,10 @@ CREATE INDEX IF NOT EXISTS idx_question_topics_topic ON question_topics(topic_id
 CREATE TABLE IF NOT EXISTS passages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   content text NOT NULL,
-  media_urls text[] NOT NULL DEFAULT '{}',
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE passages DROP COLUMN IF EXISTS media_urls;
 
 CREATE TABLE IF NOT EXISTS question_passages (
   question_id uuid PRIMARY KEY REFERENCES questions(id),

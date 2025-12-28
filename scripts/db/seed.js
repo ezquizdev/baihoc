@@ -160,7 +160,6 @@ async function main() {
             groupSize,
             startPosition: generated + 1,
           }),
-          [],
         ]);
         for (let j = 0; j < groupSize; j += 1) {
           const id = crypto.randomUUID();
@@ -289,12 +288,7 @@ async function main() {
       );
     }
     if (passageRows.length) {
-      await insertRows(
-        client,
-        "passages",
-        ["id", "content", "media_urls"],
-        passageRows,
-      );
+      await insertRows(client, "passages", ["id", "content"], passageRows);
     }
     if (questionPassageRows.length) {
       await insertRows(

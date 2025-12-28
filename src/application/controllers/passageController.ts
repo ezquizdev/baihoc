@@ -9,11 +9,10 @@ export async function controllerGetPassageDetail(passageId: string) {
 
 export async function controllerUpdatePassage(
   passageId: string,
-  input: { content: string; mediaUrls: string[] },
+  input: { content: string },
 ) {
   const passage = await updatePassage(passageId, {
     content: input.content,
-    mediaUrls: input.mediaUrls,
   });
 
   return { passage };

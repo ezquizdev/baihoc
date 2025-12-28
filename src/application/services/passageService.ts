@@ -21,7 +21,7 @@ export async function getPassageDetail(passageId: string) {
 
 export async function updatePassage(
   passageId: string,
-  input: { content: string; mediaUrls: string[] },
+  input: { content: string },
 ) {
   const inProgress = await hasInProgressAttemptsForPassage(passageId);
   if (inProgress) {
@@ -35,12 +35,9 @@ export async function updatePassage(
     throw new Error("Passage content is required");
   }
 
-  const mediaUrls = input.mediaUrls.map((url) => url.trim()).filter(Boolean);
-
   const updated = await updatePassageById({
     passageId,
     content: input.content.trim(),
-    mediaUrls,
   });
 
   if (!updated) {

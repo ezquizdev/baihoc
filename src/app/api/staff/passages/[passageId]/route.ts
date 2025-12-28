@@ -9,7 +9,6 @@ import { isServiceError } from "@/application/services/errors";
 
 const updateSchema = z.object({
   content: z.string().min(1),
-  mediaUrls: z.array(z.string()),
 });
 
 type Params = { passageId: string };

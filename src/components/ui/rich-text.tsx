@@ -37,11 +37,30 @@ export function RichText({
                 <a {...props} target="_blank" rel="noreferrer noopener" />
               )
             : ({ children }) => <span>{children}</span>,
-          img: () => null,
+          img: ({ node: _node, ...props }) => {
+            const rawSrc = typeof props.src === "string" ? props.src : "";
+            if (!rawSrc) return null;
+            if (!isAllowedImageSrc(rawSrc)) return null;
+            return (
+              <img
+                src={rawSrc}
+                alt={props.alt ?? ""}
+                title={props.title}
+                loading="lazy"
+                decoding="async"
+                className={styles.image}
+              />
+            );
+          },
         }}
       >
         {content}
       </ReactMarkdown>
     </div>
   );
+}
+
+function isAllowedImageSrc(src: string) {
+  if (src.startsWith("/")) return true;
+  return src.startsWith("https://") || src.startsWith("http://");
 }

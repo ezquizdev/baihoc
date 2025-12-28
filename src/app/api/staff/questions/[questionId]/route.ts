@@ -46,7 +46,6 @@ const updateSchema = z.object({
   passage: z
     .object({
       content: z.string().min(1),
-      mediaUrls: z.array(z.string()).optional(),
     })
     .nullable()
     .optional(),
