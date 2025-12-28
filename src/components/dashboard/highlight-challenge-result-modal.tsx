@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useId, useMemo, useRef } from "react";
 import { RichText } from "@/components/ui/rich-text";
@@ -196,7 +197,7 @@ export function HighlightChallengeResultModal({
             className={`${styles.btn} ${
               tone === "success" ? styles.btnSuccess : styles.btnDanger
             }`.trim()}
-            href={actionHref}
+            href={actionHref as Route}
             onClick={onClose}
           >
             {actionLabel}

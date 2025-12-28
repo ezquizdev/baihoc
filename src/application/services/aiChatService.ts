@@ -341,7 +341,10 @@ export async function sendAiChatMessage(input: {
       systemInstruction,
       messages: conversation
         .filter((m) => m.role === "user" || m.role === "assistant")
-        .map((m) => ({ role: m.role, content: m.content })),
+        .map((m) => ({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: m.content,
+        })),
       timeoutMs: 20_000,
     });
 

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -312,7 +313,7 @@ export function AiChatPage({
 
   const handleBack = () => {
     if (from) {
-      router.push(from);
+      router.push(from as Route);
       return;
     }
     router.back();

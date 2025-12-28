@@ -71,6 +71,10 @@
 - Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
 - Updated custom quiz service tests to mock `listEligibleQuestionsForCustomQuiz` after the passage-atomic selection change.
 
+### fix(build): satisfy Next.js typed routes + AI typings
+- Relaxed dashboard quick-actions href typing and cast dynamic navigation targets where needed (`/ai` back-link, highlight challenge result CTA) to keep `next build` passing with typed routes.
+- Narrowed AI chat history messages so only `user`/`assistant` roles are sent to the LLM client.
+
 ### feat(ai): add AI companion chat bubble
 - Added a bottom-right AI chat bubble + dialog on student pages (hidden on `/auth/*` and `/staff/*`).
 - Added `GET /api/ai/session` + `POST /api/ai/chat` with DB logging (`ai_sessions`, `ai_messages`, `ai_failures`) and UC016-aware context (home vs attempt results).
