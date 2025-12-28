@@ -69,6 +69,7 @@
 
 ### chore(test): update repo mocks for new exports
 - Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
+- Updated custom quiz service tests to mock `listEligibleQuestionsForCustomQuiz` after the passage-atomic selection change.
 
 ### feat(ai): add AI companion chat bubble
 - Added a bottom-right AI chat bubble + dialog on student pages (hidden on `/auth/*` and `/staff/*`).

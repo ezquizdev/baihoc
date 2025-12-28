@@ -6,10 +6,9 @@ vi.mock("@/application/infra/db/userRepo", () => ({
 }));
 
 vi.mock("@/application/infra/db/customQuizRepo", () => ({
-  countActiveQuestionsByTopicAndDifficulty: vi.fn(),
   createReadyCustomQuizWithGeneratedQuiz: vi.fn(),
+  listEligibleQuestionsForCustomQuiz: vi.fn(),
   listTopicsByIds: vi.fn(),
-  pickQuestionIdsForTopicDifficulty: vi.fn(),
 }));
 
 const userRepo = await import("@/application/infra/db/userRepo");
@@ -100,71 +99,151 @@ describe("customQuizService", () => {
     ]);
 
     vi.mocked(
-      customQuizRepo.countActiveQuestionsByTopicAndDifficulty,
+      customQuizRepo.listEligibleQuestionsForCustomQuiz,
     ).mockResolvedValue([
+      // Topic B (expects more picks due to deterministic shuffle in tests)
       {
-        topicId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        id: "q-b1-1",
         difficulty: 1,
-        count: 999,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
       },
       {
-        topicId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        id: "q-b2-1",
         difficulty: 2,
-        count: 999,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
       },
       {
-        topicId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-        difficulty: 3,
-        count: 999,
-      },
-      {
-        topicId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-        difficulty: 4,
-        count: 999,
-      },
-      {
-        topicId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-        difficulty: 5,
-        count: 999,
-      },
-      {
-        topicId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-        difficulty: 1,
-        count: 999,
-      },
-      {
-        topicId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        id: "q-b2-2",
         difficulty: 2,
-        count: 999,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
       },
       {
-        topicId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        id: "q-b3-1",
         difficulty: 3,
-        count: 999,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
       },
       {
-        topicId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        id: "q-b3-2",
+        difficulty: 3,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
+      },
+      {
+        id: "q-b3-3",
+        difficulty: 3,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
+      },
+      {
+        id: "q-b4-1",
         difficulty: 4,
-        count: 999,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
       },
       {
-        topicId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        id: "q-b4-2",
+        difficulty: 4,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
+      },
+      {
+        id: "q-b4-3",
+        difficulty: 4,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
+      },
+      {
+        id: "q-b5-1",
         difficulty: 5,
-        count: 999,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
+      },
+      {
+        id: "q-b5-2",
+        difficulty: 5,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
+      },
+      {
+        id: "q-b5-3",
+        difficulty: 5,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"],
+      },
+      // Topic A
+      {
+        id: "q-a2-1",
+        difficulty: 2,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
+      },
+      {
+        id: "q-a3-1",
+        difficulty: 3,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
+      },
+      {
+        id: "q-a3-2",
+        difficulty: 3,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
+      },
+      {
+        id: "q-a4-1",
+        difficulty: 4,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
+      },
+      {
+        id: "q-a4-2",
+        difficulty: 4,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
+      },
+      {
+        id: "q-a4-3",
+        difficulty: 4,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
+      },
+      {
+        id: "q-a5-1",
+        difficulty: 5,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
+      },
+      {
+        id: "q-a5-2",
+        difficulty: 5,
+        passageId: null,
+        passagePosition: null,
+        topicIds: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
       },
     ]);
-
-    vi.mocked(
-      customQuizRepo.pickQuestionIdsForTopicDifficulty,
-    ).mockImplementation(async ({ limit, excludeQuestionIds }) => {
-      const ids: string[] = [];
-      let n = excludeQuestionIds.length + 1;
-      while (ids.length < limit) {
-        ids.push(`question-${n}`);
-        n += 1;
-      }
-      return ids;
-    });
 
     vi.mocked(
       customQuizRepo.createReadyCustomQuizWithGeneratedQuiz,
