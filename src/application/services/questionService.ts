@@ -3,6 +3,7 @@ import {
   countQuestions,
   deleteQuestion,
   getQuestionDetail as getQuestionDetailRepo,
+  hasInProgressAttemptsForQuestion,
   insertQuestion,
   isQuestionUsed,
   listQuestions as listQuestionsRepo,
@@ -15,6 +16,11 @@ import type {
   QuestionType,
   ShortAnswerKey,
 } from "@/application/models/question";
+import type {
+  QuestionSortBy,
+  QuestionSortDir,
+} from "@/application/models/questionList";
+import { ServiceError } from "@/application/services/errors";
 
 type CreateQuestionInput = {
   subjectId: string;
@@ -65,6 +71,20 @@ export async function updateQuestion(
   questionId: string,
   input: UpdateQuestionInput,
 ) {
+  const hasContentChanges = Object.entries(input).some(
+    ([key, value]) => key !== "status" && value !== undefined,
+  );
+  if (hasContentChanges) {
+    const inProgress = await hasInProgressAttemptsForQuestion(questionId);
+    if (inProgress) {
+      throw new ServiceError(
+        "QUESTION_UPDATE_BLOCKED_IN_PROGRESS",
+        "Câu hỏi đang nằm trong quiz có lượt làm đang diễn ra. Không thể chỉnh sửa nội dung.",
+        409,
+      );
+    }
+  }
+
   const needsStructuralValidation =
     input.type !== undefined ||
     input.options !== undefined ||
@@ -165,10 +185,13 @@ export async function updateQuestion(
 }
 
 export async function listQuestions(params: {
-  subjectId?: string;
-  difficulty?: DifficultyLevel;
-  status?: QuestionStatus;
+  subjectIds?: string[];
+  difficultyLevels?: DifficultyLevel[];
+  types?: QuestionType[];
+  statuses?: QuestionStatus[];
   search?: string;
+  sortBy?: QuestionSortBy;
+  sortDir?: QuestionSortDir;
   limit?: number;
   offset?: number;
 }) {
@@ -176,9 +199,10 @@ export async function listQuestions(params: {
   const [items, total] = await Promise.all([
     listQuestionsRepo({ ...params, search: search || undefined }),
     countQuestions({
-      subjectId: params.subjectId,
-      difficulty: params.difficulty,
-      status: params.status,
+      subjectIds: params.subjectIds,
+      difficultyLevels: params.difficultyLevels,
+      types: params.types,
+      statuses: params.statuses,
       search: search || undefined,
     }),
   ]);
@@ -198,8 +222,11 @@ export async function archiveQuestion(questionId: string) {
 export async function deleteQuestionWithRules(questionId: string) {
   const used = await isQuestionUsed(questionId);
   if (used) {
-    await archiveQuestionRepo(questionId);
-    return { status: "archived" as const, code: "QUESTION_IN_USE" as const };
+    throw new ServiceError(
+      "QUESTION_IN_USE",
+      "Không thể xóa câu hỏi vì đang được dùng trong quiz. Hãy gỡ câu hỏi khỏi quiz trước hoặc lưu trữ nếu bạn muốn ẩn khỏi ngân hàng câu hỏi.",
+      409,
+    );
   }
   await deleteQuestion(questionId);
   return { status: "deleted" as const };

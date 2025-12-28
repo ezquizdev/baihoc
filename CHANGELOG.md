@@ -1,5 +1,17 @@
 # Changelog
 
+## 2025-12-28
+
+### feat(staff): add excel-like sort/filter to question bank
+- `/staff/questions` now supports sorting/filtering via table headers (subject/type/difficulty/status) and removes the standalone filter bar.
+- `GET /api/staff/questions` now accepts `subjectIds`, `difficultyLevels`, `types`, `statuses`, `sortBy`, and `sortDir`.
+
+### fix(leaderboard): cap searched user rank totals
+- Leaderboard search now uses the same 300-cap + ranking logic as the main leaderboard table.
+
+### chore(test): update repo mocks for new exports
+- Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger
@@ -54,9 +66,20 @@
 - Added `GET /api/attempts` for submitted/auto-submitted attempts (includes custom quiz config metadata when available).
 - Starting a generated custom quiz now stores `custom_quiz_id` on the attempt and blocks non-owners from starting it.
 
+### feat(history): show in-progress attempt
+- `/dashboard/history` now shows the current `in_progress` attempt (if any) with a “Tiếp tục” action.
+- `GET /api/attempts` now includes `activeAttempt` so the client can surface the running quiz.
+
+### fix(attempt): enforce single running attempt
+- Users can only have **one** `in_progress` attempt at a time; starting a different quiz now returns 409 and prompts the user to finish the running attempt first.
+- When starting a quiz, any other timed/challenge attempts that should have ended are auto-submitted at their expected end time.
+
 ### fix(quiz): block delete while attempts in progress
 - Staff hard-delete now returns 409 when any attempt is `in_progress` (archive remains allowed).
 - Deleting a quiz with completed attempts now backfills snapshot metadata and `attempt_question_snapshots` so history/results stay viewable after quiz deletion.
+
+### fix(quiz): block content edits while attempts in progress
+- Staff can no longer edit quiz meta/questions (or edit questions/passages used by those quizzes) while any attempt is `in_progress` (returns 409).
 
 ### perf(attempt): snapshot-first history and redo gating
 - Attempt history listing now reads from `attempts.snapshot_*` (avoids quiz joins and heavy per-request subject-score recomputation).
@@ -69,6 +92,11 @@
 ### fix(custom-quiz): align duration and validate difficulty
 - `POST /api/custom-quizzes` now accepts `durationSeconds=0` (treated as no time limit).
 - Custom quiz generation now validates `difficulty` defensively in the service layer.
+
+### feat(catalog): add custom quiz generator modal
+- Added a “Tạo quiz tuỳ chỉnh” modal on `/quizzes` to generate premium custom quizzes by topic.
+- Added `GET /api/catalog/topics` to power topic pickers in the modal.
+- Custom quiz generation now accepts an optional title and uses it for the generated quiz.
 
 ### perf(attempt): speed up attempt meta and history queries
 - Attempt meta lookup now uses a single lateral join for custom quiz ownership (less duplicated SQL work).
@@ -195,6 +223,10 @@
 
 ### chore(seed): include draft quiz
 - Seed now includes at least one quiz with `status = draft` (useful for testing staff “lưu nháp” flows).
+
+### feat(leaderboard): search user rank
+- `/dashboard/leaderboard` search now looks up a student by email/ID (or a unique name) and shows their rank + XP breakdown.
+- Added `GET /api/catalog/leaderboard/table/search` to return a single leaderboard row for the active sort column/direction.
 
 ## 2025-12-26
 

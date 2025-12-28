@@ -28,7 +28,7 @@ export function LeaderboardCard({
   onActionClick,
   rows,
   className,
-  scoreHeader = "XP",
+  scoreHeader = "IRT",
 }: LeaderboardCardProps) {
   return (
     <div className={`${styles.card} ${className ?? ""}`}>

@@ -39,6 +39,14 @@ export function DashboardLeaderboardScreen({
   pageSize,
 }: DashboardLeaderboardScreenProps) {
   const didMountRef = useRef(false);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 250);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchEntry, setSearchEntry] = useState<LeaderboardTableEntry | null>(
+    null,
+  );
+  const [searchRefreshKey, setSearchRefreshKey] = useState(0);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<LeaderboardSortBy>("overall");
   const [sortDir, setSortDir] = useState<LeaderboardSortDir>("desc");
@@ -97,6 +105,54 @@ export function DashboardLeaderboardScreen({
     return () => controller.abort();
   }, [page, pageSize, refreshKey, sortBy, sortDir]);
 
+  useEffect(() => {
+    const trimmed = debouncedSearch.trim();
+    if (!trimmed) {
+      setSearchEntry(null);
+      setSearchError(null);
+      setSearchLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const run = async () => {
+      try {
+        setSearchLoading(true);
+        setSearchError(null);
+
+        const params = new URLSearchParams();
+        params.set("q", trimmed);
+        params.set("sortBy", sortBy);
+        params.set("sortDir", sortDir);
+        if (searchRefreshKey > 0) {
+          params.set("_", String(searchRefreshKey));
+        }
+
+        const response = await fetch(
+          `/api/catalog/leaderboard/table/search?${params}`,
+          { signal: controller.signal },
+        );
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.error ?? "Không thể tìm xếp hạng");
+        }
+
+        setSearchEntry(payload.entry ?? null);
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+        setSearchEntry(null);
+        setSearchError(
+          err instanceof Error ? err.message : "Không thể tìm xếp hạng",
+        );
+      } finally {
+        setSearchLoading(false);
+      }
+    };
+
+    run();
+    return () => controller.abort();
+  }, [debouncedSearch, searchRefreshKey, sortBy, sortDir]);
+
   const displayName = session.fullName ?? session.email.split("@")[0];
 
   const caption = useMemo(() => {
@@ -109,6 +165,17 @@ export function DashboardLeaderboardScreen({
   const handleRetry = () => {
     setError(null);
     setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleSearchClear = () => {
+    setSearch("");
+    setSearchEntry(null);
+    setSearchError(null);
+    setSearchLoading(false);
+  };
+
+  const handleSearchRetry = () => {
+    setSearchRefreshKey((prev) => prev + 1);
   };
 
   const handleSortToggle = (key: LeaderboardSortBy) => {
@@ -128,6 +195,10 @@ export function DashboardLeaderboardScreen({
       userEmail={session.email}
       userName={displayName}
       avatarUrl={session.avatarUrl}
+      searchValue={search}
+      searchPlaceholder="Tìm học sinh (email hoặc ID)"
+      onSearchChange={setSearch}
+      onSearchSubmit={setSearch}
     >
       <div className={styles.page}>
         <section className={`cardBase ${styles.hero}`} aria-label="Hero">
@@ -146,6 +217,87 @@ export function DashboardLeaderboardScreen({
               <span className={styles.caption}>{caption}</span>
             </div>
           </div>
+
+          {search.trim().length > 0 ? (
+            <section
+              className={styles.searchResult}
+              aria-label="Kết quả tìm kiếm"
+            >
+              <div className={styles.searchResultHeader}>
+                <div className={styles.searchResultTitle}>
+                  Kết quả cho{" "}
+                  <span className={styles.searchQuery}>"{search.trim()}"</span>
+                </div>
+                <div className={styles.searchResultActions}>
+                  {searchError ? (
+                    <button
+                      type="button"
+                      className={styles.retryButton}
+                      onClick={handleSearchRetry}
+                      disabled={searchLoading}
+                    >
+                      Thử lại
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className={`${styles.retryButton} ${styles.searchClearButton}`}
+                    onClick={handleSearchClear}
+                    disabled={searchLoading}
+                  >
+                    Xoá
+                  </button>
+                </div>
+              </div>
+
+              {searchLoading ? (
+                <div className={styles.searchState} aria-live="polite">
+                  Đang tìm...
+                </div>
+              ) : searchError ? (
+                <div
+                  className={`${styles.searchState} ${styles.searchStateError}`}
+                  role="alert"
+                >
+                  {searchError}
+                </div>
+              ) : searchEntry ? (
+                <div className={styles.searchRow}>
+                  <div className={styles.searchIdentity}>
+                    <div className={styles.searchRank}>#{searchEntry.rank}</div>
+                    <LeaderboardBadge
+                      rank={searchEntry.rank}
+                      variant={
+                        searchEntry.userId === session.sub ? "self" : "top"
+                      }
+                    />
+                    <Link
+                      className={styles.searchName}
+                      href={`/profile/${searchEntry.userId}`}
+                    >
+                      {searchEntry.fullName}
+                    </Link>
+                  </div>
+
+                  <div className={styles.searchScores}>
+                    <ScorePill label="TV" value={searchEntry.xpVi} />
+                    <ScorePill label="TA" value={searchEntry.xpEn} />
+                    <ScorePill label="Toán" value={searchEntry.xpMath} />
+                    <ScorePill label="KH" value={searchEntry.xpSci} />
+                    <ScorePill
+                      label="Tổng"
+                      value={searchEntry.xpOverall}
+                      variant="overall"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.searchState} aria-live="polite">
+                  Không tìm thấy học sinh này trong bảng xếp hạng.
+                </div>
+              )}
+            </section>
+          ) : null}
 
           <div
             className={`${styles.tableWrap} ${loading ? styles.tableWrapLoading : ""}`}
@@ -335,4 +487,34 @@ function LeaderboardBadge({
       </svg>
     </span>
   );
+}
+
+function ScorePill({
+  label,
+  value,
+  variant = "default",
+}: {
+  label: string;
+  value: number;
+  variant?: "default" | "overall";
+}) {
+  return (
+    <div
+      className={`${styles.scorePill} ${
+        variant === "overall" ? styles.scorePillOverall : ""
+      }`}
+    >
+      <span className={styles.scorePillLabel}>{label}</span>
+      <span className={styles.scorePillValue}>{formatNumberVi(value)}</span>
+    </div>
+  );
+}
+
+function useDebouncedValue<T>(value: T, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
 }

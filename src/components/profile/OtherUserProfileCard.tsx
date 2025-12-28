@@ -63,12 +63,6 @@ export function OtherUserProfileCard({ user }: { user: UserAdminDetail }) {
             <span className={styles.fieldLabel}>Trường/Lớp</span>
             <div className={styles.fieldValue}>{user.school || "—"}</div>
           </div>
-          <div className={styles.field}>
-            <span className={styles.fieldLabel}>Ngày sinh</span>
-            <div className={styles.fieldValue}>
-              {formatDateVi(user.dateOfBirth)}
-            </div>
-          </div>
         </div>
 
         <div className={styles.divider} aria-hidden="true" />
@@ -90,12 +84,6 @@ export function OtherUserProfileCard({ user }: { user: UserAdminDetail }) {
             <span className={styles.fieldLabel}>Email đã xác minh</span>
             <div className={styles.fieldValue}>
               {user.emailVerifiedAt ? formatDateVi(user.emailVerifiedAt) : "—"}
-            </div>
-          </div>
-          <div className={styles.field}>
-            <span className={styles.fieldLabel}>Hoàn tất hồ sơ</span>
-            <div className={styles.fieldValue}>
-              {user.profileCompleted ? "Đã hoàn tất" : "Chưa hoàn tất"}
             </div>
           </div>
           <div className={styles.field}>

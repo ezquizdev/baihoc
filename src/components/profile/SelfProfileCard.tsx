@@ -10,7 +10,6 @@ import styles from "./profile-card.module.css";
 type Props = {
   email: string;
   role: string;
-  profileCompleted: boolean;
   initialFullName: string;
   initialAvatarUrl: string | null;
   initialSchool: string;
@@ -32,7 +31,6 @@ function safeTrim(value: string) {
 export function SelfProfileCard({
   email,
   role,
-  profileCompleted,
   initialFullName,
   initialAvatarUrl,
   initialSchool,
@@ -512,12 +510,6 @@ export function SelfProfileCard({
                 <div className={styles.field}>
                   <span className={styles.fieldLabel}>Họ và tên</span>
                   <div className={styles.fieldValue}>{fullName || "—"}</div>
-                </div>
-                <div className={styles.field}>
-                  <span className={styles.fieldLabel}>Trạng thái hồ sơ</span>
-                  <div className={styles.fieldValue}>
-                    {profileCompleted ? "Đã hoàn tất" : "Chưa hoàn tất"}
-                  </div>
                 </div>
                 <div className={styles.field}>
                   <span className={styles.fieldLabel}>Trường/Lớp</span>

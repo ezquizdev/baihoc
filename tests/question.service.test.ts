@@ -7,6 +7,7 @@ vi.mock("@/application/infra/db/questionRepo", () => ({
   countQuestions: vi.fn(),
   deleteQuestion: vi.fn(),
   getQuestionDetail: vi.fn(),
+  hasInProgressAttemptsForQuestion: vi.fn(),
   insertQuestion: vi.fn(),
   isQuestionUsed: vi.fn(),
   listQuestions: vi.fn(),

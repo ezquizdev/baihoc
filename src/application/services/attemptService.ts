@@ -1,30 +1,41 @@
 import { createHash } from "node:crypto";
+import type { PoolClient } from "pg";
 import {
   type AttemptAnswerInput,
-  createAttempt,
+  createAttemptWithClient,
   findChallengeAttempt,
-  findInProgressAttempt,
   type GradedAnswerInput,
+  getActiveAttemptSummary,
   getAttemptById,
   getAttemptReviewMeta,
   getAttemptState as getAttemptStateRepo,
   getQuizAttemptMeta,
   getQuizSnapshotMeta,
+  type InProgressAttemptRow,
   listAttemptAnswers,
   listAttemptHistory as listAttemptHistoryRepo,
   listAttemptReviewQuestions,
   listAttemptSnapshotQuestionIds,
+  listInProgressAttemptsForUser,
   listQuestionReviewDetails,
   listQuizGradingData,
   listQuizGradingDataByQuestionIds,
   listQuizQuestionMetaByIds,
+  lockAttemptStartForUser,
   type QuizQuestionGrading,
   rejudgeAttempt as rejudgeAttemptRepo,
   saveAttemptAnswers,
   submitAttempt as submitAttemptRepo,
+  submitAttemptWithClient,
 } from "@/application/infra/db/attemptRepo";
+import {
+  listQuestionIrtStats,
+  type QuestionIrtStats,
+} from "@/application/infra/db/irtRepo";
+import { withTransaction } from "@/application/infra/db/pool";
 import { listQuizStatusesByIds } from "@/application/infra/db/quizRepo";
 import type {
+  ActiveAttemptSummary,
   Attempt,
   AttemptAnswer,
   AttemptHistoryItem,
@@ -52,83 +63,266 @@ type AutosaveInput = {
   remainingSeconds?: number | null;
 };
 
+function firstMatchingAttemptId(
+  attempts: InProgressAttemptRow[],
+  quizId: string,
+): string | null {
+  for (const attempt of attempts) {
+    if (attempt.quiz_id === quizId) return attempt.id;
+  }
+  return null;
+}
+
+function firstMatchingAttempt(
+  attempts: InProgressAttemptRow[],
+  quizId: string,
+): InProgressAttemptRow | null {
+  for (const attempt of attempts) {
+    if (attempt.quiz_id === quizId) return attempt;
+  }
+  return null;
+}
+
+function computeAttemptSupposedEndMs(
+  startedAt: string,
+  timeLimitSeconds: number | null,
+  challengeEndAt: string | null,
+): number | null {
+  const startedMs = new Date(startedAt).getTime();
+  if (Number.isNaN(startedMs)) return null;
+
+  const ends: number[] = [];
+  if (timeLimitSeconds !== null) {
+    ends.push(startedMs + Math.max(0, timeLimitSeconds) * 1000);
+  }
+  if (challengeEndAt) {
+    const endMs = new Date(challengeEndAt).getTime();
+    if (!Number.isNaN(endMs)) ends.push(endMs);
+  }
+
+  if (!ends.length) return null;
+  return Math.min(...ends);
+}
+
+async function autoSubmitAttemptAsEnded(
+  client: PoolClient,
+  userId: string,
+  attemptId: string,
+  endedAtMs: number,
+) {
+  if (!Number.isFinite(endedAtMs)) return;
+  const endedAtIso = new Date(endedAtMs).toISOString();
+
+  const attempt = await getAttemptById(attemptId, client);
+  if (!attempt) return;
+  if (attempt.user_id !== userId) return;
+  if (attempt.status !== "in_progress") return;
+
+  const gradingData = await listQuizGradingData(attempt.quiz_id, client);
+  const existingAnswers = await listAttemptAnswers(attemptId, client);
+  const answerMap = new Map<string, AttemptAnswerInput>();
+  existingAnswers.forEach((answer) => {
+    answerMap.set(answer.questionId, {
+      questionId: answer.questionId,
+      selectedOptionIds: answer.selectedOptionIds ?? null,
+      textAnswer: answer.textAnswer ?? null,
+    });
+  });
+
+  const irtStats = await listQuestionIrtStats(
+    gradingData.map((question) => question.questionId),
+    client,
+  );
+  const irtStatsByQuestionId = new Map(
+    irtStats.map((stat) => [stat.questionId, stat]),
+  );
+
+  const { gradedAnswers, correctCount, scoreRaw, scorePercent, irtScore } =
+    gradeAnswers(gradingData, answerMap, irtStatsByQuestionId);
+  const quizMetaForSnapshot = await getQuizSnapshotMeta(
+    attempt.quiz_id,
+    client,
+  );
+
+  const questionSnapshots = buildQuestionSnapshots(gradingData);
+  const subjectScores = computeSubjectScores(gradingData, gradedAnswers);
+  const subjectAllocations = subjectScores.map((subject) => ({
+    subjectId: subject.subjectId,
+    amount: subject.irtScore,
+  }));
+  const quizContentHash = computeQuizContentHashSnapshot(gradingData);
+
+  await submitAttemptWithClient(
+    client,
+    {
+      attemptId,
+      gradedAnswers,
+      scoreRaw,
+      scorePercent,
+      correctCount,
+      totalQuestions: gradingData.length || attempt.total_questions,
+      remainingSeconds: 0,
+      xpEvent: {
+        userId,
+        source: attempt.challenge_id ? "challenge" : "attempt",
+        amount: irtScore,
+        metadata: { quizId: attempt.quiz_id, subjectAllocations },
+      },
+      snapshot: {
+        quizContentHash,
+        quizTitle: quizMetaForSnapshot?.title ?? null,
+        quizDifficultyLevel: quizMetaForSnapshot?.difficultyLevel ?? null,
+        quizEstimatedTimeSeconds:
+          quizMetaForSnapshot?.estimatedTimeSeconds ?? null,
+        isChallenge:
+          quizMetaForSnapshot?.isChallenge ?? attempt.challenge_id !== null,
+        subjectScores,
+        subjectScoresEstimated: false,
+      },
+      questionSnapshots,
+    },
+    {
+      status: "auto_submitted",
+      submittedAt: endedAtIso,
+      judgedAt: endedAtIso,
+      xpEventCreatedAt: endedAtIso,
+    },
+  );
+}
+
 export async function startOrResumeAttempt(
   userId: string,
   quizId: string,
 ): Promise<StartAttemptResult> {
-  const quizMeta = await getQuizAttemptMeta(quizId);
-  if (!quizMeta) {
-    throw new ServiceError("QUIZ_NOT_FOUND", "Quiz not found", 404);
-  }
-  if (quizMeta.customQuizOwnerId && quizMeta.customQuizOwnerId !== userId) {
-    throw new ServiceError("CUSTOM_QUIZ_FORBIDDEN", "Forbidden", 403);
-  }
-  if (quizMeta.totalQuestions <= 0) {
-    throw new ServiceError("QUIZ_NO_QUESTIONS", "Quiz has no questions", 400);
-  }
+  return withTransaction(async (client) => {
+    await lockAttemptStartForUser(client, userId);
 
-  if (quizMeta.isChallenge) {
-    const existing = await findChallengeAttempt(userId, quizId);
-    if (existing) {
-      return { attemptId: existing.id, resumed: true, status: existing.status };
-    }
-  } else {
-    const existing = await findInProgressAttempt(userId, quizId);
-    if (existing) {
-      return { attemptId: existing.id, resumed: true, status: existing.status };
-    }
-  }
+    const nowMs = Date.now();
 
-  const timeLimitSeconds = quizMeta.isChallenge
-    ? quizMeta.challengeTimeLimitSeconds
-    : quizMeta.estimatedTimeSeconds;
-  if (quizMeta.isChallenge && timeLimitSeconds === null) {
-    throw new ServiceError(
-      "CHALLENGE_TIME_LIMIT_MISSING",
-      "Challenge time limit missing",
-      400,
+    // Enforce: a user can have only one `in_progress` attempt at a time.
+    // When starting a quiz, auto-submit any *other* timed attempts that have already expired.
+    const initialInProgress = await listInProgressAttemptsForUser(
+      userId,
+      client,
     );
-  }
-  if (quizMeta.isChallenge) {
-    const startAt = quizMeta.challengeStartAt;
-    const endAt = quizMeta.challengeEndAt;
-    if (!startAt || !endAt) {
-      throw new ServiceError(
-        "CHALLENGE_SCHEDULE_MISSING",
-        "Challenge schedule missing",
-        400,
+    const requestedInProgressId = firstMatchingAttemptId(
+      initialInProgress,
+      quizId,
+    );
+
+    for (const attempt of initialInProgress) {
+      if (attempt.id === requestedInProgressId) continue;
+      const endAtMs = computeAttemptSupposedEndMs(
+        attempt.started_at,
+        attempt.time_limit_seconds,
+        attempt.challenge_end_at,
       );
+      if (endAtMs === null || nowMs < endAtMs) continue;
+      await autoSubmitAttemptAsEnded(client, userId, attempt.id, endAtMs);
     }
-    const now = Date.now();
-    const startMs = new Date(startAt).getTime();
-    const endMs = new Date(endAt).getTime();
-    if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
-      throw new ServiceError(
-        "CHALLENGE_SCHEDULE_INVALID",
-        "Challenge schedule invalid",
-        400,
-      );
+
+    const refreshedInProgress = await listInProgressAttemptsForUser(
+      userId,
+      client,
+    );
+
+    const requestedInProgress = firstMatchingAttempt(
+      refreshedInProgress,
+      quizId,
+    );
+    if (requestedInProgress) {
+      return {
+        attemptId: requestedInProgress.id,
+        resumed: true,
+        status: requestedInProgress.status,
+      };
     }
-    if (now < startMs || now > endMs) {
+
+    const activeAttempt = refreshedInProgress[0] ?? null;
+    if (activeAttempt) {
       throw new ServiceError(
-        "CHALLENGE_NOT_ACTIVE",
-        "Thử thách chưa bắt đầu hoặc đã kết thúc.",
+        "ATTEMPT_OTHER_IN_PROGRESS",
+        "Bạn đang có một lượt làm quiz đang diễn ra. Vui lòng hoàn thành trước khi bắt đầu quiz khác.",
         409,
+        {
+          activeAttemptId: activeAttempt.id,
+          activeQuizId: activeAttempt.quiz_id,
+        },
       );
     }
-  }
 
-  const created = await createAttempt({
-    userId,
-    quizId,
-    challengeId: quizMeta.isChallenge ? quizId : null,
-    customQuizId: quizMeta.customQuizId ?? null,
-    timeLimitSeconds: timeLimitSeconds ?? null,
-    remainingSeconds: timeLimitSeconds ?? null,
-    totalQuestions: quizMeta.totalQuestions,
+    const quizMeta = await getQuizAttemptMeta(quizId, client);
+    if (!quizMeta) {
+      throw new ServiceError("QUIZ_NOT_FOUND", "Quiz not found", 404);
+    }
+    if (quizMeta.customQuizOwnerId && quizMeta.customQuizOwnerId !== userId) {
+      throw new ServiceError("CUSTOM_QUIZ_FORBIDDEN", "Forbidden", 403);
+    }
+    if (quizMeta.totalQuestions <= 0) {
+      throw new ServiceError("QUIZ_NO_QUESTIONS", "Quiz has no questions", 400);
+    }
+
+    if (quizMeta.isChallenge) {
+      const existing = await findChallengeAttempt(userId, quizId, client);
+      if (existing) {
+        return {
+          attemptId: existing.id,
+          resumed: true,
+          status: existing.status,
+        };
+      }
+    }
+
+    const timeLimitSeconds = quizMeta.isChallenge
+      ? quizMeta.challengeTimeLimitSeconds
+      : quizMeta.estimatedTimeSeconds;
+    if (quizMeta.isChallenge && timeLimitSeconds === null) {
+      throw new ServiceError(
+        "CHALLENGE_TIME_LIMIT_MISSING",
+        "Challenge time limit missing",
+        400,
+      );
+    }
+    if (quizMeta.isChallenge) {
+      const startAt = quizMeta.challengeStartAt;
+      const endAt = quizMeta.challengeEndAt;
+      if (!startAt || !endAt) {
+        throw new ServiceError(
+          "CHALLENGE_SCHEDULE_MISSING",
+          "Challenge schedule missing",
+          400,
+        );
+      }
+      const startMs = new Date(startAt).getTime();
+      const endMs = new Date(endAt).getTime();
+      if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
+        throw new ServiceError(
+          "CHALLENGE_SCHEDULE_INVALID",
+          "Challenge schedule invalid",
+          400,
+        );
+      }
+      if (nowMs < startMs || nowMs > endMs) {
+        throw new ServiceError(
+          "CHALLENGE_NOT_ACTIVE",
+          "Thử thách chưa bắt đầu hoặc đã kết thúc.",
+          409,
+        );
+      }
+    }
+
+    const created = await createAttemptWithClient(client, {
+      userId,
+      quizId,
+      challengeId: quizMeta.isChallenge ? quizId : null,
+      customQuizId: quizMeta.customQuizId ?? null,
+      timeLimitSeconds: timeLimitSeconds ?? null,
+      remainingSeconds: timeLimitSeconds ?? null,
+      totalQuestions: quizMeta.totalQuestions,
+    });
+
+    return { attemptId: created.id, resumed: false, status: created.status };
   });
-
-  return { attemptId: created.id, resumed: false, status: created.status };
 }
 
 export async function getAttemptState(
@@ -255,15 +449,24 @@ export async function listAttemptHistory(
     search?: string;
     kind?: AttemptHistoryKind;
   } = {},
-): Promise<{ items: AttemptHistoryItem[]; total: number }> {
-  const result = await listAttemptHistoryRepo({
-    userId,
-    limit: params.limit,
-    offset: params.offset,
-    search: params.search,
-    kind: params.kind,
-  });
-  if (!result.items.length) return { items: [], total: result.total };
+): Promise<{
+  items: AttemptHistoryItem[];
+  total: number;
+  activeAttempt: ActiveAttemptSummary | null;
+}> {
+  const [result, activeAttempt] = await Promise.all([
+    listAttemptHistoryRepo({
+      userId,
+      limit: params.limit,
+      offset: params.offset,
+      search: params.search,
+      kind: params.kind,
+    }),
+    getActiveAttemptSummary(userId),
+  ]);
+  if (!result.items.length) {
+    return { items: [], total: result.total, activeAttempt };
+  }
 
   const quizIds = Array.from(new Set(result.items.map((item) => item.quizId)));
   const statuses = await listQuizStatusesByIds(quizIds);
@@ -280,7 +483,7 @@ export async function listAttemptHistory(
     };
   });
 
-  return { items, total: result.total };
+  return { items, total: result.total, activeAttempt };
 }
 
 export async function autosaveAttempt(
@@ -392,12 +595,15 @@ export async function submitAttempt(
       : normalizeSubmitAnswers(input.answers, gradingMap);
   const merged = mergeAnswers(existingAnswers, normalized);
 
-  const { gradedAnswers, correctCount, scoreRaw, scorePercent } = gradeAnswers(
-    gradingData,
-    merged,
+  const irtStats = await listQuestionIrtStats(
+    gradingData.map((question) => question.questionId),
+  );
+  const irtStatsByQuestionId = new Map(
+    irtStats.map((stat) => [stat.questionId, stat]),
   );
 
-  const xpEarned = Math.round(scorePercent);
+  const { gradedAnswers, correctCount, scoreRaw, scorePercent, irtScore } =
+    gradeAnswers(gradingData, merged, irtStatsByQuestionId);
   const quizMetaForSnapshot = await getQuizSnapshotMeta(attempt.quiz_id);
   if (!quizMetaForSnapshot) {
     throw new ServiceError("QUIZ_NOT_FOUND", "Quiz not found", 404);
@@ -405,6 +611,10 @@ export async function submitAttempt(
 
   const questionSnapshots = buildQuestionSnapshots(gradingData);
   const subjectScores = computeSubjectScores(gradingData, gradedAnswers);
+  const subjectAllocations = subjectScores.map((subject) => ({
+    subjectId: subject.subjectId,
+    amount: subject.irtScore,
+  }));
   const quizContentHash = computeQuizContentHashSnapshot(gradingData);
 
   const result = await submitAttemptRepo({
@@ -418,8 +628,8 @@ export async function submitAttempt(
     xpEvent: {
       userId,
       source: attempt.challenge_id ? "challenge" : "attempt",
-      amount: xpEarned,
-      metadata: { quizId: attempt.quiz_id },
+      amount: irtScore,
+      metadata: { quizId: attempt.quiz_id, subjectAllocations },
     },
     snapshot: {
       quizContentHash,
@@ -506,16 +716,42 @@ export async function rejudgeAttempt(
     });
   });
 
-  const { gradedAnswers, correctCount, scoreRaw, scorePercent } = gradeAnswers(
-    gradingData,
-    answerMap,
+  const irtStats = await listQuestionIrtStats(
+    gradingData.map((question) => question.questionId),
+  );
+  const irtStatsByQuestionId = new Map(
+    irtStats.map((stat) => [stat.questionId, stat]),
   );
 
-  const xpEarned = Math.round(scorePercent);
-  const xpDelta = xpEarned - Number(attempt.xp_earned ?? 0);
+  const { gradedAnswers, correctCount, scoreRaw, scorePercent, irtScore } =
+    gradeAnswers(gradingData, answerMap, irtStatsByQuestionId);
+
+  const xpDelta = irtScore - Number(attempt.xp_earned ?? 0);
 
   const questionSnapshots = buildQuestionSnapshots(gradingData);
   const subjectScores = computeSubjectScores(gradingData, gradedAnswers);
+  const previousSubjectScores = parseAttemptSubjectScores(
+    attempt.snapshot_subject_scores,
+  );
+  const previousIrtBySubject = new Map(
+    previousSubjectScores.map((subject) => [
+      subject.subjectId,
+      subject.irtScore,
+    ]),
+  );
+  const nextIrtBySubject = new Map(
+    subjectScores.map((subject) => [subject.subjectId, subject.irtScore]),
+  );
+  const subjectAllocations = Array.from(
+    new Set([...previousIrtBySubject.keys(), ...nextIrtBySubject.keys()]),
+  )
+    .map((subjectId) => ({
+      subjectId,
+      amount:
+        (nextIrtBySubject.get(subjectId) ?? 0) -
+        (previousIrtBySubject.get(subjectId) ?? 0),
+    }))
+    .filter((allocation) => allocation.amount !== 0);
   const quizContentHash = computeQuizContentHashSnapshot(gradingData);
 
   const result = await rejudgeAttemptRepo({
@@ -525,12 +761,13 @@ export async function rejudgeAttempt(
       questionId: answer.questionId,
       isCorrect: answer.isCorrect,
       awardedScore: answer.awardedScore,
+      awardedIrtScore: answer.awardedIrtScore,
     })),
     scoreRaw,
     scorePercent,
     correctCount,
     totalQuestions: gradingData.length,
-    xpEarned,
+    xpEarned: irtScore,
     xpAdjustmentEvent:
       xpDelta !== 0
         ? {
@@ -541,6 +778,9 @@ export async function rejudgeAttempt(
               quizId: attempt.quiz_id,
               attemptId,
               reason: "rejudge",
+              ...(subjectAllocations.length
+                ? { subjectAllocations }
+                : undefined),
             },
           }
         : null,
@@ -762,18 +1002,38 @@ function mergeAnswers(
   return map;
 }
 
+function computeIrtWeight(stat: QuestionIrtStats | undefined): number {
+  const attemptCount = stat?.firstAttemptCount ?? 0;
+  const correctCount = stat?.firstCorrectCount ?? 0;
+
+  // Beta(2,2) prior (smooths early questions toward 50%).
+  const priorAttempts = 4;
+  const priorCorrect = 2;
+  const pCorrect =
+    (correctCount + priorCorrect) / Math.max(1, attemptCount + priorAttempts);
+  const difficulty = 1 - Math.min(1, Math.max(0, pCorrect));
+
+  const minWeight = 4;
+  const maxWeight = 10;
+  const weight = Math.round(minWeight + difficulty * (maxWeight - minWeight));
+  return Math.min(maxWeight, Math.max(minWeight, weight));
+}
+
 function gradeAnswers(
   gradingData: QuizQuestionGrading[],
   answerMap: Map<string, AttemptAnswerInput>,
+  irtStatsByQuestionId: Map<string, QuestionIrtStats>,
 ): {
   gradedAnswers: GradedAnswerInput[];
   correctCount: number;
   scoreRaw: number;
   scorePercent: number;
+  irtScore: number;
 } {
   let correctCount = 0;
   let scoreRaw = 0;
   let totalPossible = 0;
+  let irtScore = 0;
   const gradedAnswers = gradingData.map((question) => {
     const answer = answerMap.get(question.questionId);
     const selectedOptionIds = answer?.selectedOptionIds ?? null;
@@ -790,8 +1050,13 @@ function gradeAnswers(
     }
 
     const awardedScore = isCorrect ? questionScore : 0;
+    const irtWeight = computeIrtWeight(
+      irtStatsByQuestionId.get(question.questionId),
+    );
+    const awardedIrtScore = isCorrect ? irtWeight : 0;
     if (isCorrect) correctCount += 1;
     scoreRaw += awardedScore;
+    irtScore += awardedIrtScore;
 
     return {
       questionId: question.questionId,
@@ -799,6 +1064,7 @@ function gradeAnswers(
       textAnswer: textAnswer ?? null,
       isCorrect,
       awardedScore,
+      awardedIrtScore,
     };
   });
 
@@ -806,7 +1072,7 @@ function gradeAnswers(
     totalPossible > 0
       ? Number(((scoreRaw / totalPossible) * 100).toFixed(2))
       : 0;
-  return { gradedAnswers, correctCount, scoreRaw, scorePercent };
+  return { gradedAnswers, correctCount, scoreRaw, scorePercent, irtScore };
 }
 
 function buildQuestionSnapshots(gradingData: QuizQuestionGrading[]): Array<{
@@ -843,11 +1109,12 @@ function computeSubjectScores(
 ): AttemptSubjectScore[] {
   const gradedMap = new Map<
     string,
-    { awardedScore: number; isCorrect: boolean }
+    { awardedScore: number; awardedIrtScore: number; isCorrect: boolean }
   >();
   gradedAnswers.forEach((answer) => {
     gradedMap.set(answer.questionId, {
       awardedScore: answer.awardedScore,
+      awardedIrtScore: answer.awardedIrtScore,
       isCorrect: answer.isCorrect,
     });
   });
@@ -862,6 +1129,7 @@ function computeSubjectScores(
       correctCount: number;
       totalPossible: number;
       awarded: number;
+      irtScore: number;
     }
   >();
 
@@ -875,6 +1143,7 @@ function computeSubjectScores(
       correctCount: 0,
       totalPossible: 0,
       awarded: 0,
+      irtScore: 0,
     };
     const maxScore =
       question.score !== null ? question.score : question.defaultScore;
@@ -883,6 +1152,7 @@ function computeSubjectScores(
     const graded = gradedMap.get(question.questionId);
     if (graded) {
       agg.awarded += graded.awardedScore;
+      agg.irtScore += graded.awardedIrtScore;
       if (graded.isCorrect) agg.correctCount += 1;
     }
     bySubject.set(subjectId, agg);
@@ -895,6 +1165,7 @@ function computeSubjectScores(
       slug: agg.slug,
       correctCount: agg.correctCount,
       totalQuestions: agg.totalQuestions,
+      irtScore: agg.irtScore,
       scorePercent:
         agg.totalPossible > 0
           ? Number(((agg.awarded / agg.totalPossible) * 100).toFixed(2))
@@ -926,6 +1197,7 @@ function parseAttemptSubjectScores(raw: unknown): AttemptSubjectScore[] {
       if (!subjectId || !name || !slug) return null;
       const correctCount = Number(record.correctCount ?? 0);
       const totalQuestions = Number(record.totalQuestions ?? 0);
+      const irtScore = Number(record.irtScore ?? 0);
       const scorePercent = Number(record.scorePercent ?? 0);
       return {
         subjectId,
@@ -933,6 +1205,7 @@ function parseAttemptSubjectScores(raw: unknown): AttemptSubjectScore[] {
         slug,
         correctCount: Number.isFinite(correctCount) ? correctCount : 0,
         totalQuestions: Number.isFinite(totalQuestions) ? totalQuestions : 0,
+        irtScore: Number.isFinite(irtScore) ? irtScore : 0,
         scorePercent: Number.isFinite(scorePercent) ? scorePercent : 0,
       };
     })

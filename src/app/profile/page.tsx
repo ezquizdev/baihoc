@@ -85,7 +85,6 @@ export default async function ProfilePage() {
           <SelfProfileCard
             email={session.email}
             role={session.role}
-            profileCompleted={session.profileCompleted}
             initialFullName={profile.fullName}
             initialAvatarUrl={profile.avatarUrl || null}
             initialSchool={profile.school}

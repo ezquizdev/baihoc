@@ -8,12 +8,12 @@ import {
 import { ServiceError } from "@/application/services/errors";
 
 vi.mock("@/application/infra/db/attemptRepo", () => ({
-  createAttempt: vi.fn(),
+  createAttemptWithClient: vi.fn(),
   findChallengeAttempt: vi.fn(),
-  findInProgressAttempt: vi.fn(),
   getAttemptById: vi.fn(),
   getAttemptReviewMeta: vi.fn(),
   getAttemptState: vi.fn(),
+  listInProgressAttemptsForUser: vi.fn(),
   getQuizAttemptMeta: vi.fn(),
   getQuizSnapshotMeta: vi.fn(),
   listAttemptAnswers: vi.fn(),
@@ -22,12 +22,18 @@ vi.mock("@/application/infra/db/attemptRepo", () => ({
   listQuizGradingData: vi.fn(),
   listQuizGradingDataByQuestionIds: vi.fn(),
   listQuizQuestionMetaByIds: vi.fn(),
+  lockAttemptStartForUser: vi.fn(),
   rejudgeAttempt: vi.fn(),
   saveAttemptAnswers: vi.fn(),
   submitAttempt: vi.fn(),
 }));
 
+vi.mock("@/application/infra/db/irtRepo", () => ({
+  listQuestionIrtStats: vi.fn(),
+}));
+
 const attemptRepo = await import("@/application/infra/db/attemptRepo");
+const irtRepo = await import("@/application/infra/db/irtRepo");
 
 const baseAttemptRow: AttemptRow = {
   id: "attempt-1",
@@ -96,36 +102,37 @@ describe("attemptService", () => {
       customQuizOwnerId: null,
       totalQuestions: 2,
     });
-    vi.mocked(attemptRepo.findInProgressAttempt).mockResolvedValue(null);
-    vi.mocked(attemptRepo.createAttempt).mockResolvedValue({
+    vi.mocked(attemptRepo.listInProgressAttemptsForUser)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    vi.mocked(attemptRepo.createAttemptWithClient).mockResolvedValue({
       ...baseAttemptRow,
     });
 
     const result = await startOrResumeAttempt("user-1", "quiz-1");
 
-    expect(attemptRepo.createAttempt).toHaveBeenCalledTimes(1);
+    expect(attemptRepo.createAttemptWithClient).toHaveBeenCalledTimes(1);
     expect(result.attemptId).toBe("attempt-1");
   });
 
   it("resumes an in-progress attempt", async () => {
-    vi.mocked(attemptRepo.getQuizAttemptMeta).mockResolvedValue({
-      quizId: "quiz-1",
-      isChallenge: false,
-      estimatedTimeSeconds: 600,
-      challengeTimeLimitSeconds: null,
-      challengeStartAt: null,
-      challengeEndAt: null,
-      customQuizId: null,
-      customQuizOwnerId: null,
-      totalQuestions: 2,
-    });
-    vi.mocked(attemptRepo.findInProgressAttempt).mockResolvedValue({
-      ...baseAttemptRow,
-    });
+    const inProgressAttempt = {
+      id: baseAttemptRow.id,
+      quiz_id: baseAttemptRow.quiz_id,
+      challenge_id: baseAttemptRow.challenge_id,
+      status: baseAttemptRow.status,
+      started_at: baseAttemptRow.started_at,
+      time_limit_seconds: baseAttemptRow.time_limit_seconds,
+      remaining_seconds: baseAttemptRow.remaining_seconds,
+      challenge_end_at: null,
+    };
+    vi.mocked(attemptRepo.listInProgressAttemptsForUser)
+      .mockResolvedValueOnce([inProgressAttempt])
+      .mockResolvedValueOnce([inProgressAttempt]);
 
     const result = await startOrResumeAttempt("user-1", "quiz-1");
 
-    expect(attemptRepo.createAttempt).not.toHaveBeenCalled();
+    expect(attemptRepo.createAttemptWithClient).not.toHaveBeenCalled();
     expect(result.attemptId).toBe("attempt-1");
   });
 
@@ -141,6 +148,9 @@ describe("attemptService", () => {
       customQuizOwnerId: null,
       totalQuestions: 2,
     });
+    vi.mocked(attemptRepo.listInProgressAttemptsForUser)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
     vi.mocked(attemptRepo.findChallengeAttempt).mockResolvedValue({
       ...baseAttemptRow,
       status: "submitted",
@@ -183,6 +193,9 @@ describe("attemptService", () => {
       customQuizOwnerId: null,
       totalQuestions: 2,
     });
+    vi.mocked(attemptRepo.listInProgressAttemptsForUser)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
     vi.mocked(attemptRepo.findChallengeAttempt).mockResolvedValue(null);
 
     await expect(
@@ -204,6 +217,9 @@ describe("attemptService", () => {
       customQuizOwnerId: "user-2",
       totalQuestions: 2,
     });
+    vi.mocked(attemptRepo.listInProgressAttemptsForUser)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
 
     await expect(
       startOrResumeAttempt("user-1", "quiz-1"),
@@ -221,6 +237,7 @@ describe("attemptService", () => {
       estimatedTimeSeconds: 600,
       isChallenge: false,
     });
+    vi.mocked(irtRepo.listQuestionIrtStats).mockResolvedValue([]);
     vi.mocked(attemptRepo.listQuizGradingData).mockResolvedValue([
       {
         questionId: "q1",
@@ -278,11 +295,19 @@ describe("attemptService", () => {
     expect(call?.scoreRaw).toBe(5);
     expect(call?.scorePercent).toBe(100);
     expect(call?.correctCount).toBe(2);
+    const awardedIrt = (call?.gradedAnswers ?? []).reduce(
+      (sum, answer) => sum + (answer.awardedIrtScore ?? 0),
+      0,
+    );
     expect(call?.xpEvent).toMatchObject({
       source: "attempt",
-      amount: 100,
+      amount: awardedIrt,
       metadata: { quizId: "quiz-1" },
     });
+    expect(
+      (call?.xpEvent.metadata as { subjectAllocations?: unknown })
+        ?.subjectAllocations,
+    ).toBeTruthy();
     expect(result.attempt.status).toBe("submitted");
   });
 
@@ -300,6 +325,7 @@ describe("attemptService", () => {
       estimatedTimeSeconds: 600,
       isChallenge: false,
     });
+    vi.mocked(irtRepo.listQuestionIrtStats).mockResolvedValue([]);
     vi.mocked(attemptRepo.listQuizGradingData).mockResolvedValue([
       {
         questionId: "q1",
@@ -367,6 +393,7 @@ describe("attemptService", () => {
       estimatedTimeSeconds: 600,
       isChallenge: false,
     });
+    vi.mocked(irtRepo.listQuestionIrtStats).mockResolvedValue([]);
     vi.mocked(attemptRepo.listQuizGradingData).mockResolvedValue([
       {
         questionId: "q1",

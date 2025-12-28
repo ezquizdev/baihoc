@@ -60,6 +60,14 @@ export async function updateQuizMeta(
   quizId: string,
   input: Partial<CreateQuizInput> & { status?: QuizStatus },
 ) {
+  const inProgress = await hasInProgressAttempts(quizId);
+  if (inProgress) {
+    throw new ServiceError(
+      "QUIZ_UPDATE_BLOCKED_IN_PROGRESS",
+      "Quiz đang có lượt làm đang diễn ra. Không thể chỉnh sửa nội dung.",
+      409,
+    );
+  }
   validateQuizInput({ ...input, quizId } as CreateQuizInput, true);
   const updated = await updateQuiz({ quizId, ...input });
   return updated;
@@ -69,6 +77,14 @@ export async function setQuizQuestions(
   quizId: string,
   questions: QuestionLinkInput[],
 ) {
+  const inProgress = await hasInProgressAttempts(quizId);
+  if (inProgress) {
+    throw new ServiceError(
+      "QUIZ_UPDATE_BLOCKED_IN_PROGRESS",
+      "Quiz đang có lượt làm đang diễn ra. Không thể chỉnh sửa nội dung.",
+      409,
+    );
+  }
   if (!questions.length) {
     await replaceQuizQuestions(quizId, []);
     return;
@@ -142,7 +158,7 @@ export async function listCatalogPage(
     maxQuestions?: number;
     minDurationMinutes?: number;
     maxDurationMinutes?: number;
-    status?: "todo" | "done" | "all";
+    status?: "todo" | "done" | "challenge" | "all";
     sort?: "newest" | "oldest";
     limit?: number;
     offset?: number;

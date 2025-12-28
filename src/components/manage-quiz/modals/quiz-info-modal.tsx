@@ -35,7 +35,6 @@ export function QuizInfoModal({
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [featuredRank, setFeaturedRank] = useState("");
   const [status, setStatus] = useState<QuizStatus>("draft");
   const [visibility, setVisibility] = useState<QuizVisibility>("free");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>(5);
@@ -68,11 +67,6 @@ export function QuizInfoModal({
         setQuiz(nextQuiz);
         setTitle(nextQuiz.title ?? "");
         setDescription(nextQuiz.description ?? "");
-        setFeaturedRank(
-          nextQuiz.featuredRank !== null && nextQuiz.featuredRank !== undefined
-            ? String(nextQuiz.featuredRank)
-            : "",
-        );
         setStatus((nextQuiz.status ?? "draft") as QuizStatus);
         setVisibility(nextQuiz.visibility ?? "free");
         setDifficulty((nextQuiz.difficulty ?? 5) as DifficultyLevel);
@@ -147,20 +141,6 @@ export function QuizInfoModal({
       const titleTrimmed = title.trim();
       if (titleTrimmed) payload.title = titleTrimmed;
       payload.description = description.trim() ? description.trim() : null;
-      const featuredRankTrimmed = featuredRank.trim();
-      if (!featuredRankTrimmed) {
-        payload.featuredRank = null;
-      } else {
-        const parsedRank = Number(featuredRankTrimmed);
-        if (
-          !Number.isFinite(parsedRank) ||
-          !Number.isInteger(parsedRank) ||
-          parsedRank < 0
-        ) {
-          throw new Error("Featured rank không hợp lệ.");
-        }
-        payload.featuredRank = parsedRank;
-      }
       payload.status = status;
       payload.visibility = visibility;
       payload.difficulty = difficulty;
@@ -303,18 +283,6 @@ export function QuizInfoModal({
                     />
                     Lưu trữ
                   </label>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.label}>Featured rank:</div>
-                  <input
-                    className={styles.dashInput}
-                    type="number"
-                    min={0}
-                    value={featuredRank}
-                    onChange={(event) => setFeaturedRank(event.target.value)}
-                    disabled={disabled}
-                  />
                 </div>
 
                 <div className={styles.formRow}>

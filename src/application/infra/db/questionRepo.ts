@@ -9,6 +9,10 @@ import type {
   QuestionType,
   ShortAnswerKey,
 } from "@/application/models/question";
+import type {
+  QuestionSortBy,
+  QuestionSortDir,
+} from "@/application/models/questionList";
 
 export type QuestionRow = {
   id: string;
@@ -358,10 +362,13 @@ export async function updateQuestion(input: {
 }
 
 export async function listQuestions(params: {
-  subjectId?: string;
-  difficulty?: Question["defaultDifficulty"];
-  status?: QuestionStatus;
+  subjectIds?: string[];
+  difficultyLevels?: Question["defaultDifficulty"][];
+  types?: QuestionType[];
+  statuses?: QuestionStatus[];
   search?: string;
+  sortBy?: QuestionSortBy;
+  sortDir?: QuestionSortDir;
   limit?: number;
   offset?: number;
 }): Promise<Question[]> {
@@ -372,9 +379,14 @@ export async function listQuestions(params: {
     where.push(sql.replaceAll("$idx", `$${values.length}`));
   };
 
-  if (params.subjectId) add("subject_id = $idx", params.subjectId);
-  if (params.difficulty) add("default_difficulty = $idx", params.difficulty);
-  if (params.status) add("status = $idx::question_status", params.status);
+  if (params.subjectIds?.length)
+    add("q.subject_id = ANY($idx::uuid[])", params.subjectIds);
+  if (params.difficultyLevels?.length)
+    add("q.default_difficulty = ANY($idx::int[])", params.difficultyLevels);
+  if (params.types?.length)
+    add("q.type = ANY($idx::question_type[])", params.types);
+  if (params.statuses?.length)
+    add("q.status = ANY($idx::question_status[])", params.statuses);
   if (params.search) {
     add("(stem ILIKE $idx OR explanation ILIKE $idx)", `%${params.search}%`);
   }
@@ -384,12 +396,26 @@ export async function listQuestions(params: {
   values.push(limit);
   values.push(offset);
 
+  const sortColumns: Record<QuestionSortBy, string> = {
+    createdAt: "q.created_at",
+    difficulty: "q.default_difficulty",
+    status: "q.status",
+    stem: "q.stem",
+    subject: "s.name",
+    type: "q.type",
+    updatedAt: "q.updated_at",
+  };
+  const sortBy = params.sortBy ?? "createdAt";
+  const sortDir = params.sortDir ?? "desc";
+  const sortColumn = sortColumns[sortBy];
+
   const res = await query<QuestionRow>(
     `SELECT q.*,
             COALESCE(qt.topic_ids, '{}') AS topic_ids,
             qp.passage_id,
             qp.position AS passage_position
      FROM questions q
+     JOIN subjects s ON s.id = q.subject_id
      LEFT JOIN (
        SELECT question_id, array_agg(topic_id) AS topic_ids
        FROM question_topics
@@ -397,7 +423,7 @@ export async function listQuestions(params: {
      ) qt ON qt.question_id = q.id
      LEFT JOIN question_passages qp ON qp.question_id = q.id
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-     ORDER BY q.created_at DESC
+     ORDER BY ${sortColumn} ${sortDir}, q.id ASC
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
     values,
   );
@@ -405,9 +431,10 @@ export async function listQuestions(params: {
 }
 
 export async function countQuestions(params: {
-  subjectId?: string;
-  difficulty?: Question["defaultDifficulty"];
-  status?: QuestionStatus;
+  subjectIds?: string[];
+  difficultyLevels?: Question["defaultDifficulty"][];
+  types?: QuestionType[];
+  statuses?: QuestionStatus[];
   search?: string;
 }): Promise<number> {
   const where: string[] = [];
@@ -417,9 +444,14 @@ export async function countQuestions(params: {
     where.push(sql.replaceAll("$idx", `$${values.length}`));
   };
 
-  if (params.subjectId) add("subject_id = $idx", params.subjectId);
-  if (params.difficulty) add("default_difficulty = $idx", params.difficulty);
-  if (params.status) add("status = $idx::question_status", params.status);
+  if (params.subjectIds?.length)
+    add("subject_id = ANY($idx::uuid[])", params.subjectIds);
+  if (params.difficultyLevels?.length)
+    add("default_difficulty = ANY($idx::int[])", params.difficultyLevels);
+  if (params.types?.length)
+    add("type = ANY($idx::question_type[])", params.types);
+  if (params.statuses?.length)
+    add("status = ANY($idx::question_status[])", params.statuses);
   if (params.search) {
     add("(stem ILIKE $idx OR explanation ILIKE $idx)", `%${params.search}%`);
   }
@@ -531,6 +563,37 @@ export async function isQuestionUsed(questionId: string) {
     [questionId],
   );
   return Number(res.rows[0]?.cnt ?? 0) > 0;
+}
+
+export async function hasInProgressAttemptsForQuestion(questionId: string) {
+  const res = await query<{ exists: boolean }>(
+    `SELECT EXISTS(
+      SELECT 1
+      FROM quiz_questions qq
+      JOIN attempts a ON a.quiz_id = qq.quiz_id
+      WHERE qq.question_id = $1
+        AND a.status = 'in_progress'
+      LIMIT 1
+    ) AS exists`,
+    [questionId],
+  );
+  return Boolean(res.rows[0]?.exists);
+}
+
+export async function hasInProgressAttemptsForPassage(passageId: string) {
+  const res = await query<{ exists: boolean }>(
+    `SELECT EXISTS(
+      SELECT 1
+      FROM question_passages qp
+      JOIN quiz_questions qq ON qq.question_id = qp.question_id
+      JOIN attempts a ON a.quiz_id = qq.quiz_id
+      WHERE qp.passage_id = $1
+        AND a.status = 'in_progress'
+      LIMIT 1
+    ) AS exists`,
+    [passageId],
+  );
+  return Boolean(res.rows[0]?.exists);
 }
 
 export async function listQuestionIdsByIds(questionIds: string[]) {

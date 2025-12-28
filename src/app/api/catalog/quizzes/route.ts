@@ -63,7 +63,14 @@ export async function GET(request: NextRequest) {
 
 function parseStatus(value: string | null) {
   if (!value) return undefined;
-  if (value === "todo" || value === "done" || value === "all") return value;
+  if (
+    value === "todo" ||
+    value === "done" ||
+    value === "challenge" ||
+    value === "all"
+  ) {
+    return value;
+  }
   return undefined;
 }
 

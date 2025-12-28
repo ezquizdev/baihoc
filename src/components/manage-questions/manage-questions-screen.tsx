@@ -3,15 +3,20 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
-import type { DifficultyLevel } from "@/application/models/enums";
+import {
+  type DifficultyLevel,
+  DifficultyLevelValues,
+  QuestionTypeValues,
+} from "@/application/models/enums";
 import type { Question } from "@/application/models/question";
+import type {
+  QuestionSortBy,
+  QuestionSortDir,
+} from "@/application/models/questionList";
 import type { Subject } from "@/application/models/subject";
 import { QuizPagination } from "@/components/quiz-catalog/quiz-pagination";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
-import {
-  ManageQuestionsFilters,
-  type QuestionStatusFilter,
-} from "./manage-questions-filters";
+import { NoticeModal } from "@/components/ui/notice-modal";
 import styles from "./manage-questions-screen.module.css";
 import { QuestionTable } from "./question-table";
 
@@ -31,9 +36,18 @@ export function ManageQuestionsScreen({
   initialLimit,
 }: ManageQuestionsScreenProps) {
   const displayName = session.fullName ?? session.email.split("@")[0];
-  const [subjectId, setSubjectId] = useState<string | null>(null);
-  const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
-  const [status, setStatus] = useState<QuestionStatusFilter>("active");
+  const [subjectIds, setSubjectIds] = useState<string[]>(() =>
+    subjects.map((subject) => subject.id),
+  );
+  const [difficultyLevels, setDifficultyLevels] = useState<DifficultyLevel[]>(
+    () => [...DifficultyLevelValues],
+  );
+  const [types, setTypes] = useState<Question["type"][]>(() => [
+    ...QuestionTypeValues,
+  ]);
+  const [statuses, setStatuses] = useState<Question["status"][]>(["active"]);
+  const [sortBy, setSortBy] = useState<QuestionSortBy>("updatedAt");
+  const [sortDir, setSortDir] = useState<QuestionSortDir>("desc");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
@@ -42,8 +56,20 @@ export function ManageQuestionsScreen({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const pageSize = initialLimit;
+
+  useEffect(() => {
+    if (!loading) {
+      document.body.classList.remove("loading-open");
+      return;
+    }
+    document.body.classList.add("loading-open");
+    return () => {
+      document.body.classList.remove("loading-open");
+    };
+  }, [loading]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,9 +80,15 @@ export function ManageQuestionsScreen({
         const params = new URLSearchParams();
         params.set("limit", String(pageSize));
         params.set("offset", String((page - 1) * pageSize));
-        if (subjectId) params.set("subjectId", subjectId);
-        if (difficulty !== null) params.set("difficulty", String(difficulty));
-        if (status !== "all") params.set("status", status);
+        if (subjectIds.length !== subjects.length)
+          params.set("subjectIds", subjectIds.join(","));
+        if (difficultyLevels.length !== DifficultyLevelValues.length)
+          params.set("difficultyLevels", difficultyLevels.join(","));
+        if (types.length !== QuestionTypeValues.length)
+          params.set("types", types.join(","));
+        if (statuses.length) params.set("statuses", statuses.join(","));
+        params.set("sortBy", sortBy);
+        params.set("sortDir", sortDir);
         if (debouncedSearch.trim())
           params.set("search", debouncedSearch.trim());
         params.set("_", String(refreshKey));
@@ -84,12 +116,16 @@ export function ManageQuestionsScreen({
     return () => controller.abort();
   }, [
     debouncedSearch,
-    difficulty,
+    difficultyLevels,
     page,
     pageSize,
     refreshKey,
-    status,
-    subjectId,
+    sortBy,
+    sortDir,
+    statuses,
+    subjectIds,
+    subjects.length,
+    types,
   ]);
 
   const caption = useMemo(() => {
@@ -140,25 +176,6 @@ export function ManageQuestionsScreen({
           </div>
         </section>
 
-        <ManageQuestionsFilters
-          subjects={subjects}
-          subjectId={subjectId}
-          onSubjectChange={(next) => {
-            setSubjectId(next);
-            setPage(1);
-          }}
-          difficulty={difficulty}
-          onDifficultyChange={(next) => {
-            setDifficulty(next);
-            setPage(1);
-          }}
-          status={status}
-          onStatusChange={(next) => {
-            setStatus(next);
-            setPage(1);
-          }}
-        />
-
         <section className={`cardBase ${styles.listCard}`} aria-label="List">
           <div className={styles.listHead}>
             <h2 className={styles.listTitle}>Danh sách câu hỏi</h2>
@@ -168,10 +185,38 @@ export function ManageQuestionsScreen({
           <QuestionTable
             items={items}
             subjects={subjects}
+            subjectIds={subjectIds}
+            onSubjectIdsChange={(next) => {
+              setSubjectIds(next);
+              setPage(1);
+            }}
+            difficultyLevels={difficultyLevels}
+            onDifficultyLevelsChange={(next) => {
+              setDifficultyLevels(next);
+              setPage(1);
+            }}
+            types={types}
+            onTypesChange={(next) => {
+              setTypes(next);
+              setPage(1);
+            }}
+            statuses={statuses}
+            onStatusesChange={(next) => {
+              setStatuses(next);
+              setPage(1);
+            }}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSortChange={(nextBy, nextDir) => {
+              setSortBy(nextBy);
+              setSortDir(nextDir);
+              setPage(1);
+            }}
             isLoading={loading}
             error={error}
             onRetry={handleRetry}
             onMutated={handleMutated}
+            onSuccess={(message) => setSuccessNotice(message)}
           />
 
           <QuizPagination
@@ -182,6 +227,29 @@ export function ManageQuestionsScreen({
           />
         </section>
       </div>
+
+      {loading ? (
+        <div className={styles.loadingOverlay} role="presentation">
+          <div className={styles.loadingBackdrop} aria-hidden="true" />
+          <output
+            className={styles.loadingDialog}
+            aria-live="polite"
+            aria-label="Đang tải"
+          >
+            <span className={styles.loadingSpinner} aria-hidden="true" />
+            <span className={styles.loadingText}>Đang tải...</span>
+          </output>
+        </div>
+      ) : null}
+
+      <NoticeModal
+        open={successNotice !== null}
+        title="Thành công"
+        message={successNotice ?? ""}
+        tone="success"
+        closeLabel="OK"
+        onClose={() => setSuccessNotice(null)}
+      />
     </StaffShell>
   );
 }

@@ -2,7 +2,11 @@
 
 import styles from "./quiz-catalog.module.css";
 
-export function QuizHero() {
+type QuizHeroProps = {
+  onGenerateCustomQuiz?: () => void;
+};
+
+export function QuizHero({ onGenerateCustomQuiz }: QuizHeroProps) {
   return (
     <section className={`cardBase ${styles.hero}`} aria-label="Quiz hero">
       <div>
@@ -12,6 +16,17 @@ export function QuizHero() {
         <p className={styles.heroText}>
           Chọn quiz phù hợp với bạn, lọc theo môn học/độ khó và bắt đầu ngay.
         </p>
+        {onGenerateCustomQuiz ? (
+          <div className={styles.heroActions}>
+            <button
+              type="button"
+              className={styles.heroCta}
+              onClick={onGenerateCustomQuiz}
+            >
+              Tạo quiz tuỳ chỉnh
+            </button>
+          </div>
+        ) : null}
       </div>
       <div className={styles.heroFigure} aria-hidden="true">
         <div className={styles.heroHead} />

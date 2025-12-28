@@ -28,7 +28,16 @@ function toInt(value: number | string | null | undefined) {
 
 export async function getUserXpSummary(userId: string) {
   const res = await query<UserXpSummaryRow>(
-    `SELECT xp_total, xp_vi, xp_en, xp_math, xp_sci
+    `SELECT (
+        LEAST(xp_vi, 300)
+        + LEAST(xp_en, 300)
+        + LEAST(xp_math, 300)
+        + LEAST(xp_sci, 300)
+      )::int AS xp_total,
+      LEAST(xp_vi, 300)::int AS xp_vi,
+      LEAST(xp_en, 300)::int AS xp_en,
+      LEAST(xp_math, 300)::int AS xp_math,
+      LEAST(xp_sci, 300)::int AS xp_sci
      FROM users
      WHERE id = $1
      LIMIT 1`,

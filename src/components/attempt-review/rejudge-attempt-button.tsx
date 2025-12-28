@@ -11,7 +11,7 @@ export function RejudgeAttemptButton({ attemptId }: { attemptId: string }) {
   const handleClick = async () => {
     if (loading) return;
     const ok = window.confirm(
-      "Chấm lại sẽ tính điểm theo phiên bản mới nhất của quiz. Điểm và XP có thể thay đổi. Bạn có muốn tiếp tục?",
+      "Chấm lại sẽ tính điểm theo phiên bản mới nhất của quiz. Điểm IRT có thể thay đổi. Bạn có muốn tiếp tục?",
     );
     if (!ok) return;
 

@@ -6,7 +6,9 @@ import type {
   AttemptReviewStateResponse,
 } from "@/application/models/attempt";
 import { RejudgeAttemptButton } from "@/components/attempt-review/rejudge-attempt-button";
+import { SubjectBadge } from "@/components/quiz-catalog/quiz-badges";
 import { RichText } from "@/components/ui/rich-text";
+import { formatNumberVi } from "@/lib/formatters";
 import styles from "./attempt-results.module.css";
 
 export function AttemptResultsScreen({
@@ -104,8 +106,32 @@ export function AttemptResultsScreen({
           label="Đúng"
           value={`${state.attempt.correctCount}/${state.attempt.totalQuestions}`}
         />
-        <Stat label="XP" value={`${state.attempt.xpEarned}`} />
+        <Stat label="Điểm IRT" value={formatNumberVi(state.attempt.xpEarned)} />
       </section>
+
+      {state.subjectScores.length ? (
+        <section className={styles.subjectGrid} aria-label="Điểm theo môn">
+          {state.subjectScores.map((subject) => (
+            <div key={subject.subjectId} className={styles.subjectCard}>
+              <div className={styles.subjectTop}>
+                <SubjectBadge name={subject.name} slug={subject.slug} />
+                <div className={styles.subjectIrt}>
+                  {formatNumberVi(subject.irtScore)} IRT
+                </div>
+              </div>
+              <div className={styles.subjectBottom}>
+                {subject.correctCount}/{subject.totalQuestions} đúng •{" "}
+                {Math.round(subject.scorePercent)}%
+              </div>
+            </div>
+          ))}
+          {state.subjectScoresEstimated ? (
+            <div className={styles.subjectNote}>
+              * Điểm theo môn đang được ước tính.
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className={styles.questionList} aria-label="Xem lại từng câu">
         {state.questions.map((question) => (
@@ -144,6 +170,7 @@ function QuestionReviewCard({
   passageLabel?: string;
 }) {
   const badge = buildBadge(answer?.isCorrect);
+  const awardedIrtScore = answer?.awardedIrtScore;
   const answered =
     question.type === "short_answer"
       ? Boolean(answer?.textAnswer)
@@ -153,7 +180,15 @@ function QuestionReviewCard({
     <article className={styles.questionCard}>
       <header className={styles.questionHeader}>
         <div className={styles.questionTitle}>Câu {question.position}</div>
-        {badge}
+        <div className={styles.questionHeaderRight}>
+          <span className={styles.questionIrt}>
+            IRT:{" "}
+            {awardedIrtScore === undefined
+              ? "—"
+              : formatNumberVi(awardedIrtScore)}
+          </span>
+          {badge}
+        </div>
       </header>
 
       {!question.exists ? (
@@ -184,7 +219,7 @@ function QuestionReviewCard({
       )}
 
       {question.exists && question.explanation ? (
-        <details className={styles.explanation} open>
+        <details className={styles.explanation}>
           <summary className={styles.explanationHeader}>
             <span className={styles.explanationTitle}>Giải thích</span>
             <span className={styles.explanationToggle} aria-hidden="true">
