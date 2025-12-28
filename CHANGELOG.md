@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(leaderboard): apply search results directly to table
+- Leaderboard search now updates the main table instead of rendering a separate results view, while keeping the active sort criteria.
+
 ### fix(staff-analytics): enlarge charts and align stats grid
 - `/staff/analytics` charts and legends are larger for readability while keeping `/staff/dashboard` sizing unchanged.
 - Analytics stats cards now match the staff dashboard style (icons + subject badge).

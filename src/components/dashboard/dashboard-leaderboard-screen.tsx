@@ -64,8 +64,12 @@ export function DashboardLeaderboardScreen({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const trimmedSearch = search.trim();
+  const debouncedTrimmedSearch = debouncedSearch.trim();
+  const isSearchActive = trimmedSearch.length > 0;
 
   useEffect(() => {
+    if (isSearchActive) return;
     if (!didMountRef.current) {
       didMountRef.current = true;
       return;
@@ -111,11 +115,10 @@ export function DashboardLeaderboardScreen({
 
     run();
     return () => controller.abort();
-  }, [page, pageSize, refreshKey, sortBy, sortDir]);
+  }, [isSearchActive, page, pageSize, refreshKey, sortBy, sortDir]);
 
   useEffect(() => {
-    const trimmed = debouncedSearch.trim();
-    if (!trimmed) {
+    if (!debouncedTrimmedSearch) {
       setSearchEntries([]);
       setSearchError(null);
       setSearchLoading(false);
@@ -129,7 +132,7 @@ export function DashboardLeaderboardScreen({
         setSearchError(null);
 
         const params = new URLSearchParams();
-        params.set("q", trimmed);
+        params.set("q", debouncedTrimmedSearch);
         params.set("sortBy", sortBy);
         params.set("sortDir", sortDir);
         if (searchRefreshKey > 0) {
@@ -159,27 +162,34 @@ export function DashboardLeaderboardScreen({
 
     run();
     return () => controller.abort();
-  }, [debouncedSearch, searchRefreshKey, sortBy, sortDir]);
+  }, [debouncedTrimmedSearch, searchRefreshKey, sortBy, sortDir]);
 
   const displayName = session.fullName ?? session.email.split("@")[0];
 
   const caption = useMemo(() => {
+    if (isSearchActive) {
+      const count = searchEntries.length;
+      if (count <= 0) {
+        return `Không có kết quả cho "${trimmedSearch}"`;
+      }
+      return `${formatNumberVi(count)} kết quả cho "${trimmedSearch}"`;
+    }
     if (total <= 0) return "0 học sinh";
     const start = (page - 1) * pageSize + 1;
     const end = Math.min(total, page * pageSize);
     return `${start}-${end} / ${formatNumberVi(total)} học sinh`;
-  }, [page, pageSize, total]);
+  }, [
+    isSearchActive,
+    page,
+    pageSize,
+    searchEntries.length,
+    total,
+    trimmedSearch,
+  ]);
 
   const handleRetry = () => {
     setError(null);
     setRefreshKey((prev) => prev + 1);
-  };
-
-  const handleSearchClear = () => {
-    setSearch("");
-    setSearchEntries([]);
-    setSearchError(null);
-    setSearchLoading(false);
   };
 
   const handleSearchRetry = () => {
@@ -194,7 +204,10 @@ export function DashboardLeaderboardScreen({
     setSortBy(key);
   };
 
-  const shouldAppendSelf = self !== null;
+  const shouldAppendSelf = !isSearchActive && self !== null;
+  const activeItems = isSearchActive ? searchEntries : items;
+  const activeError = isSearchActive ? searchError : error;
+  const activeLoading = isSearchActive ? searchLoading : loading;
 
   return (
     <DashboardShell
@@ -227,93 +240,10 @@ export function DashboardLeaderboardScreen({
             </div>
           </div>
 
-          {search.trim().length > 0 ? (
-            <section
-              className={styles.searchResult}
-              aria-label="Kết quả tìm kiếm"
-            >
-              <div className={styles.searchResultHeader}>
-                <div className={styles.searchResultTitle}>
-                  Kết quả cho{" "}
-                  <span className={styles.searchQuery}>"{search.trim()}"</span>
-                </div>
-                <div className={styles.searchResultActions}>
-                  {searchError ? (
-                    <button
-                      type="button"
-                      className={styles.retryButton}
-                      onClick={handleSearchRetry}
-                      disabled={searchLoading}
-                    >
-                      Thử lại
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    className={`${styles.retryButton} ${styles.searchClearButton}`}
-                    onClick={handleSearchClear}
-                    disabled={searchLoading}
-                  >
-                    Xoá
-                  </button>
-                </div>
-              </div>
-
-              {searchLoading ? (
-                <div className={styles.searchState} aria-live="polite">
-                  Đang tìm...
-                </div>
-              ) : searchError ? (
-                <div
-                  className={`${styles.searchState} ${styles.searchStateError}`}
-                  role="alert"
-                >
-                  {searchError}
-                </div>
-              ) : searchEntries.length > 0 ? (
-                <div className={styles.searchRows}>
-                  {searchEntries.map((entry) => (
-                    <div key={entry.userId} className={styles.searchRow}>
-                      <div className={styles.searchIdentity}>
-                        <div className={styles.searchRank}>#{entry.rank}</div>
-                        <LeaderboardBadge
-                          rank={entry.rank}
-                          variant={
-                            entry.userId === session.sub ? "self" : "top"
-                          }
-                        />
-                        <Link
-                          className={styles.searchName}
-                          href={`/profile/${entry.userId}`}
-                        >
-                          {entry.fullName}
-                        </Link>
-                      </div>
-
-                      <div className={styles.searchScores}>
-                        <ScorePill label="TV" value={entry.xpVi} />
-                        <ScorePill label="TA" value={entry.xpEn} />
-                        <ScorePill label="Toán" value={entry.xpMath} />
-                        <ScorePill label="KH" value={entry.xpSci} />
-                        <ScorePill
-                          label="Tổng"
-                          value={entry.xpOverall}
-                          variant="overall"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className={styles.searchState} aria-live="polite">
-                  Không tìm thấy học sinh phù hợp trong bảng xếp hạng.
-                </div>
-              )}
-            </section>
-          ) : null}
-
           <div
-            className={`${styles.tableWrap} ${loading ? styles.tableWrapLoading : ""}`}
+            className={`${styles.tableWrap} ${
+              activeLoading ? styles.tableWrapLoading : ""
+            }`}
           >
             <table className={styles.table}>
               <caption className={styles.srOnly}>
@@ -374,29 +304,39 @@ export function DashboardLeaderboardScreen({
                 </tr>
               </thead>
               <tbody>
-                {error ? (
+                {activeError ? (
                   <tr>
                     <td colSpan={7} className={styles.stateCell}>
-                      <div className={styles.stateError}>{error}</div>
+                      <div className={styles.stateError}>{activeError}</div>
                       <button
                         type="button"
                         className={styles.retryButton}
-                        onClick={handleRetry}
-                        disabled={loading}
+                        onClick={
+                          isSearchActive ? handleSearchRetry : handleRetry
+                        }
+                        disabled={activeLoading}
                       >
                         Thử lại
                       </button>
                     </td>
                   </tr>
-                ) : items.length === 0 && !shouldAppendSelf ? (
+                ) : activeLoading ? (
                   <tr>
                     <td colSpan={7} className={styles.stateCell}>
-                      Chưa có dữ liệu.
+                      Đang tải...
+                    </td>
+                  </tr>
+                ) : activeItems.length === 0 && !shouldAppendSelf ? (
+                  <tr>
+                    <td colSpan={7} className={styles.stateCell}>
+                      {isSearchActive
+                        ? "Không tìm thấy học sinh phù hợp trong bảng xếp hạng."
+                        : "Chưa có dữ liệu."}
                     </td>
                   </tr>
                 ) : (
                   <>
-                    {items.map((entry) => (
+                    {activeItems.map((entry) => (
                       <LeaderboardRow key={entry.userId} entry={entry} />
                     ))}
 
@@ -417,12 +357,14 @@ export function DashboardLeaderboardScreen({
             </table>
           </div>
 
-          <QuizPagination
-            page={page}
-            totalItems={total}
-            pageSize={pageSize}
-            onPageChange={setPage}
-          />
+          {isSearchActive ? null : (
+            <QuizPagination
+              page={page}
+              totalItems={total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+            />
+          )}
         </section>
       </div>
     </DashboardShell>
@@ -499,27 +441,6 @@ function LeaderboardBadge({
         />
       </svg>
     </span>
-  );
-}
-
-function ScorePill({
-  label,
-  value,
-  variant = "default",
-}: {
-  label: string;
-  value: number;
-  variant?: "default" | "overall";
-}) {
-  return (
-    <div
-      className={`${styles.scorePill} ${
-        variant === "overall" ? styles.scorePillOverall : ""
-      }`}
-    >
-      <span className={styles.scorePillLabel}>{label}</span>
-      <span className={styles.scorePillValue}>{formatNumberVi(value)}</span>
-    </div>
   );
 }
 
