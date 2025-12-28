@@ -2,6 +2,10 @@
 
 ## 2025-12-28
 
+### feat(history): refresh attempt history card UI
+- `/dashboard/history` attempt cards now use a quiz-card-like visual language (left icon rail, toned backgrounds, hover/focus) and iconized meta chips for faster scanning.
+- Score summary column now pairs the ring with key stats to reduce dead space and improve balance.
+
 ### feat(staff): add excel-like sort/filter to question bank
 - `/staff/questions` now supports sorting/filtering via table headers (subject/type/difficulty/status) and removes the standalone filter bar.
 - `GET /api/staff/questions` now accepts `subjectIds`, `difficultyLevels`, `types`, `statuses`, `sortBy`, and `sortDir`.
