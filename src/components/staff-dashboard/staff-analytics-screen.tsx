@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   controllerGetStaffDashboardCharts,
   controllerGetStaffDashboardStats,
@@ -163,7 +164,13 @@ async function ChartsCard({ windowDays }: { windowDays: number }) {
   );
 }
 
-export async function StaffAnalyticsScreen() {
+const windowDayPresets = [7, 14, 30, 60] as const;
+
+export async function StaffAnalyticsScreen({
+  windowDays = 30,
+}: {
+  windowDays?: number;
+}) {
   const statsResult = await controllerGetStaffDashboardStats().catch(
     () =>
       ({
@@ -264,9 +271,46 @@ export async function StaffAnalyticsScreen() {
       <section aria-label="Biểu đồ">
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Biểu đồ</h2>
+          <div className={styles.timeframeControls}>
+            <fieldset className={styles.timeframePills}>
+              <legend className={styles.timeframeLegend}>
+                Khung thời gian
+              </legend>
+              {windowDayPresets.map((days) => (
+                <Link
+                  key={days}
+                  className={`${styles.timeframePill} ${windowDays === days ? styles.timeframePillActive : ""}`}
+                  href={`/staff/analytics?windowDays=${days}`}
+                >
+                  {days} ngày
+                </Link>
+              ))}
+            </fieldset>
+            <form
+              className={styles.timeframeForm}
+              action="/staff/analytics"
+              method="get"
+            >
+              <label className={styles.timeframeLabel}>
+                <span className={styles.timeframeLabelText}>Tùy chỉnh</span>
+                <input
+                  key={windowDays}
+                  className={styles.timeframeInput}
+                  type="number"
+                  name="windowDays"
+                  min={1}
+                  max={60}
+                  step={1}
+                  defaultValue={windowDays}
+                />
+              </label>
+              <button className={styles.timeframeSubmit} type="submit">
+                Xem
+              </button>
+            </form>
+          </div>
         </div>
-        <ChartsCard windowDays={30} />
-        <ChartsCard windowDays={60} />
+        <ChartsCard windowDays={windowDays} />
       </section>
     </div>
   );

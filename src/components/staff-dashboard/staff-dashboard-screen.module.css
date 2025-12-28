@@ -167,6 +167,139 @@
   outline-offset: 2px;
 }
 
+.timeframeControls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.timeframePills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  margin: 0;
+  min-width: 0;
+  position: relative;
+}
+
+.timeframeLegend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.timeframePill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  color: var(--text);
+  transition:
+    background 0.12s ease,
+    transform 0.12s ease;
+}
+
+.timeframePill:hover {
+  background: var(--card);
+  transform: translateY(-0.5px);
+}
+
+.timeframePill:active {
+  transform: translateY(0);
+}
+
+.timeframePill:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+}
+
+.timeframePillActive {
+  background: var(--card);
+  color: var(--primary-2);
+}
+
+.timeframeForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timeframeLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--text-muted);
+  position: relative;
+}
+
+.timeframeLabelText {
+  color: var(--text-muted);
+}
+
+.timeframeInput {
+  width: 76px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--text);
+}
+
+.timeframeInput:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+}
+
+.timeframeSubmit {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    transform 0.12s ease;
+}
+
+.timeframeSubmit:hover {
+  background: var(--surface-2);
+  transform: translateY(-0.5px);
+}
+
+.timeframeSubmit:active {
+  transform: translateY(0);
+}
+
+.timeframeSubmit:focus-visible {
+  outline: 3px solid rgba(40, 104, 230, 0.28);
+  outline-offset: 2px;
+}
+
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -828,6 +961,27 @@
 }
 
 @media (max-width: 520px) {
+  .timeframeControls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .timeframeLabelText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .timeframeInput {
+    width: 70px;
+  }
+
   .statsGrid {
     grid-template-columns: 1fr;
   }

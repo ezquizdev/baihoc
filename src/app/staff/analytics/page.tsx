@@ -2,7 +2,19 @@ import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import { StaffAnalyticsScreen } from "@/components/staff-dashboard/staff-analytics-screen";
 
-export default async function StaffAnalyticsPage() {
+type Props = {
+  searchParams: Promise<{ windowDays?: string }>;
+};
+
+function clampWindowDays(raw: string | undefined) {
+  const numeric = raw ? Number(raw) : Number.NaN;
+  if (!Number.isFinite(numeric)) return 30;
+  return Math.min(Math.max(Math.floor(numeric), 1), 60);
+}
+
+export default async function StaffAnalyticsPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const windowDays = clampWindowDays(params.windowDays);
   const session = await requireAuthenticatedPage({
     next: "/staff/analytics",
     role: "staff",
@@ -17,7 +29,7 @@ export default async function StaffAnalyticsPage() {
       userName={displayName}
       avatarUrl={session.avatarUrl}
     >
-      <StaffAnalyticsScreen />
+      <StaffAnalyticsScreen windowDays={windowDays} />
     </StaffShell>
   );
 }
