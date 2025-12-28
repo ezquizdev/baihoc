@@ -90,7 +90,6 @@ type AttemptQuestionRow = {
   score: number | null;
   passage_id: string | null;
   passage_content: string | null;
-  passage_media_urls: string[] | null;
   passage_position: number | null;
 };
 
@@ -108,7 +107,6 @@ type AttemptReviewQuestionRow = {
   explanation: string | null;
   passage_id: string | null;
   passage_content: string | null;
-  passage_media_urls: string[] | null;
   passage_position: number | null;
 };
 
@@ -358,7 +356,6 @@ function mapAttemptQuestion(
       ? {
           id: row.passage_id,
           content: row.passage_content ?? "",
-          mediaUrls: row.passage_media_urls ?? [],
           position: row.passage_position ?? 1,
         }
       : null,
@@ -950,8 +947,7 @@ export async function listAttemptReviewQuestions(
             q.explanation,
             qp.passage_id,
             qp.position AS passage_position,
-            p.content AS passage_content,
-            p.media_urls AS passage_media_urls
+            p.content AS passage_content
      FROM attempt_question_snapshots qs
      LEFT JOIN questions q ON q.id = qs.question_id
      LEFT JOIN question_passages qp ON qp.question_id = q.id
@@ -1028,7 +1024,6 @@ export async function listAttemptReviewQuestions(
       ? {
           id: row.passage_id,
           content: row.passage_content ?? "",
-          mediaUrls: row.passage_media_urls ?? [],
           position: row.passage_position ?? 1,
         }
       : null,
@@ -1118,8 +1113,7 @@ export async function listAttemptQuestions(
             q.default_score,
             qp.passage_id,
             qp.position AS passage_position,
-            p.content AS passage_content,
-            p.media_urls AS passage_media_urls
+            p.content AS passage_content
      FROM quiz_questions qq
      JOIN questions q ON q.id = qq.question_id
      LEFT JOIN question_passages qp ON qp.question_id = q.id

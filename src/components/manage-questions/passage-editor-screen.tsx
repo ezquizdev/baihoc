@@ -12,10 +12,22 @@ import type {
 } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
+import { handleMarkdownImagePaste } from "@/components/ui/markdown-image-paste";
 import { RichText } from "@/components/ui/rich-text";
 import { formatDateVi } from "@/lib/formatters";
 import styles from "./passage-editor-screen.module.css";
+import {
+  type AnswerDraft,
+  buildDefaultMcqOptions,
+  buildEmptyShortAnswer,
+  normalizeOptionDrafts,
+  normalizeOptionsForPayload,
+  normalizeShortAnswerDrafts,
+  type OptionDraft,
+  parseTags,
+} from "./question-draft";
 import editorStyles from "./question-editor-screen.module.css";
+import { QuestionInlineCreate } from "./question-inline-create";
 import { QuestionPreview } from "./question-preview";
 import tableStyles from "./question-table.module.css";
 
@@ -26,19 +38,6 @@ type PassageEditorScreenProps = {
   subjects: Subject[];
   passageId: string;
   initialDetail: PassageDetail;
-};
-
-type OptionDraft = {
-  label: string | null;
-  text: string;
-  isCorrect: boolean;
-  position: number;
-};
-
-type AnswerDraft = {
-  clientId: string;
-  acceptableAnswer: string;
-  caseSensitive: boolean;
 };
 
 type ViewMode = "edit" | "split" | "preview";
@@ -59,13 +58,12 @@ export function PassageEditorScreen({
   );
 
   const [passageContent, setPassageContent] = useState(passage.content);
-  const [passageMedia, setPassageMedia] = useState(
-    (passage.mediaUrls ?? []).join("\n"),
-  );
   const [passageViewMode, setPassageViewMode] = useState<ViewMode>("edit");
   const [passageSaving, setPassageSaving] = useState(false);
   const [passageError, setPassageError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [mediaUploadingCount, setMediaUploadingCount] = useState(0);
+  const [mediaUploadError, setMediaUploadError] = useState<string | null>(null);
 
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const didInitExpandedRef = useRef(false);
@@ -73,6 +71,14 @@ export function PassageEditorScreen({
   const [deleteTarget, setDeleteTarget] = useState<Question | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const [deletePassageOpen, setDeletePassageOpen] = useState(false);
+  const [deletePassageError, setDeletePassageError] = useState<string | null>(
+    null,
+  );
+  const [deletePassageBusy, setDeletePassageBusy] = useState(false);
 
   const refreshDetail = async (): Promise<{ found: boolean }> => {
     const response = await fetch(`/api/staff/passages/${passageId}`);
@@ -102,20 +108,13 @@ export function PassageEditorScreen({
 
   const passageDirty = useMemo(() => {
     const nextContent = passageContent.trim();
-    const nextMedia = passageMedia
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
     if (nextContent !== passage.content) return true;
-    if ((passage.mediaUrls ?? []).join("\n") !== nextMedia.join("\n"))
-      return true;
     return false;
-  }, [passage.content, passage.mediaUrls, passageContent, passageMedia]);
+  }, [passage.content, passageContent]);
 
   useEffect(() => {
     setPassageContent(passage.content);
-    setPassageMedia((passage.mediaUrls ?? []).join("\n"));
-  }, [passage.content, passage.mediaUrls]);
+  }, [passage.content]);
 
   useEffect(() => {
     if (didInitExpandedRef.current) return;
@@ -133,17 +132,13 @@ export function PassageEditorScreen({
       setPassageError("Đoạn văn không được để trống.");
       return;
     }
-    const mediaUrls = passageMedia
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
 
     try {
       setPassageSaving(true);
       const response = await fetch(`/api/staff/passages/${passageId}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ content, mediaUrls }),
+        body: JSON.stringify({ content }),
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
@@ -183,6 +178,33 @@ export function PassageEditorScreen({
   const handleRequestDelete = (question: Question) => {
     setDeleteError(null);
     setDeleteTarget(question);
+  };
+
+  const nextPassagePosition = useMemo(() => {
+    const positions = questions
+      .map((q) => q.passagePosition ?? 0)
+      .filter((pos) => pos > 0);
+    return positions.length ? Math.max(...positions) + 1 : 1;
+  }, [questions]);
+
+  const handleQuestionCreated = async (detail: QuestionDetail) => {
+    setNotice("Đã tạo câu hỏi.");
+    setCreateOpen(false);
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.add(detail.question.id);
+      return next;
+    });
+
+    try {
+      const refreshed = await refreshDetail();
+      if (!refreshed.found) {
+        router.push("/staff/questions");
+        router.refresh();
+      }
+    } catch {
+      router.refresh();
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -229,6 +251,37 @@ export function PassageEditorScreen({
     setDeleteError(null);
   };
 
+  const handleConfirmDeletePassage = async () => {
+    setDeletePassageError(null);
+    setNotice(null);
+    setPassageError(null);
+    setDeletePassageBusy(true);
+    try {
+      const response = await fetch(`/api/staff/passages/${passageId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error ?? "Không thể xóa passage");
+      }
+      await response.json().catch(() => ({}));
+      router.push("/staff/questions");
+      router.refresh();
+    } catch (err) {
+      setDeletePassageError(
+        err instanceof Error ? err.message : "Không thể xóa passage",
+      );
+    } finally {
+      setDeletePassageBusy(false);
+    }
+  };
+
+  const closeDeletePassageModal = () => {
+    if (deletePassageBusy) return;
+    setDeletePassageOpen(false);
+    setDeletePassageError(null);
+  };
+
   const questionCountLabel =
     questions.length === 0 ? "0 câu hỏi" : `${questions.length} câu hỏi`;
 
@@ -261,6 +314,16 @@ export function PassageEditorScreen({
             </Link>
             <button
               type="button"
+              className={`${styles.btn} ${styles.btnRed} ${
+                deletePassageBusy ? styles.btnDisabled : ""
+              }`}
+              disabled={deletePassageBusy}
+              onClick={() => setDeletePassageOpen(true)}
+            >
+              Xóa passage
+            </button>
+            <button
+              type="button"
               className={`${styles.btn} ${styles.btnBlue} ${
                 passageSaving || !passageDirty ? styles.btnDisabled : ""
               }`}
@@ -281,8 +344,24 @@ export function PassageEditorScreen({
             className={editorStyles.row}
             style={{ justifyContent: "space-between", marginTop: 10 }}
           >
-            <div className={editorStyles.muted}>
-              Xem trước hỗ trợ Markdown + LaTeX.
+            <div>
+              <div className={editorStyles.muted}>
+                Xem trước hỗ trợ Markdown + LaTeX.
+              </div>
+              <div className={editorStyles.muted} aria-live="polite">
+                {mediaUploadingCount > 0
+                  ? `Đang upload ${mediaUploadingCount} ảnh...`
+                  : "Tip: Dán ảnh (Ctrl/Cmd+V) để tự upload và chèn ảnh vào nội dung."}
+              </div>
+              {mediaUploadError ? (
+                <div
+                  className={editorStyles.inlineError}
+                  role="alert"
+                  style={{ marginTop: 10 }}
+                >
+                  {mediaUploadError}
+                </div>
+              ) : null}
             </div>
             <fieldset
               className={`${editorStyles.row} ${editorStyles.toggleGroup}`}
@@ -358,23 +437,15 @@ export function PassageEditorScreen({
                       className={editorStyles.textarea}
                       value={passageContent}
                       onChange={(e) => setPassageContent(e.target.value)}
+                      onPaste={(e) =>
+                        handleMarkdownImagePaste(e, {
+                          setValue: setPassageContent,
+                          setUploadingCount: setMediaUploadingCount,
+                          setUploadError: setMediaUploadError,
+                          altPrefix: "passage",
+                        })
+                      }
                       placeholder="Nội dung đoạn văn..."
-                      disabled={passageSaving}
-                    />
-                  </div>
-
-                  <div className={styles.fullRow}>
-                    <div className={editorStyles.row}>
-                      <div className={editorStyles.label}>Media URLs</div>
-                      <span className={editorStyles.muted}>
-                        (mỗi dòng 1 URL)
-                      </span>
-                    </div>
-                    <textarea
-                      className={`${editorStyles.textarea} ${editorStyles.textareaSmall}`}
-                      value={passageMedia}
-                      onChange={(e) => setPassageMedia(e.target.value)}
-                      placeholder="https://..."
                       disabled={passageSaving}
                     />
                   </div>
@@ -414,10 +485,43 @@ export function PassageEditorScreen({
               <h2 className={styles.sectionTitle}>Câu hỏi trong passage</h2>
               <div className={styles.subtle}>{questionCountLabel}</div>
             </div>
-            <div className={styles.subtle}>
-              Tip: bấm vào hàng để mở/đóng chỉnh sửa nhanh từng câu hỏi.
+            <div className={styles.tableActions}>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnBlue} ${
+                  createOpen ? styles.btnDisabled : ""
+                }`}
+                disabled={createOpen}
+                onClick={() => {
+                  setNotice(null);
+                  setCreateOpen(true);
+                }}
+              >
+                + Thêm câu hỏi
+              </button>
             </div>
           </div>
+
+          <div className={styles.subtle}>
+            Tip: bấm vào hàng để mở/đóng chỉnh sửa nhanh từng câu hỏi.
+          </div>
+
+          {createOpen ? (
+            <div style={{ marginTop: 12 }}>
+              <div className={styles.expandedCard}>
+                <QuestionInlineCreate
+                  subjects={subjects}
+                  passageId={passageId}
+                  passageContent={passageContent}
+                  initialPassagePosition={nextPassagePosition}
+                  initialSubjectId={questions[0]?.subjectId ?? subjects[0]?.id}
+                  initialType={questions[0]?.type ?? "mcq_single"}
+                  onCancel={() => setCreateOpen(false)}
+                  onCreated={handleQuestionCreated}
+                />
+              </div>
+            </div>
+          ) : null}
 
           {!questions.length ? (
             <div className={tableStyles.stateCard} aria-live="polite">
@@ -542,7 +646,160 @@ export function PassageEditorScreen({
         onConfirm={handleConfirmDelete}
         onCancel={closeDeleteModal}
       />
+
+      <ConfirmDeletePassageModal
+        open={deletePassageOpen}
+        deleting={deletePassageBusy}
+        error={deletePassageError}
+        questionCount={questions.length}
+        onConfirm={handleConfirmDeletePassage}
+        onCancel={closeDeletePassageModal}
+      />
     </StaffShell>
+  );
+}
+
+function ConfirmDeletePassageModal({
+  open,
+  deleting,
+  error,
+  questionCount,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  deleting: boolean;
+  error: string | null;
+  questionCount: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const confirmRef = useRef<HTMLButtonElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const titleId = useId();
+  const descId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    document.body.classList.add("modal-open");
+    confirmRef.current?.focus();
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onCancel, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleTab = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(
+        (node) =>
+          !node.hasAttribute("disabled") &&
+          node.getAttribute("tabindex") !== "-1",
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      const isInside = active ? dialog.contains(active) : false;
+
+      if (event.shiftKey) {
+        if (!isInside || active === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (!isInside || active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleTab);
+    return () => document.removeEventListener("keydown", handleTab);
+  }, [open]);
+
+  if (!open) return null;
+
+  const countLabel =
+    questionCount === 1 ? "1 câu hỏi" : `${questionCount} câu hỏi`;
+
+  return (
+    <div className={styles.modal} role="presentation">
+      <div
+        className={styles.backdrop}
+        onClick={deleting ? undefined : onCancel}
+        aria-hidden="true"
+      />
+      <div
+        ref={dialogRef}
+        className={styles.dialog}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
+      >
+        <h2 id={titleId} className={styles.modalTitle}>
+          Xóa passage và toàn bộ câu hỏi?
+        </h2>
+        <div id={descId} className={styles.modalBody}>
+          <div>
+            Thao tác này sẽ xóa đoạn văn và <strong>{countLabel}</strong> trong
+            nhóm. <strong>Không thể hoàn tác</strong>.
+          </div>
+          <ul>
+            <li>
+              Nếu có câu hỏi đang được dùng trong quiz, bạn sẽ{" "}
+              <strong>không thể xóa</strong>. Hãy gỡ các câu hỏi này khỏi quiz
+              trước.
+            </li>
+            <li>
+              Nếu có lượt làm đang diễn ra, hệ thống sẽ{" "}
+              <strong>chặn thao tác</strong> để tránh gián đoạn người học.
+            </li>
+          </ul>
+          {error ? (
+            <div className={styles.inlineError} role="alert">
+              {error}
+            </div>
+          ) : null}
+        </div>
+        <div className={styles.modalActions}>
+          <button
+            ref={confirmRef}
+            type="button"
+            className={`${styles.modalPrimary} ${styles.modalPrimaryDanger} ${
+              deleting ? styles.modalDisabled : ""
+            }`}
+            disabled={deleting}
+            onClick={onConfirm}
+          >
+            {deleting ? "Đang xử lý..." : "Xóa passage"}
+          </button>
+          <button
+            type="button"
+            className={`${styles.modalSecondary} ${deleting ? styles.modalDisabled : ""}`}
+            disabled={deleting}
+            onClick={onCancel}
+          >
+            Hủy
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -563,6 +820,8 @@ function InlineQuestionEditor({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
+  const [mediaUploadingCount, setMediaUploadingCount] = useState(0);
+  const [mediaUploadError, setMediaUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -833,8 +1092,24 @@ function InlineQuestionEditor({
         className={editorStyles.row}
         style={{ justifyContent: "space-between", marginTop: 12 }}
       >
-        <div className={editorStyles.muted}>
-          Xem trước hỗ trợ Markdown + LaTeX.
+        <div>
+          <div className={editorStyles.muted}>
+            Xem trước hỗ trợ Markdown + LaTeX.
+          </div>
+          <div className={editorStyles.muted} aria-live="polite">
+            {mediaUploadingCount > 0
+              ? `Đang upload ${mediaUploadingCount} ảnh...`
+              : "Tip: Dán ảnh (Ctrl/Cmd+V) để tự upload và chèn ảnh vào nội dung."}
+          </div>
+          {mediaUploadError ? (
+            <div
+              className={editorStyles.inlineError}
+              role="alert"
+              style={{ marginTop: 10 }}
+            >
+              {mediaUploadError}
+            </div>
+          ) : null}
         </div>
         <fieldset
           className={`${editorStyles.row} ${editorStyles.toggleGroup}`}
@@ -996,6 +1271,14 @@ function InlineQuestionEditor({
                   className={editorStyles.textarea}
                   value={stem}
                   onChange={(e) => setStem(e.target.value)}
+                  onPaste={(e) =>
+                    handleMarkdownImagePaste(e, {
+                      setValue: setStem,
+                      setUploadingCount: setMediaUploadingCount,
+                      setUploadError: setMediaUploadError,
+                      altPrefix: "question",
+                    })
+                  }
                   placeholder="Nhập nội dung câu hỏi..."
                   disabled={disabled}
                 />
@@ -1009,6 +1292,14 @@ function InlineQuestionEditor({
                   className={`${editorStyles.textarea} ${editorStyles.textareaSmall}`}
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
+                  onPaste={(e) =>
+                    handleMarkdownImagePaste(e, {
+                      setValue: setExplanation,
+                      setUploadingCount: setMediaUploadingCount,
+                      setUploadError: setMediaUploadError,
+                      altPrefix: "explanation",
+                    })
+                  }
                   placeholder="Giải thích / lời giải..."
                   disabled={disabled}
                 />
@@ -1040,6 +1331,24 @@ function InlineQuestionEditor({
                             ),
                           );
                         }}
+                        onPaste={(e) =>
+                          handleMarkdownImagePaste(e, {
+                            setValue: (next) =>
+                              setOptions((prev) =>
+                                prev.map((o, oi) => {
+                                  if (oi !== idx) return o;
+                                  const text =
+                                    typeof next === "function"
+                                      ? next(o.text)
+                                      : next;
+                                  return { ...o, text };
+                                }),
+                              ),
+                            setUploadingCount: setMediaUploadingCount,
+                            setUploadError: setMediaUploadError,
+                            altPrefix: `option-${idx + 1}`,
+                          })
+                        }
                         placeholder={`Đáp án ${idx + 1}`}
                         disabled={disabled}
                       />
@@ -1367,52 +1676,6 @@ function questionTypeLabel(type: QuestionType) {
   }
 }
 
-function buildDefaultMcqOptions(): OptionDraft[] {
-  return [
-    { label: null, text: "", isCorrect: false, position: 1 },
-    { label: null, text: "", isCorrect: false, position: 2 },
-    { label: null, text: "", isCorrect: false, position: 3 },
-    { label: null, text: "", isCorrect: false, position: 4 },
-  ];
-}
-
-function normalizeOptionDrafts(
-  options: QuestionDetail["options"],
-): OptionDraft[] {
-  const sorted = [...(options ?? [])].sort((a, b) => a.position - b.position);
-  if (!sorted.length) return buildDefaultMcqOptions();
-  return sorted.map((o) => ({
-    label: o.label ?? null,
-    text: o.text ?? "",
-    isCorrect: Boolean(o.isCorrect),
-    position: o.position,
-  }));
-}
-
-function normalizeShortAnswerDrafts(
-  keys: QuestionDetail["shortAnswerKeys"],
-): AnswerDraft[] {
-  const sorted = [...(keys ?? [])].map((k) => ({
-    clientId: k.id,
-    acceptableAnswer: k.acceptableAnswer ?? "",
-    caseSensitive: Boolean(k.caseSensitive),
-  }));
-  return sorted.length ? sorted : [buildEmptyShortAnswer()];
-}
-
-function normalizeOptionsForPayload(options: OptionDraft[]) {
-  const normalized = options
-    .slice()
-    .map((o, idx) => ({
-      label: o.label ?? null,
-      text: o.text.trim(),
-      isCorrect: Boolean(o.isCorrect),
-      position: idx + 1,
-    }))
-    .filter((o) => o.text);
-  return normalized;
-}
-
 function pickCorrect(
   index: number,
   multi: boolean,
@@ -1426,26 +1689,4 @@ function pickCorrect(
     }
     return prev.map((o, idx) => ({ ...o, isCorrect: idx === index }));
   });
-}
-
-function parseTags(text: string): string[] {
-  return text
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
-}
-
-function buildEmptyShortAnswer(): AnswerDraft {
-  return {
-    clientId: makeClientId(),
-    acceptableAnswer: "",
-    caseSensitive: false,
-  };
-}
-
-function makeClientId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return (crypto as { randomUUID: () => string }).randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }

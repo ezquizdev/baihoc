@@ -44,7 +44,6 @@ export type ShortAnswerKey = {
 export type Passage = {
   id: string;
   content: string;
-  mediaUrls: string[];
 };
 
 export type QuestionDetail = {

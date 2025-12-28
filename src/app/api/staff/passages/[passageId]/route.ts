@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  controllerDeletePassage,
   controllerGetPassageDetail,
   controllerUpdatePassage,
 } from "@/application/controllers/passageController";
@@ -9,7 +10,6 @@ import { isServiceError } from "@/application/services/errors";
 
 const updateSchema = z.object({
   content: z.string().min(1),
-  mediaUrls: z.array(z.string()),
 });
 
 type Params = { passageId: string };
@@ -52,6 +52,30 @@ export async function PATCH(
     }
     const message =
       error instanceof Error ? error.message : "Không thể cập nhật đoạn văn";
+    const status = message.toLowerCase().includes("not found") ? 404 : 400;
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<Params> },
+) {
+  const auth = await requireAuthenticatedApi(request, { role: "staff" });
+  if (auth instanceof NextResponse) return auth;
+  try {
+    const { passageId } = await context.params;
+    const result = await controllerDeletePassage(passageId);
+    return NextResponse.json(result);
+  } catch (error) {
+    if (isServiceError(error)) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
+    const message =
+      error instanceof Error ? error.message : "Không thể xóa đoạn văn";
     const status = message.toLowerCase().includes("not found") ? 404 : 400;
     return NextResponse.json({ error: message }, { status });
   }

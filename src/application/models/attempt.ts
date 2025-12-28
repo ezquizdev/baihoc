@@ -43,7 +43,6 @@ export type AttemptQuestionOption = {
 export type AttemptPassage = {
   id: string;
   content: string;
-  mediaUrls: string[];
   position: number;
 };
 

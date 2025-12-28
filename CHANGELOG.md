@@ -6,15 +6,17 @@
 - Challenges now use the quiz duration (`estimated_time_seconds`) as their time limit (and may be untimed like regular quizzes).
 - Dropped `challenge_settings.time_limit_seconds`; staff quiz editor now configures challenge schedule only.
 
-### feat(staff): add excel-like sort/filter to question bank
-- `/staff/questions` now supports sorting/filtering via table headers (subject/type/difficulty/status) and removes the standalone filter bar.
-- `GET /api/staff/questions` now accepts `subjectIds`, `difficultyLevels`, `types`, `statuses`, `sortBy`, and `sortDir`.
+### feat(highlight-challenge): add config and submissions backend
+- Added `dashboard_highlight_challenge` (single-row staff config) and `dashboard_highlight_challenge_submissions` (one-time-per-user submissions; not counted toward attempts/XP/IRT).
+- Added staff config API (`GET/PUT /api/staff/settings/highlight-challenge`) and student submit API (`POST /api/dashboard/highlight-challenge/submit`) with `mcq_single`/`mcq_multi` validation.
 
-### fix(leaderboard): cap searched user rank totals
-- Leaderboard search now uses the same 300-cap + ranking logic as the main leaderboard table.
+### feat(staff-settings): add highlight challenge configuration
+- Added a “Highlight challenge” settings card to `/staff/settings` to choose an active challenge + one question to surface on student dashboards.
+- Server enforces “active challenge only”; UI shows ACTIVE/INACTIVE state and provides refresh/clear actions.
 
-### chore(test): update repo mocks for new exports
-- Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
+### feat(dashboard): add highlight challenge card
+- Student `/dashboard` now shows the staff-configured highlight question + options, with “Nộp đáp án” appearing only after interaction (no layout shift).
+- After submitting, the card reveals correct answers + explanation and opens a result modal that links into the full challenge attempt flow (start/continue/view results).
 
 ### feat(dashboard): wire student overview to real data
 - `/dashboard` now shows real user stats (active days, completed quizzes, study time, average score, and 7-day correct/wrong bars).
@@ -29,20 +31,36 @@
 - New canonical route: `/leaderboard` renders student vs staff view based on session role.
 - Removed legacy routes `/dashboard/leaderboard` and `/staff/leaderboard` (no backward compat).
 
-### feat(highlight-challenge): add config and submissions backend
-- Added `dashboard_highlight_challenge` (single-row staff config) and `dashboard_highlight_challenge_submissions` (one-time-per-user submissions; not counted toward attempts/XP/IRT).
-- Added staff config API (`GET/PUT /api/staff/settings/highlight-challenge`) and student submit API (`POST /api/dashboard/highlight-challenge/submit`) with `mcq_single`/`mcq_multi` validation.
-
-### feat(staff-settings): add highlight challenge configuration
-- Added a “Highlight challenge” settings card to `/staff/settings` to choose an active challenge + one question to surface on student dashboards.
-- Server enforces “active challenge only”; UI shows ACTIVE/INACTIVE state and provides refresh/clear actions.
-
-### feat(dashboard): add highlight challenge card
-- Student `/dashboard` now shows the staff-configured highlight question + options, with “Nộp đáp án” appearing only after interaction (no layout shift).
-- After submitting, the card reveals correct answers + explanation and opens a result modal that links into the full challenge attempt flow (start/continue/view results).
-
 ### chore(changelog): document highlight challenge feature
 - Recorded the highlight challenge feature work in this changelog.
+
+### feat(staff): paste images into question markdown (Supabase upload)
+- Staff question + passage editors now support pasting images (Ctrl/Cmd+V) to auto-upload to Supabase Storage and insert markdown image syntax.
+- Added `POST /api/staff/media/images` (multipart upload, returns `{ url }`).
+- `RichText` now renders markdown images (responsive styling).
+- Staff quiz builder modals now render question stems via `RichText` so pasted images display while building quizzes.
+- Suppressed Biome `noImgElement` warning locally in `RichText` (markdown images are dynamic).
+- Removed legacy passage `mediaUrls` and dropped `passages.media_urls` (images are embedded in markdown `content` now).
+
+### feat(staff): improve passage editor + type-first question creation
+- `/staff/questions/new` now starts with a question-type picker (MCQ 1, MCQ multi, short-answer, passage).
+- Passage create flow now supports drafting the passage + first question, then continues in the passage editor UI.
+- `/staff/questions/passages/[passageId]` now supports adding new questions inline and deleting the whole passage group from one screen.
+- Added `DELETE /api/staff/passages/[passageId]` with guards for in-progress attempts and quiz usage.
+
+### fix(custom-quiz): keep passage question groups atomic
+- Custom quiz generation now includes passage-linked questions as an all-or-none group (no partial passages).
+- Passage question ordering is preserved (by `question_passages.position`) and inserted contiguously in generated quizzes.
+
+### feat(staff): add excel-like sort/filter to question bank
+- `/staff/questions` now supports sorting/filtering via table headers (subject/type/difficulty/status) and removes the standalone filter bar.
+- `GET /api/staff/questions` now accepts `subjectIds`, `difficultyLevels`, `types`, `statuses`, `sortBy`, and `sortDir`.
+
+### fix(leaderboard): cap searched user rank totals
+- Leaderboard search now uses the same 300-cap + ranking logic as the main leaderboard table.
+
+### chore(test): update repo mocks for new exports
+- Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
 
 ## 2025-12-27
 

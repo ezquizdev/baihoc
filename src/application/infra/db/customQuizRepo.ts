@@ -272,6 +272,87 @@ export async function countActiveQuestionsByTopicAndDifficulty(
   }));
 }
 
+export async function listEligibleQuestionsForCustomQuiz(
+  topicIds: string[],
+): Promise<
+  Array<{
+    id: string;
+    difficulty: DifficultyLevel;
+    passageId: string | null;
+    passagePosition: number | null;
+    topicIds: string[];
+  }>
+> {
+  if (!topicIds.length) return [];
+
+  const res = await query<{
+    id: string;
+    default_difficulty: number;
+    passage_id: string | null;
+    passage_position: number | null;
+    topic_ids: string[];
+  }>(
+    `WITH eligible_questions AS (
+        SELECT q.id,
+               q.default_difficulty,
+               qp.passage_id,
+               qp.position AS passage_position,
+               array_agg(DISTINCT qt.topic_id) AS topic_ids
+        FROM questions q
+        JOIN question_topics qt
+          ON qt.question_id = q.id
+         AND qt.topic_id = ANY($1::uuid[])
+        LEFT JOIN question_passages qp ON qp.question_id = q.id
+        WHERE q.status = 'active'::question_status
+        GROUP BY q.id, qp.passage_id, qp.position
+      ),
+      passage_ids AS (
+        SELECT DISTINCT passage_id
+        FROM eligible_questions
+        WHERE passage_id IS NOT NULL
+      ),
+      passage_active_counts AS (
+        SELECT qp.passage_id,
+               COUNT(*)::int AS active_count
+        FROM question_passages qp
+        JOIN questions q ON q.id = qp.question_id
+        WHERE q.status = 'active'::question_status
+          AND qp.passage_id IN (SELECT passage_id FROM passage_ids)
+        GROUP BY qp.passage_id
+      ),
+      passage_eligible_counts AS (
+        SELECT passage_id,
+               COUNT(*)::int AS eligible_count
+        FROM eligible_questions
+        WHERE passage_id IS NOT NULL
+        GROUP BY passage_id
+      ),
+      eligible_passages AS (
+        SELECT ac.passage_id
+        FROM passage_active_counts ac
+        JOIN passage_eligible_counts ec ON ec.passage_id = ac.passage_id
+        WHERE ac.active_count = ec.eligible_count
+      )
+      SELECT eq.id,
+             eq.default_difficulty,
+             eq.passage_id,
+             eq.passage_position,
+             eq.topic_ids
+      FROM eligible_questions eq
+      WHERE eq.passage_id IS NULL
+         OR eq.passage_id IN (SELECT passage_id FROM eligible_passages)`,
+    [topicIds],
+  );
+
+  return res.rows.map((row) => ({
+    id: row.id,
+    difficulty: row.default_difficulty as DifficultyLevel,
+    passageId: row.passage_id,
+    passagePosition: row.passage_position,
+    topicIds: row.topic_ids ?? [],
+  }));
+}
+
 export async function pickQuestionIdsForTopicDifficulty(input: {
   topicId: string;
   difficulty: DifficultyLevel;
