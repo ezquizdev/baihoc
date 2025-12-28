@@ -34,6 +34,7 @@ import {
 } from "@/application/infra/db/irtRepo";
 import { withTransaction } from "@/application/infra/db/pool";
 import { listQuizStatusesByIds } from "@/application/infra/db/quizRepo";
+import { findUserById } from "@/application/infra/db/userRepo";
 import type {
   ActiveAttemptSummary,
   Attempt,
@@ -254,6 +255,17 @@ export async function startOrResumeAttempt(
     const quizMeta = await getQuizAttemptMeta(quizId, client);
     if (!quizMeta) {
       throw new ServiceError("QUIZ_NOT_FOUND", "Quiz not found", 404);
+    }
+    const user = await findUserById(userId, client);
+    if (!user) {
+      throw new ServiceError("USER_NOT_FOUND", "User not found", 404);
+    }
+    if (quizMeta.visibility === "premium" && user.tier !== "paid") {
+      throw new ServiceError(
+        "QUIZ_PREMIUM_ONLY",
+        "Quiz này chỉ dành cho học viên VIP.",
+        403,
+      );
     }
     if (quizMeta.customQuizOwnerId && quizMeta.customQuizOwnerId !== userId) {
       throw new ServiceError("CUSTOM_QUIZ_FORBIDDEN", "Forbidden", 403);

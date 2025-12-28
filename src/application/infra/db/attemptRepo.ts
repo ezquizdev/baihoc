@@ -21,7 +21,11 @@ import type {
   AttemptStatus,
   AttemptSubjectScore,
 } from "@/application/models/attempt";
-import type { DifficultyLevel, QuestionType } from "@/application/models/enums";
+import type {
+  DifficultyLevel,
+  QuestionType,
+  QuizVisibility,
+} from "@/application/models/enums";
 
 function runQuery<T extends QueryResultRow>(
   client: PoolClient | undefined,
@@ -132,6 +136,7 @@ type AttemptReviewShortAnswerKeyRow = {
 type QuizAttemptMetaRow = {
   id: string;
   is_challenge: boolean;
+  visibility: QuizVisibility;
   estimated_time_seconds: number | null;
   challenge_start_at: string | null;
   challenge_end_at: string | null;
@@ -150,6 +155,7 @@ type QuizSnapshotMetaRow = {
 export type QuizAttemptMeta = {
   quizId: string;
   isChallenge: boolean;
+  visibility: QuizVisibility;
   estimatedTimeSeconds: number | null;
   challengeStartAt: string | null;
   challengeEndAt: string | null;
@@ -371,6 +377,7 @@ export async function getQuizAttemptMeta(
     client,
     `SELECT q.id,
             q.is_challenge,
+            q.visibility,
             q.estimated_time_seconds,
             cs.start_at AS challenge_start_at,
             cs.end_at AS challenge_end_at,
@@ -396,6 +403,7 @@ export async function getQuizAttemptMeta(
   return {
     quizId: row.id,
     isChallenge: row.is_challenge,
+    visibility: row.visibility,
     estimatedTimeSeconds: row.estimated_time_seconds,
     challengeStartAt: row.challenge_start_at,
     challengeEndAt: row.challenge_end_at,

@@ -122,8 +122,9 @@ export async function controllerListCatalogPage(
 
 export async function controllerGetRandomUnattemptedCatalogQuizId(
   userId: string,
+  options?: { includePremium?: boolean },
 ) {
-  return getRandomUnattemptedCatalogQuizId(userId);
+  return getRandomUnattemptedCatalogQuizId(userId, options);
 }
 
 export async function controllerListStaffQuizzes(

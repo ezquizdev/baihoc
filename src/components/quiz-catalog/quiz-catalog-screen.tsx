@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { DifficultyLabel } from "@/application/models/enums";
 import type { LeaderboardResult } from "@/application/models/leaderboard";
 import type { QuizCatalogItem } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { NoticeModal } from "@/components/ui/notice-modal";
 import { GenerateCustomQuizModal } from "./generate-custom-quiz-modal";
 import styles from "./quiz-catalog.module.css";
 import { QuizFilters } from "./quiz-filters";
@@ -47,6 +48,7 @@ export function QuizCatalogScreen({
 }: QuizCatalogScreenProps) {
   const router = useRouter();
   const displayName = session.fullName ?? session.email.split("@")[0];
+  const isPaidStudent = session.role === "student" && session.tier === "paid";
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [sort, setSort] = useState<SortOrder>("newest");
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
@@ -68,7 +70,9 @@ export function QuizCatalogScreen({
   const [selectedQuiz, setSelectedQuiz] = useState<QuizCatalogItem | null>(
     null,
   );
-  const [generateOpen, setGenerateOpen] = useState(initialOpenCustomQuiz);
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const [noticeMessage, setNoticeMessage] = useState("");
   const initialLoadRef = useRef(true);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -205,7 +209,29 @@ export function QuizCatalogScreen({
     setRefreshKey((prev) => prev + 1);
   };
 
+  const openVipNotice = useCallback((message: string) => {
+    setNoticeMessage(message);
+    setNoticeOpen(true);
+  }, []);
+
+  const handleOpenCustomQuiz = useCallback(() => {
+    if (!isPaidStudent) {
+      openVipNotice("Tính năng tạo quiz tùy chỉnh chỉ dành cho học viên VIP.");
+      return;
+    }
+    setGenerateOpen(true);
+  }, [isPaidStudent, openVipNotice]);
+
+  useEffect(() => {
+    if (!initialOpenCustomQuiz) return;
+    handleOpenCustomQuiz();
+  }, [handleOpenCustomQuiz, initialOpenCustomQuiz]);
+
   const handleStartQuiz = (quiz: QuizCatalogItem) => {
+    if (quiz.visibility === "premium" && !isPaidStudent) {
+      openVipNotice("Quiz này chỉ dành cho học viên VIP.");
+      return;
+    }
     router.push(`/quizzes/${quiz.id}/attempt`);
   };
 
@@ -229,7 +255,7 @@ export function QuizCatalogScreen({
       <div className={styles.page}>
         <QuizHero
           onGenerateCustomQuiz={
-            session.role === "student" ? () => setGenerateOpen(true) : undefined
+            session.role === "student" ? handleOpenCustomQuiz : undefined
           }
         />
         <GenerateCustomQuizModal
@@ -287,6 +313,14 @@ export function QuizCatalogScreen({
           setSelectedQuiz(null);
           handleStartQuiz(quiz);
         }}
+      />
+      <NoticeModal
+        open={noticeOpen}
+        title="Chỉ dành cho VIP"
+        message={noticeMessage}
+        tone="error"
+        closeLabel="Đóng"
+        onClose={() => setNoticeOpen(false)}
       />
     </DashboardShell>
   );

@@ -656,12 +656,15 @@ export async function listCatalogPage(params: {
 
 export async function getRandomUnattemptedQuizId(
   userId: string,
+  options?: { includePremium?: boolean },
 ): Promise<string | null> {
+  const includePremium = options?.includePremium ?? true;
   const res = await query<{ id: string }>(
     `SELECT q.id
      FROM quizzes q
      WHERE q.status = 'published'
        AND q.is_challenge IS FALSE
+       ${includePremium ? "" : "AND q.visibility = 'free'::quiz_visibility"}
        AND NOT EXISTS (
          SELECT 1
          FROM custom_quizzes cq

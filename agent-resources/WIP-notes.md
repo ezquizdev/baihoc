@@ -180,6 +180,26 @@ Suggested structure:
 ### UI/UX
 - Dashboard quick actions now link to catalog params and random quiz route.
 - Quiz catalog reads `status` and `custom` query params on first load.
+
+## VIP gating: premium quiz + custom quiz + AI (2025-12-28)
+- What: Enforce VIP-only access for premium quizzes and custom quiz generation, with clear messaging on attempted access.
+- Why: Ensure paid features are gated consistently for free students.
+- Roles impacted: student.
+
+### Flows
+- Catalog: clicking a premium quiz start now shows a VIP-only notice instead of starting the attempt.
+- Custom quiz: opening the generator as a free student shows a VIP-only notice (including `?custom=1` deep link).
+- Attempts: direct navigation to premium quiz attempts is blocked server-side with a VIP-only error.
+
+### Data / DB
+- Tables touched: `quizzes`, `attempts`, `custom_quizzes`, `users` (read-only for access checks).
+- Schema changes: none.
+
+### API surface
+- Attempt start now validates quiz visibility against user tier.
+
+### UI/UX
+- Added VIP notice modal to the quiz catalog page for premium quiz and custom quiz access attempts.
 - Authz: `requireAuthenticatedApi` (student).
 
 ### UI/UX

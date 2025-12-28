@@ -103,6 +103,8 @@ function getAttemptStartMessage(error: unknown) {
       return "Thử thách chưa được cấu hình lịch diễn ra.";
     case "CHALLENGE_SCHEDULE_INVALID":
       return "Lịch thử thách không hợp lệ.";
+    case "QUIZ_PREMIUM_ONLY":
+      return "Quiz này chỉ dành cho học viên VIP.";
     case "ATTEMPT_OTHER_IN_PROGRESS":
       return "Bạn đang có một lượt làm quiz đang diễn ra. Vui lòng hoàn thành trước khi bắt đầu quiz khác.";
     default:

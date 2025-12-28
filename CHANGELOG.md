@@ -18,6 +18,10 @@
 - Dashboard quick actions now deep-link to all quizzes, all challenges, and open the custom quiz modal on the catalog page.
 - Added `/quizzes/random` to pick an unattempted quiz and start the attempt flow.
 
+### fix(catalog): enforce VIP-only access for premium features
+- Premium quiz attempts now show a VIP-only notice in the catalog and are blocked server-side for free students.
+- Custom quiz generator now shows a VIP-only notice when accessed by free students (including deep links).
+
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 

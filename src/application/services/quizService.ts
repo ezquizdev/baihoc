@@ -188,8 +188,11 @@ export async function listCatalogPage(
   });
 }
 
-export async function getRandomUnattemptedCatalogQuizId(userId: string) {
-  return getRandomUnattemptedQuizId(userId);
+export async function getRandomUnattemptedCatalogQuizId(
+  userId: string,
+  options?: { includePremium?: boolean },
+) {
+  return getRandomUnattemptedQuizId(userId, options);
 }
 
 export async function listStaffQuizzes(params: {
