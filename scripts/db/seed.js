@@ -19,8 +19,11 @@ if (!connectionString) {
 }
 
 const args = parseArgs(process.argv.slice(2));
+const totalStudents = Number(args.students ?? 32);
+const defaultPaidStudents = Math.max(1, Math.round(totalStudents * 0.25));
 const config = {
-  students: Number(args.students ?? 32),
+  students: totalStudents,
+  paidStudents: Number(args.paidStudents ?? args.paid ?? defaultPaidStudents),
   quizzes: Number(args.quizzes ?? 36),
   questionsPerSubject: Number(args.questions ?? 48),
   maxAttemptsPerQuiz: Number(args.maxAttempts ?? 18),
@@ -98,26 +101,38 @@ async function main() {
     await client.connect();
     await client.query("BEGIN");
     console.log("Seeding database with config:", config);
+    console.log(
+      `Students: total=${config.students} free=${Math.max(0, config.students - Math.max(0, Math.min(config.paidStudents, config.students)))} paid=${Math.max(0, Math.min(config.paidStudents, config.students))}`,
+    );
 
     const passwordHash = bcrypt.hashSync("Password123!", 10);
     const staff = await upsertStaff(client, passwordHash);
 
     const studentInputs = [];
-    for (let i = 0; i < config.students; i += 1) {
+    const paidStudentCount = Math.max(
+      0,
+      Math.min(config.paidStudents, config.students),
+    );
+    const freeStudentCount = Math.max(0, config.students - paidStudentCount);
+
+    for (let i = 0; i < freeStudentCount; i += 1) {
       const fullName = `${pick(peopleLast)} ${pick(peopleFirst)}`;
-      const tier =
-        i === 0
-          ? "paid"
-          : i === 1
-            ? "free"
-            : Math.random() < 0.2
-              ? "paid"
-              : "free";
       studentInputs.push({
         email: `student.${i + 1}@baihoc.dev`,
         fullName,
         role: "student",
-        tier,
+        tier: "free",
+        status: "active",
+        passwordHash,
+      });
+    }
+    for (let i = 0; i < paidStudentCount; i += 1) {
+      const fullName = `${pick(peopleLast)} ${pick(peopleFirst)}`;
+      studentInputs.push({
+        email: `paid.${i + 1}@baihoc.dev`,
+        fullName,
+        role: "student",
+        tier: "paid",
         status: "active",
         passwordHash,
       });
@@ -129,11 +144,19 @@ async function main() {
     );
     const studentByEmail = new Map(students.map((s) => [s.email, s]));
     const samplePaidStudent =
-      studentByEmail.get("student.1@baihoc.dev") ?? students[0];
+      studentByEmail.get("paid.1@baihoc.dev") ??
+      students.find((s) => s.email.startsWith("paid.")) ??
+      students[0];
     const sampleFreeStudent =
-      studentByEmail.get("student.2@baihoc.dev") ?? students[1];
+      studentByEmail.get("student.1@baihoc.dev") ??
+      students.find((s) => s.email.startsWith("student.")) ??
+      students[1];
     const sampleResumeStudent =
-      studentByEmail.get("student.3@baihoc.dev") ?? students[2];
+      studentByEmail.get("student.2@baihoc.dev") ??
+      studentByEmail.get("student.3@baihoc.dev") ??
+      students[2];
+    const sampleAdminHistoryStudent =
+      studentByEmail.get("paid.2@baihoc.dev") ?? samplePaidStudent;
 
     const allowlistEmails = await seedAllowlist(client, {
       addedBy: staff.id,
@@ -145,10 +168,10 @@ async function main() {
         passwordHash,
       },
     );
-    if (sampleResumeStudent?.id) {
+    if (sampleAdminHistoryStudent?.id) {
       await seedUserAdminHistory(client, {
         staffUserId: staff.id,
-        userId: sampleResumeStudent.id,
+        userId: sampleAdminHistoryStudent.id,
       });
     }
 
@@ -640,6 +663,9 @@ async function main() {
       `Seed complete: ${subjects.length} subjects, ${students.length} students, ${config.quizzes} quizzes.`,
     );
     console.log("Login creds: staff@baihoc.dev / Password123!");
+    console.log(
+      "Student accounts: student.X@baihoc.dev = free, paid.X@baihoc.dev = paid",
+    );
     if (samplePaidStudent?.email) {
       console.log(
         `Sample paid student: ${samplePaidStudent.email} / Password123!`,
@@ -1142,7 +1168,7 @@ async function seedCustomQuizzes(client, input) {
     input?.quizMetaById instanceof Map ? input.quizMetaById : new Map();
 
   const owners = [];
-  const preferredOwner = users.find((u) => u.email === "student.1@baihoc.dev");
+  const preferredOwner = users.find((u) => u.email === "paid.1@baihoc.dev");
   if (preferredOwner) owners.push(preferredOwner);
   users.forEach((user) => {
     if (owners.length >= count) return;
