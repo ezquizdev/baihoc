@@ -5,9 +5,17 @@ if (typeof window !== "undefined") {
   throw new Error("db pool can only be imported on the server.");
 }
 
-export const pool = new Pool({
-  connectionString: env.DATABASE_URL,
-});
+const globalForPool = globalThis as typeof globalThis & {
+  __baihocPool?: Pool;
+};
+
+export const pool =
+  globalForPool.__baihocPool ??
+  new Pool({
+    connectionString: env.DATABASE_URL,
+  });
+
+globalForPool.__baihocPool = pool;
 
 export async function query<T extends QueryResultRow = QueryResultRow>(
   text: string,

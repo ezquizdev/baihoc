@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(db): reuse pg pool across hot reloads
+- The server db pool now caches in `globalThis` to avoid creating new connections per module reload.
+
 ### fix(leaderboard): apply search results directly to table
 - Leaderboard search now updates the main table instead of rendering a separate results view, while keeping the active sort criteria.
 
