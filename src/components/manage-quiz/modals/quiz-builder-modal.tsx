@@ -73,6 +73,22 @@ export function QuizBuilderModal({
   const [removeCandidateId, setRemoveCandidateId] = useState<string | null>(
     null,
   );
+  const [passageFixCandidate, setPassageFixCandidate] = useState<{
+    mode: "draft" | "publish";
+    passages: Array<{
+      passageId: string;
+      missingQuestionIds: string[];
+      needsReorder: boolean;
+      needsConsecutive: boolean;
+    }>;
+    suggested: Array<{
+      questionId: string;
+      position: number;
+      score: number | null;
+      required: boolean;
+    }>;
+  } | null>(null);
+  const [passageFixBusy, setPassageFixBusy] = useState(false);
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -199,10 +215,20 @@ export function QuizBuilderModal({
     return () => window.clearTimeout(timeout);
   }, [flashMessage]);
 
-  const saveQuestions = async () => {
+  class SaveQuestionsError extends Error {
+    code: string;
+    details: unknown;
+    constructor(message: string, code: string, details: unknown) {
+      super(message);
+      this.code = code;
+      this.details = details;
+    }
+  }
+
+  const saveQuestions = async (nextQuestions = questions) => {
     if (!quizId) return;
     const payload = {
-      questions: questions.map((q, idx) => ({
+      questions: nextQuestions.map((q, idx) => ({
         questionId: q.id,
         position: idx + 1,
         score: q.score,
@@ -216,7 +242,14 @@ export function QuizBuilderModal({
     });
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      throw new Error(data?.error ?? "Không thể cập nhật danh sách câu hỏi");
+      const message =
+        isRecord(data) && typeof data.error === "string"
+          ? data.error
+          : "Không thể cập nhật danh sách câu hỏi";
+      const code =
+        isRecord(data) && typeof data.code === "string" ? data.code : "ERROR";
+      const details = isRecord(data) ? data.details : undefined;
+      throw new SaveQuestionsError(message, code, details);
     }
   };
 
@@ -248,9 +281,13 @@ export function QuizBuilderModal({
     }
   };
 
-  const doSave = async (mode: "draft" | "publish") => {
+  const doSave = async (
+    mode: "draft" | "publish",
+    overrideQuestions?: QuizQuestionSummary[],
+  ) => {
     if (!quizId) return;
-    if (mode === "publish" && questions.length === 0) {
+    const workingQuestions = overrideQuestions ?? questions;
+    if (mode === "publish" && workingQuestions.length === 0) {
       setError(
         "Quiz chưa có câu hỏi. Vui lòng thêm ít nhất 1 câu hỏi trước khi xuất bản.",
       );
@@ -259,7 +296,7 @@ export function QuizBuilderModal({
     setError(null);
     try {
       setSaving(true);
-      await saveQuestions();
+      await saveQuestions(workingQuestions);
       if (mode === "draft") {
         await saveMeta("draft");
       } else {
@@ -269,6 +306,49 @@ export function QuizBuilderModal({
       onMutated();
       onClose();
     } catch (err) {
+      if (err instanceof SaveQuestionsError) {
+        if (
+          err.code === "QUIZ_PASSAGE_GROUP_INVALID" &&
+          isRecord(err.details) &&
+          Array.isArray(err.details.passages) &&
+          isRecord(err.details.suggested) &&
+          Array.isArray(err.details.suggested.questions)
+        ) {
+          const passages = err.details.passages
+            .filter((p): p is Record<string, unknown> => isRecord(p))
+            .map((p) => ({
+              passageId: String(p.passageId ?? ""),
+              missingQuestionIds: Array.isArray(p.missingQuestionIds)
+                ? (p.missingQuestionIds as unknown[]).filter(
+                    (id): id is string => typeof id === "string",
+                  )
+                : [],
+              needsReorder: Boolean(p.needsReorder),
+              needsConsecutive: Boolean(p.needsConsecutive),
+            }))
+            .filter((p) => p.passageId);
+
+          const suggested = err.details.suggested.questions
+            .filter((q): q is Record<string, unknown> => isRecord(q))
+            .map((q) => ({
+              questionId: String(q.questionId ?? ""),
+              position: Number(q.position ?? 0),
+              score:
+                q.score === null
+                  ? null
+                  : typeof q.score === "number"
+                    ? q.score
+                    : null,
+              required: Boolean(q.required),
+            }))
+            .filter((q) => q.questionId);
+
+          if (passages.length && suggested.length) {
+            setPassageFixCandidate({ mode, passages, suggested });
+            return;
+          }
+        }
+      }
       setError(err instanceof Error ? err.message : "Không thể lưu quiz");
     } finally {
       setSaving(false);
@@ -600,6 +680,96 @@ export function QuizBuilderModal({
           setQuestions((prev) => prev.filter((q) => q.id !== targetId));
         }}
       />
+
+      <ConfirmModal
+        open={passageFixCandidate !== null}
+        title="Tự động bổ sung & sắp xếp câu hỏi passage?"
+        message={
+          passageFixCandidate
+            ? `Quiz có câu hỏi thuộc passage nhưng chưa đủ hoặc chưa được xếp liền nhau đúng thứ tự. Hệ thống có thể tự động bổ sung câu hỏi còn thiếu và sắp xếp lại để đáp ứng yêu cầu. Tiếp tục?`
+            : ""
+        }
+        confirmLabel={passageFixBusy ? "Đang xử lý..." : "Tự động sửa"}
+        cancelLabel="Hủy"
+        disableConfirm={passageFixBusy}
+        onCancel={() => setPassageFixCandidate(null)}
+        onConfirm={() => {
+          const candidate = passageFixCandidate;
+          setPassageFixCandidate(null);
+          if (!candidate) return;
+          void (async () => {
+            try {
+              setPassageFixBusy(true);
+
+              const passageIds = Array.from(
+                new Set(candidate.passages.map((p) => p.passageId)),
+              );
+              const fetched = await Promise.all(
+                passageIds.map(async (passageId) => {
+                  const res = await fetch(`/api/staff/passages/${passageId}`);
+                  const data = await res.json().catch(() => ({}));
+                  if (!res.ok) {
+                    throw new Error(data?.error ?? "Không thể tải passage");
+                  }
+                  return data;
+                }),
+              );
+
+              const byId = new Map<string, QuizQuestionSummary>();
+              questions.forEach((q, idx) => {
+                byId.set(q.id, { ...q, position: idx + 1 });
+              });
+
+              fetched.forEach((payload) => {
+                if (!isRecord(payload) || !Array.isArray(payload.questions))
+                  return;
+                (payload.questions as unknown[]).forEach((q) => {
+                  if (!isRecord(q)) return;
+                  const id = typeof q.id === "string" ? q.id : null;
+                  if (!id) return;
+                  if (byId.has(id)) return;
+                  byId.set(id, {
+                    id,
+                    stem: typeof q.stem === "string" ? q.stem : "",
+                    type: typeof q.type === "string" ? q.type : "",
+                    defaultScore:
+                      typeof q.defaultScore === "number" ? q.defaultScore : 1,
+                    position: 0,
+                    score: null,
+                    required: true,
+                  });
+                });
+              });
+
+              const nextQuestions: QuizQuestionSummary[] = candidate.suggested
+                .sort((a, b) => a.position - b.position)
+                .map((entry, idx) => {
+                  const base = byId.get(entry.questionId);
+                  if (!base) {
+                    throw new Error(
+                      "Không thể tự động bổ sung câu hỏi passage.",
+                    );
+                  }
+                  return {
+                    ...base,
+                    position: idx + 1,
+                    score: entry.score ?? null,
+                    required: entry.required ?? true,
+                  };
+                });
+
+              setQuestions(nextQuestions);
+              await doSave(candidate.mode, nextQuestions);
+            } catch (err) {
+              setError(
+                err instanceof Error ? err.message : "Không thể tự động sửa",
+              );
+            } finally {
+              setPassageFixBusy(false);
+            }
+          })();
+        }}
+      />
     </>
   );
 
@@ -734,4 +904,8 @@ function SortableQuestionCard({
       </div>
     </li>
   );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

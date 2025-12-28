@@ -684,6 +684,27 @@ export async function listQuestionIdsByIds(questionIds: string[]) {
   return res.rows.map((row) => row.id);
 }
 
+export async function listQuestionsByIds(questionIds: string[]) {
+  if (!questionIds.length) return [];
+  const res = await query<QuestionRow>(
+    `SELECT q.*,
+            COALESCE(qt.topic_ids, '{}') AS topic_ids,
+            qp.passage_id,
+            qp.position AS passage_position
+     FROM questions q
+     LEFT JOIN (
+       SELECT question_id, array_agg(topic_id) AS topic_ids
+       FROM question_topics
+       GROUP BY question_id
+     ) qt ON qt.question_id = q.id
+     LEFT JOIN question_passages qp ON qp.question_id = q.id
+     WHERE q.id = ANY($1::uuid[])
+     ORDER BY q.created_at DESC, q.id ASC`,
+    [questionIds],
+  );
+  return res.rows.map(mapQuestion);
+}
+
 export async function deleteQuestion(questionId: string) {
   await withTransaction(async (client) => {
     await client.query(`DELETE FROM question_options WHERE question_id = $1`, [

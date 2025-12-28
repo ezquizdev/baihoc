@@ -34,7 +34,7 @@ export async function PUT(
   } catch (error) {
     if (isServiceError(error)) {
       return NextResponse.json(
-        { error: error.message, code: error.code },
+        { error: error.message, code: error.code, details: error.details },
         { status: error.status },
       );
     }

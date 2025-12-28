@@ -7,6 +7,7 @@ import type { DifficultyLevel } from "@/application/models/enums";
 import type { Question } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
 import { QuizPagination } from "@/components/quiz-catalog/quiz-pagination";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import styles from "./manage-quiz-modals.module.css";
 
 type QuestionBankPickerModalProps = {
@@ -53,6 +54,13 @@ export function QuestionBankPickerModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, Question>>({});
+  const [passageConfirm, setPassageConfirm] = useState<{
+    passageId: string;
+    base: Question;
+    extras: Question[];
+  } | null>(null);
+  const [passageBusy, setPassageBusy] = useState(false);
+  const passageCacheRef = useRef<Map<string, Question[]>>(new Map());
 
   useEffect(() => {
     if (!open) return;
@@ -135,19 +143,72 @@ export function QuestionBankPickerModal({
     opened?.focus?.();
   };
 
-  const toggle = (question: Question) => {
+  const getPassageQuestions = async (passageId: string) => {
+    const cached = passageCacheRef.current.get(passageId) ?? null;
+    if (cached) return cached;
+
+    const res = await fetch(`/api/staff/passages/${passageId}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.error ?? "Không thể tải passage");
+    }
+    const questions = Array.isArray(data?.questions)
+      ? (data.questions as Question[])
+      : [];
+    passageCacheRef.current.set(passageId, questions);
+    return questions;
+  };
+
+  const toggle = async (question: Question) => {
     if (existingSet.has(question.id)) return;
-    setSelected((prev) => {
-      if (prev[question.id]) {
+    if (passageBusy) return;
+
+    if (selected[question.id]) {
+      setSelected((prev) => {
         const next = { ...prev };
+        const passageId = question.passageId ?? null;
+        if (passageId) {
+          for (const key of Object.keys(next)) {
+            if (next[key]?.passageId === passageId) {
+              delete next[key];
+            }
+          }
+          return next;
+        }
         delete next[question.id];
         return next;
+      });
+      return;
+    }
+
+    const passageId = question.passageId ?? null;
+    if (!passageId) {
+      setSelected((prev) => ({ ...prev, [question.id]: question }));
+      return;
+    }
+
+    try {
+      setPassageBusy(true);
+      const group = await getPassageQuestions(passageId);
+      const extras = group.filter(
+        (q) =>
+          q.id !== question.id && !existingSet.has(q.id) && !selected[q.id],
+      );
+      if (extras.length) {
+        setPassageConfirm({ passageId, base: question, extras });
+        return;
       }
-      return { ...prev, [question.id]: question };
-    });
+      setSelected((prev) => ({ ...prev, [question.id]: question }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không thể tải passage");
+    } finally {
+      setPassageBusy(false);
+    }
   };
 
   const clearSelected = () => setSelected({});
+
+  // Note: passage question resolution uses the staff passage detail API.
 
   return (
     <div className={styles.modal} role="presentation">
@@ -362,6 +423,33 @@ export function QuestionBankPickerModal({
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        open={passageConfirm !== null}
+        title="Tự động thêm câu hỏi passage?"
+        message={
+          passageConfirm
+            ? `Câu hỏi bạn chọn thuộc một passage. Hệ thống sẽ tự động chọn thêm ${passageConfirm.extras.length} câu hỏi liên quan để passage được đầy đủ khi thêm vào quiz. Tiếp tục?`
+            : ""
+        }
+        confirmLabel="Thêm"
+        cancelLabel="Hủy"
+        disableConfirm={passageBusy}
+        onCancel={() => setPassageConfirm(null)}
+        onConfirm={() => {
+          const pending = passageConfirm;
+          setPassageConfirm(null);
+          if (!pending) return;
+          setSelected((prev) => {
+            const next = { ...prev, [pending.base.id]: pending.base };
+            pending.extras.forEach((q) => {
+              if (existingSet.has(q.id)) return;
+              next[q.id] = q;
+            });
+            return next;
+          });
+        }}
+      />
     </div>
   );
 }

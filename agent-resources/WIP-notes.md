@@ -200,6 +200,27 @@ Suggested structure:
 
 ### UI/UX
 - Added VIP notice modal to the quiz catalog page for premium quiz and custom quiz access attempts.
+
+## Staff quiz content: passage groups atomic + ordered (2025-12-28)
+- What: Enforce that if a quiz includes any question linked to a passage, it must include *all* questions in that passage, and they must be consecutive and in the passage’s relative order.
+- Why: Passage question sets are meant to be attempted together; partial/interleaved passage groups break the reading flow.
+- Roles impacted: staff.
+
+### Flows
+- Picker-time: selecting a passage-linked question prompts that the remaining linked questions will be auto-added (cancel/confirm).
+- Save-time: server validates passage constraints; when violated it returns a suggested auto-fix; UI prompts staff to auto-add missing passage questions and reorder (cancel/confirm).
+
+### Data / DB
+- Tables touched: `question_passages`, `questions`, `quiz_questions` (read/write via existing flow).
+- Schema changes: none.
+
+### API surface
+- Updated: `PUT /api/staff/quizzes/[quizId]/questions` now returns `details` for passage-group validation errors (`code=QUIZ_PASSAGE_GROUP_INVALID`) including a suggested normalized question list.
+- Reused: `GET /api/staff/passages/[passageId]` to fetch passage question lists for picker/save-time auto-fix.
+
+### Edge cases / decisions
+- If staff remove or reorder passage questions into a non-consecutive layout, the next save prompts to auto-fix (or staff can manually fix).
+- Auto-fix anchors each passage group at the first occurrence of any of its questions, then replaces that segment with the full passage question set in `question_passages.position` order.
 - Authz: `requireAuthenticatedApi` (student).
 
 ### UI/UX

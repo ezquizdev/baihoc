@@ -22,6 +22,11 @@
 - Premium quiz attempts now show a VIP-only notice in the catalog and are blocked server-side for free students.
 - Custom quiz generator now shows a VIP-only notice when accessed by free students (including deep links).
 
+### fix(staff-quizzes): enforce passage question groups in quiz content
+- Saving quiz questions now enforces that passage-linked questions are included as a full, consecutive group in the correct passage order.
+- Question picker warns that selecting a passage-linked question will auto-add the other linked questions.
+- If a saved ordering violates the passage rule, staff can confirm an auto-fix that adds missing questions and reorders the list.
+
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 
