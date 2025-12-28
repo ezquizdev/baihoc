@@ -208,7 +208,7 @@ async function main() {
       short_answer: [],
     };
 
-    seedDemo1Questions({
+    const demoSeed = seedDemo1Questions({
       questionRows,
       questionOptionRows,
       questionTopicRows,
@@ -407,8 +407,8 @@ async function main() {
     let demoChallengeId = null;
 
     for (let i = 0; i < config.quizzes; i += 1) {
-      const isDemoQuiz = i === 0;
-      const isDemoChallenge = i === 1;
+      const isDemoChallenge = i === 0;
+      const isDemoQuiz = i === 1;
       const isDemoDraft = i === 2;
       const quizId = isDemoChallenge
         ? DEMO_1_CHALLENGE_QUIZ_ID
@@ -432,24 +432,24 @@ async function main() {
             : Math.random() < 0.2;
       const status = isDraft ? "draft" : "published";
       const title = isDemoQuiz
-        ? "Demo: Tất cả dạng câu hỏi"
+        ? "Demo #1 (15s)"
         : isDemoChallenge
           ? "Demo #1"
           : isDemoDraft
             ? `Draft: ${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`
             : `${primarySubject.name} ${pick(quizNameParts)} #${i + 1}`;
       const description = isDemoQuiz
-        ? "Quiz mẫu để kiểm tra đủ dạng câu hỏi (MCQ 1 đáp án, nhiều đáp án, và tự luận ngắn) + đoạn văn."
+        ? "Bản sao của challenge demo #1 với thời gian 15 giây để kiểm tra flow tính giờ."
         : isDemoChallenge
           ? "Challenge demo #1 (đang diễn ra) để luyện tập nhanh theo từng môn."
           : isDemoDraft
             ? `Quiz nháp (draft) để kiểm tra flow quản trị: chỉnh sửa, lưu nháp và thêm câu hỏi.`
             : `Bộ câu hỏi ${title.toLowerCase()} dành cho luyện tập.`;
-      const minutes = isDemoQuiz
-        ? 20
+      const timeLimitSeconds = isDemoQuiz
+        ? 15
         : isDemoChallenge
-          ? 15
-          : randomInt(10, 50);
+          ? 15 * 60
+          : randomInt(10, 50) * 60;
       const nowIso = new Date().toISOString();
       const timestamps =
         isDemoQuiz || isDemoChallenge
@@ -465,7 +465,7 @@ async function main() {
         visibility,
         status,
         isChallenge,
-        minutes * 60,
+        timeLimitSeconds,
         null,
         staff.id,
         timestamps.createdAt,
@@ -475,7 +475,7 @@ async function main() {
       quizMetaById.set(quizId, {
         title,
         difficulty,
-        estimatedTimeSeconds: minutes * 60,
+        estimatedTimeSeconds: timeLimitSeconds,
         isChallenge,
         status,
       });
@@ -493,14 +493,7 @@ async function main() {
 
       let position = 1;
       if (isDemoQuiz || isDemoChallenge) {
-        const demoQuestionIds = isDemoChallenge
-          ? DEMO_1_QUESTION_IDS
-          : buildDemoQuestionList({
-              chosenSubjects,
-              questionGroups,
-              questionIdsByType,
-            });
-        demoQuestionIds.forEach((questionId) => {
+        demoSeed.demoChallengeQuestionIds.forEach((questionId) => {
           quizQuestionRows.push([quizId, questionId, position, null, true]);
           position += 1;
         });
@@ -508,7 +501,7 @@ async function main() {
         const questionTotal = randomInt(8, 30);
         const distribution = distribute(questionTotal, chosenSubjects.length);
         chosenSubjects.forEach((subject, index) => {
-          const groups = questionGroups.get(subject.id) ?? [];
+          const groups = demoSeed.demoQuestionGroupsBySubject.get(subject.id) ?? [];
           const selectedGroups = pickQuestionGroups(
             groups,
             distribution[index],
@@ -550,7 +543,7 @@ async function main() {
           status: attemptStatus,
           startedAt,
           submittedAt,
-          timeLimitSeconds: minutes * 60,
+          timeLimitSeconds,
           totalQuestions: questionCount || 1,
         });
       });
@@ -1401,8 +1394,10 @@ async function seedHighlightChallenge(client, input) {
     `SELECT qq.question_id
      FROM quiz_questions qq
      JOIN questions q ON q.id = qq.question_id
+     LEFT JOIN question_passages qp ON qp.question_id = q.id
      WHERE qq.quiz_id = $1
        AND q.type IN ('mcq_single'::question_type, 'mcq_multi'::question_type)
+       AND qp.question_id IS NULL
      ORDER BY qq.position ASC
      LIMIT 1`,
     [quizId],
@@ -2444,6 +2439,11 @@ function seedDemo1Questions({
 
   const passageIdsByContent = new Map();
   const passagePositions = new Map();
+  const passageQuestionIds = new Map();
+  const subjectStandaloneIds = new Map();
+  const subjectPassageIds = new Map();
+  const demoChallengeQuestionIds = [];
+  const demoQuestionIdsBySubject = new Map();
 
   const addMcqSingle = ({
     questionId,
@@ -2497,23 +2497,62 @@ function seedDemo1Questions({
       const position = (passagePositions.get(passageId) ?? 0) + 1;
       passagePositions.set(passageId, position);
       questionPassageRows.push([questionId, passageId, position]);
+      const passageIds = subjectPassageIds.get(subject.id) ?? new Set();
+      passageIds.add(passageId);
+      subjectPassageIds.set(subject.id, passageIds);
+      const ids = passageQuestionIds.get(passageId) ?? [];
+      ids.push(questionId);
+      passageQuestionIds.set(passageId, ids);
+    } else {
+      const ids = subjectStandaloneIds.get(subject.id) ?? [];
+      ids.push(questionId);
+      subjectStandaloneIds.set(subject.id, ids);
     }
   };
 
   const demoQuestions = loadDemoQuestionBank();
-  const selected = sample(demoQuestions, DEMO_1_QUESTION_IDS.length);
-  const specs = selected.map((question, index) => ({
+  const specs = demoQuestions.map((question, index) => ({
     ...question,
-    questionId: DEMO_1_QUESTION_IDS[index],
+    questionId:
+      index < DEMO_1_QUESTION_IDS.length
+        ? DEMO_1_QUESTION_IDS[index]
+        : crypto.randomUUID(),
   }));
+  DEMO_1_QUESTION_IDS.forEach((id) => demoChallengeQuestionIds.push(id));
 
-  if (specs.length !== DEMO_1_QUESTION_IDS.length) {
-    throw new Error(
-      `Seed misconfigured: DEMO_1_QUESTION_IDS must be ${specs.length} items.`,
+  specs.forEach((question) => {
+    addMcqSingle(question);
+    const subject = subjectBySlug.get(question.subjectSlug);
+    if (!subject?.id) return;
+    const ids = demoQuestionIdsBySubject.get(subject.id) ?? [];
+    ids.push(question.questionId);
+    demoQuestionIdsBySubject.set(subject.id, ids);
+  });
+
+  const demoQuestionGroupsBySubject = new Map();
+  for (const [subjectId, passageIds] of subjectPassageIds.entries()) {
+    const groups = [];
+    passageIds.forEach((passageId) => {
+      const ids = passageQuestionIds.get(passageId);
+      if (ids?.length) groups.push(ids);
+    });
+    const standalone = subjectStandaloneIds.get(subjectId) ?? [];
+    standalone.forEach((id) => groups.push([id]));
+    demoQuestionGroupsBySubject.set(subjectId, groups);
+  }
+  for (const [subjectId, ids] of subjectStandaloneIds.entries()) {
+    if (demoQuestionGroupsBySubject.has(subjectId)) continue;
+    demoQuestionGroupsBySubject.set(
+      subjectId,
+      ids.map((id) => [id]),
     );
   }
 
-  specs.forEach(addMcqSingle);
+  return {
+    demoChallengeQuestionIds,
+    demoQuestionIdsBySubject,
+    demoQuestionGroupsBySubject,
+  };
 }
 
 main();
