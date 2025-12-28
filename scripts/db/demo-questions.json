@@ -69,7 +69,7 @@
     "difficulty": 2,
     "stem": "Xác định số hạng đầu u_1 và công bội q của cấp số nhân.",
     "options": [
-      "---",
+      "$u_1 = 8; q = \\frac{-1}{2}$",
       "$u_1 = 4; q = \\frac{1}{2}$",
       "$u_1 = 2; q = -2$",
       "$u_1 = 4; q = \\frac{-1}{4}$"
@@ -109,7 +109,7 @@
     "stem": "Tìm m để phương trình log_3^2(x) - 3log_3(x) + 2m - 7 = 0 có hai nghiệm x1, x2 thỏa mãn (x1+3)(x2+3) = 72.",
     "options": [
       "$m = \\frac{9}{2}$",
-      "$m = 3$",
+      "m = 3",
       "Không tồn tại",
       "$m = \\frac{61}{2}$"
     ],
@@ -121,10 +121,10 @@
     "difficulty": 2,
     "stem": "Hàm số biểu thị tổng lợi nhuận f(x, y) (đơn vị: nghìn đồng) của xưởng mộc là:",
     "options": [
-      "$f(x, y) = 800x + 1200y$",
-      "$f(x, y) = 1200x + 800y$",
-      "$f(x, y) = 400x + 300y$",
-      "$f(x, y) = 150x + 200y$"
+      "f(x, y) = 800x + 1200y",
+      "f(x, y) = 1200x + 800y",
+      "f(x, y) = 400x + 300y",
+      "f(x, y) = 150x + 200y"
     ],
     "correctIndex": 1,
     "explanation": "Chọn B\nLợi nhuận từ Bàn trà là 1200, từ Ghế tựa là 800.\nf(x,y) = 1200x + 800y.\n\n---"
@@ -147,7 +147,7 @@
     "difficulty": 3,
     "stem": "Để đạt lợi nhuận cao nhất, xưởng mộc cần lên kế hoạch sản xuất như thế nào? (Biết số lượng sản phẩm phải là số nguyên).",
     "options": [
-      "---",
+      "Sản xuất 15 Bàn trà và 12 Ghế tựa.",
       "Sản xuất 9 Bàn trà và 20 Ghế tựa.",
       "Chỉ sản xuất 15 Bàn trà.",
       "Chỉ sản xuất 80 Ghế tựa."
@@ -277,9 +277,9 @@
     "difficulty": 4,
     "stem": "Danh sách nào sau đây có thể là danh sách đầy đủ và chính xác của những đứa trẻ cùng sở hữu chó K?",
     "options": [
-      "Từ dữ kiện 2 và 3 để loại được B và D (U và S, T và R không có giống chó nào chung).",
+      "U.",
       "V, U, S.",
-      "---",
+      "V, U, R.",
       "V, T, R."
     ],
     "correctIndex": 2,
@@ -290,7 +290,7 @@
     "difficulty": 3,
     "stem": "Nếu S và T không sở hữu bất kỳ giống chó nào chung, điều nào sau đây PHẢI đúng?",
     "options": [
-      "---",
+      "T và U có chính xác một giống chó chung.",
       "Ít nhất ba đứa trẻ sở hữu chó K.",
       "R hoặc T phải sở hữu chó M.",
       "Ít nhất ba đứa trẻ sở hữu chó L."
@@ -305,7 +305,7 @@
     "options": [
       "R sở hữu chó L.",
       "S sở hữu chó L.",
-      "Như vậy trong R, S, T, U có đúng 1 người có L.",
+      "V không sở hữu chó L.",
       "Cả S và U đều không sở hữu chó L."
     ],
     "correctIndex": 1,
