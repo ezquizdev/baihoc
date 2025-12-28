@@ -211,9 +211,11 @@ async function main() {
     seedDemo1Questions({
       questionRows,
       questionOptionRows,
+      questionTopicRows,
       passageRows,
       questionPassageRows,
       subjectBySlug,
+      topicsBySubject,
       staffUserId: staff.id,
     });
 
@@ -2425,9 +2427,11 @@ function loadDemoQuestionBank() {
 function seedDemo1Questions({
   questionRows,
   questionOptionRows,
+  questionTopicRows,
   passageRows,
   questionPassageRows,
   subjectBySlug,
+  topicsBySubject,
   staffUserId,
 }) {
   const requireSubject = (slug) => {
@@ -2452,6 +2456,7 @@ function seedDemo1Questions({
     passage,
   }) => {
     const subject = requireSubject(subjectSlug);
+    const subjectTopicIds = topicsBySubject.get(subject.id) ?? [];
     questionRows.push([
       questionId,
       subject.id,
@@ -2480,6 +2485,7 @@ function seedDemo1Questions({
         idx + 1,
       ]);
     });
+    assignQuestionTopics(questionTopicRows, questionId, subjectTopicIds);
 
     if (passage) {
       let passageId = passageIdsByContent.get(passage);
