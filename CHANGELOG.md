@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(auth): avoid avatar_url parameter type error
+- Cast the avatar_url parameter in profile completion updates to prevent Postgres type inference failures.
+
 ### refactor(challenge): remove separate challenge time limit
 - Challenges now use the quiz duration (`estimated_time_seconds`) as their time limit (and may be untimed like regular quizzes).
 - Dropped `challenge_settings.time_limit_seconds`; staff quiz editor now configures challenge schedule only.

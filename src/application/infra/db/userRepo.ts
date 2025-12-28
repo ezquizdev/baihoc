@@ -207,9 +207,9 @@ export async function updateUserProfile(
          school = COALESCE($3, school),
          date_of_birth = COALESCE($4, date_of_birth),
          avatar_url = CASE
-           WHEN $5 IS NULL THEN avatar_url
-           WHEN $5 = '' THEN NULL
-           ELSE $5
+           WHEN $5::text IS NULL THEN avatar_url
+           WHEN $5::text = '' THEN NULL
+           ELSE $5::text
          END,
          profile_completed = COALESCE($6, profile_completed),
          updated_at = now()
