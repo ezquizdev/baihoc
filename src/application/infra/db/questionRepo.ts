@@ -514,12 +514,65 @@ export async function updatePassageById(input: {
 }): Promise<Passage | null> {
   const res = await query<PassageRow>(
     `UPDATE passages
-     SET content = $2,
+     SET content = $2
      WHERE id = $1
      RETURNING id, content`,
     [input.passageId, input.content],
   );
   return mapPassage(res.rows[0]);
+}
+
+export async function listUsedQuestionIdsInQuizzes(questionIds: string[]) {
+  if (!questionIds.length) return [];
+  const res = await query<{ question_id: string }>(
+    `SELECT DISTINCT question_id
+     FROM quiz_questions
+     WHERE question_id = ANY($1::uuid[])`,
+    [questionIds],
+  );
+  return res.rows.map((row) => row.question_id);
+}
+
+export async function deletePassageCascade(passageId: string) {
+  await withTransaction(async (client) => {
+    const questionRes = await client.query<{ question_id: string }>(
+      `SELECT question_id
+       FROM question_passages
+       WHERE passage_id = $1`,
+      [passageId],
+    );
+    const questionIds = questionRes.rows.map((row) => row.question_id);
+
+    if (questionIds.length) {
+      await client.query(
+        `DELETE FROM question_options
+         WHERE question_id = ANY($1::uuid[])`,
+        [questionIds],
+      );
+      await client.query(
+        `DELETE FROM short_answer_keys
+         WHERE question_id = ANY($1::uuid[])`,
+        [questionIds],
+      );
+      await client.query(
+        `DELETE FROM question_topics
+         WHERE question_id = ANY($1::uuid[])`,
+        [questionIds],
+      );
+    }
+
+    await client.query(`DELETE FROM question_passages WHERE passage_id = $1`, [
+      passageId,
+    ]);
+
+    if (questionIds.length) {
+      await client.query(`DELETE FROM questions WHERE id = ANY($1::uuid[])`, [
+        questionIds,
+      ]);
+    }
+
+    await client.query(`DELETE FROM passages WHERE id = $1`, [passageId]);
+  });
 }
 
 export async function listQuestionsForPassage(

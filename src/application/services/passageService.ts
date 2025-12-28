@@ -1,7 +1,9 @@
 import {
+  deletePassageCascade,
   getPassageById,
   hasInProgressAttemptsForPassage,
   listQuestionsForPassage,
+  listUsedQuestionIdsInQuizzes,
   updatePassageById,
 } from "@/application/infra/db/questionRepo";
 import { ServiceError } from "@/application/services/errors";
@@ -45,4 +47,34 @@ export async function updatePassage(
   }
 
   return updated;
+}
+
+export async function deletePassageWithQuestions(passageId: string) {
+  const passage = await getPassageById(passageId);
+  if (!passage) {
+    throw new Error("Passage not found");
+  }
+
+  const inProgress = await hasInProgressAttemptsForPassage(passageId);
+  if (inProgress) {
+    throw new ServiceError(
+      "PASSAGE_DELETE_BLOCKED_IN_PROGRESS",
+      "Đoạn văn đang nằm trong quiz có lượt làm đang diễn ra. Không thể xóa.",
+      409,
+    );
+  }
+
+  const questions = await listQuestionsForPassage(passageId);
+  const questionIds = questions.map((q) => q.id);
+  const usedIds = await listUsedQuestionIdsInQuizzes(questionIds);
+  if (usedIds.length) {
+    throw new ServiceError(
+      "PASSAGE_DELETE_BLOCKED_IN_USE",
+      "Không thể xóa passage vì có câu hỏi đang được dùng trong quiz. Hãy gỡ các câu hỏi này khỏi quiz trước.",
+      409,
+    );
+  }
+
+  await deletePassageCascade(passageId);
+  return { status: "deleted" as const };
 }

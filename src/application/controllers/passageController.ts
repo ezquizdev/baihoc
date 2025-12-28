@@ -1,4 +1,5 @@
 import {
+  deletePassageWithQuestions,
   getPassageDetail,
   updatePassage,
 } from "@/application/services/passageService";
@@ -16,4 +17,8 @@ export async function controllerUpdatePassage(
   });
 
   return { passage };
+}
+
+export async function controllerDeletePassage(passageId: string) {
+  return deletePassageWithQuestions(passageId);
 }

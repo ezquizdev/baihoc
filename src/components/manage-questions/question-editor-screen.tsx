@@ -22,6 +22,7 @@ type QuestionEditorScreenProps =
       session: SessionPayload;
       subjects: Subject[];
       mode: "create";
+      initialType?: QuestionType;
       questionId?: never;
       initialDetail?: never;
     }
@@ -56,12 +57,16 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
 
   const initial = props.mode === "edit" ? props.initialDetail : null;
   const initialQuestion = initial?.question;
+  const initialCreateType =
+    props.mode === "create"
+      ? (props.initialType ?? "mcq_single")
+      : "mcq_single";
 
   const [subjectId, setSubjectId] = useState<string>(
     initialQuestion?.subjectId ?? props.subjects[0]?.id ?? "",
   );
   const [type, setType] = useState<QuestionType>(
-    initialQuestion?.type ?? "mcq_single",
+    initialQuestion?.type ?? initialCreateType,
   );
   const [defaultDifficulty, setDefaultDifficulty] = useState<DifficultyLevel>(
     (initialQuestion?.defaultDifficulty ?? 3) as DifficultyLevel,

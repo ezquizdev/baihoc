@@ -2,6 +2,12 @@
 
 ## 2025-12-28
 
+### feat(staff): improve passage editor + type-first question creation
+- `/staff/questions/new` now starts with a question-type picker (MCQ 1, MCQ multi, short-answer, passage).
+- Passage create flow now supports drafting the passage + first question, then continues in the passage editor UI.
+- `/staff/questions/passages/[passageId]` now supports adding new questions inline and deleting the whole passage group from one screen.
+- Added `DELETE /api/staff/passages/[passageId]` with guards for in-progress attempts and quiz usage.
+
 ### feat(staff): paste images into question markdown (Supabase upload)
 - Staff question + passage editors now support pasting images (Ctrl/Cmd+V) to auto-upload to Supabase Storage and insert markdown image syntax.
 - Added `POST /api/staff/media/images` (multipart upload, returns `{ url }`).
