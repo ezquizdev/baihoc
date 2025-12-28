@@ -213,6 +213,10 @@
   flex-wrap: wrap;
 }
 
+.questionRow {
+  cursor: pointer;
+}
+
 .subtle {
   font-size: 12px;
   color: var(--muted);

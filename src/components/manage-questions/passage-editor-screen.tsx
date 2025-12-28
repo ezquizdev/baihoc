@@ -430,7 +430,7 @@ export function PassageEditorScreen({
               <div className={styles.subtle}>{questionCountLabel}</div>
             </div>
             <div className={styles.subtle}>
-              Tip: bấm “Mở” để chỉnh sửa nhanh từng câu hỏi.
+              Tip: bấm vào hàng để mở/đóng chỉnh sửa nhanh từng câu hỏi.
             </div>
           </div>
 
@@ -469,9 +469,14 @@ export function PassageEditorScreen({
                       const dateLabel = formatDateVi(
                         q.updatedAt ?? q.createdAt,
                       );
+                      const editorRowId = `question-${q.id}-editor`;
                       return (
                         <Fragment key={q.id}>
-                          <tr key={q.id}>
+                          <tr
+                            key={q.id}
+                            className={styles.questionRow}
+                            onClick={() => toggleExpanded(q.id)}
+                          >
                             <td>{q.passagePosition ?? "—"}</td>
                             <td className={tableStyles.stem}>{q.stem}</td>
                             <td>{subject?.name ?? "—"}</td>
@@ -507,15 +512,11 @@ export function PassageEditorScreen({
                               <div className={tableStyles.actions}>
                                 <button
                                   type="button"
-                                  className={`${tableStyles.linkBtn} ${tableStyles.linkBtnBlue}`}
-                                  onClick={() => toggleExpanded(q.id)}
-                                >
-                                  {open ? "Đóng" : "Mở"}
-                                </button>
-                                <button
-                                  type="button"
                                   className={`${tableStyles.linkBtn} ${tableStyles.linkBtnRed}`}
-                                  onClick={() => handleRequestDelete(q)}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleRequestDelete(q);
+                                  }}
                                 >
                                   Xóa
                                 </button>
@@ -523,7 +524,7 @@ export function PassageEditorScreen({
                             </td>
                           </tr>
                           {open ? (
-                            <tr key={`${q.id}-editor`}>
+                            <tr key={`${q.id}-editor`} id={editorRowId}>
                               <td colSpan={8} className={styles.expandedCell}>
                                 <div className={styles.expandedCard}>
                                   <InlineQuestionEditor

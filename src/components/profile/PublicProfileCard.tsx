@@ -1,6 +1,5 @@
 import Image from "next/image";
 import type { PublicProfileUserDto } from "@/application/models/profile";
-import { formatDateVi } from "@/lib/formatters";
 import styles from "./profile-card.module.css";
 
 function roleLabel(role: PublicProfileUserDto["role"]) {
@@ -55,20 +54,8 @@ export function PublicProfileCard({ user }: { user: PublicProfileUserDto }) {
             <div className={styles.fieldValue}>{user.fullName || "—"}</div>
           </div>
           <div className={styles.field}>
-            <span className={styles.fieldLabel}>Trạng thái hồ sơ</span>
-            <div className={styles.fieldValue}>
-              {user.profileCompleted ? "Đã hoàn tất" : "Chưa hoàn tất"}
-            </div>
-          </div>
-          <div className={styles.field}>
             <span className={styles.fieldLabel}>Trường/Lớp</span>
             <div className={styles.fieldValue}>{user.school || "—"}</div>
-          </div>
-          <div className={styles.field}>
-            <span className={styles.fieldLabel}>Ngày sinh</span>
-            <div className={styles.fieldValue}>
-              {formatDateVi(user.dateOfBirth)}
-            </div>
           </div>
         </div>
       </section>
