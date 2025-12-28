@@ -39,6 +39,9 @@
 ### fix(catalog): honor deep link params for status/custom
 - Navigating to `/quizzes?status=...` and `/quizzes?custom=1` now reliably applies the tab filter or opens the custom quiz modal even during client-side navigation.
 
+### fix(results): show unanswered as "Bỏ trống" in question nav
+- Attempt results question navigator now treats blank responses as “Bỏ trống” (warning/yellow) instead of “Sai” (red).
+
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 

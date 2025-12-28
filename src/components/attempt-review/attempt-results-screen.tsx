@@ -781,15 +781,14 @@ function getQuestionStatus(
   const detailUnavailable = options?.detailUnavailable ?? false;
   if (!answer) return detailUnavailable ? "ungraded" : "unanswered";
 
-  const hasTypedAnswer = Boolean(answer.textAnswer);
+  const hasTypedAnswer = Boolean(answer.textAnswer?.trim());
   const hasSelectedOptions = Boolean(answer.selectedOptionIds?.length);
-  const hasJudgement = typeof answer.isCorrect === "boolean";
-  const answered =
-    question.type === "short_answer"
-      ? hasTypedAnswer || hasJudgement
-      : hasSelectedOptions || hasJudgement;
+  const hasResponse =
+    question.type === "short_answer" ? hasTypedAnswer : hasSelectedOptions;
 
-  if (!answered) return "unanswered";
+  // Some legacy rows may mark blank answers as `isCorrect=false`.
+  // For the review UI, treat "no response" as "unanswered" so it shows as "Bỏ trống".
+  if (!hasResponse) return "unanswered";
   if (answer?.isCorrect === true) return "correct";
   if (answer?.isCorrect === false) return "wrong";
   return "ungraded";
