@@ -9,16 +9,26 @@ import { QuestionCreateTypeScreen } from "@/components/manage-questions/question
 import { QuestionEditorScreen } from "@/components/manage-questions/question-editor-screen";
 
 type Props = {
-  searchParams: Promise<{ type?: string }>;
+  searchParams: Promise<{ type?: string; from?: string; quizId?: string }>;
 };
 
 export default async function StaffQuestionCreatePage({ searchParams }: Props) {
   const params = await searchParams;
   const type = params.type;
+  const from = params.from;
+  const quizId = params.quizId;
+
+  const nextParams = new URLSearchParams();
+  if (type) nextParams.set("type", type);
+  if (from) nextParams.set("from", from);
+  if (quizId) nextParams.set("quizId", quizId);
+  const next = nextParams.toString()
+    ? `/staff/questions/new?${nextParams}`
+    : "/staff/questions/new";
 
   const session = await requireAuthenticatedPage({
     role: "staff",
-    next: "/staff/questions/new",
+    next,
   });
 
   const subjects = await controllerListSubjects();

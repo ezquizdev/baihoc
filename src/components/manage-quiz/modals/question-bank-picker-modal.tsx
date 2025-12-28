@@ -13,6 +13,7 @@ type QuestionBankPickerModalProps = {
   open: boolean;
   subjects: Subject[];
   existingQuestionIds: string[];
+  createQuestionUrl?: string;
   onClose: () => void;
   onAdd: (questions: Question[]) => void;
 };
@@ -23,6 +24,7 @@ export function QuestionBankPickerModal({
   open,
   subjects,
   existingQuestionIds,
+  createQuestionUrl = "/staff/questions/new",
   onClose,
   onAdd,
 }: QuestionBankPickerModalProps) {
@@ -128,6 +130,11 @@ export function QuestionBankPickerModal({
   const selectedCount = Object.keys(selected).length;
   const toolDisabled = loading;
 
+  const openCreateQuestion = () => {
+    const opened = window.open(createQuestionUrl, "_blank");
+    opened?.focus?.();
+  };
+
   const toggle = (question: Question) => {
     if (existingSet.has(question.id)) return;
     setSelected((prev) => {
@@ -172,14 +179,14 @@ export function QuestionBankPickerModal({
             </div>
           </div>
           <div className={styles.pickerHeadActions}>
-            <Link
+            <button
               className={styles.pickerLink}
-              href="/staff/questions/new"
-              target="_blank"
-              rel="noopener noreferrer"
+              type="button"
+              onClick={openCreateQuestion}
+              disabled={toolDisabled}
             >
               + Tạo câu hỏi
-            </Link>
+            </button>
             {selectedCount ? (
               <button
                 type="button"

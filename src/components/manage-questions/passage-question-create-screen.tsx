@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { QuestionDetail } from "@/application/models/question";
 import type { Subject } from "@/application/models/subject";
+import { publishQuizBuilderAddQuestion } from "@/components/manage-quiz/quiz-builder-callback";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import { handleMarkdownImagePaste } from "@/components/ui/markdown-image-paste";
 import { RichText } from "@/components/ui/rich-text";
@@ -23,7 +24,32 @@ export function PassageQuestionCreateScreen({
   subjects: Subject[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const displayName = session.fullName ?? session.email.split("@")[0];
+  const callbackQuizId =
+    searchParams.get("from") === "quiz-builder"
+      ? searchParams.get("quizId")
+      : null;
+  const isQuizCallback = Boolean(callbackQuizId);
+  const returnHref = callbackQuizId
+    ? `/staff/quizzes/${callbackQuizId}/content`
+    : "/staff/quizzes";
+
+  const chooseTypeHref =
+    isQuizCallback && callbackQuizId
+      ? `/staff/questions/new?${new URLSearchParams({
+          from: "quiz-builder",
+          quizId: callbackQuizId,
+        })}`
+      : "/staff/questions/new";
+
+  const closeOrRedirect = () => {
+    if (!isQuizCallback || !callbackQuizId) return;
+    window.close();
+    window.setTimeout(() => {
+      window.location.assign(returnHref);
+    }, 250);
+  };
 
   const [passageContent, setPassageContent] = useState<string>("");
   const [passageViewMode, setPassageViewMode] = useState<ViewMode>("edit");
@@ -31,6 +57,23 @@ export function PassageQuestionCreateScreen({
   const [mediaUploadError, setMediaUploadError] = useState<string | null>(null);
 
   const handleCreated = (detail: QuestionDetail) => {
+    if (isQuizCallback && callbackQuizId) {
+      publishQuizBuilderAddQuestion({
+        quizId: callbackQuizId,
+        question: {
+          id: detail.question.id,
+          stem: detail.question.stem,
+          type: detail.question.type,
+          defaultScore: detail.question.defaultScore,
+        },
+      });
+      window.setTimeout(() => window.close(), 200);
+      window.setTimeout(() => {
+        window.location.assign(returnHref);
+      }, 450);
+      return;
+    }
+
     const nextPassageId = detail.question.passageId;
     if (!nextPassageId) {
       router.push(`/staff/questions/${detail.question.id}`);
@@ -57,30 +100,42 @@ export function PassageQuestionCreateScreen({
           <div>
             <h1 className={styles.heroTitle}>Tạo câu hỏi với ngữ liệu</h1>
             <p className={styles.heroText}>
-              Tạo đoạn ngữ liệu và câu hỏi đầu tiên. Sau khi tạo xong, bạn sẽ được
-              chuyển tới màn hình quản lý để thêm/xóa các câu hỏi khác.
+              {isQuizCallback
+                ? "Tạo đoạn ngữ liệu và câu hỏi để thêm vào quiz. Sau khi lưu, câu hỏi sẽ tự được thêm vào quiz và tab này sẽ đóng."
+                : "Tạo đoạn ngữ liệu và câu hỏi đầu tiên. Sau khi tạo xong, bạn sẽ được chuyển tới màn hình quản lý để thêm/xóa các câu hỏi khác."}
             </p>
           </div>
           <div className={styles.heroActions}>
             <Link
               className={`${styles.btn} ${styles.btnGray}`}
-              href="/staff/questions/new"
+              href={chooseTypeHref as Parameters<typeof Link>[0]["href"]}
             >
               Chọn loại khác
             </Link>
-            <Link
-              className={`${styles.btn} ${styles.btnGray}`}
-              href="/staff/questions"
-            >
-              Quay lại
-            </Link>
+            {isQuizCallback ? (
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGray}`}
+                onClick={closeOrRedirect}
+              >
+                Quay lại quiz
+              </button>
+            ) : (
+              <Link
+                className={`${styles.btn} ${styles.btnGray}`}
+                href="/staff/questions"
+              >
+                Quay lại
+              </Link>
+            )}
           </div>
         </section>
 
         <section className={`cardBase ${styles.card}`} aria-label="Passage">
           <h2 className={styles.sectionTitle}>Đoạn ngữ liệu</h2>
           <p className={styles.sectionSub}>
-            Đoạn ngữ liệu này sẽ được dùng chung cho các câu hỏi trong đoạn ngữ liệu.
+            Đoạn ngữ liệu này sẽ được dùng chung cho các câu hỏi trong đoạn ngữ
+            liệu.
           </p>
 
           <div
@@ -236,7 +291,13 @@ export function PassageQuestionCreateScreen({
               passageContent={passageContent}
               initialPassagePosition={1}
               initialSubjectId={subjects[0]?.id}
-              onCancel={() => router.push("/staff/questions/new")}
+              onCancel={() => {
+                if (isQuizCallback && callbackQuizId) {
+                  closeOrRedirect();
+                  return;
+                }
+                router.push("/staff/questions/new");
+              }}
               onCreated={handleCreated}
             />
           </div>

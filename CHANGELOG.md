@@ -11,6 +11,9 @@
 ### fix(staff-quizzes): remove dialog card from quiz content page
 - `/staff/quizzes/[quizId]/content` now renders the quiz builder content without the modal dialog-card container while keeping the same question management UI.
 
+### feat(staff-quizzes): callback new questions into quiz builder
+- From `/staff/quizzes/[quizId]/content`, “Tạo câu hỏi mới” opens the question create flow in a new tab and auto-adds the created question into the builder list before closing the tab.
+
 ### fix(db): reuse pg pool across hot reloads
 - The server db pool now caches in `globalThis` to avoid creating new connections per module reload.
 

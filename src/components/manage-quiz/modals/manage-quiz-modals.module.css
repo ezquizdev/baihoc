@@ -320,6 +320,17 @@
   color: var(--text-secondary);
 }
 
+.inlineNotice {
+  margin-top: 10px;
+  border-radius: 14px;
+  border: 1px solid rgb(var(--primary-rgb) / 0.18);
+  background: var(--primary-soft);
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--text-secondary);
+}
+
 .builderScroll {
   overflow: auto;
   padding-right: 6px;

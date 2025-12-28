@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type { DifficultyLevel, QuestionType } from "@/application/models/enums";
@@ -15,6 +15,7 @@ import {
   makePassageConversionDraftId,
   writePassageConversionDraft,
 } from "@/components/manage-questions/passage-conversion-draft";
+import { publishQuizBuilderAddQuestion } from "@/components/manage-quiz/quiz-builder-callback";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { handleMarkdownImagePaste } from "@/components/ui/markdown-image-paste";
@@ -57,8 +58,26 @@ type ViewMode = "edit" | "split" | "preview";
 
 export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const displayName =
     props.session.fullName ?? props.session.email.split("@")[0];
+
+  const callbackQuizId =
+    props.mode === "create" && searchParams.get("from") === "quiz-builder"
+      ? searchParams.get("quizId")
+      : null;
+  const isQuizCallback = Boolean(callbackQuizId);
+  const returnHref = callbackQuizId
+    ? `/staff/quizzes/${callbackQuizId}/content`
+    : "/staff/quizzes";
+
+  const closeOrRedirect = () => {
+    if (!isQuizCallback || !callbackQuizId) return;
+    window.close();
+    window.setTimeout(() => {
+      window.location.assign(returnHref);
+    }, 250);
+  };
 
   const initial = props.mode === "edit" ? props.initialDetail : null;
   const initialQuestion = initial?.question;
@@ -168,7 +187,9 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
   const meta = props.mode === "edit" ? `ID: ${props.questionId}` : null;
   const description =
     props.mode === "create"
-      ? "Tạo câu hỏi mới để đưa vào kho."
+      ? isQuizCallback
+        ? "Tạo câu hỏi mới để thêm vào quiz. Sau khi lưu, tab này sẽ đóng."
+        : "Tạo câu hỏi mới để đưa vào kho."
       : "Chỉnh sửa nội dung, đáp án và trạng thái.";
 
   const disabled = busyAction !== null;
@@ -251,6 +272,24 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
       if (!next) throw new Error("Không thể lưu câu hỏi");
 
       if (props.mode === "create") {
+        if (isQuizCallback && callbackQuizId) {
+          publishQuizBuilderAddQuestion({
+            quizId: callbackQuizId,
+            question: {
+              id: next.question.id,
+              stem: next.question.stem,
+              type: next.question.type,
+              defaultScore: next.question.defaultScore,
+            },
+          });
+          setNotice("Đã thêm câu hỏi vào quiz. Đang quay lại...");
+          window.setTimeout(() => window.close(), 200);
+          window.setTimeout(() => {
+            window.location.assign(returnHref);
+          }, 450);
+          return;
+        }
+
         router.push(`/staff/questions/${next.question.id}`);
         router.refresh();
         return;
@@ -384,12 +423,22 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
             <p className={styles.heroText}>{description}</p>
           </div>
           <div className={styles.heroActions}>
-            <Link
-              className={`${styles.btn} ${styles.btnGray}`}
-              href="/staff/questions"
-            >
-              Quay lại
-            </Link>
+            {isQuizCallback ? (
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGray}`}
+                onClick={closeOrRedirect}
+              >
+                Quay lại quiz
+              </button>
+            ) : (
+              <Link
+                className={`${styles.btn} ${styles.btnGray}`}
+                href="/staff/questions"
+              >
+                Quay lại
+              </Link>
+            )}
             {props.mode === "edit" ? (
               status === "archived" ? (
                 <button
@@ -626,7 +675,9 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
               </div>
 
               <div
-                className={viewMode === "split" ? styles.splitLayout : undefined}
+                className={
+                  viewMode === "split" ? styles.splitLayout : undefined
+                }
               >
                 <div>
                   <div className={styles.stack}>
@@ -670,179 +721,179 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                   </div>
 
                   <div className={styles.stack} style={{ marginTop: 16 }}>
-                  <h3 className={styles.sectionTitle}>
-                    {isMcq ? "Đáp án (MCQ)" : "Đáp án (Tự luận ngắn)"}
-                  </h3>
+                    <h3 className={styles.sectionTitle}>
+                      {isMcq ? "Đáp án (MCQ)" : "Đáp án (Tự luận ngắn)"}
+                    </h3>
 
-                  {isMcq ? (
-                    <>
-                      <div className={styles.muted}>
-                        {isMultiCorrect
-                          ? "Chọn một hoặc nhiều đáp án đúng."
-                          : "Chọn đúng 1 đáp án."}
-                      </div>
-                      {options.map((opt, idx) => (
-                        <div key={opt.position} className={styles.optionRow}>
-                          <input
-                            className={styles.input}
-                            value={opt.text}
-                            onChange={(e) => {
-                              const nextText = e.target.value;
-                              setOptions((prev) =>
-                                prev.map((o, oi) =>
-                                  oi === idx ? { ...o, text: nextText } : o,
-                                ),
-                              );
-                            }}
-                            onPaste={(e) =>
-                              handleMarkdownImagePaste(e, {
-                                setValue: (next) =>
-                                  setOptions((prev) =>
-                                    prev.map((o, oi) => {
-                                      if (oi !== idx) return o;
-                                      const text =
-                                        typeof next === "function"
-                                          ? next(o.text)
-                                          : next;
-                                      return { ...o, text };
-                                    }),
+                    {isMcq ? (
+                      <>
+                        <div className={styles.muted}>
+                          {isMultiCorrect
+                            ? "Chọn một hoặc nhiều đáp án đúng."
+                            : "Chọn đúng 1 đáp án."}
+                        </div>
+                        {options.map((opt, idx) => (
+                          <div key={opt.position} className={styles.optionRow}>
+                            <input
+                              className={styles.input}
+                              value={opt.text}
+                              onChange={(e) => {
+                                const nextText = e.target.value;
+                                setOptions((prev) =>
+                                  prev.map((o, oi) =>
+                                    oi === idx ? { ...o, text: nextText } : o,
                                   ),
-                                setUploadingCount: setMediaUploadingCount,
-                                setUploadError: setMediaUploadError,
-                                altPrefix: `option-${idx + 1}`,
-                              })
-                            }
-                            placeholder={`Đáp án ${idx + 1}`}
-                            disabled={disabled}
-                          />
+                                );
+                              }}
+                              onPaste={(e) =>
+                                handleMarkdownImagePaste(e, {
+                                  setValue: (next) =>
+                                    setOptions((prev) =>
+                                      prev.map((o, oi) => {
+                                        if (oi !== idx) return o;
+                                        const text =
+                                          typeof next === "function"
+                                            ? next(o.text)
+                                            : next;
+                                        return { ...o, text };
+                                      }),
+                                    ),
+                                  setUploadingCount: setMediaUploadingCount,
+                                  setUploadError: setMediaUploadError,
+                                  altPrefix: `option-${idx + 1}`,
+                                })
+                              }
+                              placeholder={`Đáp án ${idx + 1}`}
+                              disabled={disabled}
+                            />
+                            <button
+                              type="button"
+                              className={`${styles.smallBtn} ${styles.smallBtnBlue}`}
+                              onClick={() =>
+                                pickCorrect(idx, isMultiCorrect, setOptions)
+                              }
+                              disabled={disabled}
+                            >
+                              {opt.isCorrect ? "Đúng ✓" : "Chọn đúng"}
+                            </button>
+                            <button
+                              type="button"
+                              className={`${styles.smallBtn} ${styles.smallBtnRed}`}
+                              onClick={() =>
+                                setOptions((prev) =>
+                                  prev.length <= 2
+                                    ? prev
+                                    : prev.filter((_, oi) => oi !== idx),
+                                )
+                              }
+                              disabled={disabled || options.length <= 2}
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        ))}
+                        <div className={styles.row}>
                           <button
                             type="button"
                             className={`${styles.smallBtn} ${styles.smallBtnBlue}`}
                             onClick={() =>
-                              pickCorrect(idx, isMultiCorrect, setOptions)
+                              setOptions((prev) => {
+                                const nextPosition =
+                                  prev.reduce(
+                                    (max, opt) => Math.max(max, opt.position),
+                                    0,
+                                  ) + 1;
+                                return [
+                                  ...prev,
+                                  {
+                                    label: null,
+                                    text: "",
+                                    isCorrect: false,
+                                    position: nextPosition,
+                                  },
+                                ];
+                              })
                             }
                             disabled={disabled}
                           >
-                            {opt.isCorrect ? "Đúng ✓" : "Chọn đúng"}
-                          </button>
-                          <button
-                            type="button"
-                            className={`${styles.smallBtn} ${styles.smallBtnRed}`}
-                            onClick={() =>
-                              setOptions((prev) =>
-                                prev.length <= 2
-                                  ? prev
-                                  : prev.filter((_, oi) => oi !== idx),
-                              )
-                            }
-                            disabled={disabled || options.length <= 2}
-                          >
-                            Xóa
+                            + Thêm đáp án
                           </button>
                         </div>
-                      ))}
-                      <div className={styles.row}>
-                        <button
-                          type="button"
-                          className={`${styles.smallBtn} ${styles.smallBtnBlue}`}
-                          onClick={() =>
-                            setOptions((prev) => {
-                              const nextPosition =
-                                prev.reduce(
-                                  (max, opt) => Math.max(max, opt.position),
-                                  0,
-                                ) + 1;
-                              return [
-                                ...prev,
-                                {
-                                  label: null,
-                                  text: "",
-                                  isCorrect: false,
-                                  position: nextPosition,
-                                },
-                              ];
-                            })
-                          }
-                          disabled={disabled}
-                        >
-                          + Thêm đáp án
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {shortAnswers.map((ans, idx) => (
-                        <div key={ans.clientId} className={styles.optionRow}>
-                          <input
-                            className={styles.input}
-                            value={ans.acceptableAnswer}
-                            onChange={(e) => {
-                              const nextText = e.target.value;
-                              setShortAnswers((prev) =>
-                                prev.map((a, ai) =>
-                                  ai === idx
-                                    ? { ...a, acceptableAnswer: nextText }
-                                    : a,
-                                ),
-                              );
-                            }}
-                            placeholder={`Đáp án ${idx + 1}`}
-                            disabled={disabled}
-                          />
-                          <label className={styles.smallBtn}>
+                      </>
+                    ) : (
+                      <>
+                        {shortAnswers.map((ans, idx) => (
+                          <div key={ans.clientId} className={styles.optionRow}>
                             <input
-                              type="checkbox"
-                              checked={ans.caseSensitive}
-                              onChange={() =>
+                              className={styles.input}
+                              value={ans.acceptableAnswer}
+                              onChange={(e) => {
+                                const nextText = e.target.value;
                                 setShortAnswers((prev) =>
                                   prev.map((a, ai) =>
                                     ai === idx
-                                      ? {
-                                          ...a,
-                                          caseSensitive: !a.caseSensitive,
-                                        }
+                                      ? { ...a, acceptableAnswer: nextText }
                                       : a,
                                   ),
+                                );
+                              }}
+                              placeholder={`Đáp án ${idx + 1}`}
+                              disabled={disabled}
+                            />
+                            <label className={styles.smallBtn}>
+                              <input
+                                type="checkbox"
+                                checked={ans.caseSensitive}
+                                onChange={() =>
+                                  setShortAnswers((prev) =>
+                                    prev.map((a, ai) =>
+                                      ai === idx
+                                        ? {
+                                            ...a,
+                                            caseSensitive: !a.caseSensitive,
+                                          }
+                                        : a,
+                                    ),
+                                  )
+                                }
+                                disabled={disabled}
+                              />{" "}
+                              Phân biệt hoa/thường
+                            </label>
+                            <button
+                              type="button"
+                              className={`${styles.smallBtn} ${styles.smallBtnRed}`}
+                              onClick={() =>
+                                setShortAnswers((prev) =>
+                                  prev.length <= 1
+                                    ? prev
+                                    : prev.filter((_, ai) => ai !== idx),
                                 )
                               }
-                              disabled={disabled}
-                            />{" "}
-                            Phân biệt hoa/thường
-                          </label>
+                              disabled={disabled || shortAnswers.length <= 1}
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        ))}
+                        <div className={styles.row}>
                           <button
                             type="button"
-                            className={`${styles.smallBtn} ${styles.smallBtnRed}`}
+                            className={`${styles.smallBtn} ${styles.smallBtnBlue}`}
                             onClick={() =>
-                              setShortAnswers((prev) =>
-                                prev.length <= 1
-                                  ? prev
-                                  : prev.filter((_, ai) => ai !== idx),
-                              )
+                              setShortAnswers((prev) => [
+                                ...prev,
+                                buildEmptyShortAnswer(),
+                              ])
                             }
-                            disabled={disabled || shortAnswers.length <= 1}
+                            disabled={disabled}
                           >
-                            Xóa
+                            + Thêm đáp án
                           </button>
                         </div>
-                      ))}
-                      <div className={styles.row}>
-                        <button
-                          type="button"
-                          className={`${styles.smallBtn} ${styles.smallBtnBlue}`}
-                          onClick={() =>
-                            setShortAnswers((prev) => [
-                              ...prev,
-                              buildEmptyShortAnswer(),
-                            ])
-                          }
-                          disabled={disabled}
-                        >
-                          + Thêm đáp án
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                      </>
+                    )}
+                  </div>
 
                   {props.mode === "create" ? (
                     <div className={styles.stack} style={{ marginTop: 16 }}>
@@ -900,8 +951,9 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                     <div className={styles.stack} style={{ marginTop: 16 }}>
                       <h3 className={styles.sectionTitle}>Đoạn ngữ liệu</h3>
                       <div className={styles.muted}>
-                        Câu hỏi thường không kèm đoạn ngữ liệu. Nếu bạn muốn thêm
-                        đoạn ngữ liệu, hãy chuyển câu hỏi sang dạng passage.
+                        Câu hỏi thường không kèm đoạn ngữ liệu. Nếu bạn muốn
+                        thêm đoạn ngữ liệu, hãy chuyển câu hỏi sang dạng
+                        passage.
                       </div>
                       <button
                         type="button"
@@ -1154,8 +1206,8 @@ function ConfirmDeleteModal({
             </li>
             {hasPassage ? (
               <li>
-                Câu hỏi có đoạn ngữ liệu đính kèm; nếu đoạn ngữ liệu không còn được dùng,
-                hệ thống cũng sẽ xóa đoạn ngữ liệu.
+                Câu hỏi có đoạn ngữ liệu đính kèm; nếu đoạn ngữ liệu không còn
+                được dùng, hệ thống cũng sẽ xóa đoạn ngữ liệu.
               </li>
             ) : null}
           </ul>

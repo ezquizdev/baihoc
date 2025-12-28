@@ -31,6 +31,7 @@ import type {
   QuizQuestionSummary,
 } from "@/application/models/quiz";
 import type { Subject } from "@/application/models/subject";
+import { subscribeQuizBuilderAddQuestion } from "@/components/manage-quiz/quiz-builder-callback";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { NoticeModal } from "@/components/ui/notice-modal";
 import { RichText } from "@/components/ui/rich-text";
@@ -63,6 +64,7 @@ export function QuizBuilderModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [flashMessage, setFlashMessage] = useState<string | null>(null);
   const [bankOpen, setBankOpen] = useState(false);
   const [notice, setNotice] = useState<{
     title: string;
@@ -79,6 +81,7 @@ export function QuizBuilderModal({
     setDescription("");
     setQuestions([]);
     setError(null);
+    setFlashMessage(null);
     setBankOpen(false);
     setNotice(null);
     setRemoveCandidateId(null);
@@ -159,6 +162,42 @@ export function QuizBuilderModal({
     ? Math.round(quiz.estimatedTimeSeconds / 60)
     : "—";
   const challengeText = quiz?.isChallenge ? "Có" : "Không";
+
+  const createQuestionUrl = useMemo(() => {
+    if (!quizId) return "/staff/questions/new";
+    const params = new URLSearchParams({ from: "quiz-builder", quizId });
+    return `/staff/questions/new?${params}`;
+  }, [quizId]);
+
+  useEffect(() => {
+    if (!quizId) return;
+    return subscribeQuizBuilderAddQuestion(quizId, ({ question }) => {
+      setQuestions((prev) => {
+        if (prev.some((item) => item.id === question.id)) return prev;
+        return [
+          ...prev,
+          {
+            id: question.id,
+            stem: question.stem,
+            type: question.type,
+            defaultScore: question.defaultScore,
+            position: prev.length + 1,
+            score: null,
+            required: true,
+          },
+        ];
+      });
+      setFlashMessage(
+        "Đã thêm câu hỏi mới. Nhớ bấm “Lưu nháp” hoặc “Đăng” để lưu vào quiz.",
+      );
+    });
+  }, [quizId]);
+
+  useEffect(() => {
+    if (!flashMessage) return;
+    const timeout = window.setTimeout(() => setFlashMessage(null), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [flashMessage]);
 
   const saveQuestions = async () => {
     if (!quizId) return;
@@ -325,6 +364,11 @@ export function QuizBuilderModal({
   const content = (
     <>
       {loading ? <output aria-live="polite">Đang tải quiz...</output> : null}
+      {flashMessage ? (
+        <output className={styles.inlineNotice} aria-live="polite">
+          {flashMessage}
+        </output>
+      ) : null}
 
       {!loading && quiz ? (
         <>
@@ -373,21 +417,26 @@ export function QuizBuilderModal({
             >
               Chọn câu hỏi từ kho
             </button>
-            <a
+            <button
               className={`${styles.toolBtn} ${styles.toolYellow} ${
                 toolDisabled ? styles.toolBtnDisabled : ""
               }`}
-              href="/staff/questions/new"
-              target="_blank"
-              rel="noreferrer"
-              aria-disabled={toolDisabled}
-              tabIndex={toolDisabled ? -1 : undefined}
-              onClick={(event) => {
-                if (toolDisabled) event.preventDefault();
+              type="button"
+              onClick={() => {
+                if (toolDisabled) return;
+                const opened = window.open(createQuestionUrl, "_blank");
+                if (!opened) {
+                  setNotice({
+                    title: "Không thể mở tab mới",
+                    message:
+                      "Trình duyệt đang chặn mở tab mới. Vui lòng cho phép pop-up và thử lại.",
+                  });
+                }
               }}
+              disabled={toolDisabled}
             >
               Tạo câu hỏi mới
-            </a>
+            </button>
             <button
               className={`${styles.toolBtn} ${styles.toolDark}`}
               type="button"
@@ -501,6 +550,7 @@ export function QuizBuilderModal({
         open={bankOpen}
         subjects={subjects}
         existingQuestionIds={questions.map((q) => q.id)}
+        createQuestionUrl={createQuestionUrl}
         onClose={() => setBankOpen(false)}
         onAdd={(selected) => {
           setQuestions((prev) => {
