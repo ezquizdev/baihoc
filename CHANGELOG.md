@@ -21,6 +21,10 @@
 - Daily challenge card now pulls the currently active challenge quiz (if any) and links into the attempt start flow.
 - Replaced the placeholder banner with the user’s leaderboard rank + IRT total when available.
 
+### feat(staff): implement staff leaderboard + analytics pages
+- `/staff/leaderboard` now uses the real leaderboard table (sort, pagination, and search by email/ID/name).
+- `/staff/analytics` is no longer “Sắp ra mắt” and now shows real summary stats and per-subject charts (30 & 60 ngày gần nhất).
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger

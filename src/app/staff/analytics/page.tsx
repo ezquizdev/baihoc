@@ -1,6 +1,6 @@
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
-import styles from "../staff-stub-page.module.css";
+import { StaffAnalyticsScreen } from "@/components/staff-dashboard/staff-analytics-screen";
 
 export default async function StaffAnalyticsPage() {
   const session = await requireAuthenticatedPage({
@@ -17,7 +17,7 @@ export default async function StaffAnalyticsPage() {
       userName={displayName}
       avatarUrl={session.avatarUrl}
     >
-      <div className={styles.card}>Sắp ra mắt</div>
+      <StaffAnalyticsScreen />
     </StaffShell>
   );
 }
