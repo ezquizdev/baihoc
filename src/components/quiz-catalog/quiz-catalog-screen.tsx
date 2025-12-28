@@ -16,7 +16,7 @@ import { QuizLeaderboard } from "./quiz-leaderboard";
 import { QuizModal } from "./quiz-modal";
 import { QuizPagination } from "./quiz-pagination";
 
-type StatusFilter = "todo" | "done" | "all";
+type StatusFilter = "done" | "challenge" | "all";
 type SortOrder = "newest" | "oldest";
 
 type QuizCatalogScreenProps = {
@@ -42,7 +42,7 @@ export function QuizCatalogScreen({
 }: QuizCatalogScreenProps) {
   const router = useRouter();
   const displayName = session.fullName ?? session.email.split("@")[0];
-  const [status, setStatus] = useState<StatusFilter>("todo");
+  const [status, setStatus] = useState<StatusFilter>("all");
   const [sort, setSort] = useState<SortOrder>("newest");
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<
