@@ -146,6 +146,8 @@ export function ProfileAiSuggestionCard() {
   const status = summary?.status ?? null;
   const showSpinner =
     requesting || status === "pending" || status === "processing";
+  const canRequestGeneration =
+    !loading && !requesting && status !== "pending" && status !== "processing";
 
   const titleText = useMemo(() => {
     if (blockedMessage) return "Chiến lược học tập (Premium)";
@@ -224,16 +226,14 @@ export function ProfileAiSuggestionCard() {
         >
           Tải lại
         </button>
-        {!blockedMessage &&
-        eligible &&
-        (summary?.status === "failed" || summary === null) ? (
+        {!blockedMessage && eligible ? (
           <button
             type="button"
             className={styles.aiButton}
             onClick={() => void requestGeneration()}
-            disabled={loading || requesting}
+            disabled={!canRequestGeneration}
           >
-            {requesting ? "Đang yêu cầu..." : "Thử lại"}
+            {requesting ? "Đang tạo lại..." : "Tạo lại"}
           </button>
         ) : null}
       </div>
