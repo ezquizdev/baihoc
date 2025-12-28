@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(staff-dashboard): align leaderboard card styling
+- Staff dashboard leaderboard now uses the shared leaderboard card styling and omits the self row to match other surfaces.
+
 ### fix(leaderboard): search by name and show all matches
 - Leaderboard table search now matches by student name only and returns all matching rows instead of a single entry.
 

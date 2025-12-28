@@ -17,7 +17,10 @@ export default async function StaffDashboardPage() {
       userName={displayName}
       avatarUrl={session.avatarUrl}
     >
-      <StaffDashboardScreen displayName={displayName} />
+      <StaffDashboardScreen
+        displayName={displayName}
+        viewerUserId={session.sub}
+      />
     </StaffShell>
   );
 }

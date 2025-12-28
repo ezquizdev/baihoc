@@ -1,21 +1,22 @@
 import Link from "next/link";
 import { type CSSProperties, Suspense } from "react";
+import { controllerGetLeaderboard } from "@/application/controllers/leaderboardController";
 import {
   controllerGetStaffDashboardActivity,
   controllerGetStaffDashboardCharts,
   controllerGetStaffDashboardCompetency,
-  controllerGetStaffDashboardLeaderboard,
   controllerGetStaffDashboardStats,
 } from "@/application/controllers/staffDashboardController";
 import { controllerListSubjects } from "@/application/controllers/subjectController";
-import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
-import leaderboardStyles from "@/components/dashboard/leaderboard-card.module.css";
+import { QuizLeaderboard } from "@/components/quiz-catalog/quiz-leaderboard";
+import quizLeaderboardStyles from "@/components/quiz-catalog/quiz-leaderboard.module.css";
 import { StaffLineChart } from "@/components/staff-dashboard/staff-line-chart";
 import { formatNumberVi } from "@/lib/formatters";
 import styles from "./staff-dashboard-screen.module.css";
 
 type StaffDashboardScreenProps = {
   displayName: string;
+  viewerUserId: string;
   leaderboardLimit?: number;
   activityLimit?: number;
 };
@@ -400,41 +401,42 @@ function LeaderboardSectionFallback({ limit }: { limit: number }) {
 
   return (
     <div
-      className={`${leaderboardStyles.card} ${styles.skeletonLeaderboardCard}`}
+      className={`${quizLeaderboardStyles.card} ${styles.skeletonLeaderboardCard}`}
       aria-busy="true"
     >
-      <div className={leaderboardStyles.header}>
-        <h3 className={leaderboardStyles.title}>Bảng xếp hạng</h3>
-        <Link className={leaderboardStyles.action} href="/leaderboard">
+      <div className={quizLeaderboardStyles.header}>
+        <h3 className={quizLeaderboardStyles.title}>Bảng xếp hạng</h3>
+        <Link className={quizLeaderboardStyles.action} href="/leaderboard">
           Xem tất cả
         </Link>
       </div>
 
-      <div className={leaderboardStyles.tableWrap}>
-        <table className={leaderboardStyles.table} aria-label="Bảng xếp hạng">
+      <div className={quizLeaderboardStyles.tableWrap}>
+        <table
+          className={quizLeaderboardStyles.table}
+          aria-label="Leaderboard table"
+        >
           <thead>
             <tr>
-              <th style={{ width: "56px" }}>#</th>
-              <th>Họ và tên</th>
-              <th style={{ width: "120px", textAlign: "right" }}>
-                Điểm Năng lực
-              </th>
+              <th className={quizLeaderboardStyles.colRank}>#</th>
+              <th className={quizLeaderboardStyles.colName}>Họ và tên</th>
+              <th className={quizLeaderboardStyles.colXp}>Điểm</th>
             </tr>
           </thead>
           <tbody>
             {skeletonRows.map((row) => (
               <tr key={row.id}>
-                <td className={leaderboardStyles.rank}>
+                <td className={quizLeaderboardStyles.rank}>
                   <SkeletonBlock
                     className={styles.skeletonInline}
                     style={{ width: 18, height: 12, borderRadius: 999 }}
                   />
                 </td>
                 <td>
-                  <div className={leaderboardStyles.nameCell}>
-                    <div
-                      className={`${leaderboardStyles.avatar} ${styles.leaderboardSkeletonAvatar}`}
-                      aria-hidden="true"
+                  <div className={quizLeaderboardStyles.nameCell}>
+                    <SkeletonBlock
+                      className={styles.skeletonInline}
+                      style={{ width: 28, height: 28, borderRadius: 999 }}
                     />
                     <SkeletonBlock
                       className={styles.skeletonInline}
@@ -442,7 +444,7 @@ function LeaderboardSectionFallback({ limit }: { limit: number }) {
                     />
                   </div>
                 </td>
-                <td className={leaderboardStyles.xp}>
+                <td className={quizLeaderboardStyles.xp}>
                   <SkeletonBlock
                     className={styles.skeletonInline}
                     style={{
@@ -698,62 +700,66 @@ async function StaffActivityList({ limit }: { limit: number }) {
   return <div className={styles.emptyState}>—</div>;
 }
 
-async function StaffLeaderboardSection({ limit }: { limit: number }) {
-  const result = await controllerGetStaffDashboardLeaderboard({ limit }).catch(
-    () =>
-      ({
-        status: "error",
-        message: "unknown_error",
-      }) as const,
-  );
+async function StaffLeaderboardSection({
+  limit,
+  viewerUserId,
+}: {
+  limit: number;
+  viewerUserId: string;
+}) {
+  const leaderboard = await controllerGetLeaderboard({
+    viewerUserId,
+    limit,
+    includeSelf: false,
+    subjectId: null,
+  }).catch(() => null);
 
-  const leaderboard = result.status === "ok" ? result.data.entries : null;
-  const leaderboardError = result.status === "error" ? result.message : null;
-
-  if (leaderboardError) {
+  if (!leaderboard) {
     return (
-      <div className={styles.card}>
-        <div className={styles.cardTitleRow}>
-          <h4 className={styles.cardTitle}>Bảng xếp hạng</h4>
+      <div className={quizLeaderboardStyles.card}>
+        <div className={quizLeaderboardStyles.header}>
+          <h3 className={quizLeaderboardStyles.title}>Bảng xếp hạng</h3>
+          <Link className={quizLeaderboardStyles.action} href="/leaderboard">
+            Xem tất cả
+          </Link>
         </div>
-        <div className={styles.emptyState}>Không tải được bảng xếp hạng</div>
+        <div className={quizLeaderboardStyles.tableWrap}>
+          <table
+            className={quizLeaderboardStyles.table}
+            aria-label="Leaderboard table"
+          >
+            <thead>
+              <tr>
+                <th className={quizLeaderboardStyles.colRank}>#</th>
+                <th className={quizLeaderboardStyles.colName}>Họ và tên</th>
+                <th className={quizLeaderboardStyles.colXp}>Điểm</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colSpan={3} className={quizLeaderboardStyles.stateCell}>
+                  <div className={quizLeaderboardStyles.stateError}>
+                    Không tải được bảng xếp hạng
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }
-  if (leaderboard && leaderboard.length === 0) {
-    return (
-      <div className={styles.card}>
-        <div className={styles.cardTitleRow}>
-          <h4 className={styles.cardTitle}>Bảng xếp hạng</h4>
-        </div>
-        <div className={styles.emptyState}>Chưa có dữ liệu bảng xếp hạng</div>
-      </div>
-    );
-  }
-  if (leaderboard) {
-    return (
-      <LeaderboardCard
-        title="Bảng xếp hạng"
-        actionLabel="Xem tất cả"
-        actionHref="/leaderboard"
-        rows={leaderboard.map((entry) => ({
-          rank: entry.rank,
-          name: entry.fullName,
-          xp: entry.score,
-          avatarUrl: entry.avatarUrl,
-          href: `/profile/${entry.userId}`,
-        }))}
-        scoreHeader="Điểm Năng lực"
-      />
-    );
-  }
+
   return (
-    <div className={styles.card}>
-      <div className={styles.cardTitleRow}>
-        <h4 className={styles.cardTitle}>Bảng xếp hạng</h4>
-      </div>
-      <div className={styles.emptyState}>—</div>
-    </div>
+    <QuizLeaderboard
+      title="Bảng xếp hạng"
+      actionLabel="Xem tất cả"
+      actionHref="/leaderboard"
+      initial={leaderboard}
+      maxRows={limit}
+      includeSelf={false}
+      sticky={false}
+    />
   );
 }
 
@@ -859,6 +865,7 @@ async function StaffCompetencySection() {
 
 export function StaffDashboardScreen({
   displayName,
+  viewerUserId,
   leaderboardLimit = 5,
   activityLimit = 6,
 }: StaffDashboardScreenProps) {
@@ -927,7 +934,10 @@ export function StaffDashboardScreen({
             <Suspense
               fallback={<LeaderboardSectionFallback limit={leaderboardLimit} />}
             >
-              <StaffLeaderboardSection limit={leaderboardLimit} />
+              <StaffLeaderboardSection
+                limit={leaderboardLimit}
+                viewerUserId={viewerUserId}
+              />
             </Suspense>
           </section>
 
