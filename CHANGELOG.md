@@ -25,6 +25,10 @@
 - `/staff/leaderboard` now uses the real leaderboard table (sort, pagination, and search by email/ID/name).
 - `/staff/analytics` is no longer “Sắp ra mắt” and now shows real summary stats and per-subject charts (30 & 60 ngày gần nhất).
 
+### refactor(leaderboard): unify staff/student leaderboard route
+- New canonical route: `/leaderboard` renders student vs staff view based on session role.
+- Legacy routes `/dashboard/leaderboard` and `/staff/leaderboard` now redirect to `/leaderboard`.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger

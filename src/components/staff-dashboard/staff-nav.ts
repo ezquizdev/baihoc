@@ -22,7 +22,7 @@ export const staffNavItems: Array<{
   { key: "quizzes", label: "Tất cả quiz", href: "/staff/quizzes" },
   { key: "questions", label: "Kho câu hỏi", href: "/staff/questions" },
   { key: "students", label: "Quản lý học sinh", href: "/staff/students" },
-  { key: "leaderboard", label: "Bảng xếp hạng", href: "/staff/leaderboard" },
+  { key: "leaderboard", label: "Bảng xếp hạng", href: "/leaderboard" },
   { key: "audit", label: "Nhật ký hệ thống", href: "/staff/audit" },
   { key: "analytics", label: "Phân tích thống kê", href: "/staff/analytics" },
   { key: "profile", label: "Hồ sơ", href: "/profile" },

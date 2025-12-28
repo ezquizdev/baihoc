@@ -146,7 +146,7 @@ export default async function DashboardPage() {
         <QuizLeaderboard
           title="Bảng xếp hạng"
           actionLabel="Xem tất cả"
-          actionHref="/dashboard/leaderboard"
+          actionHref="/leaderboard"
           initial={leaderboard}
           maxRows={LEADERBOARD_ROWS}
           includeSelf={true}
