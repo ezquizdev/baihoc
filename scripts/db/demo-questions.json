@@ -2,6 +2,8 @@
   {
     "subjectSlug": "vi",
     "difficulty": 3,
+    "topicName": "Chính tả",
+    "topicSlug": "vi-chinh-ta",
     "stem": "Dòng nào dưới đây có các từ viết đúng chính tả?",
     "options": [
       "Sai xót, sơ suất, sừng sộ.",
@@ -14,8 +16,190 @@
     "isHighlight": true
   },
   {
+    "subjectSlug": "vi",
+    "difficulty": 2,
+    "topicName": "Từ ghép - từ láy",
+    "topicSlug": "vi-tu-ghep-tu-lay",
+    "stem": "Từ nào dưới đây là từ ghép?",
+    "options": [
+      "Xanh xao",
+      "Học tập",
+      "Lấp lánh",
+      "Run rẩy"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B. “Học tập” là từ ghép; các từ còn lại là từ láy."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 3,
+    "topicName": "Dấu câu",
+    "topicSlug": "vi-dau-cau",
+    "stem": "Câu nào dưới đây dùng dấu phẩy đúng?",
+    "options": [
+      "Buổi sáng, em đi học rồi về nhà.",
+      "Buổi sáng em, đi học rồi về nhà.",
+      "Buổi sáng em đi, học rồi về nhà.",
+      "Buổi sáng em đi học rồi, về nhà."
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A. Dấu phẩy ngăn cách trạng ngữ “Buổi sáng” với phần còn lại của câu."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 2,
+    "topicName": "Chính tả",
+    "topicSlug": "vi-chinh-ta",
+    "stem": "Trong các từ sau, từ nào viết đúng chính tả?",
+    "options": [
+      "Chỉnh chu",
+      "Chỉn chu",
+      "Chỉnh chư",
+      "Chỉn chư"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B. Từ đúng là “chỉn chu”."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 3,
+    "topicName": "Biện pháp tu từ",
+    "topicSlug": "vi-bien-phap-tu-tu",
+    "stem": "Biện pháp tu từ nào được dùng trong câu: “Sóng vỗ rì rào gọi bờ”?",
+    "options": [
+      "So sánh",
+      "Nhân hóa",
+      "Ẩn dụ",
+      "Hoán dụ"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B. “Gọi bờ” là hành động của con người được gán cho sóng."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 2,
+    "topicName": "Câu ghép",
+    "topicSlug": "vi-cau-ghep",
+    "stem": "Câu nào là câu ghép?",
+    "options": [
+      "Trời mưa, đường trơn.",
+      "Em đọc sách rất chăm chỉ.",
+      "Nhà em có một con mèo.",
+      "Vì trời mưa nên em ở nhà."
+    ],
+    "correctIndex": 0,
+    "explanation": "Chọn A. Có hai vế “Trời mưa” và “đường trơn”."
+  },
+  {
+    "subjectSlug": "vi",
+    "difficulty": 3,
+    "topicName": "Từ đồng nghĩa",
+    "topicSlug": "vi-tu-dong-nghia",
+    "stem": "Từ nào dưới đây là từ đồng nghĩa với “nhanh chóng”?",
+    "options": [
+      "Chậm rãi",
+      "Mau lẹ",
+      "Ung dung",
+      "Lững thững"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chọn B. “Mau lẹ” đồng nghĩa với “nhanh chóng”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 2,
+    "topicName": "Thì hiện tại đơn",
+    "topicSlug": "en-present-simple",
+    "stem": "Choose the correct option: He ____ football every weekend.",
+    "options": [
+      "play",
+      "plays",
+      "played",
+      "playing"
+    ],
+    "correctIndex": 1,
+    "explanation": "With “he” in the present simple, use “plays”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 2,
+    "topicName": "There is / are",
+    "topicSlug": "en-there-is-are",
+    "stem": "Choose the correct option: There ____ two books on the table.",
+    "options": [
+      "is",
+      "are",
+      "was",
+      "be"
+    ],
+    "correctIndex": 1,
+    "explanation": "Plural subject “two books” takes “are”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 3,
+    "topicName": "Từ vựng",
+    "topicSlug": "en-vocabulary",
+    "stem": "Choose the word closest in meaning to “begin”.",
+    "options": [
+      "start",
+      "end",
+      "break",
+      "stop"
+    ],
+    "correctIndex": 0,
+    "explanation": "“Begin” means “start”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 3,
+    "topicName": "Câu điều kiện loại 1",
+    "topicSlug": "en-first-conditional",
+    "stem": "Choose the correct option: If it ____ tomorrow, we will stay home.",
+    "options": [
+      "rains",
+      "rain",
+      "rained",
+      "raining"
+    ],
+    "correctIndex": 0,
+    "explanation": "First conditional: present simple in the if-clause."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 2,
+    "topicName": "So sánh hơn",
+    "topicSlug": "en-comparatives",
+    "stem": "Choose the correct option: She is ____ than her brother.",
+    "options": [
+      "tall",
+      "taller",
+      "tallest",
+      "more tall"
+    ],
+    "correctIndex": 1,
+    "explanation": "Comparative of “tall” is “taller”."
+  },
+  {
+    "subjectSlug": "en",
+    "difficulty": 3,
+    "topicName": "Since / for",
+    "topicSlug": "en-since-for",
+    "stem": "Choose the correct option: I have lived here ____ 2018.",
+    "options": [
+      "for",
+      "since",
+      "from",
+      "during"
+    ],
+    "correctIndex": 1,
+    "explanation": "“Since” is used with a specific starting point."
+  },
+  {
     "subjectSlug": "math",
     "difficulty": 3,
+    "topicName": "Ứng dụng đạo hàm",
+    "topicSlug": "math-ung-dung-ao-ham",
     "stem": "Tìm số giá trị nguyên của tham số m thuộc [-10; 10] để phương trình x + 2*$\\sqrt{x-1}$ = m + 3 có nghiệm.",
     "options": [
       "13",
@@ -29,6 +213,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 2,
+    "topicName": "Hình học phẳng",
+    "topicSlug": "math-hinh-hoc-phang",
     "stem": "Cho tam giác ABC có cạnh AB = 4, AC = 6 biết rằng $\\cos(B+C)$ = $\\frac{1}{3}$. Độ dài đường trung tuyến AM kẻ từ đỉnh A của tam giác là:",
     "options": [
       "$\\sqrt{19}$",
@@ -42,6 +228,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 2,
+    "topicName": "Hình học phẳng",
+    "topicSlug": "math-hinh-hoc-phang",
     "stem": "Cho tam giác ABC có cạnh AC = $\\sqrt{2}$*AB và góc C = 30 độ. Biết góc B là góc tù. Số đo góc A là:",
     "options": [
       "15 độ",
@@ -55,6 +243,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 2,
+    "topicName": "Quy hoạch tuyến tính",
+    "topicSlug": "math-quy-hoach-tuyen-tinh",
     "stem": "Ba tổ công nhân A, B, C cùng sản xuất được tổng cộng 1500 sản phẩm trong một ngày. Biết rằng tổng số sản phẩm của tổ A và B làm được là 950, tổng số sản phẩm của B và C làm được là 900 sản phẩm. Hỏi tổ B làm được bao nhiêu sản phẩm.",
     "options": [
       "350",
@@ -68,6 +258,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 2,
+    "topicName": "Hàm số mũ, hàm số logarit, hàm số lũy thừa",
+    "topicSlug": "math-ham-so-mu-ham-so-logarit-ham-so-luy-thua",
     "stem": "Số nghiệm của phương trình $x^2$ + 2x - 5*$\\sqrt{x^2 + 2x + 8}$ + 14 = 0 là:",
     "options": [
       "1",
@@ -81,6 +273,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 2,
+    "topicName": "Dãy số, giới hạn",
+    "topicSlug": "math-day-so-gioi-han",
     "stem": "Xác định số hạng đầu u_1 và công bội q của cấp số nhân.",
     "options": [
       "u_1 = 8; q = $\\frac{-1}{2}$",
@@ -95,6 +289,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 2,
+    "topicName": "Dãy số, giới hạn",
+    "topicSlug": "math-day-so-gioi-han",
     "stem": "Xét dãy số (v_n) xác định bởi v_n = u_n^3. Tính tổng của cấp số nhân lùi vô hạn (v_n).",
     "options": [
       "$\\frac{512}{9}$",
@@ -109,6 +305,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 3,
+    "topicName": "Dãy số, giới hạn",
+    "topicSlug": "math-day-so-gioi-han",
     "stem": "Tính giá trị gần đúng của tổng vô hạn sau:\nT = u_1 + 2u_2 + 3u_3 + ... + n*u_n + ...",
     "options": [
       "$\\frac{32}{9}$",
@@ -123,6 +321,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 3,
+    "topicName": "Hàm số mũ, hàm số logarit, hàm số lũy thừa",
+    "topicSlug": "math-ham-so-mu-ham-so-logarit-ham-so-luy-thua",
     "stem": "Tìm m để phương trình log_3^2(x) - 3$\\log_{3}(x)$ + 2m - 7 = 0 có hai nghiệm x1, x2 thỏa mãn (x1+3)(x2+3) = 72.",
     "options": [
       "m = $\\frac{9}{2}$",
@@ -137,6 +337,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 2,
+    "topicName": "Quy hoạch tuyến tính",
+    "topicSlug": "math-quy-hoach-tuyen-tinh",
     "stem": "Hàm số biểu thị tổng lợi nhuận f(x, y) (đơn vị: nghìn đồng) của xưởng mộc là:",
     "options": [
       "f(x, y) = 800x + 1200y",
@@ -151,6 +353,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 2,
+    "topicName": "Quy hoạch tuyến tính",
+    "topicSlug": "math-quy-hoach-tuyen-tinh",
     "stem": "Bất phương trình mô tả ràng buộc về tổng số giờ công hoàn thiện là:",
     "options": [
       "3x + $4y \\leq 96$",
@@ -165,6 +369,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 3,
+    "topicName": "Quy hoạch tuyến tính",
+    "topicSlug": "math-quy-hoach-tuyen-tinh",
     "stem": "Để đạt lợi nhuận cao nhất, xưởng mộc cần lên kế hoạch sản xuất như thế nào? (Biết số lượng sản phẩm phải là số nguyên).",
     "options": [
       "Sản xuất 15 Bàn trà và 12 Ghế tựa.",
@@ -173,12 +379,14 @@
       "Chỉ sản xuất 80 Ghế tựa."
     ],
     "correctIndex": 0,
-    "explanation": "Hệ bất phương trình:\n4x + $3y \\leq 96$\n$0 \\leq __MATH_1__$\n$0 \\leq __MATH_2__$\n\nthêm hình ở đây\n\nXét các đỉnh của miền nghiệm: O(0;0), A(15;0), B(15;12), C(9;20), D(0;20).\nTính f(x,y) = 1200x + 800y:\n- Tại B(15;12): f = 27600 $(Max)\n- Tại C(9;20): f = 26800$\nChọn A.\n\n---",
+    "explanation": "Hệ bất phương trình:\n4x + $3y \\leq 96$\n$0 \\leq __MATH_1__$\n$0 \\leq __MATH_2__$\n\nthêm hình ở đây\n\nXét các đỉnh của miền nghiệm: O(0;0), A(15;0), B(15;12), C(9;20), D(0;20).\nTính f(x,y) = 1200x + 800y:\n- Tại B(15;12): f = 27600 (Max)\n- Tại C(9;20): f = 26800\nChọn A.\n\n---",
     "passage": "Một xưởng thủ công mỹ nghệ sản xuất hai loại sản phẩm chính: Bàn trà (kiểu X) và Ghế tựa (kiểu Y). Phân xưởng làm mộc cho Bàn trà có thể sản xuất tối đa 15 chiếc/tháng. Phân xưởng làm mộc cho Ghế tựa có thể sản xuất tối đa 20 chiếc/tháng. Để hoàn thiện (sơn, lắp ráp), mỗi chiếc Bàn trà tốn 4 giờ công, mỗi chiếc Ghế tựa tốn 3 giờ công. Tổng số giờ tối đa công xưởng có thể huy động trong tháng là 96 giờ. Lợi nhuận từ một chiếc bàn trà là 1.200.000 đồng, từ một chiếc Ghế tựa là 800.000 đồng. Gọi x và y lần lượt là số Bàn trà và Ghế tựa sản xuất trong 1 tháng (x, y >= 0).\n\n---"
   },
   {
     "subjectSlug": "math",
     "difficulty": 3,
+    "topicName": "Xác suất",
+    "topicSlug": "math-xac-suat",
     "stem": "Tính xác suất để lấy ra dãy có đúng 3 kí hiệu là 1.",
     "options": [
       "$\\frac{7}{32}$",
@@ -193,6 +401,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 3,
+    "topicName": "Xác suất",
+    "topicSlug": "math-xac-suat",
     "stem": "Xác suất để dãy lấy ra có nhiều nhất 6 kí hiệu là 1 là",
     "options": [
       "$\\frac{255}{256}$",
@@ -207,6 +417,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 4,
+    "topicName": "Xác suất",
+    "topicSlug": "math-xac-suat",
     "stem": "Một dãy được gọi là đối xứng nếu đọc từ trái sang giống đọc từ phải sang. Tính xác suất để chọn được một dãy đối xứng.",
     "options": [
       "$\\frac{1}{2}$",
@@ -221,6 +433,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 3,
+    "topicName": "Hình không gian",
+    "topicSlug": "math-hinh-khong-gian",
     "stem": "Tính diện tích thiết diện của lăng trụ cắt bởi mặt phẳng (AMN).",
     "options": [
       "3a^2",
@@ -235,6 +449,8 @@
   {
     "subjectSlug": "math",
     "difficulty": 3,
+    "topicName": "Hình không gian",
+    "topicSlug": "math-hinh-khong-gian",
     "stem": "Tính thể tích lăng trụ đã cho theo a:",
     "options": [
       "3 \\cdot $\\sqrt{3}$a^3",
@@ -243,12 +459,14 @@
       "4 \\cdot $\\sqrt{3}$a^3"
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nTheo lời giải: V = AA' * S_AMN = 2*$\\sqrt{3}$a * 6a^2 = 12*$\\sqrt{3}$a^3$.\n\n---",
+    "explanation": "Chọn C\nTheo lời giải: V = AA' * S_AMN = 2*$\\sqrt{3}$a * 6a^2 = 12*$\\sqrt{3}$a^3.\n\n---",
     "passage": "Cho lăng trụ ABC.A'B'C' có đáy là tam giác đều cạnh 4a; AA' = 2*sqrt(3)a. Gọi M; N lần lượt là trung điểm của BB' và CC'. Biết mặt bên BCC'B' là hình chữ nhật và mặt phẳng (AMN) vuông góc với mặt phẳng (BCC'B').\n\n---"
   },
   {
     "subjectSlug": "math",
     "difficulty": 3,
+    "topicName": "Hình không gian",
+    "topicSlug": "math-hinh-khong-gian",
     "stem": "Tính cosin của góc tạo bởi mặt phẳng đáy (ABC) và mặt phẳng thiết diện (AMN).",
     "options": [
       "$\\frac{1}{2}$",
@@ -263,6 +481,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 2,
+    "topicName": "Logic sắp xếp",
+    "topicSlug": "sci-logic-sap-xep",
     "stem": "Nếu Họp Tài chính là buổi họp đầu tiên thì buổi họp cuối cùng là:",
     "options": [
       "Họp IT.",
@@ -277,6 +497,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 1,
+    "topicName": "Logic sắp xếp",
+    "topicSlug": "sci-logic-sap-xep",
     "stem": "Buổi họp nào chắc chắn diễn ra từ khung giờ thứ tư trở đi?",
     "options": [
       "Họp Kế hoạch.",
@@ -291,6 +513,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 4,
+    "topicName": "Logic sắp xếp",
+    "topicSlug": "sci-logic-sap-xep",
     "stem": "Hai buổi họp nào có thể diễn ra vào khung giờ thứ hai?",
     "options": [
       "Họp Tài chính và Họp Kế hoạch.",
@@ -305,6 +529,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 4,
+    "topicName": "Logic kẻ bảng",
+    "topicSlug": "sci-logic-ke-bang",
     "stem": "Danh sách nào sau đây có thể là danh sách đầy đủ và chính xác của những đứa trẻ cùng sở hữu chó K?",
     "options": [
       "U.",
@@ -319,6 +545,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 3,
+    "topicName": "Logic kẻ bảng",
+    "topicSlug": "sci-logic-ke-bang",
     "stem": "Nếu S và T không sở hữu bất kỳ giống chó nào chung, điều nào sau đây PHẢI đúng?",
     "options": [
       "T và U có chính xác một giống chó chung.",
@@ -333,6 +561,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 3,
+    "topicName": "Logic kẻ bảng",
+    "topicSlug": "sci-logic-ke-bang",
     "stem": "Nếu chỉ có đúng hai đứa trẻ sở hữu chó L, điều nào sau đây CÓ THỂ đúng?",
     "options": [
       "R sở hữu chó L.",
@@ -347,6 +577,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 2,
+    "topicName": "PTSL biểu đồ",
+    "topicSlug": "sci-ptsl-bieu-o",
     "stem": "Doanh thu kết hợp từ Máy Slot và Roulette khác biệt bao nhiêu so với doanh thu từ Các trò chơi bàn khác trong khoảng thời gian từ 2006-2009 (bao gồm cả 2009) (tính bằng triệu £)?",
     "options": [
       "0,9.",
@@ -361,6 +593,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 3,
+    "topicName": "PTSL biểu đồ",
+    "topicSlug": "sci-ptsl-bieu-o",
     "stem": "Có một khoản phí vào cửa là £15 cho mỗi người chơi tại sòng bạc Calewall. Trong năm nào, hoặc những năm nào, doanh thu từ phí vào cửa thấp hơn 23 triệu £?",
     "options": [
       "2006, 2007.",
@@ -375,6 +609,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 4,
+    "topicName": "PTSL biểu đồ",
+    "topicSlug": "sci-ptsl-bieu-o",
     "stem": "Sòng bạc Calewall đang được đề nghị thâu tóm với giá gấp 7 lần doanh thu dự kiến năm 2010 của sòng bạc. Hội đồng quản trị phản hồi rằng họ có thể mang lại 10% giá trị gia tăng thông qua việc cắt giảm chi phí so với giá mua này. Hội đồng quản trị đang định giá sòng bạc Calewall là bao nhiêu (tính bằng triệu £)?",
     "options": [
       "48,51 triệu £.",
@@ -389,6 +625,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 3,
+    "topicName": "PTSL bảng",
+    "topicSlug": "sci-ptsl-bang",
     "stem": "Tổng số tiền phí lót tay mà câu lạc bộ phải chi trả cho người đại diện của cả 3 cầu thủ là bao nhiêu triệu USD?",
     "options": [
       "17,0 triệu USD.",
@@ -403,6 +641,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 3,
+    "topicName": "PTSL bảng",
+    "topicSlug": "sci-ptsl-bang",
     "stem": "Xét \"Tổng giá trị gói hợp đồng\" (bao gồm: Phí chuyển nhượng + Phí lót tay + Tổng tiền lương trả trong suốt thời hạn hợp đồng). Gói hợp đồng của Tiền đạo A chiếm bao nhiêu phần trăm trong tổng chi phí đầu tư cho cả 3 cầu thủ này? (Làm tròn kết quả đến 2 chữ số thập phân)",
     "options": [
       "49,42%.",
@@ -417,6 +657,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 2,
+    "topicName": "PTSL bảng",
+    "topicSlug": "sci-ptsl-bang",
     "stem": "Theo luật Công bằng tài chính, \"Chi phí đội hình hàng năm\" của một cầu thủ được tính theo công thức:\nChi phí năm = (Phí chuyển nhượng / Số năm hợp đồng) + Lương hằng năm\nGiả sử sang năm tài chính 2025, câu lạc bộ kích hoạt điều khoản tăng lương 20% cho Tiền vệ B (các yếu tố khác không đổi). Chi phí đội hình hàng năm của Tiền vệ B ghi nhận trong sổ sách năm 2025 là bao nhiêu?",
     "options": [
       "33,0 triệu USD.",
@@ -431,6 +673,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 2,
+    "topicName": "KHTN",
+    "topicSlug": "sci-khtn",
     "stem": "Một bạn học sinh phát biểu rằng: “Trong thí nghiệm trên, việc pha loãng 10,00 ml giấm ăn bằng nước cất sẽ làm giảm nồng độ acetic acid, do đó khi chuẩn độ sẽ cần ít dung dịch NaOH hơn, dẫn đến kết quả xác định hàm lượng acid trong giấm không chính xác.”\nPhát biểu trên:",
     "options": [
       "Đúng, vì pha loãng luôn làm giảm nồng độ chất tan nên làm sai lệch kết quả chuẩn độ.",
@@ -445,6 +689,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 2,
+    "topicName": "KHTN",
+    "topicSlug": "sci-khtn",
     "stem": "Sau khi thực hiện chuẩn độ, kết quả 3 lần chuẩn độ ghi nhận thể tích dung dịch NaOH tiêu tốn lần lượt là: 12,40 ml; 12,50 ml; 12,45 ml. Nồng độ của acetic acid trong mẫu giấm ăn ban đầu là bao nhiêu?",
     "options": [
       "0,1245 M.",
@@ -459,6 +705,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 4,
+    "topicName": "KHTN",
+    "topicSlug": "sci-khtn",
     "stem": "Trong quá trình chuẩn độ, một học sinh đã mắc lỗi thao tác như sau: trước khi chuẩn độ, trong phần vòi nhọn bên dưới khóa burette (dụng cụ nhỏ dd NaOH) chứa một bọt khí lớn. Phần bọt khí này vẫn được tính vào phần thể tích dd NaOH nhỏ xuống. Lỗi này sẽ ảnh hưởng như thế nào đến kết quả tính toán nồng độ acetic acid?",
     "options": [
       "Không ảnh hưởng, vì lượng acid trong bình tam giác không đổi.",
@@ -473,6 +721,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 2,
+    "topicName": "KHXH",
+    "topicSlug": "sci-khxh",
     "stem": "Nền kinh tế thị trường định hướng xã hội chủ nghĩa của Việt Nam hướng tới mục đích:",
     "options": [
       "cải thiện đời sống, nâng cao vị thế đất nước, bình đẳng, văn minh.",
@@ -487,6 +737,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 3,
+    "topicName": "KHXH",
+    "topicSlug": "sci-khxh",
     "stem": "Nền kinh tế thị trường định hướng xã hội chủ nghĩa được thực hiện ở Việt Nam từ khi:",
     "options": [
       "miền Bắc xây dựng chủ nghĩa xã hội năm 1961.",
@@ -501,6 +753,8 @@
   {
     "subjectSlug": "sci",
     "difficulty": 3,
+    "topicName": "KHXH",
+    "topicSlug": "sci-khxh",
     "stem": "Nội dung nào sau đây phản ánh điểm khác biệt giữa nền kinh tế thị trường định hướng xã hội chủ nghĩa với nền kinh tế thị trường ở các nước tư bản chủ nghĩa?",
     "options": [
       "Có sự tham gia của nhiều thành phần kinh tế và nhiều loại hình sở hữu tồn tại.",
@@ -511,161 +765,5 @@
     "correctIndex": 1,
     "explanation": "Đáp án B\nSự khác biệt nằm ở sự quản lý của nhà nước pháp quyền XHCN và mục tiêu định hướng xã hội chủ nghĩa (công bằng, tiến bộ xã hội).\n\n\"\"\"",
     "passage": "Dựa vào thông tin dưới đây để trả lời các câu từ 112 đến 114:\n“Theo nhận thức của chúng ta, kinh tế thị trường định hướng xã hội chủ nghĩa là nền kinh tế thị trường hiện đại, hội nhập quốc tế, vận hành đầy đủ, đồng bộ theo các quy luật của kinh tế thị trường, có sự quản lí của nhà nước pháp quyền xã hội chủ nghĩa, do Đảng Cộng sản Việt Nam lãnh đạo; bảo đảm định hướng xã hội chủ nghĩa, nhằm mục tiêu “dân giàu, nước mạnh, công bằng, dân chủ, văn minh…”\n(Nguyễn Phú Trọng, Một số vấn đề lý luận và thực tiễn về chủ nghĩa xã hội và con đường đi lên chủ nghĩa xã hội ở Việt Nam, NXB Chính trị quốc gia Sự thật, Hà Nội, 2022)\n\n---"
-  },
-  {
-    "subjectSlug": "vi",
-    "difficulty": 2,
-    "stem": "Từ nào dưới đây là từ ghép?",
-    "options": [
-      "Xanh xao",
-      "Học tập",
-      "Lấp lánh",
-      "Run rẩy"
-    ],
-    "correctIndex": 1,
-    "explanation": "Chọn B. “Học tập” là từ ghép; các từ còn lại là từ láy."
-  },
-  {
-    "subjectSlug": "vi",
-    "difficulty": 3,
-    "stem": "Câu nào dưới đây dùng dấu phẩy đúng?",
-    "options": [
-      "Buổi sáng, em đi học rồi về nhà.",
-      "Buổi sáng em, đi học rồi về nhà.",
-      "Buổi sáng em đi, học rồi về nhà.",
-      "Buổi sáng em đi học rồi, về nhà."
-    ],
-    "correctIndex": 0,
-    "explanation": "Chọn A. Dấu phẩy ngăn cách trạng ngữ “Buổi sáng” với phần còn lại của câu."
-  },
-  {
-    "subjectSlug": "vi",
-    "difficulty": 2,
-    "stem": "Trong các từ sau, từ nào viết đúng chính tả?",
-    "options": [
-      "Chỉnh chu",
-      "Chỉn chu",
-      "Chỉnh chư",
-      "Chỉn chư"
-    ],
-    "correctIndex": 1,
-    "explanation": "Chọn B. Từ đúng là “chỉn chu”."
-  },
-  {
-    "subjectSlug": "vi",
-    "difficulty": 3,
-    "stem": "Biện pháp tu từ nào được dùng trong câu: “Sóng vỗ rì rào gọi bờ”?",
-    "options": [
-      "So sánh",
-      "Nhân hóa",
-      "Ẩn dụ",
-      "Hoán dụ"
-    ],
-    "correctIndex": 1,
-    "explanation": "Chọn B. “Gọi bờ” là hành động của con người được gán cho sóng."
-  },
-  {
-    "subjectSlug": "vi",
-    "difficulty": 2,
-    "stem": "Câu nào là câu ghép?",
-    "options": [
-      "Trời mưa, đường trơn.",
-      "Em đọc sách rất chăm chỉ.",
-      "Nhà em có một con mèo.",
-      "Vì trời mưa nên em ở nhà."
-    ],
-    "correctIndex": 0,
-    "explanation": "Chọn A. Có hai vế “Trời mưa” và “đường trơn”."
-  },
-  {
-    "subjectSlug": "vi",
-    "difficulty": 3,
-    "stem": "Từ nào dưới đây là từ đồng nghĩa với “nhanh chóng”?",
-    "options": [
-      "Chậm rãi",
-      "Mau lẹ",
-      "Ung dung",
-      "Lững thững"
-    ],
-    "correctIndex": 1,
-    "explanation": "Chọn B. “Mau lẹ” đồng nghĩa với “nhanh chóng”."
-  },
-  {
-    "subjectSlug": "en",
-    "difficulty": 2,
-    "stem": "Choose the correct option: He ____ football every weekend.",
-    "options": [
-      "play",
-      "plays",
-      "played",
-      "playing"
-    ],
-    "correctIndex": 1,
-    "explanation": "With “he” in the present simple, use “plays”."
-  },
-  {
-    "subjectSlug": "en",
-    "difficulty": 2,
-    "stem": "Choose the correct option: There ____ two books on the table.",
-    "options": [
-      "is",
-      "are",
-      "was",
-      "be"
-    ],
-    "correctIndex": 1,
-    "explanation": "Plural subject “two books” takes “are”."
-  },
-  {
-    "subjectSlug": "en",
-    "difficulty": 3,
-    "stem": "Choose the word closest in meaning to “begin”.",
-    "options": [
-      "start",
-      "end",
-      "break",
-      "stop"
-    ],
-    "correctIndex": 0,
-    "explanation": "“Begin” means “start”."
-  },
-  {
-    "subjectSlug": "en",
-    "difficulty": 3,
-    "stem": "Choose the correct option: If it ____ tomorrow, we will stay home.",
-    "options": [
-      "rains",
-      "rain",
-      "rained",
-      "raining"
-    ],
-    "correctIndex": 0,
-    "explanation": "First conditional: present simple in the if-clause."
-  },
-  {
-    "subjectSlug": "en",
-    "difficulty": 2,
-    "stem": "Choose the correct option: She is ____ than her brother.",
-    "options": [
-      "tall",
-      "taller",
-      "tallest",
-      "more tall"
-    ],
-    "correctIndex": 1,
-    "explanation": "Comparative of “tall” is “taller”."
-  },
-  {
-    "subjectSlug": "en",
-    "difficulty": 3,
-    "stem": "Choose the correct option: I have lived here ____ 2018.",
-    "options": [
-      "for",
-      "since",
-      "from",
-      "during"
-    ],
-    "correctIndex": 1,
-    "explanation": "“Since” is used with a specific starting point."
   }
 ]

@@ -190,7 +190,7 @@ async function main() {
     }
 
     const subjects = await upsertSubjects(client, subjectSeeds);
-    const { topicsBySubject } = await seedTopics(client, subjects);
+    const { topicsBySubject, topicIdBySlug } = await seedTopics(client, subjects);
     const subjectBySlug = new Map(
       subjects.map((subject) => [subject.slug, subject]),
     );
@@ -215,7 +215,7 @@ async function main() {
       passageRows,
       questionPassageRows,
       subjectBySlug,
-      topicsBySubject,
+      topicIdBySlug,
       staffUserId: staff.id,
     });
 
@@ -840,13 +840,26 @@ async function upsertSubjects(client, seeds) {
 
 async function seedTopics(client, subjects) {
   const topicRows = [];
+  const topicSlugSet = new Set();
+  const subjectIdBySlug = new Map(
+    subjects.map((subject) => [subject.slug, subject.id]),
+  );
+
+  const demoTopics = loadDemoTopicSeeds();
+  demoTopics.forEach((topic) => {
+    const subjectId = subjectIdBySlug.get(topic.subjectSlug);
+    if (!subjectId) return;
+    if (topicSlugSet.has(topic.topicSlug)) return;
+    topicSlugSet.add(topic.topicSlug);
+    topicRows.push([subjectId, topic.topicName, topic.topicSlug]);
+  });
+
   subjects.forEach((subject) => {
     for (let i = 0; i < 3; i += 1) {
-      topicRows.push([
-        subject.id,
-        `${subject.name} Chủ đề ${i + 1}`,
-        `${subject.slug}-topic-${i + 1}`,
-      ]);
+      const slug = `${subject.slug}-topic-${i + 1}`;
+      if (topicSlugSet.has(slug)) continue;
+      topicSlugSet.add(slug);
+      topicRows.push([subject.id, `${subject.name} Chủ đề ${i + 1}`, slug]);
     }
   });
 
@@ -859,17 +872,19 @@ async function seedTopics(client, subjects) {
   );
 
   const res = await client.query(
-    `SELECT id, subject_id FROM topics WHERE subject_id = ANY($1::uuid[])`,
+    `SELECT id, subject_id, slug FROM topics WHERE subject_id = ANY($1::uuid[])`,
     [subjects.map((subject) => subject.id)],
   );
   const topicsBySubject = new Map();
+  const topicIdBySlug = new Map();
   res.rows.forEach((row) => {
     if (!topicsBySubject.has(row.subject_id)) {
       topicsBySubject.set(row.subject_id, []);
     }
     topicsBySubject.get(row.subject_id).push(row.id);
+    if (row.slug) topicIdBySlug.set(row.slug, row.id);
   });
-  return { topicsBySubject };
+  return { topicsBySubject, topicIdBySlug };
 }
 
 async function insertRows(client, table, columns, rows, conflictClause = "") {
@@ -2447,6 +2462,25 @@ function loadDemoQuestionBank() {
   return validQuestions;
 }
 
+function loadDemoTopicSeeds() {
+  const questions = loadDemoQuestionBank();
+  const topics = [];
+  const seen = new Set();
+  questions.forEach((question) => {
+    if (!question.topicSlug || !question.topicName || !question.subjectSlug) {
+      return;
+    }
+    if (seen.has(question.topicSlug)) return;
+    seen.add(question.topicSlug);
+    topics.push({
+      subjectSlug: question.subjectSlug,
+      topicName: question.topicName,
+      topicSlug: question.topicSlug,
+    });
+  });
+  return topics;
+}
+
 function seedDemo1Questions({
   questionRows,
   questionOptionRows,
@@ -2454,7 +2488,7 @@ function seedDemo1Questions({
   passageRows,
   questionPassageRows,
   subjectBySlug,
-  topicsBySubject,
+  topicIdBySlug,
   staffUserId,
 }) {
   const requireSubject = (slug) => {
@@ -2485,7 +2519,10 @@ function seedDemo1Questions({
     passage,
   }) => {
     const subject = requireSubject(subjectSlug);
-    const subjectTopicIds = topicsBySubject.get(subject.id) ?? [];
+    const topicId =
+      question.topicSlug && topicIdBySlug instanceof Map
+        ? topicIdBySlug.get(question.topicSlug)
+        : null;
     questionRows.push([
       questionId,
       subject.id,
@@ -2514,7 +2551,13 @@ function seedDemo1Questions({
         idx + 1,
       ]);
     });
-    assignQuestionTopics(questionTopicRows, questionId, subjectTopicIds);
+    if (topicId) {
+      questionTopicRows.push([questionId, topicId]);
+    } else if (question.topicSlug) {
+      throw new Error(
+        `Seed misconfigured: topic slug \"${question.topicSlug}\" not found for demo question.`,
+      );
+    }
 
     if (passage) {
       let passageId = passageIdsByContent.get(passage);
