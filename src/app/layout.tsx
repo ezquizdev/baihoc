@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { siteConfig } from "@/config/site";
 import "katex/dist/katex.min.css";
 import "./globals.css";
+import { AiChatLauncher } from "@/components/ai-chat/AiChatLauncher";
 import { ClientRuntimeInit } from "./ClientRuntimeInit";
 
 const inter = Inter({
@@ -44,6 +45,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ClientRuntimeInit />
         {children}
+        <AiChatLauncher />
       </body>
     </html>
   );

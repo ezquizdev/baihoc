@@ -19,3 +19,9 @@ export type QuestionType = (typeof QuestionTypeValues)[number];
 
 export const QuestionStatusValues = ["active", "archived"] as const;
 export type QuestionStatus = (typeof QuestionStatusValues)[number];
+
+export const AiEntryPointValues = ["question", "result", "home"] as const;
+export type AiEntryPoint = (typeof AiEntryPointValues)[number];
+
+export const AiMessageRoleValues = ["user", "assistant", "system"] as const;
+export type AiMessageRole = (typeof AiMessageRoleValues)[number];

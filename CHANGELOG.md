@@ -12,6 +12,11 @@
 ### chore(test): update repo mocks for new exports
 - Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
 
+### feat(ai): add AI companion chat bubble
+- Added a bottom-right AI chat bubble + dialog on student pages (hidden on `/auth/*` and `/staff/*`).
+- Added `GET /api/ai/session` + `POST /api/ai/chat` with DB logging (`ai_sessions`, `ai_messages`, `ai_failures`) and UC016-aware context (home vs attempt results).
+- Premium gating: students must be `tier=paid` to send messages; free students see a locked state.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger
