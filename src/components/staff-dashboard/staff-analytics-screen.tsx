@@ -85,7 +85,7 @@ async function ChartsCard({ windowDays }: { windowDays: number }) {
         className={`${styles.chartsCard} ${styles.analyticsChartsCard}`}
         aria-label={`Biểu đồ (${windowDays} ngày gần nhất)`}
       >
-        <ul
+        {/* <ul
           className={`${styles.legend} ${styles.analyticsLegend}`}
           aria-label="Chú giải"
         >
@@ -117,7 +117,7 @@ async function ChartsCard({ windowDays }: { windowDays: number }) {
             />
             Tư duy Khoa học
           </li>
-        </ul>
+        </ul> */}
 
         <div className={`${styles.chartsGrid} ${styles.analyticsChartsGrid}`}>
           <div className={`${styles.chartPanel} ${styles.analyticsChartPanel}`}>
@@ -168,7 +168,7 @@ async function ChartsCard({ windowDays }: { windowDays: number }) {
       className={`${styles.chartsCard} ${styles.analyticsChartsCard}`}
       aria-label={`Biểu đồ (${charts.windowDays} ngày gần nhất)`}
     >
-      <ul
+      {/* <ul
         className={`${styles.legend} ${styles.analyticsLegend}`}
         aria-label="Chú giải"
       >
@@ -200,7 +200,7 @@ async function ChartsCard({ windowDays }: { windowDays: number }) {
           />
           Tư duy Khoa học
         </li>
-      </ul>
+      </ul> */}
 
       <div className={`${styles.chartsGrid} ${styles.analyticsChartsGrid}`}>
         <div className={`${styles.chartPanel} ${styles.analyticsChartPanel}`}>

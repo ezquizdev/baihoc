@@ -204,7 +204,7 @@ function StatsGridFallback() {
 function ChartsCardFallback() {
   return (
     <section className={styles.chartsCard} aria-label="Biểu đồ (đang tải)">
-      <ul className={styles.legend} aria-label="Chú giải">
+      {/* <ul className={styles.legend} aria-label="Chú giải">
         <li className={styles.legendItem}>
           <span
             className={`${styles.legendDot} ${styles.legendVi}`}
@@ -233,7 +233,7 @@ function ChartsCardFallback() {
           />
           Tư duy Khoa học
         </li>
-      </ul>
+      </ul> */}
 
       <div className={styles.chartsGrid}>
         <div className={styles.chartPanel} aria-busy="true">
@@ -268,7 +268,7 @@ async function StaffChartsCard({ windowDays }: { windowDays: number }) {
   if (result.status === "error") {
     return (
       <section className={styles.chartsCard} aria-label="Biểu đồ">
-        <ul className={styles.legend} aria-label="Chú giải">
+        {/* <ul className={styles.legend} aria-label="Chú giải">
           <li className={styles.legendItem}>
             <span
               className={`${styles.legendDot} ${styles.legendVi}`}
@@ -297,7 +297,7 @@ async function StaffChartsCard({ windowDays }: { windowDays: number }) {
             />
             Tư duy Khoa học
           </li>
-        </ul>
+        </ul> */}
 
         <div className={styles.chartsGrid}>
           <div className={styles.chartPanel}>
@@ -332,7 +332,7 @@ async function StaffChartsCard({ windowDays }: { windowDays: number }) {
 
   return (
     <section className={styles.chartsCard} aria-label="Biểu đồ">
-      <ul className={styles.legend} aria-label="Chú giải">
+      {/* <ul className={styles.legend} aria-label="Chú giải">
         <li className={styles.legendItem}>
           <span
             className={`${styles.legendDot} ${styles.legendVi}`}
@@ -361,7 +361,7 @@ async function StaffChartsCard({ windowDays }: { windowDays: number }) {
           />
           Tư duy Khoa học
         </li>
-      </ul>
+      </ul> */}
 
       <div className={styles.chartsGrid}>
         <div className={styles.chartPanel}>
