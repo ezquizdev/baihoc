@@ -337,6 +337,31 @@
   font-size: 12px;
 }
 
+.warningBox {
+  display: block;
+  border-radius: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  background: rgba(245, 158, 11, 0.12);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.warningTitle {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(146, 64, 14, 1);
+}
+
+.warningList {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: rgba(124, 45, 18, 1);
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  gap: 4px;
+}
+
 .modal {
   position: fixed;
   inset: 0;

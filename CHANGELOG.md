@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(staff-questions): surface save blockers in editor
+- Question editor now shows a warning panel listing missing/invalid fields when the save button is disabled.
+
 ### feat(custom-quiz): allow custom time limit in modal
 - Custom quiz modal now lets students enter a time limit (minutes) and shows the recommended duration as a hint.
 

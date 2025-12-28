@@ -182,6 +182,53 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
     passageEnabled,
     passagePosition,
   ]);
+  const saveWarnings = useMemo(() => {
+    const warnings: string[] = [];
+    if (!subjectId) warnings.push("Chọn môn học.");
+    if (!stem.trim()) warnings.push("Nhập nội dung câu hỏi.");
+    if (!Number.isFinite(defaultDifficulty)) warnings.push("Chọn độ khó.");
+    if (!Number.isFinite(defaultScore) || defaultScore <= 0) {
+      warnings.push("Điểm mặc định phải lớn hơn 0.");
+    }
+    if (passageEnabled) {
+      if (!passageContent.trim()) warnings.push("Nhập nội dung đoạn ngữ liệu.");
+      if (!Number.isFinite(passagePosition) || passagePosition <= 0) {
+        warnings.push("Thứ tự trong cụm câu hỏi phải từ 1 trở lên.");
+      }
+    }
+    if (isMcq) {
+      const trimmed = options.map((o) => o.text.trim());
+      if (trimmed.length < 2) warnings.push("Cần ít nhất 2 đáp án.");
+      if (trimmed.some((t) => !t)) {
+        warnings.push("Không để trống nội dung đáp án.");
+      }
+      const correctCount = options.filter((o) => o.isCorrect).length;
+      if (correctCount <= 0) warnings.push("Chọn ít nhất 1 đáp án đúng.");
+      if (!isMultiCorrect && correctCount !== 1) {
+        warnings.push("MCQ 1 đáp án chỉ được chọn đúng 1 đáp án.");
+      }
+    } else if (type === "short_answer") {
+      const answers = shortAnswers.map((a) => a.acceptableAnswer.trim());
+      if (!answers.length) warnings.push("Cần ít nhất 1 đáp án.");
+      if (answers.some((a) => !a)) {
+        warnings.push("Không để trống nội dung đáp án.");
+      }
+    }
+    return warnings;
+  }, [
+    defaultDifficulty,
+    defaultScore,
+    isMcq,
+    isMultiCorrect,
+    options,
+    passageContent,
+    passageEnabled,
+    passagePosition,
+    shortAnswers,
+    stem,
+    subjectId,
+    type,
+  ]);
 
   const title = props.mode === "create" ? "Tạo câu hỏi" : "Chỉnh sửa câu hỏi";
   const meta = props.mode === "edit" ? `ID: ${props.questionId}` : null;
@@ -525,6 +572,16 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
         />
 
         <section className={`cardBase ${styles.card}`} aria-label="Editor">
+          {saveWarnings.length ? (
+            <output className={styles.warningBox} aria-live="polite">
+              <div className={styles.warningTitle}>Chưa thể lưu</div>
+              <ul className={styles.warningList}>
+                {saveWarnings.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </output>
+          ) : null}
           <div
             className={styles.row}
             style={{ justifyContent: "space-between", marginBottom: 14 }}
