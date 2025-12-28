@@ -2,6 +2,64 @@
 
 ## 2025-12-28
 
+### refactor(challenge): remove separate challenge time limit
+- Challenges now use the quiz duration (`estimated_time_seconds`) as their time limit (and may be untimed like regular quizzes).
+- Dropped `challenge_settings.time_limit_seconds`; staff quiz editor now configures challenge schedule only.
+
+### feat(highlight-challenge): add config and submissions backend
+- Added `dashboard_highlight_challenge` (single-row staff config) and `dashboard_highlight_challenge_submissions` (one-time-per-user submissions; not counted toward attempts/XP/IRT).
+- Added staff config API (`GET/PUT /api/staff/settings/highlight-challenge`) and student submit API (`POST /api/dashboard/highlight-challenge/submit`) with `mcq_single`/`mcq_multi` validation.
+
+### feat(staff-settings): add highlight challenge configuration
+- Added a “Highlight challenge” settings card to `/staff/settings` to choose an active challenge + one question to surface on student dashboards.
+- Server enforces “active challenge only”; UI shows ACTIVE/INACTIVE state and provides refresh/clear actions.
+
+### feat(dashboard): add highlight challenge card
+- Student `/dashboard` now shows the staff-configured highlight question + options, with “Nộp đáp án” appearing only after interaction (no layout shift).
+- After submitting, the card reveals correct answers + explanation and opens a result modal that links into the full challenge attempt flow (start/continue/view results).
+
+### feat(dashboard): wire student overview to real data
+- `/dashboard` now shows real user stats (active days, completed quizzes, study time, average score, and 7-day correct/wrong bars).
+- Daily challenge card now pulls the currently active challenge quiz (if any) and links into the attempt start flow.
+- Replaced the placeholder banner with the user’s leaderboard rank + IRT total when available.
+
+### feat(staff): implement staff leaderboard + analytics pages
+- `/staff/leaderboard` now uses the real leaderboard table (sort, pagination, and search by email/ID/name).
+- `/staff/analytics` is no longer “Sắp ra mắt” and now shows real summary stats and per-subject charts (30 & 60 ngày gần nhất).
+
+### refactor(leaderboard): unify staff/student leaderboard route
+- New canonical route: `/leaderboard` renders student vs staff view based on session role.
+- Removed legacy routes `/dashboard/leaderboard` and `/staff/leaderboard` (no backward compat).
+
+### chore(changelog): document highlight challenge feature
+- Recorded the highlight challenge feature work in this changelog.
+
+### feat(staff): paste images into question markdown (Supabase upload)
+- Staff question + passage editors now support pasting images (Ctrl/Cmd+V) to auto-upload to Supabase Storage and insert markdown image syntax.
+- Added `POST /api/staff/media/images` (multipart upload, returns `{ url }`).
+- `RichText` now renders markdown images (responsive styling).
+- Staff quiz builder modals now render question stems via `RichText` so pasted images display while building quizzes.
+- Suppressed Biome `noImgElement` warning locally in `RichText` (markdown images are dynamic).
+- Removed legacy passage `mediaUrls` and dropped `passages.media_urls` (images are embedded in markdown `content` now).
+
+### feat(staff): improve passage editor + type-first question creation
+- `/staff/questions/new` now starts with a question-type picker (MCQ 1, MCQ multi, short-answer, passage).
+- Passage create flow now supports drafting the passage + first question, then continues in the passage editor UI.
+- `/staff/questions/passages/[passageId]` now supports adding new questions inline and deleting the whole passage group from one screen.
+- Added `DELETE /api/staff/passages/[passageId]` with guards for in-progress attempts and quiz usage.
+
+### fix(custom-quiz): keep passage question groups atomic
+- Custom quiz generation now includes passage-linked questions as an all-or-none group (no partial passages).
+- Passage question ordering is preserved (by `question_passages.position`) and inserted contiguously in generated quizzes.
+
+### feat(results): refresh attempt results review UI
+- `/attempts/[attemptId]/results` now uses a clearer hero summary (score ring + key stats) and collapsible per-question cards for a calmer review flow.
+- Added a sticky “Đi tới câu” navigator on desktop (and a compact version on mobile) to jump between questions quickly.
+
+### feat(history): refresh attempt history card UI
+- `/dashboard/history` attempt cards now use a quiz-card-like visual language (left icon rail, toned backgrounds, hover/focus) and iconized meta chips for faster scanning.
+- Score summary column now pairs the ring with key stats to reduce dead space and improve balance.
+
 ### feat(staff): add excel-like sort/filter to question bank
 - `/staff/questions` now supports sorting/filtering via table headers (subject/type/difficulty/status) and removes the standalone filter bar.
 - `GET /api/staff/questions` now accepts `subjectIds`, `difficultyLevels`, `types`, `statuses`, `sortBy`, and `sortDir`.
@@ -11,6 +69,29 @@
 
 ### chore(test): update repo mocks for new exports
 - Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
+- Updated custom quiz service tests to mock `listEligibleQuestionsForCustomQuiz` after the passage-atomic selection change.
+
+### fix(build): satisfy Next.js typed routes + AI typings
+- Relaxed dashboard quick-actions href typing and cast dynamic navigation targets where needed (`/ai` back-link, highlight challenge result CTA) to keep `next build` passing with typed routes.
+- Narrowed AI chat history messages so only `user`/`assistant` roles are sent to the LLM client.
+
+### feat(ai): add AI companion chat bubble
+- Added a bottom-right AI chat bubble + dialog on student pages (hidden on `/auth/*` and `/staff/*`).
+- Added `GET /api/ai/session` + `POST /api/ai/chat` with DB logging (`ai_sessions`, `ai_messages`, `ai_failures`) and UC016-aware context (home vs attempt results).
+- Premium gating: students must be `tier=paid` to send messages; free students see a locked state.
+
+### feat(ai): add full-page AI chat with history sidebar
+- Added `/ai` page with ChatGPT-style layout (session history sidebar + conversation panel) and a back button.
+- Added `GET/POST /api/ai/sessions` and `GET /api/ai/sessions/[sessionId]` for conversation history and loading.
+- Chat bubble dialog now links to the full page via “Mở toàn màn hình”.
+
+### feat(profile): add premium AI study strategy summary
+- Added a premium-only “Chiến lược học tập” card on `/profile` that asynchronously generates and persists an AI study plan when a user has attempt history.
+- Added `ai_profile_summaries` table + `GET/POST /api/profile/ai-summary`.
+
+### feat(staff): regenerate AI profile summary from student detail panel
+- Added `GET/POST /api/staff/users/[userId]/ai-summary` and surfaced it in `/staff/students` (detail panel).
+- Removed the per-row “Thao tác” column from the student table; actions now live in the detail panel to reduce clutter.
 
 ## 2025-12-27
 

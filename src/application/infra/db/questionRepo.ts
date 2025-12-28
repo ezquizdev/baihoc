@@ -52,7 +52,6 @@ export type ShortAnswerRow = {
 export type PassageRow = {
   id: string;
   content: string;
-  media_urls: string[];
 };
 
 const searchVectorSql =
@@ -106,7 +105,6 @@ function mapPassage(row: PassageRow | undefined): Passage | null {
   return {
     id: row.id,
     content: row.content,
-    mediaUrls: row.media_urls,
   };
 }
 
@@ -123,7 +121,7 @@ export async function insertQuestion(input: {
   createdBy: string;
   options?: Array<Omit<QuestionOption, "id" | "questionId">>;
   shortAnswers?: Array<Omit<ShortAnswerKey, "id" | "questionId">>;
-  passage?: { content: string; mediaUrls?: string[] } | null;
+  passage?: { content: string } | null;
   passageId?: string | null;
   passagePosition?: number;
 }): Promise<QuestionDetail> {
@@ -166,8 +164,8 @@ export async function insertQuestion(input: {
     let passageId = input.passageId ?? null;
     if (input.passage) {
       const passageRes = await client.query<PassageRow>(
-        `INSERT INTO passages (content, media_urls) VALUES ($1, $2) RETURNING *`,
-        [input.passage.content, input.passage.mediaUrls ?? []],
+        `INSERT INTO passages (content) VALUES ($1) RETURNING *`,
+        [input.passage.content],
       );
       passageRow = passageRes.rows[0];
       passageId = passageRow?.id ?? null;
@@ -222,7 +220,7 @@ export async function updateQuestion(input: {
   defaultScore?: number;
   options?: Array<Omit<QuestionOption, "id" | "questionId">> | null;
   shortAnswers?: Array<Omit<ShortAnswerKey, "id" | "questionId">> | null;
-  passage?: { content: string; mediaUrls?: string[] } | null;
+  passage?: { content: string } | null;
   passageId?: string | null;
   passagePosition?: number;
 }): Promise<QuestionDetail | null> {
@@ -278,10 +276,10 @@ export async function updateQuestion(input: {
       let passageId = input.passageId ?? null;
       if (input.passage) {
         const passageRes = await client.query<PassageRow>(
-          `INSERT INTO passages (content, media_urls)
-           VALUES ($1, $2)
+          `INSERT INTO passages (content)
+           VALUES ($1)
            RETURNING *`,
-          [input.passage.content, input.passage.mediaUrls ?? []],
+          [input.passage.content],
         );
         const passageRow = passageRes.rows[0];
         passageId = passageRow?.id ?? null;
@@ -502,7 +500,7 @@ export async function getPassageById(
   passageId: string,
 ): Promise<Passage | null> {
   const res = await query<PassageRow>(
-    `SELECT id, content, media_urls
+    `SELECT id, content
      FROM passages
      WHERE id = $1`,
     [passageId],
@@ -513,17 +511,68 @@ export async function getPassageById(
 export async function updatePassageById(input: {
   passageId: string;
   content: string;
-  mediaUrls: string[];
 }): Promise<Passage | null> {
   const res = await query<PassageRow>(
     `UPDATE passages
-     SET content = $2,
-         media_urls = $3
+     SET content = $2
      WHERE id = $1
-     RETURNING id, content, media_urls`,
-    [input.passageId, input.content, input.mediaUrls],
+     RETURNING id, content`,
+    [input.passageId, input.content],
   );
   return mapPassage(res.rows[0]);
+}
+
+export async function listUsedQuestionIdsInQuizzes(questionIds: string[]) {
+  if (!questionIds.length) return [];
+  const res = await query<{ question_id: string }>(
+    `SELECT DISTINCT question_id
+     FROM quiz_questions
+     WHERE question_id = ANY($1::uuid[])`,
+    [questionIds],
+  );
+  return res.rows.map((row) => row.question_id);
+}
+
+export async function deletePassageCascade(passageId: string) {
+  await withTransaction(async (client) => {
+    const questionRes = await client.query<{ question_id: string }>(
+      `SELECT question_id
+       FROM question_passages
+       WHERE passage_id = $1`,
+      [passageId],
+    );
+    const questionIds = questionRes.rows.map((row) => row.question_id);
+
+    if (questionIds.length) {
+      await client.query(
+        `DELETE FROM question_options
+         WHERE question_id = ANY($1::uuid[])`,
+        [questionIds],
+      );
+      await client.query(
+        `DELETE FROM short_answer_keys
+         WHERE question_id = ANY($1::uuid[])`,
+        [questionIds],
+      );
+      await client.query(
+        `DELETE FROM question_topics
+         WHERE question_id = ANY($1::uuid[])`,
+        [questionIds],
+      );
+    }
+
+    await client.query(`DELETE FROM question_passages WHERE passage_id = $1`, [
+      passageId,
+    ]);
+
+    if (questionIds.length) {
+      await client.query(`DELETE FROM questions WHERE id = ANY($1::uuid[])`, [
+        questionIds,
+      ]);
+    }
+
+    await client.query(`DELETE FROM passages WHERE id = $1`, [passageId]);
+  });
 }
 
 export async function listQuestionsForPassage(

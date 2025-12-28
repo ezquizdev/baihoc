@@ -149,6 +149,51 @@
   margin: 0;
 }
 
+.footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--text-inverse);
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.cta:hover {
+  background: var(--primary-2);
+  border-color: var(--primary-2);
+}
+
+.cta:focus-visible {
+  outline: 2px solid rgba(var(--primary-rgb), 0.28);
+  outline-offset: 2px;
+}
+
+.cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ctaHidden {
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
 .pill {
   width: 100%;
   padding: 10px 14px;
@@ -163,10 +208,40 @@
   text-overflow: ellipsis;
 }
 
+.pillButton {
+  appearance: none;
+  text-align: left;
+  cursor: pointer;
+  display: block;
+}
+
+.pillButton:disabled {
+  cursor: default;
+}
+
 .active {
   background: var(--primary);
   border-color: var(--primary);
   color: var(--text-inverse);
+}
+
+.pillCorrect {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.45);
+  color: var(--success-text);
+}
+
+.pillWrong {
+  border-color: rgba(239, 68, 68, 0.55);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--danger-ink);
+}
+
+.inlineError {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--danger-ink);
+  text-align: center;
 }
 
 @media (max-width: 900px) {

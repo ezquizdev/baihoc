@@ -269,8 +269,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS challenge_settings (
   quiz_id uuid PRIMARY KEY REFERENCES quizzes(id),
   start_at timestamptz NOT NULL,
-  end_at timestamptz NOT NULL,
-  time_limit_seconds integer NOT NULL
+  end_at timestamptz NOT NULL
 );
 
 DO $$
@@ -283,6 +282,16 @@ BEGIN
       AND column_name = 'rules'
   ) THEN
     ALTER TABLE challenge_settings DROP COLUMN rules;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'challenge_settings'
+      AND column_name = 'time_limit_seconds'
+  ) THEN
+    ALTER TABLE challenge_settings DROP COLUMN time_limit_seconds;
   END IF;
 
   IF NOT EXISTS (
@@ -327,9 +336,10 @@ CREATE INDEX IF NOT EXISTS idx_question_topics_topic ON question_topics(topic_id
 CREATE TABLE IF NOT EXISTS passages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   content text NOT NULL,
-  media_urls text[] NOT NULL DEFAULT '{}',
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE passages DROP COLUMN IF EXISTS media_urls;
 
 CREATE TABLE IF NOT EXISTS question_passages (
   question_id uuid PRIMARY KEY REFERENCES questions(id),
@@ -364,6 +374,39 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
   PRIMARY KEY (quiz_id, question_id),
   UNIQUE(quiz_id, position)
 );
+
+-- Dashboard highlight challenge (staff-configured, one active at a time).
+CREATE TABLE IF NOT EXISTS dashboard_highlight_challenge (
+  id integer PRIMARY KEY CHECK (id = 1),
+  quiz_id uuid,
+  question_id uuid,
+  updated_by uuid NOT NULL REFERENCES users(id),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT dashboard_highlight_challenge_quiz_question_fk
+    FOREIGN KEY (quiz_id, question_id)
+    REFERENCES quiz_questions(quiz_id, question_id)
+    ON DELETE SET NULL,
+  CONSTRAINT dashboard_highlight_challenge_quiz_question_both_or_none
+    CHECK (
+      (quiz_id IS NULL AND question_id IS NULL) OR
+      (quiz_id IS NOT NULL AND question_id IS NOT NULL)
+    )
+);
+
+-- Each user can submit once per highlighted question. This does not affect attempts/XP/IRT.
+CREATE TABLE IF NOT EXISTS dashboard_highlight_challenge_submissions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  quiz_id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  selected_option_ids uuid[] NOT NULL DEFAULT '{}',
+  is_correct boolean NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, quiz_id, question_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_dashboard_highlight_challenge_submissions_user
+ON dashboard_highlight_challenge_submissions(user_id, created_at DESC);
 
 -- Custom quizzes
 CREATE TABLE IF NOT EXISTS custom_quizzes (
@@ -1097,6 +1140,8 @@ CREATE TABLE IF NOT EXISTS ai_sessions (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE INDEX IF NOT EXISTS idx_ai_sessions_user_created_at ON ai_sessions(user_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS ai_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id uuid NOT NULL REFERENCES ai_sessions(id) ON DELETE CASCADE,
@@ -1106,6 +1151,8 @@ CREATE TABLE IF NOT EXISTS ai_messages (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE INDEX IF NOT EXISTS idx_ai_messages_session_created_at ON ai_messages(session_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS ai_failures (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id uuid NOT NULL REFERENCES ai_sessions(id) ON DELETE CASCADE,
@@ -1113,6 +1160,22 @@ CREATE TABLE IF NOT EXISTS ai_failures (
   message text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- AI profile summaries (premium-only feature; generation is app-managed)
+CREATE TABLE IF NOT EXISTS ai_profile_summaries (
+  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  status job_status NOT NULL DEFAULT 'pending',
+  summary_markdown text,
+  error_message text,
+  requested_by uuid REFERENCES users(id),
+  requested_at timestamptz NOT NULL DEFAULT now(),
+  started_at timestamptz,
+  completed_at timestamptz,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_profile_summaries_status_updated_at
+  ON ai_profile_summaries(status, updated_at DESC);
 
 -- Audit
 CREATE TABLE IF NOT EXISTS audit_logs (

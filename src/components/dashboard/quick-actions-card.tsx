@@ -1,7 +1,7 @@
 import Link, { type LinkProps } from "next/link";
 import styles from "./quick-actions-card.module.css";
 
-type ActionHref = LinkProps<string>["href"];
+type ActionHref = LinkProps<any>["href"];
 
 export type QuickAction = {
   label: string;

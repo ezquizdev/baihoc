@@ -405,7 +405,7 @@ function LeaderboardSectionFallback({ limit }: { limit: number }) {
     >
       <div className={leaderboardStyles.header}>
         <h3 className={leaderboardStyles.title}>Bảng xếp hạng</h3>
-        <Link className={leaderboardStyles.action} href="/staff/leaderboard">
+        <Link className={leaderboardStyles.action} href="/leaderboard">
           Xem tất cả
         </Link>
       </div>
@@ -735,7 +735,7 @@ async function StaffLeaderboardSection({ limit }: { limit: number }) {
       <LeaderboardCard
         title="Bảng xếp hạng"
         actionLabel="Xem tất cả"
-        actionHref="/staff/leaderboard"
+        actionHref="/leaderboard"
         rows={leaderboard.map((entry) => ({
           rank: entry.rank,
           name: entry.fullName,

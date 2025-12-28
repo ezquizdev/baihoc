@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { SpinnerGap } from "phosphor-react";
 import { useEffect, useMemo, useState } from "react";
 import type {
   UserAdminDetail,
   UserHistory,
 } from "@/application/models/userAdmin";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { RichText } from "@/components/ui/rich-text";
 import { TextAreaModal } from "@/components/ui/text-area-modal";
 import { formatDateVi, formatRelativeTimeVi } from "@/lib/formatters";
 import styles from "./student-detail-panel.module.css";
@@ -19,21 +21,42 @@ type StudentDetailPanelProps = {
 
 type Notice = { tone: "success" | "error"; message: string };
 
+type AiSummary = {
+  status: "pending" | "processing" | "failed" | "completed";
+  summaryMarkdown: string | null;
+  errorMessage: string | null;
+  requestedAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  updatedAt: string;
+};
+
+type AiSummaryState = {
+  eligible: boolean;
+  summary: AiSummary | null;
+};
+
 export function StudentDetailPanel({
   userId,
   onMutated,
 }: StudentDetailPanelProps) {
   const [user, setUser] = useState<UserAdminDetail | null>(null);
   const [history, setHistory] = useState<UserHistory | null>(null);
+  const [aiSummary, setAiSummary] = useState<AiSummaryState | null>(null);
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [aiSummaryError, setAiSummaryError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [busyAction, setBusyAction] = useState<"verify" | "reset" | null>(null);
+  const [busyAction, setBusyAction] = useState<
+    "verify" | "reset" | "ai_summary" | null
+  >(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [verifyReason, setVerifyReason] = useState("");
   const [resetOpen, setResetOpen] = useState(false);
+  const [regenSummaryOpen, setRegenSummaryOpen] = useState(false);
 
   useEffect(() => {
     setEditOpen(false);
@@ -42,9 +65,13 @@ export function StudentDetailPanel({
     setError(null);
     setUser(null);
     setHistory(null);
+    setAiSummary(null);
+    setAiSummaryLoading(false);
+    setAiSummaryError(null);
     setVerifyOpen(false);
     setVerifyReason("");
     setResetOpen(false);
+    setRegenSummaryOpen(false);
     if (!userId) {
       setLoading(false);
     }
@@ -94,6 +121,40 @@ export function StudentDetailPanel({
         setLoading(false);
       }
     };
+    run();
+    return () => controller.abort();
+  }, [refreshKey, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const controller = new AbortController();
+    const run = async () => {
+      try {
+        setAiSummaryLoading(true);
+        setAiSummaryError(null);
+
+        const cacheBust = String(refreshKey);
+        const response = await fetch(
+          `/api/staff/users/${userId}/ai-summary?_=${cacheBust}`,
+          { signal: controller.signal },
+        );
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload?.error ?? "Không thể tải AI summary");
+        }
+        const payload = (await response.json()) as AiSummaryState;
+        setAiSummary(payload);
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+        setAiSummaryError(
+          err instanceof Error ? err.message : "Không thể tải AI summary",
+        );
+      } finally {
+        setAiSummaryLoading(false);
+      }
+    };
+
     run();
     return () => controller.abort();
   }, [refreshKey, userId]);
@@ -170,6 +231,32 @@ export function StudentDetailPanel({
     }
   };
 
+  const regenSummaryConfirmed = async () => {
+    if (!userId || !user) return;
+    setNotice(null);
+    setBusyAction("ai_summary");
+    try {
+      const response = await fetch(`/api/staff/users/${userId}/ai-summary`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error ?? "Không thể tạo lại AI summary");
+      }
+      const payload = (await response.json()) as AiSummaryState;
+      setAiSummary(payload);
+      setNotice({ tone: "success", message: "Đã yêu cầu tạo lại tóm tắt AI." });
+    } catch (err) {
+      setNotice({
+        tone: "error",
+        message:
+          err instanceof Error ? err.message : "Không thể tạo lại AI summary",
+      });
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
   if (!userId) {
     return (
       <div className={styles.empty} aria-live="polite">
@@ -217,6 +304,19 @@ export function StudentDetailPanel({
 
   const membershipHistory = history?.membership ?? [];
   const statusHistory = history?.status ?? [];
+  const aiEligible = aiSummary?.eligible ?? false;
+  const aiStatus = aiSummary?.summary?.status ?? null;
+  const aiCompletedAt = aiSummary?.summary?.completedAt ?? null;
+  const aiRequestedAt = aiSummary?.summary?.requestedAt ?? null;
+  const aiTimeLabel = aiCompletedAt
+    ? `Cập nhật: ${formatRelativeTimeVi(aiCompletedAt)}`
+    : aiRequestedAt
+      ? `Yêu cầu: ${formatRelativeTimeVi(aiRequestedAt)}`
+      : null;
+  const aiLocked = user ? user.tier !== "paid" : true;
+  const canRegenAiSummary = Boolean(
+    user && !aiLocked && aiEligible && !aiSummaryLoading && !busyAction,
+  );
 
   return (
     <div className={styles.panel} aria-busy={loading}>
@@ -241,52 +341,70 @@ export function StudentDetailPanel({
         </div>
       ) : null}
 
-      <div className={styles.actions}>
-        {user ? (
-          <Link
-            className={`${styles.linkBtn} ${styles.linkBtnBlue}`}
-            href={`/profile/${user.id}`}
-          >
-            Mở hồ sơ
-          </Link>
-        ) : (
+      <div className={styles.actionBar}>
+        <div className={styles.actionPrimary}>
+          {user ? (
+            <Link
+              className={`${styles.linkBtn} ${styles.linkBtnBlue}`}
+              href={`/profile/${user.id}`}
+            >
+              Mở hồ sơ
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className={`${styles.linkBtn} ${styles.linkBtnBlue}`}
+              disabled
+            >
+              Mở hồ sơ
+            </button>
+          )}
           <button
             type="button"
-            className={`${styles.linkBtn} ${styles.linkBtnBlue}`}
-            disabled
+            className={styles.linkBtn}
+            disabled={!user}
+            onClick={() => setEditOpen(true)}
           >
-            Mở hồ sơ
+            Cập nhật
+          </button>
+        </div>
+
+        {user ? (
+          <details className={styles.actionMenu}>
+            <summary
+              className={`${styles.linkBtn} ${styles.actionMenuSummary}`}
+            >
+              Thao tác
+            </summary>
+            <div className={styles.actionMenuList}>
+              <button
+                type="button"
+                className={styles.actionMenuItem}
+                disabled={Boolean(busyAction) || Boolean(user.emailVerifiedAt)}
+                onClick={() => {
+                  setVerifyReason("");
+                  setVerifyOpen(true);
+                }}
+              >
+                {busyAction === "verify"
+                  ? "Đang xác minh..."
+                  : "Xác minh email"}
+              </button>
+              <button
+                type="button"
+                className={`${styles.actionMenuItem} ${styles.actionMenuItemDanger}`}
+                disabled={Boolean(busyAction)}
+                onClick={() => setResetOpen(true)}
+              >
+                {busyAction === "reset" ? "Đang gửi..." : "Reset mật khẩu"}
+              </button>
+            </div>
+          </details>
+        ) : (
+          <button type="button" className={styles.linkBtn} disabled>
+            Thao tác
           </button>
         )}
-        <button
-          type="button"
-          className={styles.linkBtn}
-          disabled={!user}
-          onClick={() => setEditOpen(true)}
-        >
-          Cập nhật
-        </button>
-        <button
-          type="button"
-          className={styles.linkBtn}
-          disabled={
-            !user || Boolean(busyAction) || Boolean(user?.emailVerifiedAt)
-          }
-          onClick={() => {
-            setVerifyReason("");
-            setVerifyOpen(true);
-          }}
-        >
-          {busyAction === "verify" ? "Đang xác minh..." : "Xác minh email"}
-        </button>
-        <button
-          type="button"
-          className={`${styles.linkBtn} ${styles.linkBtnRed}`}
-          disabled={!user || Boolean(busyAction)}
-          onClick={() => setResetOpen(true)}
-        >
-          {busyAction === "reset" ? "Đang gửi..." : "Reset mật khẩu"}
-        </button>
       </div>
 
       <TextAreaModal
@@ -321,6 +439,20 @@ export function StudentDetailPanel({
         onConfirm={() => {
           setResetOpen(false);
           void resetPasswordConfirmed();
+        }}
+      />
+
+      <ConfirmModal
+        open={regenSummaryOpen}
+        title="Tạo lại tóm tắt AI?"
+        message="Tạo lại gợi ý học tập cho học sinh này? Hệ thống sẽ tạo lại trong nền và bạn có thể quay lại xem sau."
+        confirmLabel="Tạo lại"
+        cancelLabel="Hủy"
+        disableConfirm={Boolean(busyAction)}
+        onCancel={() => setRegenSummaryOpen(false)}
+        onConfirm={() => {
+          setRegenSummaryOpen(false);
+          void regenSummaryConfirmed();
         }}
       />
 
@@ -363,6 +495,78 @@ export function StudentDetailPanel({
               {formatDateVi(user?.createdAt)}
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h4 className={styles.sectionTitle}>AI gợi ý học tập</h4>
+          <button
+            type="button"
+            className={styles.linkBtn}
+            disabled={!canRegenAiSummary}
+            onClick={() => setRegenSummaryOpen(true)}
+          >
+            Tạo lại
+          </button>
+        </div>
+
+        <div className={styles.aiSummaryCard}>
+          <div className={styles.aiSummaryMetaRow}>
+            <span
+              className={`${styles.pill} ${aiStatusToneClass(aiStatus, styles)}`}
+            >
+              {aiStatusLabel(aiStatus)}
+            </span>
+            {aiTimeLabel ? (
+              <span className={styles.aiSummaryMetaText}>{aiTimeLabel}</span>
+            ) : null}
+          </div>
+
+          {aiLocked ? (
+            <div className={styles.aiSummaryBody}>
+              Chỉ áp dụng cho học sinh trả phí.
+            </div>
+          ) : !aiEligible ? (
+            <div className={styles.aiSummaryBody}>
+              Chưa đủ lịch sử làm bài để tạo gợi ý học tập.
+            </div>
+          ) : aiSummaryLoading ? (
+            <div className={styles.aiSummaryBody}>
+              <span className="inline-flex items-center gap-2">
+                <SpinnerGap size={16} className="animate-spin" /> Đang tải…
+              </span>
+            </div>
+          ) : aiSummaryError ? (
+            <div className={styles.aiSummaryBody}>{aiSummaryError}</div>
+          ) : aiSummary?.summary?.status === "completed" &&
+            aiSummary.summary.summaryMarkdown ? (
+            <div className={styles.aiSummaryRichText}>
+              <RichText
+                content={aiSummary.summary.summaryMarkdown}
+                allowLinks={false}
+              />
+            </div>
+          ) : aiSummary?.summary?.status === "failed" ? (
+            <div className={styles.aiSummaryBody}>
+              Không thể tạo gợi ý.{" "}
+              {aiSummary.summary.errorMessage
+                ? `(${aiSummary.summary.errorMessage})`
+                : null}
+            </div>
+          ) : aiSummary?.summary?.status === "pending" ||
+            aiSummary?.summary?.status === "processing" ? (
+            <div className={styles.aiSummaryBody}>
+              <span className="inline-flex items-center gap-2">
+                <SpinnerGap size={16} className="animate-spin" /> Đang tạo gợi
+                ý… Quay lại sau để xem.
+              </span>
+            </div>
+          ) : (
+            <div className={styles.aiSummaryBody}>
+              Chưa có tóm tắt. Nhấn “Tạo lại” để bắt đầu.
+            </div>
+          )}
         </div>
       </div>
 
@@ -489,6 +693,37 @@ function statusToneClass(status: UserAdminDetail["status"], s: typeof styles) {
     case "deactivated":
       return s.pillRed;
     default:
+      return s.pillGray;
+  }
+}
+
+function aiStatusLabel(status: AiSummary["status"] | null) {
+  if (!status) return "Chưa có";
+  switch (status) {
+    case "pending":
+    case "processing":
+      return "Đang tạo";
+    case "failed":
+      return "Lỗi";
+    case "completed":
+      return "Đã tạo";
+    default:
+      return "Chưa có";
+  }
+}
+
+function aiStatusToneClass(
+  status: AiSummary["status"] | null,
+  s: typeof styles,
+) {
+  if (!status) return s.pillGray;
+  switch (status) {
+    case "completed":
+      return s.pillBlue;
+    case "failed":
+      return s.pillRed;
+    case "pending":
+    case "processing":
       return s.pillGray;
   }
 }

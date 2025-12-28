@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./daily-challenge-card.module.css";
 
 type AnswerOption = {
@@ -10,6 +11,8 @@ type DailyChallengeCardProps = {
   titleLines: string[];
   question: string;
   answers: AnswerOption[];
+  ctaLabel?: string;
+  ctaHref?: Parameters<typeof Link>[0]["href"];
   className?: string;
 };
 
@@ -18,6 +21,8 @@ export function DailyChallengeCard({
   titleLines,
   question,
   answers,
+  ctaLabel,
+  ctaHref,
   className,
 }: DailyChallengeCardProps) {
   return (
@@ -65,6 +70,20 @@ export function DailyChallengeCard({
             </li>
           ))}
         </ul>
+
+        {ctaLabel ? (
+          <div className={styles.footer}>
+            {ctaHref ? (
+              <Link className={styles.cta} href={ctaHref}>
+                {ctaLabel}
+              </Link>
+            ) : (
+              <button type="button" className={styles.cta} disabled>
+                {ctaLabel}
+              </button>
+            )}
+          </div>
+        ) : null}
       </div>
     </section>
   );

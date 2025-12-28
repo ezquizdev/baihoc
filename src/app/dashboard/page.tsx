@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { controllerGetLeaderboard } from "@/application/controllers/leaderboardController";
+import { controllerGetStudentDashboardHighlightChallengeCard } from "@/application/controllers/studentDashboardController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
-import { DailyChallengeCard } from "@/components/dashboard/daily-challenge-card";
+import { getSelfProfileOverview } from "@/application/services/profileService";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { HighlightChallengeCard } from "@/components/dashboard/highlight-challenge-card";
 import { PromoBanner } from "@/components/dashboard/promo-banner";
 import {
   type QuickAction,
@@ -11,16 +13,10 @@ import {
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
 import { QuizLeaderboard } from "@/components/quiz-catalog/quiz-leaderboard";
+import { formatNumberVi, formatStudyTimeVi } from "@/lib/formatters";
 import layoutStyles from "./dashboard-page.module.css";
 
 const LEADERBOARD_ROWS = 5;
-
-const quickActions = [
-  { label: "TẤT CẢ", href: "/quizzes" },
-  { label: "TỰ LUYỆN QUIZ CÙNG AI", disabled: true },
-  { label: "QUIZ NGẪU NHIÊN", disabled: true },
-  { label: "TẤT CẢ CHALLENGE", disabled: true },
-] satisfies QuickAction[];
 
 export default async function DashboardPage() {
   const session = await requireAuthenticatedPage({ next: "/dashboard" });
@@ -29,12 +25,48 @@ export default async function DashboardPage() {
   }
   const displayName = session.fullName ?? session.email.split("@")[0];
 
-  const leaderboard = await controllerGetLeaderboard({
-    viewerUserId: session.sub,
-    limit: LEADERBOARD_ROWS,
-    includeSelf: true,
-    subjectId: null,
-  }).catch(() => ({ items: [], self: null }));
+  const [leaderboard, profileOverview, highlightChallenge] = await Promise.all([
+    controllerGetLeaderboard({
+      viewerUserId: session.sub,
+      limit: LEADERBOARD_ROWS,
+      includeSelf: true,
+      subjectId: null,
+    }).catch(() => ({ items: [], self: null })),
+    getSelfProfileOverview(session.sub).catch(() => null),
+    controllerGetStudentDashboardHighlightChallengeCard(session.sub).catch(
+      () => ({ status: "none" }) as const,
+    ),
+  ]);
+
+  const stats = profileOverview?.stats ?? {
+    completedQuizCount: 0,
+    activeDays30d: 0,
+    studySeconds: 0,
+    averageScorePercent: 0,
+    weeklyBars: defaultWeeklyBars(),
+  };
+
+  const selfRank =
+    leaderboard.self ??
+    leaderboard.items.find((row) => row.userId === session.sub) ??
+    null;
+
+  const welcomeSubtitle =
+    stats.completedQuizCount > 0
+      ? `Bạn đã hoàn thành ${formatNumberVi(stats.completedQuizCount)} quiz • Học ${formatNumberVi(stats.activeDays30d)} ngày (30 ngày gần đây)`
+      : "Bắt đầu làm quiz đầu tiên để ghi điểm nhé.";
+
+  const quickActions = [
+    { label: "TẤT CẢ", href: "/quizzes" },
+    highlightChallenge.status === "active"
+      ? {
+          label: "CHALLENGE\nHÔM NAY",
+          href: highlightChallenge.actionHref,
+        }
+      : { label: "CHALLENGE\nHÔM NAY", disabled: true },
+    { label: "TỰ LUYỆN QUIZ CÙNG AI", disabled: true },
+    { label: "QUIZ NGẪU NHIÊN", disabled: true },
+  ] satisfies QuickAction[];
 
   return (
     <DashboardShell
@@ -46,7 +78,7 @@ export default async function DashboardPage() {
     >
       <WelcomeBanner
         title={`Chào mừng đã trở lại, ${displayName}!`}
-        subtitle="Tiếp tục làm bài thôi nào, bạn còn 10 bài chưa làm trong tuần vừa rồi"
+        subtitle={welcomeSubtitle}
         ctaLabel="Bắt đầu ngay"
         ctaHref="/quizzes"
       />
@@ -55,17 +87,7 @@ export default async function DashboardPage() {
         className={layoutStyles.pageGridTop}
         aria-label="Khối trắc nghiệm"
       >
-        <DailyChallengeCard
-          tag="CHALLENGE"
-          titleLines={["DAILY", "QUIZ"]}
-          question="Dòng nào sau đây nêu tên những tác phẩm cùng phong cách sáng tác của trường phái văn học hiện thực?"
-          answers={[
-            { text: "Tắt đèn • Số đỏ • Chí Phèo" },
-            { text: "Chữ người tử tù • Giông tố • Lão Hạc", isActive: true },
-            { text: "Hai đứa trẻ • Tắt đèn • Số đỏ" },
-            { text: "Lão Hạc • Số đỏ • Chữ người tử tù" },
-          ]}
-        />
+        <HighlightChallengeCard initial={highlightChallenge} />
 
         <QuickActionsCard actions={quickActions} />
       </section>
@@ -78,28 +100,30 @@ export default async function DashboardPage() {
           title="Thống kê"
           actionLabel="Xem chi tiết"
           actionHref="/dashboard/history"
-          progressValue={36}
-          progressLabel="Tiến độ hoàn thành bài tập"
+          progressValue={stats.activeDays30d}
+          progressLabel="Ngày học (30 ngày gần đây)"
           kpis={[
-            { label: "Số quiz đã làm", value: "12" },
-            { label: "Thời gian học", value: "12h39" },
-            { label: "Điểm TB", value: "82%" },
+            {
+              label: "Số quiz đã làm",
+              value: formatNumberVi(stats.completedQuizCount),
+            },
+            {
+              label: "Thời gian học",
+              value: formatStudyTimeVi(stats.studySeconds),
+            },
+            { label: "Điểm TB", value: `${stats.averageScorePercent}%` },
           ]}
-          weeklyBars={[
-            { day: "T2", correct: 50, wrong: 20 },
-            { day: "T3", correct: 70, wrong: 10 },
-            { day: "T4", correct: 30, wrong: 25 },
-            { day: "T5", correct: 80, wrong: 15 },
-            { day: "T6", correct: 45, wrong: 22 },
-            { day: "T7", correct: 60, wrong: 18 },
-            { day: "CN", correct: 35, wrong: 20 },
-          ]}
+          weeklyBars={stats.weeklyBars.map((bar) => ({
+            day: bar.label,
+            correct: bar.correct,
+            wrong: bar.wrong,
+          }))}
         />
 
         <QuizLeaderboard
           title="Bảng xếp hạng"
           actionLabel="Xem tất cả"
-          actionHref="/dashboard/leaderboard"
+          actionHref="/leaderboard"
           initial={leaderboard}
           maxRows={LEADERBOARD_ROWS}
           includeSelf={true}
@@ -107,11 +131,34 @@ export default async function DashboardPage() {
         />
 
         <PromoBanner
-          tag="BANNER"
-          titleLines={["QUẢNG", "CÁO"]}
-          subtitle="Khu vực banner / quảng cáo (placeholder)"
+          tag="THÀNH TÍCH"
+          titleLines={
+            selfRank
+              ? ["HẠNG", `#${formatNumberVi(selfRank.rank)}`]
+              : ["BẮT", "ĐẦU"]
+          }
+          subtitle={
+            selfRank
+              ? `Bạn đang có ${formatNumberVi(selfRank.xp)} IRT trên leaderboard.`
+              : "Làm quiz để xuất hiện trên bảng xếp hạng."
+          }
         />
       </section>
     </DashboardShell>
   );
+}
+
+function defaultWeeklyBars() {
+  const today = new Date();
+  const bars: Array<{ label: string; correct: number; wrong: number }> = [];
+
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const day = new Date(today);
+    day.setDate(today.getDate() - offset);
+    const dow = day.getDay(); // 0=Sunday ... 6=Saturday
+    const label = dow === 0 ? "CN" : `T${dow + 1}`;
+    bars.push({ label, correct: 0, wrong: 0 });
+  }
+
+  return bars;
 }

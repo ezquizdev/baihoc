@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type {
   AttemptAnswer,
   AttemptReviewQuestion,
@@ -8,7 +8,11 @@ import type {
 import { RejudgeAttemptButton } from "@/components/attempt-review/rejudge-attempt-button";
 import { SubjectBadge } from "@/components/quiz-catalog/quiz-badges";
 import { RichText } from "@/components/ui/rich-text";
-import { formatNumberVi } from "@/lib/formatters";
+import {
+  formatDateVi,
+  formatNumberVi,
+  formatRelativeTimeVi,
+} from "@/lib/formatters";
 import styles from "./attempt-results.module.css";
 
 export function AttemptResultsScreen({
@@ -25,14 +29,59 @@ export function AttemptResultsScreen({
     answerMap.set(answer.questionId, answer);
   }
 
-  const answeredCount = state.questions.reduce((count, question) => {
+  const detailUnavailable =
+    state.questions.length > 0 &&
+    state.answers.length === 0 &&
+    (state.attempt.correctCount > 0 || state.attempt.scorePercent > 0);
+
+  const baseSummaries = state.questions.map((question) => {
     const answer = answerMap.get(question.id);
-    if (!answer) return count;
-    if (question.type === "short_answer") {
-      return answer.textAnswer ? count + 1 : count;
-    }
-    return answer.selectedOptionIds?.length ? count + 1 : count;
-  }, 0);
+    const status = getQuestionStatus(question, answer, { detailUnavailable });
+    return {
+      question,
+      answer,
+      status,
+      anchor: `q-${question.position}`,
+    };
+  });
+
+  const defaultOpenPosition =
+    baseSummaries.find((q) => q.status !== "correct")?.question.position ??
+    baseSummaries[0]?.question.position ??
+    null;
+
+  const questionSummaries = baseSummaries.map((summary) => ({
+    ...summary,
+    defaultOpen:
+      defaultOpenPosition !== null &&
+      summary.question.position === defaultOpenPosition,
+  }));
+
+  const correctCount = questionSummaries.filter(
+    (q) => q.status === "correct",
+  ).length;
+  const wrongCount = questionSummaries.filter(
+    (q) => q.status === "wrong",
+  ).length;
+  const ungradedCount = questionSummaries.filter(
+    (q) => q.status === "ungraded",
+  ).length;
+  const unansweredCount = questionSummaries.filter(
+    (q) => q.status === "unanswered",
+  ).length;
+  const needsReviewCount = Math.max(
+    0,
+    state.attempt.totalQuestions - state.attempt.correctCount,
+  );
+
+  const scorePercent = clampPercent(state.attempt.scorePercent);
+  const completedAt = state.attempt.submittedAt ?? state.attempt.startedAt;
+  const completedRelative = formatRelativeTimeVi(completedAt);
+  const completedDate = formatDateVi(completedAt);
+  const durationLabel = formatDurationFromIso(
+    state.attempt.startedAt,
+    state.attempt.submittedAt,
+  );
 
   const passageLabels = buildPassageLabels(state.questions);
   const showQuizDeletedBanner = !state.quizExists;
@@ -46,116 +95,265 @@ export function AttemptResultsScreen({
 
   return (
     <div className={styles.page}>
-      <section className={styles.headerCard} aria-label="Tóm tắt kết quả">
-        <div className={styles.headerTop}>
-          <h1 className={styles.title}>Kết quả: {quizTitle}</h1>
-          <p className={styles.subtitle}>
-            Đã trả lời {answeredCount}/{state.questions.length} câu • Phiên bản
-            chấm: v{state.judgementVersion}
-          </p>
-        </div>
-
-        <div className={styles.actions}>
-          <Link className={styles.secondaryAction} href="/dashboard/history">
-            Lịch sử
-          </Link>
-          <Link className={styles.primaryAction} href="/quizzes">
-            Quiz khác
-          </Link>
-        </div>
-      </section>
-
-      {showQuizDeletedBanner ? (
-        <div className={`${styles.banner} ${styles.bannerDanger}`}>
-          Quiz có thể đã bị xoá. Không thể chấm lại, nhưng bạn vẫn có thể xem
-          lại kết quả dựa trên dữ liệu đã lưu.
-        </div>
-      ) : null}
-
-      {showLegacyBanner ? (
-        <div className={`${styles.banner} ${styles.bannerMuted}`}>
-          Bài làm này chưa có snapshot đầy đủ. Nội dung hiển thị có thể dựa trên
-          quiz hiện tại và không phản ánh chính xác lịch sử khi bạn làm bài.
-        </div>
-      ) : null}
-
-      {showRejudgeBanner ? (
-        <div className={`${styles.banner} ${styles.bannerWarn}`}>
-          <div className={styles.bannerRow}>
-            <div>
-              Quiz đã thay đổi kể từ lúc bạn nộp. Bạn có thể chấm lại để cập
-              nhật điểm theo phiên bản mới nhất.
+      <section className={styles.heroCard} aria-label="Tóm tắt kết quả">
+        <div className={styles.heroTop}>
+          <div className={styles.heroTitleBlock}>
+            <div className={styles.heroKicker}>Kết quả</div>
+            <h1 className={styles.heroTitle}>{quizTitle}</h1>
+            <div className={styles.heroSubtitle}>
+              Hoàn thành {completedRelative} • {completedDate}
+              {durationLabel ? ` • ${durationLabel}` : ""}
             </div>
-            <div>
-              <RejudgeAttemptButton attemptId={attemptId} />
+          </div>
+
+          <div className={styles.heroActions}>
+            <Link className={styles.secondaryAction} href="/dashboard/history">
+              Lịch sử
+            </Link>
+            <Link className={styles.primaryAction} href="/quizzes">
+              Quiz khác
+            </Link>
+          </div>
+        </div>
+
+        <div className={styles.heroMain}>
+          <div
+            className={styles.scoreRing}
+            style={{ "--p": scorePercent } as CSSProperties}
+            aria-label={`Điểm ${scorePercent}%`}
+            role="img"
+          >
+            <div className={styles.scoreInner}>
+              <div className={styles.scoreValue}>{scorePercent}%</div>
+              <div className={styles.scoreLabel}>Điểm</div>
+            </div>
+          </div>
+
+          <div className={styles.heroStats}>
+            <section className={styles.statsGrid} aria-label="Thống kê">
+              <MetaStat
+                label="Đúng"
+                value={`${state.attempt.correctCount}/${state.attempt.totalQuestions}`}
+                tone="success"
+              />
+              <MetaStat
+                label="IRT"
+                value={formatNumberVi(state.attempt.xpEarned)}
+                tone="primary"
+              />
+              <MetaStat
+                label="Tổng câu"
+                value={formatNumberVi(state.attempt.totalQuestions)}
+                tone="muted"
+              />
+              {needsReviewCount > 0 ? (
+                <MetaStat
+                  label="Cần xem lại"
+                  value={
+                    detailUnavailable
+                      ? `${formatNumberVi(needsReviewCount)} câu`
+                      : [
+                          wrongCount ? `${wrongCount} sai` : null,
+                          unansweredCount
+                            ? `${unansweredCount} bỏ trống`
+                            : null,
+                          ungradedCount ? `${ungradedCount} chưa chấm` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" • ")
+                  }
+                  tone="warning"
+                />
+              ) : (
+                <MetaStat
+                  label="Trạng thái"
+                  value="Rất tốt — tất cả đúng"
+                  tone="success"
+                />
+              )}
+            </section>
+
+            <div className={styles.metaFootnote}>
+              Phiên bản chấm: v{state.judgementVersion}
             </div>
           </div>
         </div>
-      ) : null}
-
-      {showRejudgeUnavailableBanner ? (
-        <div className={`${styles.banner} ${styles.bannerWarn}`}>
-          Quiz đã thay đổi quá nhiều và không còn câu hỏi nào trùng với lượt làm
-          này, nên không thể chấm lại.
-        </div>
-      ) : null}
-
-      <section className={styles.statsGrid} aria-label="Thống kê">
-        <Stat label="Điểm" value={`${state.attempt.scorePercent}%`} />
-        <Stat
-          label="Đúng"
-          value={`${state.attempt.correctCount}/${state.attempt.totalQuestions}`}
-        />
-        <Stat label="Điểm IRT" value={formatNumberVi(state.attempt.xpEarned)} />
       </section>
 
-      {state.subjectScores.length ? (
-        <section className={styles.subjectGrid} aria-label="Điểm theo môn">
-          {state.subjectScores.map((subject) => (
-            <div key={subject.subjectId} className={styles.subjectCard}>
-              <div className={styles.subjectTop}>
-                <SubjectBadge name={subject.name} slug={subject.slug} />
-                <div className={styles.subjectIrt}>
-                  {formatNumberVi(subject.irtScore)} IRT
+      {showQuizDeletedBanner ||
+      showLegacyBanner ||
+      showRejudgeBanner ||
+      showRejudgeUnavailableBanner ? (
+        <section className={styles.noticeStack} aria-label="Thông báo">
+          {showQuizDeletedBanner ? (
+            <div className={`${styles.notice} ${styles.noticeDanger}`}>
+              Quiz có thể đã bị xoá. Không thể chấm lại, nhưng bạn vẫn có thể
+              xem lại kết quả dựa trên dữ liệu đã lưu.
+            </div>
+          ) : null}
+
+          {showLegacyBanner ? (
+            <div className={`${styles.notice} ${styles.noticeMuted}`}>
+              {detailUnavailable
+                ? "Bài làm này chưa có snapshot đầy đủ, nên một số thông tin và đáp án chi tiết có thể không hiển thị chính xác."
+                : "Bài làm này chưa có snapshot đầy đủ, nên một số thông tin có thể không phản ánh đúng thời điểm bạn làm bài."}
+            </div>
+          ) : null}
+
+          {showRejudgeBanner ? (
+            <div className={`${styles.notice} ${styles.noticeWarn}`}>
+              <div className={styles.noticeRow}>
+                <div>
+                  Quiz đã thay đổi kể từ lúc bạn nộp. Bạn có thể chấm lại để cập
+                  nhật điểm theo phiên bản mới nhất.
+                </div>
+                <div>
+                  <RejudgeAttemptButton attemptId={attemptId} />
                 </div>
               </div>
-              <div className={styles.subjectBottom}>
-                {subject.correctCount}/{subject.totalQuestions} đúng •{" "}
-                {Math.round(subject.scorePercent)}%
-              </div>
             </div>
-          ))}
-          {state.subjectScoresEstimated ? (
-            <div className={styles.subjectNote}>
-              * Điểm theo môn đang được ước tính.
+          ) : null}
+
+          {showRejudgeUnavailableBanner ? (
+            <div className={`${styles.notice} ${styles.noticeWarn}`}>
+              Quiz đã thay đổi quá nhiều và không còn câu hỏi nào trùng với lượt
+              làm này, nên không thể chấm lại.
             </div>
           ) : null}
         </section>
       ) : null}
 
-      <section className={styles.questionList} aria-label="Xem lại từng câu">
-        {state.questions.map((question) => (
-          <QuestionReviewCard
-            key={question.id}
-            question={question}
-            answer={answerMap.get(question.id)}
-            passageLabel={
-              question.passage
-                ? passageLabels.get(question.passage.id)
-                : undefined
-            }
-          />
-        ))}
+      {state.subjectScores.length ? (
+        <details className={styles.sectionCard} open aria-label="Điểm theo môn">
+          <summary className={styles.sectionSummary}>
+            <div className={styles.sectionSummaryTitle}>Theo môn</div>
+            <div className={styles.sectionSummaryHint}>
+              {state.subjectScores.length} môn
+              {state.subjectScoresEstimated ? " • ước tính" : ""}
+            </div>
+            <span className={styles.sectionChevron} aria-hidden="true">
+              ▾
+            </span>
+          </summary>
+
+          <div className={styles.sectionBody}>
+            <section className={styles.subjectList} aria-label="Điểm theo môn">
+              {state.subjectScores.map((subject) => {
+                const percent = clampPercent(subject.scorePercent);
+                return (
+                  <div key={subject.subjectId} className={styles.subjectRow}>
+                    <div className={styles.subjectRowTop}>
+                      <SubjectBadge name={subject.name} slug={subject.slug} />
+                      <div className={styles.subjectRowRight}>
+                        <span className={styles.subjectPercent}>
+                          {Math.round(percent)}%
+                        </span>
+                        <span className={styles.subjectIrt}>
+                          {formatNumberVi(subject.irtScore)} IRT
+                        </span>
+                      </div>
+                    </div>
+                    <div className={styles.subjectRowBottom}>
+                      <span className={styles.subjectDetail}>
+                        {subject.correctCount}/{subject.totalQuestions} đúng
+                      </span>
+                    </div>
+                    <div className={styles.subjectBar} aria-hidden="true">
+                      <div
+                        className={styles.subjectBarFill}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
+            {state.subjectScoresEstimated ? (
+              <div className={styles.subjectNote}>
+                * Điểm theo môn đang được ước tính.
+              </div>
+            ) : null}
+          </div>
+        </details>
+      ) : null}
+
+      <section className={styles.reviewLayout} aria-label="Xem lại từng câu">
+        <div className={styles.reviewMain}>
+          <header className={styles.reviewHeader}>
+            <h2 className={styles.reviewTitle}>Xem lại</h2>
+            <div className={styles.reviewSubtitle}>
+              {detailUnavailable
+                ? `${state.attempt.correctCount} đúng • ${needsReviewCount} chưa đúng`
+                : `${correctCount} đúng • ${wrongCount} sai • ${unansweredCount} bỏ trống${
+                    ungradedCount ? ` • ${ungradedCount} chưa chấm` : ""
+                  }`}
+            </div>
+          </header>
+
+          <div className={styles.questionList}>
+            {questionSummaries.map(
+              ({ question, answer, status, defaultOpen }) => (
+                <QuestionReviewCard
+                  key={question.id}
+                  question={question}
+                  answer={answer}
+                  status={status}
+                  defaultOpen={defaultOpen}
+                  passageLabel={
+                    question.passage
+                      ? passageLabels.get(question.passage.id)
+                      : undefined
+                  }
+                />
+              ),
+            )}
+          </div>
+        </div>
+
+        <aside className={styles.navigator} aria-label="Đi tới câu">
+          <div className={styles.navTitle}>Đi tới câu</div>
+          <div className={styles.navGrid}>
+            {questionSummaries.map(({ question, status, anchor }) => (
+              <a
+                key={question.id}
+                className={`${styles.navItem} ${navToneClass(status)}`.trim()}
+                href={`#${anchor}`}
+                aria-label={`Đi tới câu ${question.position}`}
+              >
+                {question.position}
+              </a>
+            ))}
+          </div>
+          <div className={styles.navLegend} aria-hidden="true">
+            <span className={`${styles.legendDot} ${styles.legendCorrect}`} />{" "}
+            Đúng{" "}
+            <span className={`${styles.legendDot} ${styles.legendWrong}`} /> Sai{" "}
+            <span
+              className={`${styles.legendDot} ${styles.legendUnanswered}`}
+            />{" "}
+            Bỏ trống{" "}
+            <span className={`${styles.legendDot} ${styles.legendUngraded}`} />{" "}
+            Chưa chấm
+          </div>
+        </aside>
       </section>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function MetaStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "primary" | "success" | "warning" | "muted";
+}) {
   return (
-    <div className={styles.stat}>
-      <div className={styles.statLabel}>{label}</div>
-      <div className={styles.statValue}>{value}</div>
+    <div className={`${styles.metaStat} ${metaToneClass(tone)}`.trim()}>
+      <div className={styles.metaStatLabel}>{label}</div>
+      <div className={styles.metaStatValue}>{value}</div>
     </div>
   );
 }
@@ -164,75 +362,111 @@ function QuestionReviewCard({
   question,
   answer,
   passageLabel,
+  status,
+  defaultOpen,
 }: {
   question: AttemptReviewQuestion;
   answer?: AttemptAnswer;
   passageLabel?: string;
+  status: QuestionStatus;
+  defaultOpen: boolean;
 }) {
-  const badge = buildBadge(answer?.isCorrect);
+  const badge = buildBadge(status);
   const awardedIrtScore = answer?.awardedIrtScore;
   const answered =
     question.type === "short_answer"
-      ? Boolean(answer?.textAnswer)
-      : Boolean(answer?.selectedOptionIds?.length);
+      ? Boolean(answer?.textAnswer) || typeof answer?.isCorrect === "boolean"
+      : Boolean(answer?.selectedOptionIds?.length) ||
+        typeof answer?.isCorrect === "boolean";
 
   return (
-    <article className={styles.questionCard}>
-      <header className={styles.questionHeader}>
-        <div className={styles.questionTitle}>Câu {question.position}</div>
-        <div className={styles.questionHeaderRight}>
+    <details
+      id={`q-${question.position}`}
+      className={`${styles.questionCard} ${questionToneClass(status)}`.trim()}
+      open={defaultOpen}
+    >
+      <summary className={styles.questionSummary}>
+        <div className={styles.questionSummaryLeft}>
+          <div className={styles.questionTitle}>Câu {question.position}</div>
+          <div className={styles.questionHintRow}>
+            <span className={styles.questionHint}>
+              {status === "unanswered"
+                ? "Bỏ trống"
+                : status === "ungraded"
+                  ? "Chưa chấm"
+                  : "Đã trả lời"}
+            </span>
+            {!question.exists ? (
+              <span className={styles.questionHintDanger}>Câu đã bị xoá</span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className={styles.questionSummaryRight}>
           <span className={styles.questionIrt}>
-            IRT:{" "}
+            <span className={styles.questionIrtLabel}>IRT</span>{" "}
             {awardedIrtScore === undefined
               ? "—"
               : formatNumberVi(awardedIrtScore)}
           </span>
           {badge}
+          <span className={styles.questionChevron} aria-hidden="true">
+            ▾
+          </span>
         </div>
-      </header>
+      </summary>
 
-      {!question.exists ? (
-        <div className={styles.missingQuestion}>
-          Câu hỏi này đã bị xoá nên không thể hiển thị nội dung đầy đủ.
-        </div>
-      ) : null}
-
-      {question.passage ? (
-        <section className={styles.passage} aria-label="Đoạn văn">
-          <div className={styles.passageTitle}>
-            {passageLabel ?? "Dùng thông tin sau để trả lời các câu liên quan."}
+      <div className={styles.questionBody}>
+        {!question.exists ? (
+          <div className={styles.missingQuestion}>
+            Câu hỏi này đã bị xoá nên không thể hiển thị nội dung đầy đủ.
           </div>
-          <RichText content={question.passage.content} allowLinks />
-        </section>
-      ) : null}
+        ) : null}
 
-      {question.stem ? (
-        <RichText content={question.stem} className={styles.stem} allowLinks />
-      ) : (
-        <div className={styles.stem}>—</div>
-      )}
+        {question.passage ? (
+          <section className={styles.passage} aria-label="Đoạn văn">
+            <div className={styles.passageTitle}>
+              {passageLabel ??
+                "Dùng thông tin sau để trả lời các câu liên quan."}
+            </div>
+            <RichText content={question.passage.content} allowLinks />
+          </section>
+        ) : null}
 
-      {question.type === "short_answer" ? (
-        <ShortAnswerReview question={question} answer={answer} />
-      ) : (
-        <McqReview question={question} answer={answer} answered={answered} />
-      )}
+        {question.stem ? (
+          <RichText
+            content={question.stem}
+            className={styles.stem}
+            allowLinks
+          />
+        ) : (
+          <div className={styles.stem}>—</div>
+        )}
 
-      {question.exists && question.explanation ? (
-        <details className={styles.explanation}>
-          <summary className={styles.explanationHeader}>
-            <span className={styles.explanationTitle}>Giải thích</span>
-            <span className={styles.explanationToggle} aria-hidden="true">
-              <span className={styles.explanationToggleLabelOpen}>Ẩn</span>
-              <span className={styles.explanationToggleLabelClosed}>Hiện</span>
-            </span>
-          </summary>
-          <div className={styles.explanationBody}>
-            <RichText content={question.explanation} allowLinks />
-          </div>
-        </details>
-      ) : null}
-    </article>
+        {question.type === "short_answer" ? (
+          <ShortAnswerReview question={question} answer={answer} />
+        ) : (
+          <McqReview question={question} answer={answer} answered={answered} />
+        )}
+
+        {question.exists && question.explanation ? (
+          <details className={styles.explanation}>
+            <summary className={styles.explanationHeader}>
+              <span className={styles.explanationTitle}>Giải thích</span>
+              <span className={styles.explanationToggle} aria-hidden="true">
+                <span className={styles.explanationToggleLabelOpen}>Ẩn</span>
+                <span className={styles.explanationToggleLabelClosed}>
+                  Hiện
+                </span>
+              </span>
+            </summary>
+            <div className={styles.explanationBody}>
+              <RichText content={question.explanation} allowLinks />
+            </div>
+          </details>
+        ) : null}
+      </div>
+    </details>
   );
 }
 
@@ -313,13 +547,21 @@ function McqReview({
             .join(" ");
 
           const icon = isCorrect ? (
-            <CheckCircleIcon size={18} color="var(--success)" />
+            <span className={styles.optionIconSuccess} aria-hidden="true">
+              <CheckCircleIcon size={18} color="currentColor" />
+            </span>
           ) : isWrongSelected ? (
-            <XCircleIcon size={18} color="var(--danger-ink)" />
+            <span className={styles.optionIconDanger} aria-hidden="true">
+              <XCircleIcon size={18} color="currentColor" />
+            </span>
           ) : isSelectedUnkeyed ? (
-            <WarningCircleIcon size={18} color="var(--warning)" />
+            <span className={styles.optionIconWarn} aria-hidden="true">
+              <WarningCircleIcon size={18} color="currentColor" />
+            </span>
           ) : (
-            <CircleIcon size={18} color="var(--neutral-400)" />
+            <span className={styles.optionIconMuted} aria-hidden="true">
+              <CircleIcon size={18} color="currentColor" />
+            </span>
           );
 
           return (
@@ -392,31 +634,39 @@ function ShortAnswerReview({
   );
 }
 
-function buildBadge(isCorrect: AttemptAnswer["isCorrect"]) {
-  if (isCorrect === undefined) {
-    return (
-      <span className={`${styles.badge} ${styles.badgeNeutral}`}>
-        <MinusCircleIcon size={16} color="var(--text-tertiary)" />
-        Chưa chấm
-      </span>
-    );
-  }
+type QuestionStatus = "correct" | "wrong" | "ungraded" | "unanswered";
 
-  if (isCorrect) {
-    return (
-      <span className={`${styles.badge} ${styles.badgeCorrect}`}>
-        <CheckCircleIcon size={16} color="var(--success)" />
-        Đúng
-      </span>
-    );
+function buildBadge(status: QuestionStatus) {
+  switch (status) {
+    case "correct":
+      return (
+        <span className={`${styles.badge} ${styles.badgeCorrect}`}>
+          <CheckCircleIcon size={16} color="currentColor" />
+          Đúng
+        </span>
+      );
+    case "wrong":
+      return (
+        <span className={`${styles.badge} ${styles.badgeWrong}`}>
+          <XCircleIcon size={16} color="currentColor" />
+          Sai
+        </span>
+      );
+    case "unanswered":
+      return (
+        <span className={`${styles.badge} ${styles.badgeWarn}`}>
+          <WarningCircleIcon size={16} color="currentColor" />
+          Bỏ trống
+        </span>
+      );
+    default:
+      return (
+        <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+          <MinusCircleIcon size={16} color="currentColor" />
+          Chưa chấm
+        </span>
+      );
   }
-
-  return (
-    <span className={`${styles.badge} ${styles.badgeWrong}`}>
-      <XCircleIcon size={16} color="var(--danger-ink)" />
-      Sai
-    </span>
-  );
 }
 
 type IconProps = {
@@ -532,4 +782,90 @@ function buildPassageLabel(range: { start: number; end: number }) {
     return `Dùng thông tin sau để trả lời câu ${range.start}.`;
   }
   return `Dùng thông tin sau để trả lời các câu ${range.start}–${range.end}.`;
+}
+
+function clampPercent(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+function getQuestionStatus(
+  question: AttemptReviewQuestion,
+  answer?: AttemptAnswer,
+  options?: { detailUnavailable: boolean },
+): QuestionStatus {
+  const detailUnavailable = options?.detailUnavailable ?? false;
+  if (!answer) return detailUnavailable ? "ungraded" : "unanswered";
+
+  const hasTypedAnswer = Boolean(answer.textAnswer);
+  const hasSelectedOptions = Boolean(answer.selectedOptionIds?.length);
+  const hasJudgement = typeof answer.isCorrect === "boolean";
+  const answered =
+    question.type === "short_answer"
+      ? hasTypedAnswer || hasJudgement
+      : hasSelectedOptions || hasJudgement;
+
+  if (!answered) return "unanswered";
+  if (answer?.isCorrect === true) return "correct";
+  if (answer?.isCorrect === false) return "wrong";
+  return "ungraded";
+}
+
+function metaToneClass(tone: "primary" | "success" | "warning" | "muted") {
+  switch (tone) {
+    case "primary":
+      return styles.metaTonePrimary;
+    case "success":
+      return styles.metaToneSuccess;
+    case "warning":
+      return styles.metaToneWarn;
+    default:
+      return styles.metaToneMuted;
+  }
+}
+
+function navToneClass(status: QuestionStatus) {
+  switch (status) {
+    case "correct":
+      return styles.navItemCorrect;
+    case "wrong":
+      return styles.navItemWrong;
+    case "unanswered":
+      return styles.navItemUnanswered;
+    default:
+      return styles.navItemUngraded;
+  }
+}
+
+function questionToneClass(status: QuestionStatus) {
+  switch (status) {
+    case "correct":
+      return styles.questionToneCorrect;
+    case "wrong":
+      return styles.questionToneWrong;
+    case "unanswered":
+      return styles.questionToneUnanswered;
+    default:
+      return styles.questionToneUngraded;
+  }
+}
+
+function formatDurationFromIso(startedAt: string, submittedAt: string | null) {
+  if (!submittedAt) return null;
+  const started = new Date(startedAt);
+  const submitted = new Date(submittedAt);
+  if (Number.isNaN(started.getTime()) || Number.isNaN(submitted.getTime())) {
+    return null;
+  }
+  const diffSeconds = Math.max(
+    0,
+    Math.round((submitted.getTime() - started.getTime()) / 1000),
+  );
+  if (diffSeconds < 60) return `${diffSeconds}s`;
+  const minutes = Math.floor(diffSeconds / 60);
+  const seconds = diffSeconds % 60;
+  if (minutes < 60) return `${minutes}m${String(seconds).padStart(2, "0")}s`;
+  const hours = Math.floor(minutes / 60);
+  const minutesRemainder = minutes % 60;
+  return `${hours}h${String(minutesRemainder).padStart(2, "0")}m`;
 }

@@ -33,6 +33,7 @@ import type {
 import type { Subject } from "@/application/models/subject";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { NoticeModal } from "@/components/ui/notice-modal";
+import { RichText } from "@/components/ui/rich-text";
 import styles from "./manage-quiz-modals.module.css";
 import { QuestionBankPickerModal } from "./question-bank-picker-modal";
 
@@ -604,7 +605,11 @@ function SortableQuestionCard({
         <div className={styles.qTitle}>{`Câu ${index + 1}:`}</div>
       </div>
 
-      <p className={styles.qText}>{question.stem}</p>
+      <RichText
+        content={question.stem}
+        className={styles.qText}
+        allowLinks={false}
+      />
 
       <div className={styles.qMetaRow}>
         <label className={styles.qMetaItem}>

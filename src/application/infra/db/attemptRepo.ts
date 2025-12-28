@@ -90,7 +90,6 @@ type AttemptQuestionRow = {
   score: number | null;
   passage_id: string | null;
   passage_content: string | null;
-  passage_media_urls: string[] | null;
   passage_position: number | null;
 };
 
@@ -108,7 +107,6 @@ type AttemptReviewQuestionRow = {
   explanation: string | null;
   passage_id: string | null;
   passage_content: string | null;
-  passage_media_urls: string[] | null;
   passage_position: number | null;
 };
 
@@ -135,7 +133,6 @@ type QuizAttemptMetaRow = {
   id: string;
   is_challenge: boolean;
   estimated_time_seconds: number | null;
-  challenge_time_limit_seconds: number | null;
   challenge_start_at: string | null;
   challenge_end_at: string | null;
   custom_quiz_id: string | null;
@@ -154,7 +151,6 @@ export type QuizAttemptMeta = {
   quizId: string;
   isChallenge: boolean;
   estimatedTimeSeconds: number | null;
-  challengeTimeLimitSeconds: number | null;
   challengeStartAt: string | null;
   challengeEndAt: string | null;
   customQuizId: string | null;
@@ -360,7 +356,6 @@ function mapAttemptQuestion(
       ? {
           id: row.passage_id,
           content: row.passage_content ?? "",
-          mediaUrls: row.passage_media_urls ?? [],
           position: row.passage_position ?? 1,
         }
       : null,
@@ -377,7 +372,6 @@ export async function getQuizAttemptMeta(
     `SELECT q.id,
             q.is_challenge,
             q.estimated_time_seconds,
-            cs.time_limit_seconds AS challenge_time_limit_seconds,
             cs.start_at AS challenge_start_at,
             cs.end_at AS challenge_end_at,
             cq.id AS custom_quiz_id,
@@ -403,7 +397,6 @@ export async function getQuizAttemptMeta(
     quizId: row.id,
     isChallenge: row.is_challenge,
     estimatedTimeSeconds: row.estimated_time_seconds,
-    challengeTimeLimitSeconds: row.challenge_time_limit_seconds,
     challengeStartAt: row.challenge_start_at,
     challengeEndAt: row.challenge_end_at,
     customQuizId: row.custom_quiz_id,
@@ -954,8 +947,7 @@ export async function listAttemptReviewQuestions(
             q.explanation,
             qp.passage_id,
             qp.position AS passage_position,
-            p.content AS passage_content,
-            p.media_urls AS passage_media_urls
+            p.content AS passage_content
      FROM attempt_question_snapshots qs
      LEFT JOIN questions q ON q.id = qs.question_id
      LEFT JOIN question_passages qp ON qp.question_id = q.id
@@ -1032,7 +1024,6 @@ export async function listAttemptReviewQuestions(
       ? {
           id: row.passage_id,
           content: row.passage_content ?? "",
-          mediaUrls: row.passage_media_urls ?? [],
           position: row.passage_position ?? 1,
         }
       : null,
@@ -1122,8 +1113,7 @@ export async function listAttemptQuestions(
             q.default_score,
             qp.passage_id,
             qp.position AS passage_position,
-            p.content AS passage_content,
-            p.media_urls AS passage_media_urls
+            p.content AS passage_content
      FROM quiz_questions qq
      JOIN questions q ON q.id = qq.question_id
      LEFT JOIN question_passages qp ON qp.question_id = q.id

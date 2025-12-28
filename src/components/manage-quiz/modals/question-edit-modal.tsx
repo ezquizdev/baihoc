@@ -3,6 +3,7 @@
 import { X } from "phosphor-react";
 import { useEffect, useMemo, useState } from "react";
 import type { QuestionDetail } from "@/application/models/question";
+import { RichText } from "@/components/ui/rich-text";
 import styles from "./manage-quiz-modals.module.css";
 
 type QuestionEditTarget = {
@@ -188,7 +189,11 @@ export function QuestionEditModal({
               <div id={titleId} className={styles.qeditTitle}>
                 {`Câu ${target.position}:`}
               </div>
-              <p className={styles.qeditText}>{detail.question.stem}</p>
+              <RichText
+                content={detail.question.stem}
+                className={styles.qeditText}
+                allowLinks
+              />
 
               {!isMcq ? (
                 <div className={styles.inlineError} role="alert">

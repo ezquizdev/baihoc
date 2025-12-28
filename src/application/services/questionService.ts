@@ -34,7 +34,7 @@ type CreateQuestionInput = {
   createdBy: string;
   options?: Array<Omit<QuestionOption, "id" | "questionId">>;
   shortAnswers?: Array<Omit<ShortAnswerKey, "id" | "questionId">>;
-  passage?: { content: string; mediaUrls?: string[] } | null;
+  passage?: { content: string } | null;
   passageId?: string | null;
   passagePosition?: number;
 };

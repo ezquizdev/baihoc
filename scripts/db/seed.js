@@ -160,7 +160,6 @@ async function main() {
             groupSize,
             startPosition: generated + 1,
           }),
-          [],
         ]);
         for (let j = 0; j < groupSize; j += 1) {
           const id = crypto.randomUUID();
@@ -289,12 +288,7 @@ async function main() {
       );
     }
     if (passageRows.length) {
-      await insertRows(
-        client,
-        "passages",
-        ["id", "content", "media_urls"],
-        passageRows,
-      );
+      await insertRows(client, "passages", ["id", "content"], passageRows);
     }
     if (questionPassageRows.length) {
       await insertRows(
@@ -391,7 +385,6 @@ async function main() {
           quizId,
           shiftDate(anchorIso, -1),
           shiftDate(anchorIso, 7),
-          minutes * 60,
         ]);
       }
 
@@ -482,7 +475,7 @@ async function main() {
       await insertRows(
         client,
         "challenge_settings",
-        ["quiz_id", "start_at", "end_at", "time_limit_seconds"],
+        ["quiz_id", "start_at", "end_at"],
         challengeRows,
         "ON CONFLICT (quiz_id) DO NOTHING",
       );

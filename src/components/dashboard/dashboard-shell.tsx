@@ -65,7 +65,7 @@ const defaultNav: NavItem[] = [
   {
     key: "leaderboard",
     label: "Bảng xếp hạng",
-    href: "/dashboard/leaderboard",
+    href: "/leaderboard",
   },
   { key: "settings", label: "Cài đặt", href: "/profile" },
 ];

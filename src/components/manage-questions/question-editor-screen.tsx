@@ -13,6 +13,7 @@ import type {
 import type { Subject } from "@/application/models/subject";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { handleMarkdownImagePaste } from "@/components/ui/markdown-image-paste";
 import styles from "./question-editor-screen.module.css";
 import { QuestionPreview } from "./question-preview";
 
@@ -21,6 +22,7 @@ type QuestionEditorScreenProps =
       session: SessionPayload;
       subjects: Subject[];
       mode: "create";
+      initialType?: QuestionType;
       questionId?: never;
       initialDetail?: never;
     }
@@ -55,12 +57,16 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
 
   const initial = props.mode === "edit" ? props.initialDetail : null;
   const initialQuestion = initial?.question;
+  const initialCreateType =
+    props.mode === "create"
+      ? (props.initialType ?? "mcq_single")
+      : "mcq_single";
 
   const [subjectId, setSubjectId] = useState<string>(
     initialQuestion?.subjectId ?? props.subjects[0]?.id ?? "",
   );
   const [type, setType] = useState<QuestionType>(
-    initialQuestion?.type ?? "mcq_single",
+    initialQuestion?.type ?? initialCreateType,
   );
   const [defaultDifficulty, setDefaultDifficulty] = useState<DifficultyLevel>(
     (initialQuestion?.defaultDifficulty ?? 3) as DifficultyLevel,
@@ -95,9 +101,6 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
   const [passageContent, setPassageContent] = useState<string>(
     initial?.passage?.content ?? "",
   );
-  const [passageMedia, setPassageMedia] = useState<string>(
-    (initial?.passage?.mediaUrls ?? []).join("\n"),
-  );
   const [passagePosition, setPassagePosition] = useState<number>(
     initialQuestion?.passagePosition ?? 1,
   );
@@ -106,6 +109,8 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [mediaUploadingCount, setMediaUploadingCount] = useState(0);
+  const [mediaUploadError, setMediaUploadError] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -211,10 +216,6 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
         }
         payload.passage = {
           content,
-          mediaUrls: passageMedia
-            .split("\n")
-            .map((line) => line.trim())
-            .filter(Boolean),
         };
         payload.passagePosition = Math.max(
           1,
@@ -421,8 +422,24 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
             className={styles.row}
             style={{ justifyContent: "space-between", marginBottom: 14 }}
           >
-            <div className={styles.muted}>
-              Xem trước hỗ trợ Markdown + LaTeX.
+            <div>
+              <div className={styles.muted}>
+                Xem trước hỗ trợ Markdown + LaTeX.
+              </div>
+              <div className={styles.muted} aria-live="polite">
+                {mediaUploadingCount > 0
+                  ? `Đang upload ${mediaUploadingCount} ảnh...`
+                  : "Tip: Dán ảnh (Ctrl/Cmd+V) để tự upload và chèn ảnh vào nội dung."}
+              </div>
+              {mediaUploadError ? (
+                <div
+                  className={styles.inlineError}
+                  role="alert"
+                  style={{ marginTop: 10 }}
+                >
+                  {mediaUploadError}
+                </div>
+              ) : null}
             </div>
             <fieldset
               className={`${styles.row} ${styles.toggleGroup}`}
@@ -587,6 +604,14 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                       className={styles.textarea}
                       value={stem}
                       onChange={(e) => setStem(e.target.value)}
+                      onPaste={(e) =>
+                        handleMarkdownImagePaste(e, {
+                          setValue: setStem,
+                          setUploadingCount: setMediaUploadingCount,
+                          setUploadError: setMediaUploadError,
+                          altPrefix: "question",
+                        })
+                      }
                       placeholder="Nhập nội dung câu hỏi..."
                       disabled={disabled}
                     />
@@ -598,6 +623,14 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                       className={`${styles.textarea} ${styles.textareaSmall}`}
                       value={explanation}
                       onChange={(e) => setExplanation(e.target.value)}
+                      onPaste={(e) =>
+                        handleMarkdownImagePaste(e, {
+                          setValue: setExplanation,
+                          setUploadingCount: setMediaUploadingCount,
+                          setUploadError: setMediaUploadError,
+                          altPrefix: "explanation",
+                        })
+                      }
                       placeholder="Giải thích / lời giải..."
                       disabled={disabled}
                     />
@@ -629,6 +662,24 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                                 ),
                               );
                             }}
+                            onPaste={(e) =>
+                              handleMarkdownImagePaste(e, {
+                                setValue: (next) =>
+                                  setOptions((prev) =>
+                                    prev.map((o, oi) => {
+                                      if (oi !== idx) return o;
+                                      const text =
+                                        typeof next === "function"
+                                          ? next(o.text)
+                                          : next;
+                                      return { ...o, text };
+                                    }),
+                                  ),
+                                setUploadingCount: setMediaUploadingCount,
+                                setUploadError: setMediaUploadError,
+                                altPrefix: `option-${idx + 1}`,
+                              })
+                            }
                             placeholder={`Đáp án ${idx + 1}`}
                             disabled={disabled}
                           />
@@ -778,14 +829,15 @@ export function QuestionEditorScreen(props: QuestionEditorScreenProps) {
                         className={`${styles.textarea} ${styles.textareaSmall}`}
                         value={passageContent}
                         onChange={(e) => setPassageContent(e.target.value)}
+                        onPaste={(e) =>
+                          handleMarkdownImagePaste(e, {
+                            setValue: setPassageContent,
+                            setUploadingCount: setMediaUploadingCount,
+                            setUploadError: setMediaUploadError,
+                            altPrefix: "passage",
+                          })
+                        }
                         placeholder="Nội dung đoạn văn..."
-                        disabled={disabled}
-                      />
-                      <textarea
-                        className={`${styles.textarea} ${styles.textareaSmall}`}
-                        value={passageMedia}
-                        onChange={(e) => setPassageMedia(e.target.value)}
-                        placeholder="Media URLs (mỗi dòng 1 URL)"
                         disabled={disabled}
                       />
                       <div className={styles.row}>

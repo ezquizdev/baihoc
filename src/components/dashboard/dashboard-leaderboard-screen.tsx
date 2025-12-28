@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { CaretDown, CaretUp } from "phosphor-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ComponentProps,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { SessionPayload } from "@/application/infra/auth/session";
 import type {
   LeaderboardSortBy,
@@ -19,6 +25,7 @@ type DashboardLeaderboardScreenProps = {
   session: SessionPayload;
   initial: LeaderboardTableResult;
   pageSize: number;
+  navItems?: ComponentProps<typeof DashboardShell>["navItems"];
 };
 
 const scoreColumns: Array<{
@@ -37,6 +44,7 @@ export function DashboardLeaderboardScreen({
   session,
   initial,
   pageSize,
+  navItems,
 }: DashboardLeaderboardScreenProps) {
   const didMountRef = useRef(false);
   const [search, setSearch] = useState("");
@@ -192,6 +200,7 @@ export function DashboardLeaderboardScreen({
     <DashboardShell
       pageTitle="Bảng xếp hạng"
       activeNav="leaderboard"
+      navItems={navItems}
       userEmail={session.email}
       userName={displayName}
       avatarUrl={session.avatarUrl}
