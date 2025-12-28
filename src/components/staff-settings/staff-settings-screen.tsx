@@ -1,9 +1,11 @@
 "use client";
 
 import type { SessionPayload } from "@/application/infra/auth/session";
+import type { StaffHighlightChallengeSettingsDto } from "@/application/models/staffSettings";
 import type { AllowlistEntry } from "@/application/models/userAdmin";
 import { StaffShell } from "@/components/staff-dashboard/StaffShell";
 import { AllowlistManager } from "./allowlist-manager";
+import { HighlightChallengeSettingsCard } from "./highlight-challenge-settings-card";
 import styles from "./staff-settings-screen.module.css";
 
 export type StaffSettingsStatus = {
@@ -18,6 +20,7 @@ export type StaffSettingsStatus = {
 type StaffSettingsScreenProps = {
   session: SessionPayload;
   status: StaffSettingsStatus;
+  initialHighlightChallengeSettings: StaffHighlightChallengeSettingsDto;
   initialAllowlist: AllowlistEntry[];
   initialAllowlistTotal: number;
 };
@@ -25,6 +28,7 @@ type StaffSettingsScreenProps = {
 export function StaffSettingsScreen({
   session,
   status,
+  initialHighlightChallengeSettings,
   initialAllowlist,
   initialAllowlistTotal,
 }: StaffSettingsScreenProps) {
@@ -117,6 +121,15 @@ export function StaffSettingsScreen({
             </ul>
           </section>
         </div>
+
+        <section
+          className={`cardBase ${styles.allowlistCard}`}
+          aria-label="Highlight challenge"
+        >
+          <HighlightChallengeSettingsCard
+            initial={initialHighlightChallengeSettings}
+          />
+        </section>
 
         <section
           className={`cardBase ${styles.allowlistCard}`}

@@ -1,3 +1,4 @@
+import { controllerGetStaffHighlightChallengeSettings } from "@/application/controllers/staffSettingsController";
 import { controllerAdminAllowlistList } from "@/application/controllers/userAdminController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import { StaffSettingsScreen } from "@/components/staff-settings/staff-settings-screen";
@@ -13,6 +14,12 @@ export default async function StaffSettingsPage() {
     limit: 50,
     offset: 0,
   });
+
+  const highlightChallengeSettings =
+    await controllerGetStaffHighlightChallengeSettings().catch(() => ({
+      config: null,
+      activeChallenges: [],
+    }));
 
   const googleServerConfigured = Boolean(
     env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET,
@@ -36,6 +43,7 @@ export default async function StaffSettingsPage() {
         llmConfigured: Boolean(env.LLM_API_KEY),
         avatars: { bucket: "avatars", maxSizeMb: 5 },
       }}
+      initialHighlightChallengeSettings={highlightChallengeSettings}
       initialAllowlist={allowlist.items}
       initialAllowlistTotal={allowlist.total}
     />
