@@ -2,6 +2,9 @@
 
 ## 2025-12-28
 
+### fix(dashboard): keep stats legend above bars
+- Raised the stats card legend stacking order and reduced bar height to avoid overlap.
+
 ### fix(auth): avoid avatar_url parameter type error
 - Cast the avatar_url parameter in profile completion updates to prevent Postgres type inference failures.
 

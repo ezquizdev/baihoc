@@ -137,7 +137,7 @@
 
 .bars {
   position: absolute;
-  inset: 16px 12px 34px 12px; /* tighter gap for labels */
+  inset: 36px 12px 34px 12px; /* leave space for legend */
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   align-items: end;
@@ -198,6 +198,7 @@
   font-size: 11px;
   color: var(--text-subtle);
   font-weight: 600;
+  z-index: 2;
 }
 
 .legendItem {
