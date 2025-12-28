@@ -200,6 +200,7 @@ Suggested structure:
 
 ### UI/UX
 - Added VIP notice modal to the quiz catalog page for premium quiz and custom quiz access attempts.
+- Session payload now includes `tier` and is refreshed from DB when it changes, so VIP gating can be surfaced consistently in UI.
 
 ## Staff quiz content: passage groups atomic + ordered (2025-12-28)
 - What: Enforce that if a quiz includes any question linked to a passage, it must include *all* questions in that passage, and they must be consecutive and in the passage’s relative order.

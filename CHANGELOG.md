@@ -27,6 +27,9 @@
 - Question picker warns that selecting a passage-linked question will auto-add the other linked questions.
 - If a saved ordering violates the passage rule, staff can confirm an auto-fix that adds missing questions and reorders the list.
 
+### fix(auth): include user tier in session
+- Session payload now includes `tier` so UI/flows that depend on VIP access can rely on the current session (and it refreshes when tier changes).
+
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 

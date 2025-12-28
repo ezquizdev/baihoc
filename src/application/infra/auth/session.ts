@@ -1,6 +1,6 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
-import type { UserRole } from "@/application/models/user";
+import type { UserRole, UserTier } from "@/application/models/user";
 import { env } from "@/core/env";
 
 if (typeof window !== "undefined") {
@@ -17,6 +17,7 @@ export type SessionPayload = {
   sub: string;
   email: string;
   role: UserRole;
+  tier: UserTier;
   profileCompleted: boolean;
   fullName?: string;
   avatarUrl?: string;
@@ -26,6 +27,7 @@ export function toSessionPayload(user: {
   id: string;
   email: string;
   role: UserRole;
+  tier: UserTier;
   profileCompleted: boolean;
   fullName?: string | null;
   avatarUrl?: string | null;
@@ -34,6 +36,7 @@ export function toSessionPayload(user: {
     sub: user.id,
     email: user.email,
     role: user.role,
+    tier: user.tier,
     profileCompleted: user.profileCompleted,
     fullName: user.fullName ?? undefined,
     avatarUrl: user.avatarUrl ?? undefined,
@@ -73,10 +76,13 @@ export async function getSession(): Promise<SessionPayload | null> {
       await clearSession();
       return null;
     }
+    const tier = payload.tier ? String(payload.tier) : "free";
+    const normalizedTier = tier === "paid" ? "paid" : "free";
     return {
       sub: String(payload.sub),
       email: String(payload.email),
       role,
+      tier: normalizedTier,
       profileCompleted: Boolean(payload.profileCompleted),
       fullName: payload.fullName ? String(payload.fullName) : undefined,
       avatarUrl: payload.avatarUrl ? String(payload.avatarUrl) : undefined,

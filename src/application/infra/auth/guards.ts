@@ -101,6 +101,7 @@ async function refreshSessionFromDb(
     id: user.id,
     email: user.email,
     role: user.role,
+    tier: user.tier,
     profileCompleted: user.profile_completed,
     fullName: user.full_name,
     avatarUrl: user.avatar_url,
@@ -108,6 +109,7 @@ async function refreshSessionFromDb(
   if (
     fresh.email !== session.email ||
     fresh.role !== session.role ||
+    fresh.tier !== session.tier ||
     fresh.profileCompleted !== session.profileCompleted ||
     fresh.fullName !== session.fullName ||
     fresh.avatarUrl !== session.avatarUrl

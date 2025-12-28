@@ -20,6 +20,7 @@ export type SessionUser = {
   id: string;
   email: string;
   role: UserRole;
+  tier: UserTier;
   profileCompleted: boolean;
   fullName?: string | null;
   avatarUrl?: string | null;

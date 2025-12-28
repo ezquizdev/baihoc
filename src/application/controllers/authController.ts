@@ -19,6 +19,7 @@ const toSessionUser = (user: User): SessionUser => ({
   id: user.id,
   email: user.email,
   role: user.role,
+  tier: user.tier,
   profileCompleted: user.profileCompleted,
   fullName: user.fullName,
   avatarUrl: user.avatarUrl,
