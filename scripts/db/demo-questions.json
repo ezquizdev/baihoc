@@ -16,7 +16,7 @@
   {
     "subjectSlug": "math",
     "difficulty": 3,
-    "stem": "Tìm số giá trị nguyên của tham số m thuộc [-10; 10] để phương trình x + 2*sqrt(x-1) = m + 3 có nghiệm.",
+    "stem": "Tìm số giá trị nguyên của tham số m thuộc [-10; 10] để phương trình x + 2*$\\sqrt{x-1}$ = m + 3 có nghiệm.",
     "options": [
       "13",
       "11",
@@ -24,12 +24,12 @@
       "10"
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\n\nĐKXĐ: x >= 1. Đặt t = sqrt(x-1) (t >= 0) => x = t^2 + 1\nPhương trình trở thành: (t^2 + 1) + 2t = m + 3 <=> t^2 + 2t - 2 = m\n\nXét f(t) = t^2 + 2t - 2 trên [0; +vo cung)\nf'(t) = 2t + 2 >= 0 với mọi t >= 0 => f(t) đồng biến trên [0; +vo cung)\n=> min f(t) = f(0) = -2\n\nĐể phương trình có nghiệm thì m >= min f(t) = -2.\nKết hợp với m thuộc [-10; 10], ta tính được các giá trị nguyên của tham số m:\nm thuộc {-2, -1, 0, ..., 10}\nSố giá trị là: 10 - (-2) + 1 = 13 giá trị.\n\n---"
+    "explanation": "Chọn A\n\nĐKXĐ: $x \\geq 1$. Đặt t = $\\sqrt{x-1}$ ($t \\geq 0$) => x = $t^2$ + 1\nPhương trình trở thành: ($t^2$ + 1) + 2t = m + 3 <=> $t^2$ + 2t - 2 = m\n\nXét f(t) = $t^2$ + 2t - 2 trên [0; +vo cung)\nf'(t) = 2t + $2 \\geq 0$ với mọi $t \\geq 0$ => f(t) đồng biến trên [0; +vo cung)\n=> min f(t) = f(0) = -2\n\nĐể phương trình có nghiệm thì m >= min f(t) = -2.\nKết hợp với m thuộc [-10; 10], ta tính được các giá trị nguyên của tham số m:\nm thuộc {-2, -1, 0, ..., 10}\nSố giá trị là: 10 - (-2) + 1 = 13 giá trị.\n\n---"
   },
   {
     "subjectSlug": "math",
     "difficulty": 2,
-    "stem": "Cho tam giác ABC có cạnh AB = 4, AC = 6 biết rằng cos(B+C) = 1/3. Độ dài đường trung tuyến AM kẻ từ đỉnh A của tam giác là:",
+    "stem": "Cho tam giác ABC có cạnh AB = 4, AC = 6 biết rằng $\\cos(B+C)$ = $\\frac{1}{3}$. Độ dài đường trung tuyến AM kẻ từ đỉnh A của tam giác là:",
     "options": [
       "$\\sqrt{19}$",
       "5",
@@ -37,12 +37,12 @@
       "3"
     ],
     "correctIndex": 3,
-    "explanation": "Chọn D\n\nTa có cos A = cos(180 - (B+C)) = -cos(B+C) = -1/3\nÁp dụng định lý hàm Cos:\nBC^2 = AB^2 + AC^2 - 2*AB*AC*cosA = 4^2 + 6^2 - 2*4*6*(-1/3) = 68\n\nTính độ dài trung tuyến AM:\nAM^2 = (AB^2 + AC^2)/2 - BC^2/4 = (16+36)/2 - 68/4 = 26 - 17 = 9 \n=> AM = 3\n\n---"
+    "explanation": "Chọn D\n\nTa có cos A = cos(180 - (B+C)) = -$\\cos(B+C)$ = $\\frac{-1}{3}$\nÁp dụng định lý hàm Cos:\n$BC^2$ = $AB^2$ + $AC^2$ - 2*AB*AC*cosA = $4^2$ + $6^2$ - 2*4*6*($\\frac{-1}{3}$) = 68\n\nTính độ dài trung tuyến AM:\n$AM^2$ = ($AB^2$ + $AC^2$)/2 - $BC^2$/4 = (16+36)/2 - $\\frac{68}{4}$ = 26 - 17 = 9 \n=> AM = 3\n\n---"
   },
   {
     "subjectSlug": "math",
     "difficulty": 2,
-    "stem": "Cho tam giác ABC có cạnh AC = sqrt(2)*AB và góc C = 30 độ. Biết góc B là góc tù. Số đo góc A là:",
+    "stem": "Cho tam giác ABC có cạnh AC = $\\sqrt{2}$*AB và góc C = 30 độ. Biết góc B là góc tù. Số đo góc A là:",
     "options": [
       "15 độ",
       "105 độ",
@@ -50,7 +50,7 @@
       "135 độ"
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\n\nTheo định lý Sin:\nAC / sin B = AB / sin C => sin B = (AC * sin C) / AB = (sqrt(2) * 1/2) = sqrt(2)/2\nMà góc B tù nên B = 135 độ.\n\nA = 180 - B - C = 180 - 135 - 30 = 15 độ.\n\n---"
+    "explanation": "Chọn A\n\nTheo định lý Sin:\nAC / sin B = AB / sin C => sin B = (AC * sin C) / AB = ($\\sqrt{2}$ * $\\frac{1}{2}$) = $\\sqrt{2}$/2\nMà góc B tù nên B = 135 độ.\n\nA = 180 - B - C = 180 - 135 - 30 = 15 độ.\n\n---"
   },
   {
     "subjectSlug": "math",
@@ -68,7 +68,7 @@
   {
     "subjectSlug": "math",
     "difficulty": 2,
-    "stem": "Số nghiệm của phương trình x^2 + 2x - 5*sqrt(x^2 + 2x + 8) + 14 = 0 là:",
+    "stem": "Số nghiệm của phương trình $x^2$ + 2x - 5*$\\sqrt{x^2 + 2x + 8}$ + 14 = 0 là:",
     "options": [
       "1",
       "2",
@@ -76,20 +76,20 @@
       "0"
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\n\nĐặt t = sqrt(x^2 + 2x + 8). Điều kiện t >= sqrt(7).\nPhương trình trở thành: (t^2 - 8) - 5t + 14 = 0 <=> t^2 - 5t + 6 = 0\n<=> t = 2 (loại) hoặc t = 3 (nhận)\n\nVới t = 3 => x^2 + 2x + 8 = 9 <=> x^2 + 2x - 1 = 0\nPhương trình này có 2 nghiệm phân biệt.\n\n---"
+    "explanation": "Chọn B\n\nĐặt t = $\\sqrt{x^2 + 2x + 8}$. Điều kiện t >= $\\sqrt{7}$.\nPhương trình trở thành: ($t^2$ - 8) - 5t + 14 = 0 <=> $t^2$ - 5t + 6 = 0\n<=> t = 2 (loại) hoặc t = 3 (nhận)\n\nVới t = 3 => $x^2$ + 2x + 8 = 9 <=> $x^2$ + 2x - 1 = 0\nPhương trình này có 2 nghiệm phân biệt.\n\n---"
   },
   {
     "subjectSlug": "math",
     "difficulty": 2,
     "stem": "Xác định số hạng đầu u_1 và công bội q của cấp số nhân.",
     "options": [
-      "$u_1 = 8; q = \\frac{-1}{2}$",
-      "$u_1 = 4; q = \\frac{1}{2}$",
-      "$u_1 = 2; q = -2$",
-      "$u_1 = 4; q = \\frac{-1}{4}$"
+      "u_1 = 8; q = $\\frac{-1}{2}$",
+      "u_1 = 4; q = $\\frac{1}{2}$",
+      "u_1 = 2; q = -2",
+      "u_1 = 4; q = $\\frac{-1}{4}$"
     ],
     "correctIndex": 0,
-    "explanation": "Giải hệ phương trình tìm được q = -1/2 (thỏa mãn điều kiện).\nThế vào tìm u_1 = 8.\nChọn A.\n\n---",
+    "explanation": "Giải hệ phương trình tìm được q = $\\frac{-1}{2}$ (thỏa mãn điều kiện).\nThế vào tìm u_1 = 8.\nChọn A.\n\n---",
     "passage": "Cho (u_n) là một cấp số nhân lùi vô hạn có công bội âm (q < 0). Biết rằng:\nu_1 + u_3 = 10\nu_1^2 + u_3^2 = 68"
   },
   {
@@ -103,7 +103,7 @@
       "$\\frac{4096}{7}$"
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\n\nv_1 = u_1^3 = 8^3 = 512.\nCông bội Q = q^3 = (-1/2)^3 = -1/8.\nTổng S = v_1 / (1 - Q) = 512 / (1 - (-1/8)) = 4096/9.\n\n---",
+    "explanation": "Chọn B\n\nv_1 = u_1^3 = $8^3$ = 512.\nCông bội Q = $q^3$ = ($\\frac{-1}{2}$)^3 = $\\frac{-1}{8}$.\nTổng S = v_1 / (1 - Q) = 512 / (1 - ($\\frac{-1}{8}$)) = $\\frac{4096}{9}$.\n\n---",
     "passage": "Cho (u_n) là một cấp số nhân lùi vô hạn có công bội âm (q < 0). Biết rằng:\nu_1 + u_3 = 10\nu_1^2 + u_3^2 = 68"
   },
   {
@@ -117,21 +117,21 @@
       "$\\frac{64}{9}$"
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\n\nCông thức tổng quát cho dạng này là T = u_1 / (1-q)^2\nT = 8 / (1 - (-0.5))^2 = 8 / (1.5)^2 = 8 / 2.25 = 32/9.\n\n---",
+    "explanation": "Chọn A\n\nCông thức tổng quát cho dạng này là T = u_1 / (1-q)^2\nT = 8 / (1 - (-0.5))^2 = 8 / (1.5)^2 = $\\frac{8}{2}$.25 = $\\frac{32}{9}$.\n\n---",
     "passage": "Cho (u_n) là một cấp số nhân lùi vô hạn có công bội âm (q < 0). Biết rằng:\nu_1 + u_3 = 10\nu_1^2 + u_3^2 = 68"
   },
   {
     "subjectSlug": "math",
     "difficulty": 3,
-    "stem": "Tìm m để phương trình log_3^2(x) - 3log_3(x) + 2m - 7 = 0 có hai nghiệm x1, x2 thỏa mãn (x1+3)(x2+3) = 72.",
+    "stem": "Tìm m để phương trình log_3^2(x) - 3$\\log_{3}(x)$ + 2m - 7 = 0 có hai nghiệm x1, x2 thỏa mãn (x1+3)(x2+3) = 72.",
     "options": [
-      "$m = \\frac{9}{2}$",
+      "m = $\\frac{9}{2}$",
       "m = 3",
       "Không tồn tại",
-      "$m = \\frac{61}{2}$"
+      "m = $\\frac{61}{2}$"
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\n\nĐặt t = log_3(x). PT trở thành t^2 - 3t + 2m - 7 = 0.\nVi-et: t1 + t2 = 3 => log_3(x1) + log_3(x2) = 3 => x1*x2 = 27.\nTừ (x1+3)(x2+3) = 72 => x1*x2 + 3(x1+x2) + 9 = 72 => 27 + 3(x1+x2) + 9 = 72 => x1+x2 = 12.\nGiải hệ x1*x2=27, x1+x2=12 => x1=3, x2=9.\n=> t1=1, t2=2.\nTích t1*t2 = 2m - 7 => 2 = 2m - 7 => 2m = 9 => m = 9/2.",
+    "explanation": "Chọn A\n\nĐặt t = $\\log_{3}(x)$. PT trở thành $t^2$ - 3t + 2m - 7 = 0.\nVi-et: t1 + t2 = 3 => $\\log_{3}(x1)$ + $\\log_{3}(x2)$ = 3 => x1*x2 = 27.\nTừ (x1+3)(x2+3) = 72 => x1*x2 + 3(x1+x2) + 9 = 72 => 27 + 3(x1+x2) + 9 = 72 => x1+x2 = 12.\nGiải hệ x1*x2=27, x1+x2=12 => x1=3, x2=9.\n=> t1=1, t2=2.\nTích t1*t2 = 2m - 7 => 2 = 2m - 7 => 2m = 9 => m = $\\frac{9}{2}$.",
     "passage": "Cho (u_n) là một cấp số nhân lùi vô hạn có công bội âm (q < 0). Biết rằng:\nu_1 + u_3 = 10\nu_1^2 + u_3^2 = 68"
   },
   {
@@ -153,13 +153,13 @@
     "difficulty": 2,
     "stem": "Bất phương trình mô tả ràng buộc về tổng số giờ công hoàn thiện là:",
     "options": [
-      "3x + 4y <= 96",
-      "15x + 20y <= 96",
-      "4x + 3y <= 96",
-      "4x + 3y >= 96"
+      "3x + $4y \\leq 96$",
+      "15x + $20y \\leq 96$",
+      "4x + $3y \\leq 96$",
+      "4x + $3y \\geq 96$"
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nBàn trà tốn 4h, Ghế tựa tốn 3h. Tổng <= 96.\n4x + 3y <= 96.\n\n---",
+    "explanation": "Chọn C\nBàn trà tốn 4h, Ghế tựa tốn 3h. Tổng <= 96.\n4x + $3y \\leq 96$.\n\n---",
     "passage": "Một xưởng thủ công mỹ nghệ sản xuất hai loại sản phẩm chính: Bàn trà (kiểu X) và Ghế tựa (kiểu Y). Phân xưởng làm mộc cho Bàn trà có thể sản xuất tối đa 15 chiếc/tháng. Phân xưởng làm mộc cho Ghế tựa có thể sản xuất tối đa 20 chiếc/tháng. Để hoàn thiện (sơn, lắp ráp), mỗi chiếc Bàn trà tốn 4 giờ công, mỗi chiếc Ghế tựa tốn 3 giờ công. Tổng số giờ tối đa công xưởng có thể huy động trong tháng là 96 giờ. Lợi nhuận từ một chiếc bàn trà là 1.200.000 đồng, từ một chiếc Ghế tựa là 800.000 đồng. Gọi x và y lần lượt là số Bàn trà và Ghế tựa sản xuất trong 1 tháng (x, y >= 0).\n\n---"
   },
   {
@@ -173,7 +173,7 @@
       "Chỉ sản xuất 80 Ghế tựa."
     ],
     "correctIndex": 0,
-    "explanation": "Hệ bất phương trình:\n4x + 3y <= 96\n0 <= x <= 15\n0 <= y <= 20\n\nthêm hình ở đây\n\nXét các đỉnh của miền nghiệm: O(0;0), A(15;0), B(15;12), C(9;20), D(0;20).\nTính f(x,y) = 1200x + 800y:\n- Tại B(15;12): f = 27600 (Max)\n- Tại C(9;20): f = 26800\nChọn A.\n\n---",
+    "explanation": "Hệ bất phương trình:\n4x + $3y \\leq 96$\n$0 \\leq __MATH_1__$\n$0 \\leq __MATH_2__$\n\nthêm hình ở đây\n\nXét các đỉnh của miền nghiệm: O(0;0), A(15;0), B(15;12), C(9;20), D(0;20).\nTính f(x,y) = 1200x + 800y:\n- Tại B(15;12): f = 27600 $(Max)\n- Tại C(9;20): f = 26800$\nChọn A.\n\n---",
     "passage": "Một xưởng thủ công mỹ nghệ sản xuất hai loại sản phẩm chính: Bàn trà (kiểu X) và Ghế tựa (kiểu Y). Phân xưởng làm mộc cho Bàn trà có thể sản xuất tối đa 15 chiếc/tháng. Phân xưởng làm mộc cho Ghế tựa có thể sản xuất tối đa 20 chiếc/tháng. Để hoàn thiện (sơn, lắp ráp), mỗi chiếc Bàn trà tốn 4 giờ công, mỗi chiếc Ghế tựa tốn 3 giờ công. Tổng số giờ tối đa công xưởng có thể huy động trong tháng là 96 giờ. Lợi nhuận từ một chiếc bàn trà là 1.200.000 đồng, từ một chiếc Ghế tựa là 800.000 đồng. Gọi x và y lần lượt là số Bàn trà và Ghế tựa sản xuất trong 1 tháng (x, y >= 0).\n\n---"
   },
   {
@@ -187,7 +187,7 @@
       "$\\frac{5}{64}$"
     ],
     "correctIndex": 0,
-    "explanation": "Chọn A\nKhông gian mẫu n(Omega) = 2^8.\nChọn 3 vị trí cho số 1 trong 8 vị trí: C(8,3) = 56.\nP = 56/256 = 7/32.\n\n---",
+    "explanation": "Chọn A\nKhông gian mẫu n(Omega) = $2^8$.\nChọn 3 vị trí cho số 1 trong 8 vị trí: C(8,3) = 56.\nP = $\\frac{56}{256}$ = $\\frac{7}{32}$.\n\n---",
     "passage": "Bộ mã ASCII là bảng mã dùng một dãy gồm 8 kí hiệu là 0 hoặc 1 để mã hóa cho một kí tự. Lấy ngẫu nhiên 1 dãy 8 kí hiệu trong bảng mã này.\n\n---"
   },
   {
@@ -201,7 +201,7 @@
       "$\\frac{247}{256}$"
     ],
     "correctIndex": 3,
-    "explanation": "Chọn D\nDùng biến cố đối: \"Có hơn 6 kí hiệu là 1\" (tức 7 hoặc 8).\nSố trường hợp: C(8,7) + C(8,8) = 8 + 1 = 9.\nP = 1 - 9/256 = 247/256.\n\n---",
+    "explanation": "Chọn D\nDùng biến cố đối: \"Có hơn 6 kí hiệu là 1\" (tức 7 hoặc 8).\nSố trường hợp: C(8,7) + C(8,8) = 8 + 1 = 9.\nP = 1 - $\\frac{9}{256}$ = $\\frac{247}{256}$.\n\n---",
     "passage": "Bộ mã ASCII là bảng mã dùng một dãy gồm 8 kí hiệu là 0 hoặc 1 để mã hóa cho một kí tự. Lấy ngẫu nhiên 1 dãy 8 kí hiệu trong bảng mã này.\n\n---"
   },
   {
@@ -215,7 +215,7 @@
       "$\\frac{1}{32}$"
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nDãy đối xứng thì 4 kí tự đầu quyết định 4 kí tự sau.\nSố cách chọn 4 kí tự đầu là 2^4 = 16.\nP = 16/256 = 1/16.\n\n---",
+    "explanation": "Chọn C\nDãy đối xứng thì 4 kí tự đầu quyết định 4 kí tự sau.\nSố cách chọn 4 kí tự đầu là $2^4$ = 16.\nP = $\\frac{16}{256}$ = $\\frac{1}{16}$.\n\n---",
     "passage": "Bộ mã ASCII là bảng mã dùng một dãy gồm 8 kí hiệu là 0 hoặc 1 để mã hóa cho một kí tự. Lấy ngẫu nhiên 1 dãy 8 kí hiệu trong bảng mã này.\n\n---"
   },
   {
@@ -223,13 +223,13 @@
     "difficulty": 3,
     "stem": "Tính diện tích thiết diện của lăng trụ cắt bởi mặt phẳng (AMN).",
     "options": [
-      "$3a^2$",
-      "$6a^2$",
-      "$3 \\cdot \\sqrt{3}a^2$",
-      "$12a^2$"
+      "3a^2",
+      "6a^2",
+      "3 \\cdot $\\sqrt{3}$a^2",
+      "12a^2"
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\nthêm hình ở đây\nTa tính được MN = 4a, đường cao thiết diện AF = 3a.\nDiện tích = 1/2 * AF * MN = 6a^2.\n\n---",
+    "explanation": "Chọn B\nthêm hình ở đây\nTa tính được MN = 4a, đường cao thiết diện AF = 3a.\nDiện tích = $\\frac{1}{2}$ * AF * MN = 6a^2.\n\n---",
     "passage": "Cho lăng trụ ABC.A'B'C' có đáy là tam giác đều cạnh 4a; AA' = 2*sqrt(3)a. Gọi M; N lần lượt là trung điểm của BB' và CC'. Biết mặt bên BCC'B' là hình chữ nhật và mặt phẳng (AMN) vuông góc với mặt phẳng (BCC'B').\n\n---"
   },
   {
@@ -237,13 +237,13 @@
     "difficulty": 3,
     "stem": "Tính thể tích lăng trụ đã cho theo a:",
     "options": [
-      "$3 \\cdot \\sqrt{3}a^3$",
-      "$24 \\cdot \\sqrt{3}a^3$",
-      "$12 \\cdot \\sqrt{3}a^3$",
-      "$4 \\cdot \\sqrt{3}a^3$"
+      "3 \\cdot $\\sqrt{3}$a^3",
+      "24 \\cdot $\\sqrt{3}$a^3",
+      "12 \\cdot $\\sqrt{3}$a^3",
+      "4 \\cdot $\\sqrt{3}$a^3"
     ],
     "correctIndex": 2,
-    "explanation": "Chọn C\nTheo lời giải: V = AA' * S_AMN = 2*sqrt(3)a * 6a^2 = 12*sqrt(3)a^3.\n\n---",
+    "explanation": "Chọn C\nTheo lời giải: V = AA' * S_AMN = 2*$\\sqrt{3}$a * 6a^2 = 12*$\\sqrt{3}$a^3$.\n\n---",
     "passage": "Cho lăng trụ ABC.A'B'C' có đáy là tam giác đều cạnh 4a; AA' = 2*sqrt(3)a. Gọi M; N lần lượt là trung điểm của BB' và CC'. Biết mặt bên BCC'B' là hình chữ nhật và mặt phẳng (AMN) vuông góc với mặt phẳng (BCC'B').\n\n---"
   },
   {
@@ -252,12 +252,12 @@
     "stem": "Tính cosin của góc tạo bởi mặt phẳng đáy (ABC) và mặt phẳng thiết diện (AMN).",
     "options": [
       "$\\frac{1}{2}$",
-      "$\\sqrt{3}/2$",
-      "$\\sqrt{2}/2$",
-      "$\\sqrt{3}/3$"
+      "$\\sqrt{3}$/2",
+      "$\\sqrt{2}$/2",
+      "$\\sqrt{3}$/3"
     ],
     "correctIndex": 1,
-    "explanation": "Chọn B\nGóc cần tìm là góc FAE.\ncos(FAE) = AF / AE = 3a / (2*sqrt(3)a) = sqrt(3)/2.\n\n-----------------------------------------------------------",
+    "explanation": "Chọn B\nGóc cần tìm là góc FAE.\n$\\cos(FAE)$ = AF / AE = 3a / (2*$\\sqrt{3}$a) = $\\sqrt{3}$/2.\n\n-----------------------------------------------------------",
     "passage": "Cho lăng trụ ABC.A'B'C' có đáy là tam giác đều cạnh 4a; AA' = 2*sqrt(3)a. Gọi M; N lần lượt là trung điểm của BB' và CC'. Biết mặt bên BCC'B' là hình chữ nhật và mặt phẳng (AMN) vuông góc với mặt phẳng (BCC'B').\n\n---"
   },
   {
@@ -453,7 +453,7 @@
       "0,8030 M."
     ],
     "correctIndex": 0,
-    "explanation": "Đáp án A\nV_tb NaOH = 12,45 ml.\nn_acid = n_NaOH = 0,1 x 0,01245 = 0,001245 mol.\nC_acid = 0,001245 / 0,01 = 0,1245 M.\n\n---",
+    "explanation": "Đáp án A\nV_tb NaOH = 12,45 ml.\nn_acid = n_NaOH = 0,1 x 0,01245 = 0,001245 mol.\nC_acid = 0,$\\frac{001245}{0}$,01 = 0,1245 M.\n\n---",
     "passage": "Chuẩn độ là phương pháp định lượng dùng để xác định nồng độ của một chất đã hòa tan trong mẫu thử bằng cách cho phản ứng với một thể tích chính xác dung dịch chuẩn (dung dịch đã biết trước nồng độ).\nMột nhóm học sinh tiến hành thí nghiệm xác định hàm lượng acetic acid trong giấm ăn bằng dung dịch chuẩn sodium hydroxide nồng độ 0,10 M (0,01 mol/lít). Phản ứng xảy ra dựa trên phương trình sau:\nCH3COOH + NaOH -> CH3COONa + H2O\n\n---"
   },
   {
