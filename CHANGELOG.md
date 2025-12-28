@@ -30,6 +30,9 @@
 ### fix(auth): include user tier in session
 - Session payload now includes `tier` so UI/flows that depend on VIP access can rely on the current session (and it refreshes when tier changes).
 
+### fix(auth): avoid localhost redirects on logout
+- Logout now redirects to `/auth/login` using a relative Location header so deployments behind proxies don’t bounce users to `http://localhost:3000/...` when a session is invalidated/deactivated.
+
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 

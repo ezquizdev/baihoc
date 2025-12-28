@@ -39,11 +39,11 @@ function handleAuthPath(
   if (session && profileCompleted) {
     const role = String(session.role ?? "");
     const destination = role === "staff" ? "/staff/dashboard" : "/dashboard";
-    return NextResponse.redirect(new URL(destination, req.url));
+    return NextResponse.redirect(destination);
   }
   if (session && !profileCompleted) {
     if (!req.nextUrl.pathname.startsWith("/auth/profile-complete")) {
-      return NextResponse.redirect(new URL(`/auth/profile-complete`, req.url));
+      return NextResponse.redirect("/auth/profile-complete");
     }
   }
   return NextResponse.next();

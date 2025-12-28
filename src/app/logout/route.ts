@@ -8,10 +8,9 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const next = sanitizeNextPath(url.searchParams.get("next"));
 
-  const loginUrl = new URL("/auth/login", request.url);
-  if (next) {
-    loginUrl.searchParams.set("next", next);
-  }
+  const params = new URLSearchParams();
+  if (next) params.set("next", next);
 
-  return NextResponse.redirect(loginUrl);
+  const location = params.size ? `/auth/login?${params.toString()}` : "/auth/login";
+  return NextResponse.redirect(location);
 }
