@@ -35,6 +35,7 @@ export default async function QuizCatalogPage({
 
   return (
     <QuizCatalogScreen
+      key={`${status ?? "all"}-${openCustom ? "custom" : "default"}`}
       session={session}
       initialCatalog={catalog}
       subjects={subjects}

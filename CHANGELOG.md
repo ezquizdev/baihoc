@@ -36,6 +36,9 @@
 ### fix(staff-quizzes): hide custom-generated quizzes in manager
 - Staff quiz list (`/staff/quizzes`) no longer shows quizzes generated from custom quiz requests.
 
+### fix(catalog): honor deep link params for status/custom
+- Navigating to `/quizzes?status=...` and `/quizzes?custom=1` now reliably applies the tab filter or opens the custom quiz modal even during client-side navigation.
+
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 
