@@ -5,6 +5,9 @@
 ### fix(leaderboard): cap searched user rank totals
 - Leaderboard search now uses the same 300-cap + ranking logic as the main leaderboard table.
 
+### chore(test): update repo mocks for new exports
+- Updated unit test mocks for attempt/question repos after adding in-progress locking and IRT stats lookups.
+
 ## 2025-12-27
 
 ### chore(logging): remove unused logger
