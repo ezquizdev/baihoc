@@ -24,7 +24,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { DotsSixVertical, X } from "phosphor-react";
+import { ArrowLeft, DotsSixVertical, X } from "phosphor-react";
 import { useEffect, useMemo, useState } from "react";
 import type {
   QuizDetail,
@@ -304,202 +304,195 @@ export function QuizBuilderModal({
     });
   };
 
-  const dialog = (
-    <div
-      className={`${styles.dialog} ${styles.dialogLarge}`}
-      {...(variant === "modal"
-        ? {
-            role: "dialog",
-            "aria-modal": true as const,
-            "aria-labelledby": titleId,
-          }
-        : {
-            "aria-labelledby": titleId,
-          })}
-    >
-      <div className={styles.dialogHead}>
-        <button
-          className={styles.xbtn}
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          disabled={toolDisabled}
-        >
+  const head = (
+    <div className={styles.dialogHead}>
+      <button
+        className={styles.xbtn}
+        type="button"
+        onClick={onClose}
+        aria-label={variant === "modal" ? "Close" : "Quay lại"}
+        disabled={toolDisabled}
+      >
+        {variant === "modal" ? (
           <X size={16} weight="bold" />
-        </button>
-      </div>
-
-      <div className={styles.builderScroll}>
-        {loading ? <output aria-live="polite">Đang tải quiz...</output> : null}
-
-        {!loading && quiz ? (
-          <>
-            <div className={styles.builderHead}>
-              <h2 id={titleId} className={styles.builderHeadTitle}>
-                {quiz.title}
-              </h2>
-            </div>
-
-            <div className={styles.builderDesc}>
-              <label htmlFor="builder-desc">Mô tả quiz ở đây:</label>
-              <textarea
-                id="builder-desc"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder=".............................................................."
-                disabled={toolDisabled}
-              />
-            </div>
-
-            <div className={styles.builderInfoBar}>
-              <div className={styles.infoItem}>
-                Quyền truy cập: <b>{visibilityText}</b>
-              </div>
-              <div className={styles.infoItem}>
-                Độ khó mặc định:{" "}
-                <span className={styles.miniDiff}>{difficultyText}</span>
-              </div>
-              <div className={styles.infoItem}>
-                Thời gian làm:{" "}
-                <b>
-                  <span>{minutesText}</span> phút
-                </b>
-              </div>
-              <div className={styles.infoItem}>
-                Đặt làm Challenge: <b>{challengeText}</b>
-              </div>
-            </div>
-
-            <div className={styles.builderTools}>
-              <button
-                className={`${styles.toolBtn} ${styles.toolBlue}`}
-                type="button"
-                onClick={() => setBankOpen(true)}
-                disabled={toolDisabled}
-              >
-                Chọn câu hỏi từ kho
-              </button>
-              <a
-                className={`${styles.toolBtn} ${styles.toolYellow} ${
-                  toolDisabled ? styles.toolBtnDisabled : ""
-                }`}
-                href="/staff/questions/new"
-                target="_blank"
-                rel="noreferrer"
-                aria-disabled={toolDisabled}
-                tabIndex={toolDisabled ? -1 : undefined}
-                onClick={(event) => {
-                  if (toolDisabled) event.preventDefault();
-                }}
-              >
-                Tạo câu hỏi mới
-              </a>
-              <button
-                className={`${styles.toolBtn} ${styles.toolDark}`}
-                type="button"
-                onClick={() =>
-                  setNotice({
-                    title: "Chưa hỗ trợ",
-                    message: "Chưa hỗ trợ: import quiz từ file",
-                  })
-                }
-                disabled={toolDisabled}
-              >
-                Tải quiz từ file
-              </button>
-            </div>
-
-            <div className={styles.builderSection}>Câu hỏi</div>
-            <div className={styles.builderHint}>Kéo thả để sắp xếp.</div>
-
-            <DndContext
-              sensors={sensors}
-              accessibility={dndAccessibility}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragCancel={handleDragCancel}
-              onDragEnd={handleDragEnd}
-              modifiers={[
-                restrictToVerticalAxis,
-                restrictToFirstScrollableAncestor,
-              ]}
-            >
-              <SortableContext
-                items={questionIds}
-                strategy={verticalListSortingStrategy}
-              >
-                <ul className={styles.qList} aria-label="Danh sách câu hỏi">
-                  {questions.map((q, idx) => (
-                    <SortableQuestionCard
-                      key={q.id}
-                      question={q}
-                      index={idx}
-                      disabled={toolDisabled}
-                      onEdit={() => onEditQuestion(q.id, idx + 1)}
-                      onRemove={() => setRemoveCandidateId(q.id)}
-                      onScoreChange={(nextScore) => {
-                        setQuestions((prev) =>
-                          prev.map((item) =>
-                            item.id === q.id
-                              ? { ...item, score: nextScore }
-                              : item,
-                          ),
-                        );
-                      }}
-                    />
-                  ))}
-                </ul>
-              </SortableContext>
-            </DndContext>
-
-            {error ? (
-              <div className={styles.inlineError} role="alert">
-                {error}
-              </div>
-            ) : null}
-
-            <div className={styles.builderFooter}>
-              <button
-                className={`${styles.pillBtn} ${styles.pillDanger} ${
-                  toolDisabled ? styles.pillDisabled : ""
-                }`}
-                type="button"
-                onClick={onClose}
-                disabled={toolDisabled}
-              >
-                Hủy
-              </button>
-              <button
-                className={`${styles.pillBtn} ${styles.pillPrimary} ${
-                  toolDisabled ? styles.pillDisabled : ""
-                }`}
-                type="button"
-                onClick={() => doSave("draft")}
-                disabled={toolDisabled}
-              >
-                {saving ? "Đang lưu..." : "Lưu nháp"}
-              </button>
-              <button
-                className={`${styles.pillBtn} ${styles.pillAccent} ${
-                  toolDisabled ? styles.pillDisabled : ""
-                }`}
-                type="button"
-                onClick={() => doSave("publish")}
-                disabled={toolDisabled}
-              >
-                {saving ? "Đang đăng..." : "Đăng"}
-              </button>
-            </div>
-          </>
-        ) : null}
-
-        {!loading && !quiz && error ? (
-          <div className={styles.inlineError} role="alert">
-            {error}
-          </div>
-        ) : null}
-      </div>
+        ) : (
+          <ArrowLeft size={16} weight="bold" />
+        )}
+      </button>
     </div>
+  );
+
+  const content = (
+    <>
+      {loading ? <output aria-live="polite">Đang tải quiz...</output> : null}
+
+      {!loading && quiz ? (
+        <>
+          <div className={styles.builderHead}>
+            <h2 id={titleId} className={styles.builderHeadTitle}>
+              {quiz.title}
+            </h2>
+          </div>
+
+          <div className={styles.builderDesc}>
+            <label htmlFor="builder-desc">Mô tả quiz ở đây:</label>
+            <textarea
+              id="builder-desc"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder=".............................................................."
+              disabled={toolDisabled}
+            />
+          </div>
+
+          <div className={styles.builderInfoBar}>
+            <div className={styles.infoItem}>
+              Quyền truy cập: <b>{visibilityText}</b>
+            </div>
+            <div className={styles.infoItem}>
+              Độ khó mặc định:{" "}
+              <span className={styles.miniDiff}>{difficultyText}</span>
+            </div>
+            <div className={styles.infoItem}>
+              Thời gian làm:{" "}
+              <b>
+                <span>{minutesText}</span> phút
+              </b>
+            </div>
+            <div className={styles.infoItem}>
+              Đặt làm Challenge: <b>{challengeText}</b>
+            </div>
+          </div>
+
+          <div className={styles.builderTools}>
+            <button
+              className={`${styles.toolBtn} ${styles.toolBlue}`}
+              type="button"
+              onClick={() => setBankOpen(true)}
+              disabled={toolDisabled}
+            >
+              Chọn câu hỏi từ kho
+            </button>
+            <a
+              className={`${styles.toolBtn} ${styles.toolYellow} ${
+                toolDisabled ? styles.toolBtnDisabled : ""
+              }`}
+              href="/staff/questions/new"
+              target="_blank"
+              rel="noreferrer"
+              aria-disabled={toolDisabled}
+              tabIndex={toolDisabled ? -1 : undefined}
+              onClick={(event) => {
+                if (toolDisabled) event.preventDefault();
+              }}
+            >
+              Tạo câu hỏi mới
+            </a>
+            <button
+              className={`${styles.toolBtn} ${styles.toolDark}`}
+              type="button"
+              onClick={() =>
+                setNotice({
+                  title: "Chưa hỗ trợ",
+                  message: "Chưa hỗ trợ: import quiz từ file",
+                })
+              }
+              disabled={toolDisabled}
+            >
+              Tải quiz từ file
+            </button>
+          </div>
+
+          <div className={styles.builderSection}>Câu hỏi</div>
+          <div className={styles.builderHint}>Kéo thả để sắp xếp.</div>
+
+          <DndContext
+            sensors={sensors}
+            accessibility={dndAccessibility}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragCancel={handleDragCancel}
+            onDragEnd={handleDragEnd}
+            modifiers={[
+              restrictToVerticalAxis,
+              restrictToFirstScrollableAncestor,
+            ]}
+          >
+            <SortableContext
+              items={questionIds}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className={styles.qList} aria-label="Danh sách câu hỏi">
+                {questions.map((q, idx) => (
+                  <SortableQuestionCard
+                    key={q.id}
+                    question={q}
+                    index={idx}
+                    disabled={toolDisabled}
+                    onEdit={() => onEditQuestion(q.id, idx + 1)}
+                    onRemove={() => setRemoveCandidateId(q.id)}
+                    onScoreChange={(nextScore) => {
+                      setQuestions((prev) =>
+                        prev.map((item) =>
+                          item.id === q.id
+                            ? { ...item, score: nextScore }
+                            : item,
+                        ),
+                      );
+                    }}
+                  />
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
+
+          {error ? (
+            <div className={styles.inlineError} role="alert">
+              {error}
+            </div>
+          ) : null}
+
+          <div className={styles.builderFooter}>
+            <button
+              className={`${styles.pillBtn} ${styles.pillDanger} ${
+                toolDisabled ? styles.pillDisabled : ""
+              }`}
+              type="button"
+              onClick={onClose}
+              disabled={toolDisabled}
+            >
+              Hủy
+            </button>
+            <button
+              className={`${styles.pillBtn} ${styles.pillPrimary} ${
+                toolDisabled ? styles.pillDisabled : ""
+              }`}
+              type="button"
+              onClick={() => doSave("draft")}
+              disabled={toolDisabled}
+            >
+              {saving ? "Đang lưu..." : "Lưu nháp"}
+            </button>
+            <button
+              className={`${styles.pillBtn} ${styles.pillAccent} ${
+                toolDisabled ? styles.pillDisabled : ""
+              }`}
+              type="button"
+              onClick={() => doSave("publish")}
+              disabled={toolDisabled}
+            >
+              {saving ? "Đang đăng..." : "Đăng"}
+            </button>
+          </div>
+        </>
+      ) : null}
+
+      {!loading && !quiz && error ? (
+        <div className={styles.inlineError} role="alert">
+          {error}
+        </div>
+      ) : null}
+    </>
   );
 
   const overlays = (
@@ -558,7 +551,15 @@ export function QuizBuilderModal({
     return (
       <div className={styles.modal} role="presentation">
         <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
-        {dialog}
+        <div
+          className={`${styles.dialog} ${styles.dialogLarge}`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+        >
+          {head}
+          <div className={styles.builderScroll}>{content}</div>
+        </div>
         {overlays}
       </div>
     );
@@ -566,7 +567,8 @@ export function QuizBuilderModal({
 
   return (
     <>
-      {dialog}
+      {head}
+      {content}
       {overlays}
     </>
   );

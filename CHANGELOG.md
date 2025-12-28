@@ -8,6 +8,9 @@
 ### fix(staff-quizzes): render quiz content builder as page
 - `/staff/quizzes/[quizId]/content` now renders the builder as normal page content (no modal backdrop/fixed positioning) while preserving the existing UI and nested modals.
 
+### fix(staff-quizzes): remove dialog card from quiz content page
+- `/staff/quizzes/[quizId]/content` now renders the quiz builder content without the modal dialog-card container while keeping the same question management UI.
+
 ### fix(db): reuse pg pool across hot reloads
 - The server db pool now caches in `globalThis` to avoid creating new connections per module reload.
 

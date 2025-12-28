@@ -35,6 +35,7 @@ export function ManageQuizContentScreen({
   return (
     <StaffShell
       activeNav="quizzes"
+      pageTitle="Quản lý nội dung quiz"
       userEmail={session.email}
       userName={displayName}
       avatarUrl={session.avatarUrl}
