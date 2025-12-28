@@ -7,6 +7,7 @@
 - All seeded quizzes now source their question content from the demo question bank, filtered by quiz subjects.
 - Quiz subject selection now favors subjects that exist in the demo question bank to avoid empty quizzes.
 - Added Vietnamese and English demo questions to complete the subject coverage in the question bank.
+- Added a fixed highlight challenge question seeded from the demo question bank.
 - Demo challenge questions are fixed/deterministic; an identical demo quiz is seeded with a 15-second time limit.
 - Demo highlight challenge now prefers a non-passage question from the demo challenge set.
 

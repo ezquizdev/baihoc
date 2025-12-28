@@ -1,5 +1,19 @@
 [
   {
+    "subjectSlug": "vi",
+    "difficulty": 3,
+    "stem": "Dòng nào dưới đây có các từ viết đúng chính tả?",
+    "options": [
+      "Sai xót, sơ suất, sừng sộ.",
+      "Sai xót, sơ xuất, sừng sộ.",
+      "Sai sót, sơ xuất, sừng xộ.",
+      "Sai sót, sơ suất, sừng sộ."
+    ],
+    "correctIndex": 3,
+    "explanation": "Chọn D. Chỉ phương án D viết đúng chính tả: sai sót, sơ suất, sừng sộ.",
+    "isHighlight": true
+  },
+  {
     "subjectSlug": "math",
     "difficulty": 3,
     "stem": "Tìm số giá trị nguyên của tham số m thuộc [-10; 10] để phương trình x + 2*sqrt(x-1) = m + 3 có nghiệm.",

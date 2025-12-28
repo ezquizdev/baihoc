@@ -682,6 +682,7 @@ async function main() {
     const highlight = await seedHighlightChallenge(client, {
       staffUserId: staff.id,
       preferredChallengeQuizId: demoChallengeId,
+      preferredQuestionId: demoSeed.highlightQuestionId ?? null,
     });
 
     if (highlight && sampleFreeStudent?.id) {
@@ -1364,6 +1365,7 @@ async function seedHighlightChallenge(client, input) {
   if (!staffUserId) return null;
 
   const preferred = input?.preferredChallengeQuizId ?? null;
+  const preferredQuestionId = input?.preferredQuestionId ?? null;
 
   const quizId = await (async () => {
     if (preferred) {
@@ -1398,19 +1400,37 @@ async function seedHighlightChallenge(client, input) {
 
   if (!quizId) return null;
 
-  const questionRes = await client.query(
-    `SELECT qq.question_id
-     FROM quiz_questions qq
-     JOIN questions q ON q.id = qq.question_id
-     LEFT JOIN question_passages qp ON qp.question_id = q.id
-     WHERE qq.quiz_id = $1
-       AND q.type IN ('mcq_single'::question_type, 'mcq_multi'::question_type)
-       AND qp.question_id IS NULL
-     ORDER BY qq.position ASC
-     LIMIT 1`,
-    [quizId],
-  );
-  const questionId = questionRes.rows[0]?.question_id ?? null;
+  const questionId = await (async () => {
+    if (preferredQuestionId) {
+      const res = await client.query(
+        `SELECT qq.question_id
+         FROM quiz_questions qq
+         JOIN questions q ON q.id = qq.question_id
+         LEFT JOIN question_passages qp ON qp.question_id = q.id
+         WHERE qq.quiz_id = $1
+           AND qq.question_id = $2
+           AND q.type IN ('mcq_single'::question_type, 'mcq_multi'::question_type)
+           AND qp.question_id IS NULL
+         LIMIT 1`,
+        [quizId, preferredQuestionId],
+      );
+      if (res.rows[0]?.question_id) return res.rows[0].question_id;
+    }
+
+    const res = await client.query(
+      `SELECT qq.question_id
+       FROM quiz_questions qq
+       JOIN questions q ON q.id = qq.question_id
+       LEFT JOIN question_passages qp ON qp.question_id = q.id
+       WHERE qq.quiz_id = $1
+         AND q.type IN ('mcq_single'::question_type, 'mcq_multi'::question_type)
+         AND qp.question_id IS NULL
+       ORDER BY qq.position ASC
+       LIMIT 1`,
+      [quizId],
+    );
+    return res.rows[0]?.question_id ?? null;
+  })();
   if (!questionId) return null;
 
   await client.query(
@@ -2451,6 +2471,7 @@ function seedDemo1Questions({
   const subjectStandaloneIds = new Map();
   const subjectPassageIds = new Map();
   const demoChallengeQuestionIds = [];
+  let highlightQuestionId = null;
   const demoQuestionIdsBySubject = new Map();
 
   const addMcqSingle = ({
@@ -2530,6 +2551,9 @@ function seedDemo1Questions({
 
   specs.forEach((question) => {
     addMcqSingle(question);
+    if (question.isHighlight && !question.passage && !highlightQuestionId) {
+      highlightQuestionId = question.questionId;
+    }
     const subject = subjectBySlug.get(question.subjectSlug);
     if (!subject?.id) return;
     const ids = demoQuestionIdsBySubject.get(subject.id) ?? [];
@@ -2560,6 +2584,7 @@ function seedDemo1Questions({
     demoChallengeQuestionIds,
     demoQuestionIdsBySubject,
     demoQuestionGroupsBySubject,
+    highlightQuestionId,
   };
 }
 
