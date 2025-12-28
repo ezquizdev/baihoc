@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { controllerGetLeaderboard } from "@/application/controllers/leaderboardController";
-import { controllerGetStudentDashboardDailyChallengeCard } from "@/application/controllers/studentDashboardController";
+import { controllerGetStudentDashboardHighlightChallengeCard } from "@/application/controllers/studentDashboardController";
 import { requireAuthenticatedPage } from "@/application/infra/auth/guards";
 import { getSelfProfileOverview } from "@/application/services/profileService";
-import { DailyChallengeCard } from "@/components/dashboard/daily-challenge-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { HighlightChallengeCard } from "@/components/dashboard/highlight-challenge-card";
 import { PromoBanner } from "@/components/dashboard/promo-banner";
 import {
   type QuickAction,
@@ -25,7 +25,7 @@ export default async function DashboardPage() {
   }
   const displayName = session.fullName ?? session.email.split("@")[0];
 
-  const [leaderboard, profileOverview, dailyChallenge] = await Promise.all([
+  const [leaderboard, profileOverview, highlightChallenge] = await Promise.all([
     controllerGetLeaderboard({
       viewerUserId: session.sub,
       limit: LEADERBOARD_ROWS,
@@ -33,7 +33,7 @@ export default async function DashboardPage() {
       subjectId: null,
     }).catch(() => ({ items: [], self: null })),
     getSelfProfileOverview(session.sub).catch(() => null),
-    controllerGetStudentDashboardDailyChallengeCard(session.sub).catch(
+    controllerGetStudentDashboardHighlightChallengeCard(session.sub).catch(
       () => ({ status: "none" }) as const,
     ),
   ]);
@@ -58,10 +58,10 @@ export default async function DashboardPage() {
 
   const quickActions = [
     { label: "TẤT CẢ", href: "/quizzes" },
-    dailyChallenge.status === "active"
+    highlightChallenge.status === "active"
       ? {
           label: "CHALLENGE\nHÔM NAY",
-          href: dailyChallenge.actionHref,
+          href: highlightChallenge.actionHref,
         }
       : { label: "CHALLENGE\nHÔM NAY", disabled: true },
     { label: "TỰ LUYỆN QUIZ CÙNG AI", disabled: true },
@@ -87,30 +87,7 @@ export default async function DashboardPage() {
         className={layoutStyles.pageGridTop}
         aria-label="Khối trắc nghiệm"
       >
-        <DailyChallengeCard
-          tag="CHALLENGE"
-          titleLines={["DAILY", "QUIZ"]}
-          question={
-            dailyChallenge.status === "active"
-              ? dailyChallenge.question
-              : "Hôm nay chưa có challenge đang diễn ra."
-          }
-          answers={
-            dailyChallenge.status === "active"
-              ? dailyChallenge.answers.map((text) => ({ text }))
-              : [{ text: "Theo dõi lại sau" }]
-          }
-          ctaLabel={
-            dailyChallenge.status === "active"
-              ? dailyChallenge.actionLabel
-              : undefined
-          }
-          ctaHref={
-            dailyChallenge.status === "active"
-              ? dailyChallenge.actionHref
-              : undefined
-          }
-        />
+        <HighlightChallengeCard initial={highlightChallenge} />
 
         <QuickActionsCard actions={quickActions} />
       </section>
