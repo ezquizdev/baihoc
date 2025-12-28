@@ -691,7 +691,14 @@ export async function listQuizzesForStaff(params: {
   limit?: number;
   offset?: number;
 }): Promise<QuizListItem[]> {
-  const where: string[] = [];
+  const where: string[] = [
+    `NOT EXISTS (
+      SELECT 1
+      FROM custom_quizzes cq
+      WHERE cq.generated_quiz_id = q.id
+        AND cq.status = 'ready'::custom_quiz_status
+    )`,
+  ];
   const values: unknown[] = [];
   const add = (sql: string, value: unknown) => {
     values.push(value);
