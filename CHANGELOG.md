@@ -11,6 +11,9 @@
 ### fix(staff-questions): show action errors as popup
 - Question table action errors now display in a modal instead of inline under the row.
 
+### fix(catalog): label completed quizzes as "Làm lại"
+- Quiz catalog cards and quick-view modal now show “Làm lại” when the user has already attempted the quiz.
+
 ### fix(staff-questions): clamp long question stems in tables
 - Question stems now truncate with ellipses in the question bank table and quiz content question picker.
 

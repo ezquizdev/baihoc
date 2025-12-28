@@ -119,6 +119,7 @@ function mapCatalogRow(row: QuizCatalogRow): QuizCatalogItem {
     subjectName: primarySubject?.name ?? "Tổng hợp",
     subjectSlug: primarySubject?.slug ?? "mixed",
     attemptCount: Number(row.attempt_count ?? 0),
+    userAttempted: Boolean(row.user_attempted),
     subjectBreakdown: breakdown,
     topicIds: row.topic_ids ?? undefined,
   };

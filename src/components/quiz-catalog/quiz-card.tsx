@@ -24,7 +24,12 @@ export function QuizCard({
     : null;
   const questionCount = quiz.questionCount ?? 0;
   const dateLabel = formatDateVi(quiz.updatedAt ?? quiz.createdAt);
-  const ctaLabel = quiz.isChallenge ? "Thử thách ngay" : "Làm ngay";
+  const isDone = Boolean(quiz.userAttempted);
+  const ctaLabel = isDone
+    ? "Làm lại"
+    : quiz.isChallenge
+      ? "Thử thách ngay"
+      : "Làm ngay";
   const subjectBreakdown = quiz.subjectBreakdown ?? [];
   const isMultiSubject = subjectBreakdown.length > 1;
   const showDifficulty = Number.isFinite(quiz.difficulty);

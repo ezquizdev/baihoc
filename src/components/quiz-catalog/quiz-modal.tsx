@@ -79,7 +79,12 @@ export function QuizModal({ quiz, onClose, onStart }: QuizModalProps) {
     ? Math.round(quiz.estimatedTimeSeconds / 60)
     : 0;
   const questionCount = quiz.questionCount ?? 0;
-  const ctaLabel = quiz.isChallenge ? "Thử thách ngay" : "Làm bài ngay";
+  const isDone = Boolean(quiz.userAttempted);
+  const ctaLabel = isDone
+    ? "Làm lại"
+    : quiz.isChallenge
+      ? "Thử thách ngay"
+      : "Làm bài ngay";
   const subjectBreakdown = quiz.subjectBreakdown?.length
     ? quiz.subjectBreakdown
     : [

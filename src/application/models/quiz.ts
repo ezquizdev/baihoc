@@ -63,6 +63,7 @@ export type QuizCatalogItem = Quiz & {
   subjectName: string;
   subjectSlug: string;
   attemptCount: number;
+  userAttempted?: boolean;
   topicIds?: string[];
   subjectBreakdown?: QuizSubjectBreakdown[];
 };
