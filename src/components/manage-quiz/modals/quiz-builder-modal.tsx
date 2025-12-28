@@ -250,6 +250,12 @@ export function QuizBuilderModal({
 
   const doSave = async (mode: "draft" | "publish") => {
     if (!quizId) return;
+    if (mode === "publish" && questions.length === 0) {
+      setError(
+        "Quiz chưa có câu hỏi. Vui lòng thêm ít nhất 1 câu hỏi trước khi xuất bản.",
+      );
+      return;
+    }
     setError(null);
     try {
       setSaving(true);

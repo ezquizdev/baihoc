@@ -52,6 +52,13 @@ export function StaffQuizCard({
   const busy = publishing || deleting;
 
   const publishQuiz = async () => {
+    if (questionCount < 1) {
+      onError(
+        "Không thể xuất bản quiz",
+        "Quiz chưa có câu hỏi. Vui lòng thêm ít nhất 1 câu hỏi trước khi xuất bản.",
+      );
+      return;
+    }
     try {
       setPublishing(true);
       const response = await fetch(`/api/staff/quizzes/${quiz.id}/publish`, {

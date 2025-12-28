@@ -7,6 +7,7 @@ import { listQuestionIdsByIds } from "@/application/infra/db/questionRepo";
 import {
   deleteQuiz,
   getQuizDetail as getQuizDetailRepo,
+  getQuizQuestionCount,
   hasInProgressAttempts,
   insertQuiz,
   isQuizUsed,
@@ -68,6 +69,9 @@ export async function updateQuizMeta(
       409,
     );
   }
+  if (input.status === "published") {
+    await ensureQuizHasQuestions(quizId);
+  }
   validateQuizInput({ ...input, quizId } as CreateQuizInput, true);
   const updated = await updateQuiz({ quizId, ...input });
   return updated;
@@ -104,6 +108,7 @@ export async function setQuizQuestions(
 }
 
 export async function publishQuiz(quizId: string) {
+  await ensureQuizHasQuestions(quizId);
   const res = await updateQuizStatus(quizId, "published");
   if (!res) throw new Error("Quiz not found");
   return res;
@@ -266,6 +271,20 @@ async function ensureQuestionsExist(questionIds: string[]) {
   const missing = questionIds.filter((id) => !found.has(id));
   if (missing.length) {
     throw new Error(`Questions not found: ${missing.join(", ")}`);
+  }
+}
+
+async function ensureQuizHasQuestions(quizId: string) {
+  const questionCount = await getQuizQuestionCount(quizId);
+  if (questionCount === null) {
+    throw new Error("Quiz not found");
+  }
+  if (questionCount < 1) {
+    throw new ServiceError(
+      "QUIZ_PUBLISH_EMPTY",
+      "Quiz chưa có câu hỏi. Vui lòng thêm ít nhất 1 câu hỏi trước khi xuất bản.",
+      409,
+    );
   }
 }
 

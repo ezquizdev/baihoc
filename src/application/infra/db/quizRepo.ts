@@ -285,6 +285,25 @@ export async function updateQuizStatus(quizId: string, status: QuizStatus) {
   return res.rows[0] ? mapQuiz(res.rows[0]) : null;
 }
 
+export async function getQuizQuestionCount(
+  quizId: string,
+): Promise<number | null> {
+  const res = await query<{ question_count: number | null }>(
+    `SELECT COALESCE(qc.question_count, 0) AS question_count
+     FROM quizzes q
+     LEFT JOIN (
+       SELECT quiz_id, COUNT(*)::int AS question_count
+       FROM quiz_questions
+       GROUP BY quiz_id
+     ) qc ON qc.quiz_id = q.id
+     WHERE q.id = $1`,
+    [quizId],
+  );
+  if (!res.rows[0]) return null;
+  const count = res.rows[0].question_count ?? 0;
+  return Number.isFinite(count) ? Number(count) : 0;
+}
+
 export async function replaceQuizQuestions(
   quizId: string,
   items: Array<Omit<QuizQuestionLink, "quizId">>,
