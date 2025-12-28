@@ -856,6 +856,9 @@
 - Fix: custom quiz seeding query no longer uses `SELECT DISTINCT ... ORDER BY random()` directly (Postgres restriction); distinct selection is done in a subquery.
 - Fix: attempt snapshot subject scores are inserted as JSON (not a Postgres array literal).
 
+### fix(auth): unwrap async searchParams in profile completion
+- Fixed Next.js App Router error by awaiting `searchParams` before reading `next` on `/auth/profile-complete`.
+
 ## 2025-12-18
 
 ### feat(db): add quiz & question repositories

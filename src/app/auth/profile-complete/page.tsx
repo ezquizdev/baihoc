@@ -11,13 +11,13 @@ function dashboardHrefForRole(role: string) {
 export default async function ProfileCompletePage({
   searchParams,
 }: {
-  searchParams?: { next?: string };
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const session = await requireAuthenticatedPage({
     allowIncompleteProfile: true,
     next: "/auth/profile-complete",
   });
-  const next = sanitizeNextPath(searchParams?.next);
+  const next = sanitizeNextPath((await searchParams)?.next);
   const fallback = dashboardHrefForRole(session.role);
   const redirectTo = next ?? fallback;
   if (session.profileCompleted) {
