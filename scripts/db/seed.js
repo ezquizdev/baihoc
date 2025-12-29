@@ -190,7 +190,10 @@ async function main() {
     }
 
     const subjects = await upsertSubjects(client, subjectSeeds);
-    const { topicsBySubject, topicIdBySlug } = await seedTopics(client, subjects);
+    const { topicsBySubject, topicIdBySlug } = await seedTopics(
+      client,
+      subjects,
+    );
     const subjectBySlug = new Map(
       subjects.map((subject) => [subject.slug, subject]),
     );
@@ -406,9 +409,7 @@ async function main() {
     let demoQuizId = null;
     let demoChallengeId = null;
 
-    const demoSubjectIds = new Set(
-      demoSeed.demoQuestionGroupsBySubject.keys(),
-    );
+    const demoSubjectIds = new Set(demoSeed.demoQuestionGroupsBySubject.keys());
     const quizSubjects = subjects.filter((subject) =>
       demoSubjectIds.has(subject.id),
     );
@@ -509,7 +510,8 @@ async function main() {
         const questionTotal = randomInt(8, 30);
         const distribution = distribute(questionTotal, chosenSubjects.length);
         chosenSubjects.forEach((subject, index) => {
-          const groups = demoSeed.demoQuestionGroupsBySubject.get(subject.id) ?? [];
+          const groups =
+            demoSeed.demoQuestionGroupsBySubject.get(subject.id) ?? [];
           const selectedGroups = pickQuestionGroups(
             groups,
             distribution[index],
@@ -2408,7 +2410,7 @@ function seedQuestionMeta({
   });
 }
 
-function buildDemoQuestionList({
+function _buildDemoQuestionList({
   chosenSubjects,
   questionGroups,
   questionIdsByType,
@@ -2511,6 +2513,7 @@ function seedDemo1Questions({
   const addMcqSingle = ({
     questionId,
     subjectSlug,
+    topicSlug,
     stem,
     options,
     correctIndex,
@@ -2520,8 +2523,8 @@ function seedDemo1Questions({
   }) => {
     const subject = requireSubject(subjectSlug);
     const topicId =
-      question.topicSlug && topicIdBySlug instanceof Map
-        ? topicIdBySlug.get(question.topicSlug)
+      topicSlug && topicIdBySlug instanceof Map
+        ? topicIdBySlug.get(topicSlug)
         : null;
     questionRows.push([
       questionId,
@@ -2553,9 +2556,9 @@ function seedDemo1Questions({
     });
     if (topicId) {
       questionTopicRows.push([questionId, topicId]);
-    } else if (question.topicSlug) {
+    } else if (topicSlug) {
       throw new Error(
-        `Seed misconfigured: topic slug \"${question.topicSlug}\" not found for demo question.`,
+        `Seed misconfigured: topic slug "${topicSlug}" not found for demo question.`,
       );
     }
 
@@ -2590,7 +2593,9 @@ function seedDemo1Questions({
         ? DEMO_1_QUESTION_IDS[index]
         : crypto.randomUUID(),
   }));
-  DEMO_1_QUESTION_IDS.forEach((id) => demoChallengeQuestionIds.push(id));
+  DEMO_1_QUESTION_IDS.forEach((id) => {
+    demoChallengeQuestionIds.push(id);
+  });
 
   specs.forEach((question) => {
     addMcqSingle(question);
@@ -2612,7 +2617,9 @@ function seedDemo1Questions({
       if (ids?.length) groups.push(ids);
     });
     const standalone = subjectStandaloneIds.get(subjectId) ?? [];
-    standalone.forEach((id) => groups.push([id]));
+    standalone.forEach((id) => {
+      groups.push([id]);
+    });
     demoQuestionGroupsBySubject.set(subjectId, groups);
   }
   for (const [subjectId, ids] of subjectStandaloneIds.entries()) {

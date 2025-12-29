@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-12-29
+
+### fix(db): resolve ReferenceError in db seed demo topics
+- Fixed `scripts/db/seed.js` crashing with `Seed failed: question is not defined` when seeding demo questions that include topic slugs.
+
 ## 2025-12-28
 
 ### chore(db): seed demo questions from demo.txt
