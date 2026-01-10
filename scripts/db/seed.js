@@ -25,7 +25,7 @@ const config = {
   students: totalStudents,
   paidStudents: Number(args.paidStudents ?? args.paid ?? defaultPaidStudents),
   quizzes: Math.max(2, Number(args.quizzes ?? 36)),
-  questionsPerSubject: Number(args.questions ?? 48),
+  questionsPerSubject: Number(args.questions ?? 400),
   maxAttemptsPerQuiz: Number(args.maxAttempts ?? 18),
   multiSubjectRate: Number(args.multiSubjectRate ?? 0.35),
   allowlistEntries: Number(args.allowlist ?? 8),
